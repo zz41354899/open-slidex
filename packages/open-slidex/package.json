@@ -1,7 +1,7 @@
 {
   "name": "open-slidex",
-  "version": "2.0.4",
-  "description": "Create a private MDX-first OpenSlideX local workbench.",
+  "version": "0.2.4",
+  "description": "Create a local-first MDX presentation workspace.",
   "type": "module",
   "bin": {
     "open-slidex": "dist/cli.mjs"
@@ -13,13 +13,11 @@
     "dist",
     "runtime",
     "template",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
-    "build": "node ../../scripts/build-create-slidex.mjs",
-    "test": "node --test --import tsx src/*.test.ts",
-    "prepack": "npm run build",
-    "prepublishOnly": "npm run build"
+    "test": "node --check dist/cli.mjs && node --check dist/create.mjs"
   },
   "keywords": [
     "slidex",

@@ -1,4 +1,4 @@
-# OpenSlideX 2.0.4
+# OpenSlideX 0.2.4
 
 OpenSlideX is a local-first, MDX presentation workspace with a visual Workbench,
 deterministic HTML/PPTX export, local image optimization, and a project-scoped
@@ -13,7 +13,7 @@ Base64 image storage, or a second canvas document.
 Node.js **22.12.0 or later** is required.
 
 ```bash
-npx open-slidex@latest init my-deck
+npx open-slidex@0.2.4 init my-deck
 cd my-deck
 npm run dev
 ```
@@ -21,7 +21,7 @@ npm run dev
 Start a new project with an immutable official template blueprint and locale:
 
 ```bash
-npx open-slidex@latest init launch-deck --template launch-deck --locale zh-TW
+npx open-slidex@0.2.4 init launch-deck --template launch-deck --locale zh-TW
 ```
 
 The selected `{ id, version, locale }` is recorded in
@@ -36,15 +36,15 @@ local rendering and exports; an offline download never blocks installation.
 Alternative launchers:
 
 ```bash
-pnpm dlx open-slidex@latest init my-deck
-bunx open-slidex@latest init my-deck
+pnpm dlx open-slidex@0.2.4 init my-deck
+bunx open-slidex@0.2.4 init my-deck
 ```
 
 Use `--no-install` when you want to inspect the generated files before
 installing dependencies:
 
 ```bash
-npx open-slidex@latest init my-deck --no-install
+npx open-slidex@0.2.4 init my-deck --no-install
 cd my-deck
 npm install
 ```

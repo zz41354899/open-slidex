@@ -2,9 +2,28 @@
 
 OpenSlideX is an open-source, local-first presentation workspace. A presentation lives in a folder you own, with `presentation.mdx` as its source of truth.
 
-## Start locally
+## Install from npm
 
 Prerequisite: Node.js 22.12 or newer.
+
+```bash
+npx open-slidex@0.2.4 init my-deck
+cd my-deck
+npm run dev
+```
+
+After it is published, the release will be available at [npm: open-slidex@0.2.4](https://www.npmjs.com/package/open-slidex/v/0.2.4). The Workbench opens locally and edits `my-deck/presentation.mdx`. No account or Cloud setup is required.
+
+To install the command globally instead:
+
+```bash
+npm install --global open-slidex@0.2.4
+open-slidex init my-deck
+```
+
+## Run from GitHub
+
+The repository remains available for contributors and local-runtime verification:
 
 ```bash
 git clone https://github.com/zz41354899/open-slidex.git
@@ -13,15 +32,6 @@ npm install
 cd examples/starter
 npm install
 npm run dev
-```
-
-The Workbench opens locally and edits `examples/starter/presentation.mdx`. No account or Cloud setup is required.
-
-To create another project from the bundled starter:
-
-```bash
-cd ../..
-npm run open-slidex -- init my-deck --no-install
 ```
 
 ## Status

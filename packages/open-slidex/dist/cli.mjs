@@ -91,7 +91,7 @@ Usage:
   open-slidex export [presentation.mdx] --format <html|mdx|pptx> --out <file> [--overwrite]
 
 Examples:
-  npx open-slidex@latest init my-deck
+  npx open-slidex@0.2.4 init my-deck
   open-slidex init launch-deck --template launch-deck --locale zh-TW
   cd my-deck && npm run dev
   open-slidex mcp --print-config codex

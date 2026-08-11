@@ -1,6 +1,6 @@
 {
   "name": "__PROJECT_NAME__",
-  "version": "2.0.4",
+  "version": "0.2.4",
   "private": true,
   "engines": {
     "node": ">=22.12.0"
@@ -18,6 +18,6 @@
     "export:pptx": "open-slidex export presentation.mdx --format pptx --out dist/presentation.pptx --overwrite"
   },
   "devDependencies": {
-    "open-slidex": "2.0.4"
+    "open-slidex": "0.2.4"
   }
 }
