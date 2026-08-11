@@ -44,9 +44,24 @@ npm run dev -- --port 4174
 
 ## Status
 
-This private staging repository includes a cloneable local runtime and starter project. TypeScript source extraction is intentionally narrow: only code that runs locally, has no Cloud dependency, and passes the repository boundary check will be added here.
+This repository is currently a private staging repository for the public release. It now contains the maintainable TypeScript source for the local SDK, Workbench, AI chat, MCP server, CLI, and starter project. Every bundled runtime under `packages/open-slidex/runtime/` is rebuilt from source in this repository.
 
 The current SlideX Cloud application remains a separate private product. It is not a dependency of OpenSlideX.
+
+## Source layout
+
+```text
+common/                         # small storage-neutral UI utilities
+core/motion-doc/                # parser, serializer, local edits, layout, export
+features/pitch/                 # storage-neutral editor UI used by Workbench
+packages/editor-ui/             # public editor entry point
+packages/slidex-sdk/            # filesystem-safe SDK and CLI
+packages/slidex-workbench/      # local Workbench and AI chat
+packages/open-slidex-mcp/       # project-scoped local MCP server
+packages/open-slidex/           # npm initializer and bundled runtime
+```
+
+Use `npm run build:runtime` after changing the SDK, Workbench, AI chat, MCP, or CLI. The command rebuilds the distributable package without reading the SlideX Cloud repository.
 
 ## Principles
 
@@ -56,7 +71,7 @@ The current SlideX Cloud application remains a separate private product. It is n
 - AI integrations are optional and use the locally installed provider CLI.
 - The MotionDoc format stays portable and editable.
 
-## What will live here
+## What lives here
 
 - OpenSlideX CLI and project starter
 - Local Workbench runtime
@@ -72,6 +87,8 @@ The current SlideX Cloud application remains a separate private product. It is n
 - The private official or Premium template catalog before this repository becomes public
 
 See [OPEN_SOURCE_BOUNDARY.md](OPEN_SOURCE_BOUNDARY.md) for the extraction rules and public-release gate.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) before changing source or opening a pull request.
 
 ## License
 

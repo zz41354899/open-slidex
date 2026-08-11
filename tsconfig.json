@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./*"],
+      "@open-slidex/editor-ui": ["./packages/editor-ui/src/index.ts"],
+      "@open-slidex/sdk": ["./packages/slidex-sdk/src/index.ts"],
+      "@open-slidex/sdk/node": ["./packages/slidex-sdk/src/node.ts"]
+    },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022"
+  },
+  "include": ["global.d.ts", "common/**/*.ts", "common/**/*.tsx", "core/**/*.ts", "core/**/*.tsx", "features/**/*.ts", "features/**/*.tsx", "packages/**/*.ts", "packages/**/*.tsx"],
+  "exclude": ["node_modules", "**/dist/**", "**/runtime/**", "**/template/**"]
+}

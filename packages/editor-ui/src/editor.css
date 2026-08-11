@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@source "../../../common/ui/**/*.{ts,tsx}";
+@source "../../../core/motion-doc/**/*.{ts,tsx}";
+@source "../../../features/pitch/ui/**/*.{ts,tsx}";
+@source "../../../packages/editor-ui/src/**/*.{ts,tsx}";
+@source "../../../packages/slidex-workbench/src/client/**/*.{ts,tsx}";

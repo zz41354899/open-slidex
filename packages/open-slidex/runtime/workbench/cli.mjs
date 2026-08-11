@@ -50,8 +50,15 @@ var OpenSlideXLocalMediaError = class extends Error {
     this.issues = issues;
     this.name = "OpenSlideXLocalMediaError";
   }
+  issues;
 };
 var SlideXProject = class {
+  adapter;
+  assetsRoot;
+  distRoot;
+  projectId;
+  root;
+  stateRoot;
   constructor(root) {
     this.root = path.resolve(root);
     this.assetsRoot = path.join(this.root, "assets");
@@ -360,11 +367,14 @@ var requestTimeoutMs = 3e4;
 var CodexAppServerTransport = class {
   constructor(projectRoot) {
     this.projectRoot = projectRoot;
-    this.listeners = /* @__PURE__ */ new Set();
-    this.nextRequestId = 1;
-    this.pending = /* @__PURE__ */ new Map();
-    this.stderr = "";
   }
+  projectRoot;
+  child;
+  initializePromise;
+  listeners = /* @__PURE__ */ new Set();
+  nextRequestId = 1;
+  pending = /* @__PURE__ */ new Map();
+  stderr = "";
   get diagnostics() {
     return this.stderr;
   }
@@ -581,10 +591,13 @@ var defaultRunTimeoutMs = 8 * 6e4;
 var CodexAppServer = class {
   constructor(projectRoot, options) {
     this.projectRoot = projectRoot;
-    this.previewPaths = /* @__PURE__ */ new Map();
     this.transport = new CodexAppServerTransport(projectRoot);
     this.runTimeoutMs = options?.runTimeoutMs ?? defaultRunTimeoutMs;
   }
+  projectRoot;
+  previewPaths = /* @__PURE__ */ new Map();
+  runTimeoutMs;
+  transport;
   warm() {
     return this.transport.warm();
   }
@@ -1049,8 +1062,9 @@ function redactLocalDetails(value, projectRoot) {
 var StreamingLocalDetailRedactor = class {
   constructor(projectRoot) {
     this.projectRoot = projectRoot;
-    this.pending = "";
   }
+  projectRoot;
+  pending = "";
   push(delta) {
     this.pending += delta;
     if (this.pending.length <= 256) return "";
@@ -1142,10 +1156,8 @@ function stringValue(value) {
   return typeof value === "string" && value.trim() ? value.trim() : void 0;
 }
 var AsyncEventQueue = class {
-  constructor() {
-    this.values = [];
-    this.waiters = [];
-  }
+  values = [];
+  waiters = [];
   push(value) {
     const waiter = this.waiters.shift();
     if (waiter) waiter(value);
@@ -1163,9 +1175,12 @@ var openSlideXAiProviders = ["codex", "claude"];
 var openSlideXAiModes = ["fast", "balanced", "quality"];
 var maxProcessOutputBytes = 12 * 1024 * 1024;
 var OpenSlideXAiBridge = class {
+  project;
+  codex;
+  codexRuns = /* @__PURE__ */ new Map();
+  processes = /* @__PURE__ */ new Map();
+  statusCache;
   constructor(project) {
-    this.codexRuns = /* @__PURE__ */ new Map();
-    this.processes = /* @__PURE__ */ new Map();
     this.project = project;
     this.codex = new CodexAppServer(project.root);
   }
@@ -1431,9 +1446,11 @@ var emptyDocument = () => ({ threads: [], version: 1 });
 var AiConversationStore = class {
   constructor(projectRoot, stateRoot) {
     this.projectRoot = projectRoot;
-    this.writeQueue = Promise.resolve();
     this.filePath = path4.join(stateRoot, "ai-conversations.json");
   }
+  projectRoot;
+  filePath;
+  writeQueue = Promise.resolve();
   list() {
     return this.read();
   }

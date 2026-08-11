@@ -3,7 +3,11 @@
   "private": true,
   "version": "0.2.4",
   "workspaces": [
-    "packages/open-slidex"
+    "packages/editor-ui",
+    "packages/open-slidex",
+    "packages/open-slidex-mcp",
+    "packages/slidex-sdk",
+    "packages/slidex-workbench"
   ],
   "scripts": {
     "dev": "open-slidex dev",
@@ -16,8 +20,40 @@
     "export:html": "open-slidex export presentation.mdx --format html --out dist/presentation.html --overwrite",
     "export:mdx": "open-slidex export presentation.mdx --format mdx --out dist/presentation.mdx --overwrite",
     "export:pptx": "open-slidex export presentation.mdx --format pptx --out dist/presentation.pptx --overwrite",
+    "build:runtime": "node scripts/build-open-slidex-package.mjs",
+    "test:source": "npm run test --workspace @open-slidex/mcp && node --import tsx --test packages/slidex-workbench/src/client/*.test.ts packages/slidex-workbench/src/server/*.test.ts packages/slidex-sdk/src/*.test.ts packages/open-slidex/src/*.test.ts",
     "check:cloud-boundary": "node scripts/check-open-source-boundary.mjs",
     "check:open-source-boundary": "node scripts/check-open-source-boundary.mjs",
     "open-slidex": "open-slidex"
+  },
+  "devDependencies": {
+    "@assistant-ui/react": "^0.15.11",
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/commands": "^6.10.3",
+    "@codemirror/language": "^6.12.3",
+    "@codemirror/search": "^6.7.0",
+    "@codemirror/view": "^6.43.0",
+    "@lezer/highlight": "^1.2.3",
+    "@paper-design/shaders": "^0.0.77",
+    "@paper-design/shaders-react": "^0.0.77",
+    "@radix-ui/react-popover": "^1.1.17",
+    "@radix-ui/react-toolbar": "^1.1.13",
+    "@tailwindcss/postcss": "4.3.0",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "esbuild": "^0.28.0",
+    "framer-motion": "11.18.2",
+    "happy-dom": "20.11.1",
+    "html2canvas-pro": "^2.2.3",
+    "jszip": "3.10.1",
+    "mdast-util-from-markdown": "2.0.3",
+    "mdast-util-gfm": "^3.1.0",
+    "micromark-extension-gfm": "^3.0.0",
+    "pptxgenjs": "^4.0.1",
+    "tailwindcss": "4.3.0",
+    "tsx": "^4.22.4",
+    "typescript": "5.9.3",
+    "vite": "^8.2.0"
   }
 }

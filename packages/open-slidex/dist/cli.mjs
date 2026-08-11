@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// packages/create-slidex/src/openSlideXCli.ts
+// packages/open-slidex/src/openSlideXCli.ts
 import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -91,8 +91,8 @@ Usage:
   open-slidex export [presentation.mdx] --format <html|mdx|pptx> --out <file> [--overwrite]
 
 Examples:
-  npx open-slidex@0.2.4 init my-deck
-  open-slidex init launch-deck --template launch-deck --locale zh-TW
+  npx open-slidex@latest init my-deck
+  open-slidex init my-deck --template open-slidex-starter --locale zh-TW
   cd my-deck && npm run dev
   open-slidex mcp --print-config codex
 `;

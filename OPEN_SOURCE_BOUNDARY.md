@@ -26,6 +26,8 @@ This repository must remain independently runnable as a local-first product. It 
 4. Add a focused local test before introducing an extracted module.
 5. Run `npm run check:cloud-boundary` before every push.
 
+The boundary check scans both maintainable source and generated runtime bundles. A successful source build is not sufficient if the resulting npm package contains a prohibited Cloud import, route, credential marker, or private template source.
+
 ## Public template release gate
 
 The repository may include an openly licensed starter template. Before the repository changes to public visibility, the bundled runtime must no longer contain the official or Premium template catalog unless its source license is explicitly changed.

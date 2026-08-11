@@ -8,8 +8,12 @@ const prohibitedPatterns = [
   /SUPABASE_/i,
   /NEXT_PUBLIC_SUPABASE/i,
   /service[_-]?role/i,
+  /from\s+["']next(?:\/[^"']*)?["']/,
   /from\s+["']@\/app\//,
-  /from\s+["']@\/features\/(auth|workspace)\//
+  /from\s+["']@\/features\/(auth|workspace)\//,
+  /\/api\/template-library\//,
+  /\/(?:auth\/callback|login|workspace\/pitch)(?:[?/'"`]|$)/,
+  /(?:designTeamCulture|notionSharedDeck|obsidianQuickDeck|moodboard)TemplateSource/
 ];
 
 for (const directory of prohibitedDirectories) {

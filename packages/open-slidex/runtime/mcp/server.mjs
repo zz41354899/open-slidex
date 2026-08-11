@@ -6,7 +6,11 @@ var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __commonJS = (cb, mod) => function __require() {
-  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  try {
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  } catch (e) {
+    throw mod = 0, e;
+  }
 };
 var __export = (target, all2) => {
   for (var name in all2)
@@ -20,7 +24,6 @@ var __copyProps = (to, from, except, desc) => {
   }
   return to;
 };
-var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
   // If the importer is in node compatibility mode or this is not an ESM
   // file that has been converted to a CommonJS file using a Babel-
@@ -30,9 +33,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/codegen/code.js
+// node_modules/ajv/dist/compile/codegen/code.js
 var require_code = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/codegen/code.js"(exports) {
+  "node_modules/ajv/dist/compile/codegen/code.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.regexpCode = exports.getEsmExportName = exports.getProperty = exports.safeStringify = exports.stringify = exports.strConcat = exports.addCodeArg = exports.str = exports._ = exports.nil = exports._Code = exports.Name = exports.IDENTIFIER = exports._CodeOrName = void 0;
@@ -184,9 +187,9 @@ var require_code = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/codegen/scope.js
+// node_modules/ajv/dist/compile/codegen/scope.js
 var require_scope = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/codegen/scope.js"(exports) {
+  "node_modules/ajv/dist/compile/codegen/scope.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ValueScope = exports.ValueScopeName = exports.Scope = exports.varKinds = exports.UsedValueState = void 0;
@@ -329,9 +332,9 @@ var require_scope = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/codegen/index.js
+// node_modules/ajv/dist/compile/codegen/index.js
 var require_codegen = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/codegen/index.js"(exports) {
+  "node_modules/ajv/dist/compile/codegen/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.or = exports.and = exports.not = exports.CodeGen = exports.operators = exports.varKinds = exports.ValueScopeName = exports.ValueScope = exports.Scope = exports.Name = exports.regexpCode = exports.stringify = exports.getProperty = exports.nil = exports.strConcat = exports.str = exports._ = void 0;
@@ -1049,9 +1052,9 @@ var require_codegen = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/util.js
+// node_modules/ajv/dist/compile/util.js
 var require_util = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/util.js"(exports) {
+  "node_modules/ajv/dist/compile/util.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.checkStrictMode = exports.getErrorPath = exports.Type = exports.useFunc = exports.setEvaluated = exports.evaluatedPropsToName = exports.mergeEvaluated = exports.eachItem = exports.unescapeJsonPointer = exports.escapeJsonPointer = exports.escapeFragment = exports.unescapeFragment = exports.schemaRefOrVal = exports.schemaHasRulesButRef = exports.schemaHasRules = exports.checkUnknownRules = exports.alwaysValidSchema = exports.toHash = void 0;
@@ -1216,9 +1219,9 @@ var require_util = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/names.js
+// node_modules/ajv/dist/compile/names.js
 var require_names = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/names.js"(exports) {
+  "node_modules/ajv/dist/compile/names.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -1255,9 +1258,9 @@ var require_names = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/errors.js
+// node_modules/ajv/dist/compile/errors.js
 var require_errors = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/errors.js"(exports) {
+  "node_modules/ajv/dist/compile/errors.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.extendErrors = exports.resetErrorsCount = exports.reportExtraError = exports.reportError = exports.keyword$DataError = exports.keywordError = void 0;
@@ -1377,9 +1380,9 @@ var require_errors = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/boolSchema.js
+// node_modules/ajv/dist/compile/validate/boolSchema.js
 var require_boolSchema = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/boolSchema.js"(exports) {
+  "node_modules/ajv/dist/compile/validate/boolSchema.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.boolOrEmptySchema = exports.topBoolOrEmptySchema = void 0;
@@ -1428,9 +1431,9 @@ var require_boolSchema = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/rules.js
+// node_modules/ajv/dist/compile/rules.js
 var require_rules = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/rules.js"(exports) {
+  "node_modules/ajv/dist/compile/rules.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getRules = exports.isJSONType = void 0;
@@ -1459,9 +1462,9 @@ var require_rules = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/applicability.js
+// node_modules/ajv/dist/compile/validate/applicability.js
 var require_applicability = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/applicability.js"(exports) {
+  "node_modules/ajv/dist/compile/validate/applicability.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.shouldUseRule = exports.shouldUseGroup = exports.schemaHasRulesForType = void 0;
@@ -1482,9 +1485,9 @@ var require_applicability = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/dataType.js
+// node_modules/ajv/dist/compile/validate/dataType.js
 var require_dataType = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/dataType.js"(exports) {
+  "node_modules/ajv/dist/compile/validate/dataType.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.reportTypeError = exports.checkDataTypes = exports.checkDataType = exports.coerceAndCheckDataType = exports.getJSONTypes = exports.getSchemaTypes = exports.DataType = void 0;
@@ -1666,9 +1669,9 @@ var require_dataType = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/defaults.js
+// node_modules/ajv/dist/compile/validate/defaults.js
 var require_defaults = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/defaults.js"(exports) {
+  "node_modules/ajv/dist/compile/validate/defaults.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.assignDefaults = void 0;
@@ -1703,9 +1706,9 @@ var require_defaults = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/code.js
+// node_modules/ajv/dist/vocabularies/code.js
 var require_code2 = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/code.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/code.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.validateUnion = exports.validateArray = exports.usePattern = exports.callValidateCode = exports.schemaProperties = exports.allSchemaProperties = exports.noPropertyInData = exports.propertyInData = exports.isOwnProperty = exports.hasPropFunc = exports.reportMissingProp = exports.checkMissingProp = exports.checkReportMissingProp = void 0;
@@ -1836,9 +1839,9 @@ var require_code2 = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/keyword.js
+// node_modules/ajv/dist/compile/validate/keyword.js
 var require_keyword = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/keyword.js"(exports) {
+  "node_modules/ajv/dist/compile/validate/keyword.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.validateKeywordUsage = exports.validSchemaType = exports.funcKeywordCode = exports.macroKeywordCode = void 0;
@@ -1954,9 +1957,9 @@ var require_keyword = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/subschema.js
+// node_modules/ajv/dist/compile/validate/subschema.js
 var require_subschema = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/subschema.js"(exports) {
+  "node_modules/ajv/dist/compile/validate/subschema.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.extendSubschemaMode = exports.extendSubschemaData = exports.getSubschema = void 0;
@@ -2072,9 +2075,9 @@ var require_fast_deep_equal = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/json-schema-traverse/index.js
+// node_modules/json-schema-traverse/index.js
 var require_json_schema_traverse = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/json-schema-traverse/index.js"(exports, module) {
+  "node_modules/json-schema-traverse/index.js"(exports, module) {
     "use strict";
     var traverse = module.exports = function(schema, opts, cb) {
       if (typeof opts == "function") {
@@ -2160,9 +2163,9 @@ var require_json_schema_traverse = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/resolve.js
+// node_modules/ajv/dist/compile/resolve.js
 var require_resolve = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/resolve.js"(exports) {
+  "node_modules/ajv/dist/compile/resolve.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getSchemaRefs = exports.resolveUrl = exports.normalizeId = exports._getFullPath = exports.getFullPath = exports.inlineRef = void 0;
@@ -2316,9 +2319,9 @@ var require_resolve = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/index.js
+// node_modules/ajv/dist/compile/validate/index.js
 var require_validate = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/validate/index.js"(exports) {
+  "node_modules/ajv/dist/compile/validate/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getData = exports.KeywordCxt = exports.validateFunctionCode = void 0;
@@ -2824,9 +2827,9 @@ var require_validate = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/runtime/validation_error.js
+// node_modules/ajv/dist/runtime/validation_error.js
 var require_validation_error = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/runtime/validation_error.js"(exports) {
+  "node_modules/ajv/dist/runtime/validation_error.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var ValidationError = class extends Error {
@@ -2840,9 +2843,9 @@ var require_validation_error = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/ref_error.js
+// node_modules/ajv/dist/compile/ref_error.js
 var require_ref_error = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/ref_error.js"(exports) {
+  "node_modules/ajv/dist/compile/ref_error.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var resolve_1 = require_resolve();
@@ -2857,9 +2860,9 @@ var require_ref_error = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/index.js
+// node_modules/ajv/dist/compile/index.js
 var require_compile = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/compile/index.js"(exports) {
+  "node_modules/ajv/dist/compile/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.resolveSchema = exports.getCompilingSchema = exports.resolveRef = exports.compileSchema = exports.SchemaEnv = void 0;
@@ -3081,9 +3084,9 @@ var require_compile = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/refs/data.json
+// node_modules/ajv/dist/refs/data.json
 var require_data = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/refs/data.json"(exports, module) {
+  "node_modules/ajv/dist/refs/data.json"(exports, module) {
     module.exports = {
       $id: "https://raw.githubusercontent.com/ajv-validator/ajv/master/lib/refs/data.json#",
       description: "Meta-schema for $data reference (JSON AnySchema extension proposal)",
@@ -3641,7 +3644,12 @@ var require_fast_uri = __commonJS({
     }
     function resolve2(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
-      const resolved = resolveComponent(parse4(baseURI, schemelessOptions), parse4(relativeURI, schemelessOptions), schemelessOptions, true);
+      const { parsed: baseParsed, malformedAuthorityOrPort: baseMalformed } = parseWithStatus(baseURI, schemelessOptions);
+      const { parsed: relativeParsed, malformedAuthorityOrPort: relativeMalformed } = parseWithStatus(relativeURI, schemelessOptions);
+      if (baseMalformed || relativeMalformed) {
+        throw new Error(baseParsed.error || relativeParsed.error || "URI is malformed.");
+      }
+      const resolved = resolveComponent(baseParsed, relativeParsed, schemelessOptions, true);
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
@@ -3767,6 +3775,7 @@ var require_fast_uri = __commonJS({
     }
     var URI_PARSE = /^(?:([^#/:?]+):)?(?:\/\/((?:([^#/?@]*)@)?(\[[^#/?\]]+\]|[^#/:?]*)(?::(\d*))?))?([^#?]*)(?:\?([^#]*))?(?:#((?:.|[\n\r])*))?/u;
     var AUTHORITY_PREFIX = /^(?:[^#/:?]+:)?\/\/([^/?#]*)/;
+    var AUTHORITY_INTRODUCER_REGION = /^(?:[^#/:?]+:)?([/\\\t\n\r]*)/;
     function getParseError(parsed, matches) {
       if (matches[2] !== void 0 && parsed.path && parsed.path[0] !== "/") {
         return 'URI path must start with "/" when authority is present.';
@@ -3800,6 +3809,20 @@ var require_fast_uri = __commonJS({
       if (authorityMatch !== null && authorityMatch[1].indexOf("\\") !== -1) {
         parsed.error = "URI authority must not contain a literal backslash.";
         malformedAuthorityOrPort = true;
+      }
+      const introducerMatch = uri.match(AUTHORITY_INTRODUCER_REGION);
+      if (introducerMatch !== null) {
+        const region = introducerMatch[1];
+        const normalizedRegion = region.replace(/[\t\n\r]/g, "");
+        if (normalizedRegion.length >= 2) {
+          if (normalizedRegion.slice(0, 2) !== "//") {
+            parsed.error = parsed.error || "URI authority must not contain a literal backslash.";
+            malformedAuthorityOrPort = true;
+          } else if (region.length !== normalizedRegion.length) {
+            parsed.error = parsed.error || "URI authority introducer must not contain whitespace.";
+            malformedAuthorityOrPort = true;
+          }
+        }
       }
       const matches = uri.match(URI_PARSE);
       if (matches) {
@@ -3915,9 +3938,9 @@ var require_fast_uri = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/runtime/uri.js
+// node_modules/ajv/dist/runtime/uri.js
 var require_uri = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/runtime/uri.js"(exports) {
+  "node_modules/ajv/dist/runtime/uri.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var uri = require_fast_uri();
@@ -3926,9 +3949,9 @@ var require_uri = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/core.js
+// node_modules/ajv/dist/core.js
 var require_core = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/core.js"(exports) {
+  "node_modules/ajv/dist/core.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.CodeGen = exports.Name = exports.nil = exports.stringify = exports.str = exports._ = exports.KeywordCxt = void 0;
@@ -4284,12 +4307,12 @@ var require_core = __commonJS({
           return this;
         }
         keywordMetaschema.call(this, def);
-        const definition3 = {
+        const definition2 = {
           ...def,
           type: (0, dataType_1.getJSONTypes)(def.type),
           schemaType: (0, dataType_1.getJSONTypes)(def.schemaType)
         };
-        (0, util_1.eachItem)(keyword, definition3.type.length === 0 ? (k) => addRule.call(this, k, definition3) : (k) => definition3.type.forEach((t) => addRule.call(this, k, definition3, t)));
+        (0, util_1.eachItem)(keyword, definition2.type.length === 0 ? (k) => addRule.call(this, k, definition2) : (k) => definition2.type.forEach((t) => addRule.call(this, k, definition2, t)));
         return this;
       }
       getKeyword(keyword) {
@@ -4482,9 +4505,9 @@ var require_core = __commonJS({
         throw new Error('$data keyword must have "code" or "validate" function');
       }
     }
-    function addRule(keyword, definition3, dataType) {
+    function addRule(keyword, definition2, dataType) {
       var _a3;
-      const post = definition3 === null || definition3 === void 0 ? void 0 : definition3.post;
+      const post = definition2 === null || definition2 === void 0 ? void 0 : definition2.post;
       if (dataType && post)
         throw new Error('keyword with "post" flag cannot have "type"');
       const { RULES } = this;
@@ -4494,22 +4517,22 @@ var require_core = __commonJS({
         RULES.rules.push(ruleGroup);
       }
       RULES.keywords[keyword] = true;
-      if (!definition3)
+      if (!definition2)
         return;
       const rule = {
         keyword,
         definition: {
-          ...definition3,
-          type: (0, dataType_1.getJSONTypes)(definition3.type),
-          schemaType: (0, dataType_1.getJSONTypes)(definition3.schemaType)
+          ...definition2,
+          type: (0, dataType_1.getJSONTypes)(definition2.type),
+          schemaType: (0, dataType_1.getJSONTypes)(definition2.schemaType)
         }
       };
-      if (definition3.before)
-        addBeforeRule.call(this, ruleGroup, rule, definition3.before);
+      if (definition2.before)
+        addBeforeRule.call(this, ruleGroup, rule, definition2.before);
       else
         ruleGroup.rules.push(rule);
       RULES.all[keyword] = rule;
-      (_a3 = definition3.implements) === null || _a3 === void 0 ? void 0 : _a3.forEach((kwd) => this.addKeyword(kwd));
+      (_a3 = definition2.implements) === null || _a3 === void 0 ? void 0 : _a3.forEach((kwd) => this.addKeyword(kwd));
     }
     function addBeforeRule(ruleGroup, rule, before) {
       const i = ruleGroup.rules.findIndex((_rule) => _rule.keyword === before);
@@ -4537,9 +4560,9 @@ var require_core = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/core/id.js
+// node_modules/ajv/dist/vocabularies/core/id.js
 var require_id = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/core/id.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/core/id.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var def = {
@@ -4552,9 +4575,9 @@ var require_id = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/core/ref.js
+// node_modules/ajv/dist/vocabularies/core/ref.js
 var require_ref = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/core/ref.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/core/ref.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.callRef = exports.getValidate = void 0;
@@ -4674,9 +4697,9 @@ var require_ref = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/core/index.js
+// node_modules/ajv/dist/vocabularies/core/index.js
 var require_core2 = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/core/index.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/core/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var id_1 = require_id();
@@ -4695,9 +4718,9 @@ var require_core2 = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/limitNumber.js
+// node_modules/ajv/dist/vocabularies/validation/limitNumber.js
 var require_limitNumber = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/limitNumber.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/validation/limitNumber.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -4727,9 +4750,9 @@ var require_limitNumber = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/multipleOf.js
+// node_modules/ajv/dist/vocabularies/validation/multipleOf.js
 var require_multipleOf = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/multipleOf.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/validation/multipleOf.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -4755,9 +4778,9 @@ var require_multipleOf = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/runtime/ucs2length.js
+// node_modules/ajv/dist/runtime/ucs2length.js
 var require_ucs2length = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/runtime/ucs2length.js"(exports) {
+  "node_modules/ajv/dist/runtime/ucs2length.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function ucs2length(str) {
@@ -4781,9 +4804,9 @@ var require_ucs2length = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/limitLength.js
+// node_modules/ajv/dist/vocabularies/validation/limitLength.js
 var require_limitLength = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/limitLength.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/validation/limitLength.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -4813,9 +4836,9 @@ var require_limitLength = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/pattern.js
+// node_modules/ajv/dist/vocabularies/validation/pattern.js
 var require_pattern = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/pattern.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/validation/pattern.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -4850,9 +4873,9 @@ var require_pattern = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/limitProperties.js
+// node_modules/ajv/dist/vocabularies/validation/limitProperties.js
 var require_limitProperties = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/limitProperties.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/validation/limitProperties.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -4879,9 +4902,9 @@ var require_limitProperties = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/required.js
+// node_modules/ajv/dist/vocabularies/validation/required.js
 var require_required = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/required.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/validation/required.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -4961,9 +4984,9 @@ var require_required = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/limitItems.js
+// node_modules/ajv/dist/vocabularies/validation/limitItems.js
 var require_limitItems = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/limitItems.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/validation/limitItems.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -4990,9 +5013,9 @@ var require_limitItems = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/runtime/equal.js
+// node_modules/ajv/dist/runtime/equal.js
 var require_equal = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/runtime/equal.js"(exports) {
+  "node_modules/ajv/dist/runtime/equal.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var equal = require_fast_deep_equal();
@@ -5001,9 +5024,9 @@ var require_equal = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/uniqueItems.js
+// node_modules/ajv/dist/vocabularies/validation/uniqueItems.js
 var require_uniqueItems = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/uniqueItems.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/validation/uniqueItems.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var dataType_1 = require_dataType();
@@ -5068,9 +5091,9 @@ var require_uniqueItems = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/const.js
+// node_modules/ajv/dist/vocabularies/validation/const.js
 var require_const = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/const.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/validation/const.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -5097,9 +5120,9 @@ var require_const = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/enum.js
+// node_modules/ajv/dist/vocabularies/validation/enum.js
 var require_enum = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/enum.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/validation/enum.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -5146,9 +5169,9 @@ var require_enum = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/index.js
+// node_modules/ajv/dist/vocabularies/validation/index.js
 var require_validation = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/validation/index.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/validation/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var limitNumber_1 = require_limitNumber();
@@ -5184,9 +5207,9 @@ var require_validation = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/additionalItems.js
+// node_modules/ajv/dist/vocabularies/applicator/additionalItems.js
 var require_additionalItems = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/additionalItems.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/additionalItems.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.validateAdditionalItems = void 0;
@@ -5237,9 +5260,9 @@ var require_additionalItems = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/items.js
+// node_modules/ajv/dist/vocabularies/applicator/items.js
 var require_items = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/items.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/items.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.validateTuple = void 0;
@@ -5294,9 +5317,9 @@ var require_items = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/prefixItems.js
+// node_modules/ajv/dist/vocabularies/applicator/prefixItems.js
 var require_prefixItems = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/prefixItems.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/prefixItems.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var items_1 = require_items();
@@ -5311,9 +5334,9 @@ var require_prefixItems = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/items2020.js
+// node_modules/ajv/dist/vocabularies/applicator/items2020.js
 var require_items2020 = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/items2020.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/items2020.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -5346,9 +5369,9 @@ var require_items2020 = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/contains.js
+// node_modules/ajv/dist/vocabularies/applicator/contains.js
 var require_contains = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/contains.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/contains.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -5440,9 +5463,9 @@ var require_contains = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/dependencies.js
+// node_modules/ajv/dist/vocabularies/applicator/dependencies.js
 var require_dependencies = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/dependencies.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/dependencies.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.validateSchemaDeps = exports.validatePropertyDeps = exports.error = void 0;
@@ -5534,9 +5557,9 @@ var require_dependencies = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/propertyNames.js
+// node_modules/ajv/dist/vocabularies/applicator/propertyNames.js
 var require_propertyNames = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/propertyNames.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/propertyNames.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -5577,9 +5600,9 @@ var require_propertyNames = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js
+// node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js
 var require_additionalProperties = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -5683,9 +5706,9 @@ var require_additionalProperties = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/properties.js
+// node_modules/ajv/dist/vocabularies/applicator/properties.js
 var require_properties = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/properties.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/properties.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var validate_1 = require_validate();
@@ -5741,9 +5764,9 @@ var require_properties = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/patternProperties.js
+// node_modules/ajv/dist/vocabularies/applicator/patternProperties.js
 var require_patternProperties = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/patternProperties.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/patternProperties.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -5815,9 +5838,9 @@ var require_patternProperties = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/not.js
+// node_modules/ajv/dist/vocabularies/applicator/not.js
 var require_not = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/not.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/not.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var util_1 = require_util();
@@ -5846,9 +5869,9 @@ var require_not = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/anyOf.js
+// node_modules/ajv/dist/vocabularies/applicator/anyOf.js
 var require_anyOf = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/anyOf.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/anyOf.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -5863,9 +5886,9 @@ var require_anyOf = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/oneOf.js
+// node_modules/ajv/dist/vocabularies/applicator/oneOf.js
 var require_oneOf = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/oneOf.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/oneOf.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -5921,9 +5944,9 @@ var require_oneOf = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/allOf.js
+// node_modules/ajv/dist/vocabularies/applicator/allOf.js
 var require_allOf = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/allOf.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/allOf.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var util_1 = require_util();
@@ -5948,9 +5971,9 @@ var require_allOf = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/if.js
+// node_modules/ajv/dist/vocabularies/applicator/if.js
 var require_if = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/if.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/if.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -6017,9 +6040,9 @@ var require_if = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/thenElse.js
+// node_modules/ajv/dist/vocabularies/applicator/thenElse.js
 var require_thenElse = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/thenElse.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/thenElse.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var util_1 = require_util();
@@ -6035,9 +6058,9 @@ var require_thenElse = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/index.js
+// node_modules/ajv/dist/vocabularies/applicator/index.js
 var require_applicator = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/applicator/index.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/applicator/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var additionalItems_1 = require_additionalItems();
@@ -6083,9 +6106,9 @@ var require_applicator = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/format/format.js
+// node_modules/ajv/dist/vocabularies/format/format.js
 var require_format = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/format/format.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/format/format.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -6173,9 +6196,9 @@ var require_format = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/format/index.js
+// node_modules/ajv/dist/vocabularies/format/index.js
 var require_format2 = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/format/index.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/format/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var format_1 = require_format();
@@ -6184,9 +6207,9 @@ var require_format2 = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/metadata.js
+// node_modules/ajv/dist/vocabularies/metadata.js
 var require_metadata = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/metadata.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/metadata.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.contentVocabulary = exports.metadataVocabulary = void 0;
@@ -6207,9 +6230,9 @@ var require_metadata = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/draft7.js
+// node_modules/ajv/dist/vocabularies/draft7.js
 var require_draft7 = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/draft7.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/draft7.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var core_1 = require_core2();
@@ -6229,9 +6252,9 @@ var require_draft7 = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/discriminator/types.js
+// node_modules/ajv/dist/vocabularies/discriminator/types.js
 var require_types = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/discriminator/types.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/discriminator/types.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DiscrError = void 0;
@@ -6243,9 +6266,9 @@ var require_types = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/discriminator/index.js
+// node_modules/ajv/dist/vocabularies/discriminator/index.js
 var require_discriminator = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/vocabularies/discriminator/index.js"(exports) {
+  "node_modules/ajv/dist/vocabularies/discriminator/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -6348,9 +6371,9 @@ var require_discriminator = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/refs/json-schema-draft-07.json
+// node_modules/ajv/dist/refs/json-schema-draft-07.json
 var require_json_schema_draft_07 = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/refs/json-schema-draft-07.json"(exports, module) {
+  "node_modules/ajv/dist/refs/json-schema-draft-07.json"(exports, module) {
     module.exports = {
       $schema: "http://json-schema.org/draft-07/schema#",
       $id: "http://json-schema.org/draft-07/schema#",
@@ -6505,9 +6528,9 @@ var require_json_schema_draft_07 = __commonJS({
   }
 });
 
-// node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/ajv.js
+// node_modules/ajv/dist/ajv.js
 var require_ajv = __commonJS({
-  "node_modules/@modelcontextprotocol/sdk/node_modules/ajv/dist/ajv.js"(exports, module) {
+  "node_modules/ajv/dist/ajv.js"(exports, module) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.MissingRefError = exports.ValidationError = exports.CodeGen = exports.Name = exports.nil = exports.stringify = exports.str = exports._ = exports.KeywordCxt = exports.Ajv = void 0;
@@ -6778,5709 +6801,14 @@ var require_formats = __commonJS({
   }
 });
 
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/codegen/code.js
-var require_code3 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/codegen/code.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.regexpCode = exports.getEsmExportName = exports.getProperty = exports.safeStringify = exports.stringify = exports.strConcat = exports.addCodeArg = exports.str = exports._ = exports.nil = exports._Code = exports.Name = exports.IDENTIFIER = exports._CodeOrName = void 0;
-    var _CodeOrName = class {
-    };
-    exports._CodeOrName = _CodeOrName;
-    exports.IDENTIFIER = /^[a-z$_][a-z$_0-9]*$/i;
-    var Name = class extends _CodeOrName {
-      constructor(s) {
-        super();
-        if (!exports.IDENTIFIER.test(s))
-          throw new Error("CodeGen: name must be a valid identifier");
-        this.str = s;
-      }
-      toString() {
-        return this.str;
-      }
-      emptyStr() {
-        return false;
-      }
-      get names() {
-        return { [this.str]: 1 };
-      }
-    };
-    exports.Name = Name;
-    var _Code = class extends _CodeOrName {
-      constructor(code2) {
-        super();
-        this._items = typeof code2 === "string" ? [code2] : code2;
-      }
-      toString() {
-        return this.str;
-      }
-      emptyStr() {
-        if (this._items.length > 1)
-          return false;
-        const item = this._items[0];
-        return item === "" || item === '""';
-      }
-      get str() {
-        var _a3;
-        return (_a3 = this._str) !== null && _a3 !== void 0 ? _a3 : this._str = this._items.reduce((s, c) => `${s}${c}`, "");
-      }
-      get names() {
-        var _a3;
-        return (_a3 = this._names) !== null && _a3 !== void 0 ? _a3 : this._names = this._items.reduce((names, c) => {
-          if (c instanceof Name)
-            names[c.str] = (names[c.str] || 0) + 1;
-          return names;
-        }, {});
-      }
-    };
-    exports._Code = _Code;
-    exports.nil = new _Code("");
-    function _(strs, ...args) {
-      const code2 = [strs[0]];
-      let i = 0;
-      while (i < args.length) {
-        addCodeArg(code2, args[i]);
-        code2.push(strs[++i]);
-      }
-      return new _Code(code2);
-    }
-    exports._ = _;
-    var plus = new _Code("+");
-    function str(strs, ...args) {
-      const expr = [safeStringify(strs[0])];
-      let i = 0;
-      while (i < args.length) {
-        expr.push(plus);
-        addCodeArg(expr, args[i]);
-        expr.push(plus, safeStringify(strs[++i]));
-      }
-      optimize(expr);
-      return new _Code(expr);
-    }
-    exports.str = str;
-    function addCodeArg(code2, arg) {
-      if (arg instanceof _Code)
-        code2.push(...arg._items);
-      else if (arg instanceof Name)
-        code2.push(arg);
-      else
-        code2.push(interpolate(arg));
-    }
-    exports.addCodeArg = addCodeArg;
-    function optimize(expr) {
-      let i = 1;
-      while (i < expr.length - 1) {
-        if (expr[i] === plus) {
-          const res = mergeExprItems(expr[i - 1], expr[i + 1]);
-          if (res !== void 0) {
-            expr.splice(i - 1, 3, res);
-            continue;
-          }
-          expr[i++] = "+";
-        }
-        i++;
-      }
-    }
-    function mergeExprItems(a, b) {
-      if (b === '""')
-        return a;
-      if (a === '""')
-        return b;
-      if (typeof a == "string") {
-        if (b instanceof Name || a[a.length - 1] !== '"')
-          return;
-        if (typeof b != "string")
-          return `${a.slice(0, -1)}${b}"`;
-        if (b[0] === '"')
-          return a.slice(0, -1) + b.slice(1);
-        return;
-      }
-      if (typeof b == "string" && b[0] === '"' && !(a instanceof Name))
-        return `"${a}${b.slice(1)}`;
-      return;
-    }
-    function strConcat(c1, c2) {
-      return c2.emptyStr() ? c1 : c1.emptyStr() ? c2 : str`${c1}${c2}`;
-    }
-    exports.strConcat = strConcat;
-    function interpolate(x) {
-      return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
-    }
-    function stringify(x) {
-      return new _Code(safeStringify(x));
-    }
-    exports.stringify = stringify;
-    function safeStringify(x) {
-      return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
-    }
-    exports.safeStringify = safeStringify;
-    function getProperty(key) {
-      return typeof key == "string" && exports.IDENTIFIER.test(key) ? new _Code(`.${key}`) : _`[${key}]`;
-    }
-    exports.getProperty = getProperty;
-    function getEsmExportName(key) {
-      if (typeof key == "string" && exports.IDENTIFIER.test(key)) {
-        return new _Code(`${key}`);
-      }
-      throw new Error(`CodeGen: invalid export name: ${key}, use explicit $id name mapping`);
-    }
-    exports.getEsmExportName = getEsmExportName;
-    function regexpCode(rx) {
-      return new _Code(rx.toString());
-    }
-    exports.regexpCode = regexpCode;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/codegen/scope.js
-var require_scope2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/codegen/scope.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.ValueScope = exports.ValueScopeName = exports.Scope = exports.varKinds = exports.UsedValueState = void 0;
-    var code_1 = require_code3();
-    var ValueError = class extends Error {
-      constructor(name) {
-        super(`CodeGen: "code" for ${name} not defined`);
-        this.value = name.value;
-      }
-    };
-    var UsedValueState;
-    (function(UsedValueState2) {
-      UsedValueState2[UsedValueState2["Started"] = 0] = "Started";
-      UsedValueState2[UsedValueState2["Completed"] = 1] = "Completed";
-    })(UsedValueState || (exports.UsedValueState = UsedValueState = {}));
-    exports.varKinds = {
-      const: new code_1.Name("const"),
-      let: new code_1.Name("let"),
-      var: new code_1.Name("var")
-    };
-    var Scope = class {
-      constructor({ prefixes, parent } = {}) {
-        this._names = {};
-        this._prefixes = prefixes;
-        this._parent = parent;
-      }
-      toName(nameOrPrefix) {
-        return nameOrPrefix instanceof code_1.Name ? nameOrPrefix : this.name(nameOrPrefix);
-      }
-      name(prefix) {
-        return new code_1.Name(this._newName(prefix));
-      }
-      _newName(prefix) {
-        const ng = this._names[prefix] || this._nameGroup(prefix);
-        return `${prefix}${ng.index++}`;
-      }
-      _nameGroup(prefix) {
-        var _a3, _b;
-        if (((_b = (_a3 = this._parent) === null || _a3 === void 0 ? void 0 : _a3._prefixes) === null || _b === void 0 ? void 0 : _b.has(prefix)) || this._prefixes && !this._prefixes.has(prefix)) {
-          throw new Error(`CodeGen: prefix "${prefix}" is not allowed in this scope`);
-        }
-        return this._names[prefix] = { prefix, index: 0 };
-      }
-    };
-    exports.Scope = Scope;
-    var ValueScopeName = class extends code_1.Name {
-      constructor(prefix, nameStr) {
-        super(nameStr);
-        this.prefix = prefix;
-      }
-      setValue(value, { property, itemIndex }) {
-        this.value = value;
-        this.scopePath = (0, code_1._)`.${new code_1.Name(property)}[${itemIndex}]`;
-      }
-    };
-    exports.ValueScopeName = ValueScopeName;
-    var line = (0, code_1._)`\n`;
-    var ValueScope = class extends Scope {
-      constructor(opts) {
-        super(opts);
-        this._values = {};
-        this._scope = opts.scope;
-        this.opts = { ...opts, _n: opts.lines ? line : code_1.nil };
-      }
-      get() {
-        return this._scope;
-      }
-      name(prefix) {
-        return new ValueScopeName(prefix, this._newName(prefix));
-      }
-      value(nameOrPrefix, value) {
-        var _a3;
-        if (value.ref === void 0)
-          throw new Error("CodeGen: ref must be passed in value");
-        const name = this.toName(nameOrPrefix);
-        const { prefix } = name;
-        const valueKey = (_a3 = value.key) !== null && _a3 !== void 0 ? _a3 : value.ref;
-        let vs = this._values[prefix];
-        if (vs) {
-          const _name = vs.get(valueKey);
-          if (_name)
-            return _name;
-        } else {
-          vs = this._values[prefix] = /* @__PURE__ */ new Map();
-        }
-        vs.set(valueKey, name);
-        const s = this._scope[prefix] || (this._scope[prefix] = []);
-        const itemIndex = s.length;
-        s[itemIndex] = value.ref;
-        name.setValue(value, { property: prefix, itemIndex });
-        return name;
-      }
-      getValue(prefix, keyOrRef) {
-        const vs = this._values[prefix];
-        if (!vs)
-          return;
-        return vs.get(keyOrRef);
-      }
-      scopeRefs(scopeName, values = this._values) {
-        return this._reduceValues(values, (name) => {
-          if (name.scopePath === void 0)
-            throw new Error(`CodeGen: name "${name}" has no value`);
-          return (0, code_1._)`${scopeName}${name.scopePath}`;
-        });
-      }
-      scopeCode(values = this._values, usedValues, getCode) {
-        return this._reduceValues(values, (name) => {
-          if (name.value === void 0)
-            throw new Error(`CodeGen: name "${name}" has no value`);
-          return name.value.code;
-        }, usedValues, getCode);
-      }
-      _reduceValues(values, valueCode, usedValues = {}, getCode) {
-        let code2 = code_1.nil;
-        for (const prefix in values) {
-          const vs = values[prefix];
-          if (!vs)
-            continue;
-          const nameSet = usedValues[prefix] = usedValues[prefix] || /* @__PURE__ */ new Map();
-          vs.forEach((name) => {
-            if (nameSet.has(name))
-              return;
-            nameSet.set(name, UsedValueState.Started);
-            let c = valueCode(name);
-            if (c) {
-              const def = this.opts.es5 ? exports.varKinds.var : exports.varKinds.const;
-              code2 = (0, code_1._)`${code2}${def} ${name} = ${c};${this.opts._n}`;
-            } else if (c = getCode === null || getCode === void 0 ? void 0 : getCode(name)) {
-              code2 = (0, code_1._)`${code2}${c}${this.opts._n}`;
-            } else {
-              throw new ValueError(name);
-            }
-            nameSet.set(name, UsedValueState.Completed);
-          });
-        }
-        return code2;
-      }
-    };
-    exports.ValueScope = ValueScope;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/codegen/index.js
-var require_codegen2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/codegen/index.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.or = exports.and = exports.not = exports.CodeGen = exports.operators = exports.varKinds = exports.ValueScopeName = exports.ValueScope = exports.Scope = exports.Name = exports.regexpCode = exports.stringify = exports.getProperty = exports.nil = exports.strConcat = exports.str = exports._ = void 0;
-    var code_1 = require_code3();
-    var scope_1 = require_scope2();
-    var code_2 = require_code3();
-    Object.defineProperty(exports, "_", { enumerable: true, get: function() {
-      return code_2._;
-    } });
-    Object.defineProperty(exports, "str", { enumerable: true, get: function() {
-      return code_2.str;
-    } });
-    Object.defineProperty(exports, "strConcat", { enumerable: true, get: function() {
-      return code_2.strConcat;
-    } });
-    Object.defineProperty(exports, "nil", { enumerable: true, get: function() {
-      return code_2.nil;
-    } });
-    Object.defineProperty(exports, "getProperty", { enumerable: true, get: function() {
-      return code_2.getProperty;
-    } });
-    Object.defineProperty(exports, "stringify", { enumerable: true, get: function() {
-      return code_2.stringify;
-    } });
-    Object.defineProperty(exports, "regexpCode", { enumerable: true, get: function() {
-      return code_2.regexpCode;
-    } });
-    Object.defineProperty(exports, "Name", { enumerable: true, get: function() {
-      return code_2.Name;
-    } });
-    var scope_2 = require_scope2();
-    Object.defineProperty(exports, "Scope", { enumerable: true, get: function() {
-      return scope_2.Scope;
-    } });
-    Object.defineProperty(exports, "ValueScope", { enumerable: true, get: function() {
-      return scope_2.ValueScope;
-    } });
-    Object.defineProperty(exports, "ValueScopeName", { enumerable: true, get: function() {
-      return scope_2.ValueScopeName;
-    } });
-    Object.defineProperty(exports, "varKinds", { enumerable: true, get: function() {
-      return scope_2.varKinds;
-    } });
-    exports.operators = {
-      GT: new code_1._Code(">"),
-      GTE: new code_1._Code(">="),
-      LT: new code_1._Code("<"),
-      LTE: new code_1._Code("<="),
-      EQ: new code_1._Code("==="),
-      NEQ: new code_1._Code("!=="),
-      NOT: new code_1._Code("!"),
-      OR: new code_1._Code("||"),
-      AND: new code_1._Code("&&"),
-      ADD: new code_1._Code("+")
-    };
-    var Node = class {
-      optimizeNodes() {
-        return this;
-      }
-      optimizeNames(_names, _constants) {
-        return this;
-      }
-    };
-    var Def = class extends Node {
-      constructor(varKind, name, rhs) {
-        super();
-        this.varKind = varKind;
-        this.name = name;
-        this.rhs = rhs;
-      }
-      render({ es5, _n }) {
-        const varKind = es5 ? scope_1.varKinds.var : this.varKind;
-        const rhs = this.rhs === void 0 ? "" : ` = ${this.rhs}`;
-        return `${varKind} ${this.name}${rhs};` + _n;
-      }
-      optimizeNames(names, constants) {
-        if (!names[this.name.str])
-          return;
-        if (this.rhs)
-          this.rhs = optimizeExpr(this.rhs, names, constants);
-        return this;
-      }
-      get names() {
-        return this.rhs instanceof code_1._CodeOrName ? this.rhs.names : {};
-      }
-    };
-    var Assign = class extends Node {
-      constructor(lhs, rhs, sideEffects) {
-        super();
-        this.lhs = lhs;
-        this.rhs = rhs;
-        this.sideEffects = sideEffects;
-      }
-      render({ _n }) {
-        return `${this.lhs} = ${this.rhs};` + _n;
-      }
-      optimizeNames(names, constants) {
-        if (this.lhs instanceof code_1.Name && !names[this.lhs.str] && !this.sideEffects)
-          return;
-        this.rhs = optimizeExpr(this.rhs, names, constants);
-        return this;
-      }
-      get names() {
-        const names = this.lhs instanceof code_1.Name ? {} : { ...this.lhs.names };
-        return addExprNames(names, this.rhs);
-      }
-    };
-    var AssignOp = class extends Assign {
-      constructor(lhs, op, rhs, sideEffects) {
-        super(lhs, rhs, sideEffects);
-        this.op = op;
-      }
-      render({ _n }) {
-        return `${this.lhs} ${this.op}= ${this.rhs};` + _n;
-      }
-    };
-    var Label = class extends Node {
-      constructor(label) {
-        super();
-        this.label = label;
-        this.names = {};
-      }
-      render({ _n }) {
-        return `${this.label}:` + _n;
-      }
-    };
-    var Break = class extends Node {
-      constructor(label) {
-        super();
-        this.label = label;
-        this.names = {};
-      }
-      render({ _n }) {
-        const label = this.label ? ` ${this.label}` : "";
-        return `break${label};` + _n;
-      }
-    };
-    var Throw = class extends Node {
-      constructor(error51) {
-        super();
-        this.error = error51;
-      }
-      render({ _n }) {
-        return `throw ${this.error};` + _n;
-      }
-      get names() {
-        return this.error.names;
-      }
-    };
-    var AnyCode = class extends Node {
-      constructor(code2) {
-        super();
-        this.code = code2;
-      }
-      render({ _n }) {
-        return `${this.code};` + _n;
-      }
-      optimizeNodes() {
-        return `${this.code}` ? this : void 0;
-      }
-      optimizeNames(names, constants) {
-        this.code = optimizeExpr(this.code, names, constants);
-        return this;
-      }
-      get names() {
-        return this.code instanceof code_1._CodeOrName ? this.code.names : {};
-      }
-    };
-    var ParentNode = class extends Node {
-      constructor(nodes = []) {
-        super();
-        this.nodes = nodes;
-      }
-      render(opts) {
-        return this.nodes.reduce((code2, n) => code2 + n.render(opts), "");
-      }
-      optimizeNodes() {
-        const { nodes } = this;
-        let i = nodes.length;
-        while (i--) {
-          const n = nodes[i].optimizeNodes();
-          if (Array.isArray(n))
-            nodes.splice(i, 1, ...n);
-          else if (n)
-            nodes[i] = n;
-          else
-            nodes.splice(i, 1);
-        }
-        return nodes.length > 0 ? this : void 0;
-      }
-      optimizeNames(names, constants) {
-        const { nodes } = this;
-        let i = nodes.length;
-        while (i--) {
-          const n = nodes[i];
-          if (n.optimizeNames(names, constants))
-            continue;
-          subtractNames(names, n.names);
-          nodes.splice(i, 1);
-        }
-        return nodes.length > 0 ? this : void 0;
-      }
-      get names() {
-        return this.nodes.reduce((names, n) => addNames(names, n.names), {});
-      }
-    };
-    var BlockNode = class extends ParentNode {
-      render(opts) {
-        return "{" + opts._n + super.render(opts) + "}" + opts._n;
-      }
-    };
-    var Root = class extends ParentNode {
-    };
-    var Else = class extends BlockNode {
-    };
-    Else.kind = "else";
-    var If = class _If extends BlockNode {
-      constructor(condition, nodes) {
-        super(nodes);
-        this.condition = condition;
-      }
-      render(opts) {
-        let code2 = `if(${this.condition})` + super.render(opts);
-        if (this.else)
-          code2 += "else " + this.else.render(opts);
-        return code2;
-      }
-      optimizeNodes() {
-        super.optimizeNodes();
-        const cond = this.condition;
-        if (cond === true)
-          return this.nodes;
-        let e = this.else;
-        if (e) {
-          const ns = e.optimizeNodes();
-          e = this.else = Array.isArray(ns) ? new Else(ns) : ns;
-        }
-        if (e) {
-          if (cond === false)
-            return e instanceof _If ? e : e.nodes;
-          if (this.nodes.length)
-            return this;
-          return new _If(not(cond), e instanceof _If ? [e] : e.nodes);
-        }
-        if (cond === false || !this.nodes.length)
-          return void 0;
-        return this;
-      }
-      optimizeNames(names, constants) {
-        var _a3;
-        this.else = (_a3 = this.else) === null || _a3 === void 0 ? void 0 : _a3.optimizeNames(names, constants);
-        if (!(super.optimizeNames(names, constants) || this.else))
-          return;
-        this.condition = optimizeExpr(this.condition, names, constants);
-        return this;
-      }
-      get names() {
-        const names = super.names;
-        addExprNames(names, this.condition);
-        if (this.else)
-          addNames(names, this.else.names);
-        return names;
-      }
-    };
-    If.kind = "if";
-    var For = class extends BlockNode {
-    };
-    For.kind = "for";
-    var ForLoop = class extends For {
-      constructor(iteration) {
-        super();
-        this.iteration = iteration;
-      }
-      render(opts) {
-        return `for(${this.iteration})` + super.render(opts);
-      }
-      optimizeNames(names, constants) {
-        if (!super.optimizeNames(names, constants))
-          return;
-        this.iteration = optimizeExpr(this.iteration, names, constants);
-        return this;
-      }
-      get names() {
-        return addNames(super.names, this.iteration.names);
-      }
-    };
-    var ForRange = class extends For {
-      constructor(varKind, name, from, to) {
-        super();
-        this.varKind = varKind;
-        this.name = name;
-        this.from = from;
-        this.to = to;
-      }
-      render(opts) {
-        const varKind = opts.es5 ? scope_1.varKinds.var : this.varKind;
-        const { name, from, to } = this;
-        return `for(${varKind} ${name}=${from}; ${name}<${to}; ${name}++)` + super.render(opts);
-      }
-      get names() {
-        const names = addExprNames(super.names, this.from);
-        return addExprNames(names, this.to);
-      }
-    };
-    var ForIter = class extends For {
-      constructor(loop, varKind, name, iterable) {
-        super();
-        this.loop = loop;
-        this.varKind = varKind;
-        this.name = name;
-        this.iterable = iterable;
-      }
-      render(opts) {
-        return `for(${this.varKind} ${this.name} ${this.loop} ${this.iterable})` + super.render(opts);
-      }
-      optimizeNames(names, constants) {
-        if (!super.optimizeNames(names, constants))
-          return;
-        this.iterable = optimizeExpr(this.iterable, names, constants);
-        return this;
-      }
-      get names() {
-        return addNames(super.names, this.iterable.names);
-      }
-    };
-    var Func = class extends BlockNode {
-      constructor(name, args, async) {
-        super();
-        this.name = name;
-        this.args = args;
-        this.async = async;
-      }
-      render(opts) {
-        const _async = this.async ? "async " : "";
-        return `${_async}function ${this.name}(${this.args})` + super.render(opts);
-      }
-    };
-    Func.kind = "func";
-    var Return = class extends ParentNode {
-      render(opts) {
-        return "return " + super.render(opts);
-      }
-    };
-    Return.kind = "return";
-    var Try = class extends BlockNode {
-      render(opts) {
-        let code2 = "try" + super.render(opts);
-        if (this.catch)
-          code2 += this.catch.render(opts);
-        if (this.finally)
-          code2 += this.finally.render(opts);
-        return code2;
-      }
-      optimizeNodes() {
-        var _a3, _b;
-        super.optimizeNodes();
-        (_a3 = this.catch) === null || _a3 === void 0 ? void 0 : _a3.optimizeNodes();
-        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNodes();
-        return this;
-      }
-      optimizeNames(names, constants) {
-        var _a3, _b;
-        super.optimizeNames(names, constants);
-        (_a3 = this.catch) === null || _a3 === void 0 ? void 0 : _a3.optimizeNames(names, constants);
-        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants);
-        return this;
-      }
-      get names() {
-        const names = super.names;
-        if (this.catch)
-          addNames(names, this.catch.names);
-        if (this.finally)
-          addNames(names, this.finally.names);
-        return names;
-      }
-    };
-    var Catch = class extends BlockNode {
-      constructor(error51) {
-        super();
-        this.error = error51;
-      }
-      render(opts) {
-        return `catch(${this.error})` + super.render(opts);
-      }
-    };
-    Catch.kind = "catch";
-    var Finally = class extends BlockNode {
-      render(opts) {
-        return "finally" + super.render(opts);
-      }
-    };
-    Finally.kind = "finally";
-    var CodeGen = class {
-      constructor(extScope, opts = {}) {
-        this._values = {};
-        this._blockStarts = [];
-        this._constants = {};
-        this.opts = { ...opts, _n: opts.lines ? "\n" : "" };
-        this._extScope = extScope;
-        this._scope = new scope_1.Scope({ parent: extScope });
-        this._nodes = [new Root()];
-      }
-      toString() {
-        return this._root.render(this.opts);
-      }
-      // returns unique name in the internal scope
-      name(prefix) {
-        return this._scope.name(prefix);
-      }
-      // reserves unique name in the external scope
-      scopeName(prefix) {
-        return this._extScope.name(prefix);
-      }
-      // reserves unique name in the external scope and assigns value to it
-      scopeValue(prefixOrName, value) {
-        const name = this._extScope.value(prefixOrName, value);
-        const vs = this._values[name.prefix] || (this._values[name.prefix] = /* @__PURE__ */ new Set());
-        vs.add(name);
-        return name;
-      }
-      getScopeValue(prefix, keyOrRef) {
-        return this._extScope.getValue(prefix, keyOrRef);
-      }
-      // return code that assigns values in the external scope to the names that are used internally
-      // (same names that were returned by gen.scopeName or gen.scopeValue)
-      scopeRefs(scopeName) {
-        return this._extScope.scopeRefs(scopeName, this._values);
-      }
-      scopeCode() {
-        return this._extScope.scopeCode(this._values);
-      }
-      _def(varKind, nameOrPrefix, rhs, constant) {
-        const name = this._scope.toName(nameOrPrefix);
-        if (rhs !== void 0 && constant)
-          this._constants[name.str] = rhs;
-        this._leafNode(new Def(varKind, name, rhs));
-        return name;
-      }
-      // `const` declaration (`var` in es5 mode)
-      const(nameOrPrefix, rhs, _constant) {
-        return this._def(scope_1.varKinds.const, nameOrPrefix, rhs, _constant);
-      }
-      // `let` declaration with optional assignment (`var` in es5 mode)
-      let(nameOrPrefix, rhs, _constant) {
-        return this._def(scope_1.varKinds.let, nameOrPrefix, rhs, _constant);
-      }
-      // `var` declaration with optional assignment
-      var(nameOrPrefix, rhs, _constant) {
-        return this._def(scope_1.varKinds.var, nameOrPrefix, rhs, _constant);
-      }
-      // assignment code
-      assign(lhs, rhs, sideEffects) {
-        return this._leafNode(new Assign(lhs, rhs, sideEffects));
-      }
-      // `+=` code
-      add(lhs, rhs) {
-        return this._leafNode(new AssignOp(lhs, exports.operators.ADD, rhs));
-      }
-      // appends passed SafeExpr to code or executes Block
-      code(c) {
-        if (typeof c == "function")
-          c();
-        else if (c !== code_1.nil)
-          this._leafNode(new AnyCode(c));
-        return this;
-      }
-      // returns code for object literal for the passed argument list of key-value pairs
-      object(...keyValues) {
-        const code2 = ["{"];
-        for (const [key, value] of keyValues) {
-          if (code2.length > 1)
-            code2.push(",");
-          code2.push(key);
-          if (key !== value || this.opts.es5) {
-            code2.push(":");
-            (0, code_1.addCodeArg)(code2, value);
-          }
-        }
-        code2.push("}");
-        return new code_1._Code(code2);
-      }
-      // `if` clause (or statement if `thenBody` and, optionally, `elseBody` are passed)
-      if(condition, thenBody, elseBody) {
-        this._blockNode(new If(condition));
-        if (thenBody && elseBody) {
-          this.code(thenBody).else().code(elseBody).endIf();
-        } else if (thenBody) {
-          this.code(thenBody).endIf();
-        } else if (elseBody) {
-          throw new Error('CodeGen: "else" body without "then" body');
-        }
-        return this;
-      }
-      // `else if` clause - invalid without `if` or after `else` clauses
-      elseIf(condition) {
-        return this._elseNode(new If(condition));
-      }
-      // `else` clause - only valid after `if` or `else if` clauses
-      else() {
-        return this._elseNode(new Else());
-      }
-      // end `if` statement (needed if gen.if was used only with condition)
-      endIf() {
-        return this._endBlockNode(If, Else);
-      }
-      _for(node2, forBody) {
-        this._blockNode(node2);
-        if (forBody)
-          this.code(forBody).endFor();
-        return this;
-      }
-      // a generic `for` clause (or statement if `forBody` is passed)
-      for(iteration, forBody) {
-        return this._for(new ForLoop(iteration), forBody);
-      }
-      // `for` statement for a range of values
-      forRange(nameOrPrefix, from, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
-        const name = this._scope.toName(nameOrPrefix);
-        return this._for(new ForRange(varKind, name, from, to), () => forBody(name));
-      }
-      // `for-of` statement (in es5 mode replace with a normal for loop)
-      forOf(nameOrPrefix, iterable, forBody, varKind = scope_1.varKinds.const) {
-        const name = this._scope.toName(nameOrPrefix);
-        if (this.opts.es5) {
-          const arr = iterable instanceof code_1.Name ? iterable : this.var("_arr", iterable);
-          return this.forRange("_i", 0, (0, code_1._)`${arr}.length`, (i) => {
-            this.var(name, (0, code_1._)`${arr}[${i}]`);
-            forBody(name);
-          });
-        }
-        return this._for(new ForIter("of", varKind, name, iterable), () => forBody(name));
-      }
-      // `for-in` statement.
-      // With option `ownProperties` replaced with a `for-of` loop for object keys
-      forIn(nameOrPrefix, obj, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.const) {
-        if (this.opts.ownProperties) {
-          return this.forOf(nameOrPrefix, (0, code_1._)`Object.keys(${obj})`, forBody);
-        }
-        const name = this._scope.toName(nameOrPrefix);
-        return this._for(new ForIter("in", varKind, name, obj), () => forBody(name));
-      }
-      // end `for` loop
-      endFor() {
-        return this._endBlockNode(For);
-      }
-      // `label` statement
-      label(label) {
-        return this._leafNode(new Label(label));
-      }
-      // `break` statement
-      break(label) {
-        return this._leafNode(new Break(label));
-      }
-      // `return` statement
-      return(value) {
-        const node2 = new Return();
-        this._blockNode(node2);
-        this.code(value);
-        if (node2.nodes.length !== 1)
-          throw new Error('CodeGen: "return" should have one node');
-        return this._endBlockNode(Return);
-      }
-      // `try` statement
-      try(tryBody, catchCode, finallyCode) {
-        if (!catchCode && !finallyCode)
-          throw new Error('CodeGen: "try" without "catch" and "finally"');
-        const node2 = new Try();
-        this._blockNode(node2);
-        this.code(tryBody);
-        if (catchCode) {
-          const error51 = this.name("e");
-          this._currNode = node2.catch = new Catch(error51);
-          catchCode(error51);
-        }
-        if (finallyCode) {
-          this._currNode = node2.finally = new Finally();
-          this.code(finallyCode);
-        }
-        return this._endBlockNode(Catch, Finally);
-      }
-      // `throw` statement
-      throw(error51) {
-        return this._leafNode(new Throw(error51));
-      }
-      // start self-balancing block
-      block(body, nodeCount) {
-        this._blockStarts.push(this._nodes.length);
-        if (body)
-          this.code(body).endBlock(nodeCount);
-        return this;
-      }
-      // end the current self-balancing block
-      endBlock(nodeCount) {
-        const len = this._blockStarts.pop();
-        if (len === void 0)
-          throw new Error("CodeGen: not in self-balancing block");
-        const toClose = this._nodes.length - len;
-        if (toClose < 0 || nodeCount !== void 0 && toClose !== nodeCount) {
-          throw new Error(`CodeGen: wrong number of nodes: ${toClose} vs ${nodeCount} expected`);
-        }
-        this._nodes.length = len;
-        return this;
-      }
-      // `function` heading (or definition if funcBody is passed)
-      func(name, args = code_1.nil, async, funcBody) {
-        this._blockNode(new Func(name, args, async));
-        if (funcBody)
-          this.code(funcBody).endFunc();
-        return this;
-      }
-      // end function definition
-      endFunc() {
-        return this._endBlockNode(Func);
-      }
-      optimize(n = 1) {
-        while (n-- > 0) {
-          this._root.optimizeNodes();
-          this._root.optimizeNames(this._root.names, this._constants);
-        }
-      }
-      _leafNode(node2) {
-        this._currNode.nodes.push(node2);
-        return this;
-      }
-      _blockNode(node2) {
-        this._currNode.nodes.push(node2);
-        this._nodes.push(node2);
-      }
-      _endBlockNode(N1, N2) {
-        const n = this._currNode;
-        if (n instanceof N1 || N2 && n instanceof N2) {
-          this._nodes.pop();
-          return this;
-        }
-        throw new Error(`CodeGen: not in block "${N2 ? `${N1.kind}/${N2.kind}` : N1.kind}"`);
-      }
-      _elseNode(node2) {
-        const n = this._currNode;
-        if (!(n instanceof If)) {
-          throw new Error('CodeGen: "else" without "if"');
-        }
-        this._currNode = n.else = node2;
-        return this;
-      }
-      get _root() {
-        return this._nodes[0];
-      }
-      get _currNode() {
-        const ns = this._nodes;
-        return ns[ns.length - 1];
-      }
-      set _currNode(node2) {
-        const ns = this._nodes;
-        ns[ns.length - 1] = node2;
-      }
-    };
-    exports.CodeGen = CodeGen;
-    function addNames(names, from) {
-      for (const n in from)
-        names[n] = (names[n] || 0) + (from[n] || 0);
-      return names;
-    }
-    function addExprNames(names, from) {
-      return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
-    }
-    function optimizeExpr(expr, names, constants) {
-      if (expr instanceof code_1.Name)
-        return replaceName(expr);
-      if (!canOptimize(expr))
-        return expr;
-      return new code_1._Code(expr._items.reduce((items, c) => {
-        if (c instanceof code_1.Name)
-          c = replaceName(c);
-        if (c instanceof code_1._Code)
-          items.push(...c._items);
-        else
-          items.push(c);
-        return items;
-      }, []));
-      function replaceName(n) {
-        const c = constants[n.str];
-        if (c === void 0 || names[n.str] !== 1)
-          return n;
-        delete names[n.str];
-        return c;
-      }
-      function canOptimize(e) {
-        return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants[c.str] !== void 0);
-      }
-    }
-    function subtractNames(names, from) {
-      for (const n in from)
-        names[n] = (names[n] || 0) - (from[n] || 0);
-    }
-    function not(x) {
-      return typeof x == "boolean" || typeof x == "number" || x === null ? !x : (0, code_1._)`!${par(x)}`;
-    }
-    exports.not = not;
-    var andCode = mappend(exports.operators.AND);
-    function and(...args) {
-      return args.reduce(andCode);
-    }
-    exports.and = and;
-    var orCode = mappend(exports.operators.OR);
-    function or(...args) {
-      return args.reduce(orCode);
-    }
-    exports.or = or;
-    function mappend(op) {
-      return (x, y) => x === code_1.nil ? y : y === code_1.nil ? x : (0, code_1._)`${par(x)} ${op} ${par(y)}`;
-    }
-    function par(x) {
-      return x instanceof code_1.Name ? x : (0, code_1._)`(${x})`;
-    }
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/util.js
-var require_util2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/util.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.checkStrictMode = exports.getErrorPath = exports.Type = exports.useFunc = exports.setEvaluated = exports.evaluatedPropsToName = exports.mergeEvaluated = exports.eachItem = exports.unescapeJsonPointer = exports.escapeJsonPointer = exports.escapeFragment = exports.unescapeFragment = exports.schemaRefOrVal = exports.schemaHasRulesButRef = exports.schemaHasRules = exports.checkUnknownRules = exports.alwaysValidSchema = exports.toHash = void 0;
-    var codegen_1 = require_codegen2();
-    var code_1 = require_code3();
-    function toHash(arr) {
-      const hash2 = {};
-      for (const item of arr)
-        hash2[item] = true;
-      return hash2;
-    }
-    exports.toHash = toHash;
-    function alwaysValidSchema(it, schema) {
-      if (typeof schema == "boolean")
-        return schema;
-      if (Object.keys(schema).length === 0)
-        return true;
-      checkUnknownRules(it, schema);
-      return !schemaHasRules(schema, it.self.RULES.all);
-    }
-    exports.alwaysValidSchema = alwaysValidSchema;
-    function checkUnknownRules(it, schema = it.schema) {
-      const { opts, self } = it;
-      if (!opts.strictSchema)
-        return;
-      if (typeof schema === "boolean")
-        return;
-      const rules = self.RULES.keywords;
-      for (const key in schema) {
-        if (!rules[key])
-          checkStrictMode(it, `unknown keyword: "${key}"`);
-      }
-    }
-    exports.checkUnknownRules = checkUnknownRules;
-    function schemaHasRules(schema, rules) {
-      if (typeof schema == "boolean")
-        return !schema;
-      for (const key in schema)
-        if (rules[key])
-          return true;
-      return false;
-    }
-    exports.schemaHasRules = schemaHasRules;
-    function schemaHasRulesButRef(schema, RULES) {
-      if (typeof schema == "boolean")
-        return !schema;
-      for (const key in schema)
-        if (key !== "$ref" && RULES.all[key])
-          return true;
-      return false;
-    }
-    exports.schemaHasRulesButRef = schemaHasRulesButRef;
-    function schemaRefOrVal({ topSchemaRef, schemaPath }, schema, keyword, $data) {
-      if (!$data) {
-        if (typeof schema == "number" || typeof schema == "boolean")
-          return schema;
-        if (typeof schema == "string")
-          return (0, codegen_1._)`${schema}`;
-      }
-      return (0, codegen_1._)`${topSchemaRef}${schemaPath}${(0, codegen_1.getProperty)(keyword)}`;
-    }
-    exports.schemaRefOrVal = schemaRefOrVal;
-    function unescapeFragment(str) {
-      return unescapeJsonPointer(decodeURIComponent(str));
-    }
-    exports.unescapeFragment = unescapeFragment;
-    function escapeFragment(str) {
-      return encodeURIComponent(escapeJsonPointer(str));
-    }
-    exports.escapeFragment = escapeFragment;
-    function escapeJsonPointer(str) {
-      if (typeof str == "number")
-        return `${str}`;
-      return str.replace(/~/g, "~0").replace(/\//g, "~1");
-    }
-    exports.escapeJsonPointer = escapeJsonPointer;
-    function unescapeJsonPointer(str) {
-      return str.replace(/~1/g, "/").replace(/~0/g, "~");
-    }
-    exports.unescapeJsonPointer = unescapeJsonPointer;
-    function eachItem(xs, f) {
-      if (Array.isArray(xs)) {
-        for (const x of xs)
-          f(x);
-      } else {
-        f(xs);
-      }
-    }
-    exports.eachItem = eachItem;
-    function makeMergeEvaluated({ mergeNames, mergeToName, mergeValues: mergeValues3, resultToName }) {
-      return (gen, from, to, toName) => {
-        const res = to === void 0 ? from : to instanceof codegen_1.Name ? (from instanceof codegen_1.Name ? mergeNames(gen, from, to) : mergeToName(gen, from, to), to) : from instanceof codegen_1.Name ? (mergeToName(gen, to, from), from) : mergeValues3(from, to);
-        return toName === codegen_1.Name && !(res instanceof codegen_1.Name) ? resultToName(gen, res) : res;
-      };
-    }
-    exports.mergeEvaluated = {
-      props: makeMergeEvaluated({
-        mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => {
-          gen.if((0, codegen_1._)`${from} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from})`));
-        }),
-        mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
-          if (from === true) {
-            gen.assign(to, true);
-          } else {
-            gen.assign(to, (0, codegen_1._)`${to} || {}`);
-            setEvaluated(gen, to, from);
-          }
-        }),
-        mergeValues: (from, to) => from === true ? true : { ...from, ...to },
-        resultToName: evaluatedPropsToName
-      }),
-      items: makeMergeEvaluated({
-        mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from} === true ? true : ${to} > ${from} ? ${to} : ${from}`)),
-        mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from === true ? true : (0, codegen_1._)`${to} > ${from} ? ${to} : ${from}`)),
-        mergeValues: (from, to) => from === true ? true : Math.max(from, to),
-        resultToName: (gen, items) => gen.var("items", items)
-      })
-    };
-    function evaluatedPropsToName(gen, ps) {
-      if (ps === true)
-        return gen.var("props", true);
-      const props = gen.var("props", (0, codegen_1._)`{}`);
-      if (ps !== void 0)
-        setEvaluated(gen, props, ps);
-      return props;
-    }
-    exports.evaluatedPropsToName = evaluatedPropsToName;
-    function setEvaluated(gen, props, ps) {
-      Object.keys(ps).forEach((p) => gen.assign((0, codegen_1._)`${props}${(0, codegen_1.getProperty)(p)}`, true));
-    }
-    exports.setEvaluated = setEvaluated;
-    var snippets = {};
-    function useFunc(gen, f) {
-      return gen.scopeValue("func", {
-        ref: f,
-        code: snippets[f.code] || (snippets[f.code] = new code_1._Code(f.code))
-      });
-    }
-    exports.useFunc = useFunc;
-    var Type;
-    (function(Type2) {
-      Type2[Type2["Num"] = 0] = "Num";
-      Type2[Type2["Str"] = 1] = "Str";
-    })(Type || (exports.Type = Type = {}));
-    function getErrorPath(dataProp, dataPropType, jsPropertySyntax) {
-      if (dataProp instanceof codegen_1.Name) {
-        const isNumber = dataPropType === Type.Num;
-        return jsPropertySyntax ? isNumber ? (0, codegen_1._)`"[" + ${dataProp} + "]"` : (0, codegen_1._)`"['" + ${dataProp} + "']"` : isNumber ? (0, codegen_1._)`"/" + ${dataProp}` : (0, codegen_1._)`"/" + ${dataProp}.replace(/~/g, "~0").replace(/\\//g, "~1")`;
-      }
-      return jsPropertySyntax ? (0, codegen_1.getProperty)(dataProp).toString() : "/" + escapeJsonPointer(dataProp);
-    }
-    exports.getErrorPath = getErrorPath;
-    function checkStrictMode(it, msg, mode = it.opts.strictSchema) {
-      if (!mode)
-        return;
-      msg = `strict mode: ${msg}`;
-      if (mode === true)
-        throw new Error(msg);
-      it.self.logger.warn(msg);
-    }
-    exports.checkStrictMode = checkStrictMode;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/names.js
-var require_names2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/names.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var names = {
-      // validation function arguments
-      data: new codegen_1.Name("data"),
-      // data passed to validation function
-      // args passed from referencing schema
-      valCxt: new codegen_1.Name("valCxt"),
-      // validation/data context - should not be used directly, it is destructured to the names below
-      instancePath: new codegen_1.Name("instancePath"),
-      parentData: new codegen_1.Name("parentData"),
-      parentDataProperty: new codegen_1.Name("parentDataProperty"),
-      rootData: new codegen_1.Name("rootData"),
-      // root data - same as the data passed to the first/top validation function
-      dynamicAnchors: new codegen_1.Name("dynamicAnchors"),
-      // used to support recursiveRef and dynamicRef
-      // function scoped variables
-      vErrors: new codegen_1.Name("vErrors"),
-      // null or array of validation errors
-      errors: new codegen_1.Name("errors"),
-      // counter of validation errors
-      this: new codegen_1.Name("this"),
-      // "globals"
-      self: new codegen_1.Name("self"),
-      scope: new codegen_1.Name("scope"),
-      // JTD serialize/parse name for JSON string and position
-      json: new codegen_1.Name("json"),
-      jsonPos: new codegen_1.Name("jsonPos"),
-      jsonLen: new codegen_1.Name("jsonLen"),
-      jsonPart: new codegen_1.Name("jsonPart")
-    };
-    exports.default = names;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/errors.js
-var require_errors2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/errors.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.extendErrors = exports.resetErrorsCount = exports.reportExtraError = exports.reportError = exports.keyword$DataError = exports.keywordError = void 0;
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var names_1 = require_names2();
-    exports.keywordError = {
-      message: ({ keyword }) => (0, codegen_1.str)`must pass "${keyword}" keyword validation`
-    };
-    exports.keyword$DataError = {
-      message: ({ keyword, schemaType }) => schemaType ? (0, codegen_1.str)`"${keyword}" keyword must be ${schemaType} ($data)` : (0, codegen_1.str)`"${keyword}" keyword is invalid ($data)`
-    };
-    function reportError(cxt, error51 = exports.keywordError, errorPaths, overrideAllErrors) {
-      const { it } = cxt;
-      const { gen, compositeRule, allErrors } = it;
-      const errObj = errorObjectCode(cxt, error51, errorPaths);
-      if (overrideAllErrors !== null && overrideAllErrors !== void 0 ? overrideAllErrors : compositeRule || allErrors) {
-        addError(gen, errObj);
-      } else {
-        returnErrors(it, (0, codegen_1._)`[${errObj}]`);
-      }
-    }
-    exports.reportError = reportError;
-    function reportExtraError(cxt, error51 = exports.keywordError, errorPaths) {
-      const { it } = cxt;
-      const { gen, compositeRule, allErrors } = it;
-      const errObj = errorObjectCode(cxt, error51, errorPaths);
-      addError(gen, errObj);
-      if (!(compositeRule || allErrors)) {
-        returnErrors(it, names_1.default.vErrors);
-      }
-    }
-    exports.reportExtraError = reportExtraError;
-    function resetErrorsCount(gen, errsCount) {
-      gen.assign(names_1.default.errors, errsCount);
-      gen.if((0, codegen_1._)`${names_1.default.vErrors} !== null`, () => gen.if(errsCount, () => gen.assign((0, codegen_1._)`${names_1.default.vErrors}.length`, errsCount), () => gen.assign(names_1.default.vErrors, null)));
-    }
-    exports.resetErrorsCount = resetErrorsCount;
-    function extendErrors({ gen, keyword, schemaValue, data, errsCount, it }) {
-      if (errsCount === void 0)
-        throw new Error("ajv implementation error");
-      const err = gen.name("err");
-      gen.forRange("i", errsCount, names_1.default.errors, (i) => {
-        gen.const(err, (0, codegen_1._)`${names_1.default.vErrors}[${i}]`);
-        gen.if((0, codegen_1._)`${err}.instancePath === undefined`, () => gen.assign((0, codegen_1._)`${err}.instancePath`, (0, codegen_1.strConcat)(names_1.default.instancePath, it.errorPath)));
-        gen.assign((0, codegen_1._)`${err}.schemaPath`, (0, codegen_1.str)`${it.errSchemaPath}/${keyword}`);
-        if (it.opts.verbose) {
-          gen.assign((0, codegen_1._)`${err}.schema`, schemaValue);
-          gen.assign((0, codegen_1._)`${err}.data`, data);
-        }
-      });
-    }
-    exports.extendErrors = extendErrors;
-    function addError(gen, errObj) {
-      const err = gen.const("err", errObj);
-      gen.if((0, codegen_1._)`${names_1.default.vErrors} === null`, () => gen.assign(names_1.default.vErrors, (0, codegen_1._)`[${err}]`), (0, codegen_1._)`${names_1.default.vErrors}.push(${err})`);
-      gen.code((0, codegen_1._)`${names_1.default.errors}++`);
-    }
-    function returnErrors(it, errs) {
-      const { gen, validateName, schemaEnv } = it;
-      if (schemaEnv.$async) {
-        gen.throw((0, codegen_1._)`new ${it.ValidationError}(${errs})`);
-      } else {
-        gen.assign((0, codegen_1._)`${validateName}.errors`, errs);
-        gen.return(false);
-      }
-    }
-    var E = {
-      keyword: new codegen_1.Name("keyword"),
-      schemaPath: new codegen_1.Name("schemaPath"),
-      // also used in JTD errors
-      params: new codegen_1.Name("params"),
-      propertyName: new codegen_1.Name("propertyName"),
-      message: new codegen_1.Name("message"),
-      schema: new codegen_1.Name("schema"),
-      parentSchema: new codegen_1.Name("parentSchema")
-    };
-    function errorObjectCode(cxt, error51, errorPaths) {
-      const { createErrors } = cxt.it;
-      if (createErrors === false)
-        return (0, codegen_1._)`{}`;
-      return errorObject(cxt, error51, errorPaths);
-    }
-    function errorObject(cxt, error51, errorPaths = {}) {
-      const { gen, it } = cxt;
-      const keyValues = [
-        errorInstancePath(it, errorPaths),
-        errorSchemaPath(cxt, errorPaths)
-      ];
-      extraErrorProps(cxt, error51, keyValues);
-      return gen.object(...keyValues);
-    }
-    function errorInstancePath({ errorPath }, { instancePath }) {
-      const instPath = instancePath ? (0, codegen_1.str)`${errorPath}${(0, util_1.getErrorPath)(instancePath, util_1.Type.Str)}` : errorPath;
-      return [names_1.default.instancePath, (0, codegen_1.strConcat)(names_1.default.instancePath, instPath)];
-    }
-    function errorSchemaPath({ keyword, it: { errSchemaPath } }, { schemaPath, parentSchema }) {
-      let schPath = parentSchema ? errSchemaPath : (0, codegen_1.str)`${errSchemaPath}/${keyword}`;
-      if (schemaPath) {
-        schPath = (0, codegen_1.str)`${schPath}${(0, util_1.getErrorPath)(schemaPath, util_1.Type.Str)}`;
-      }
-      return [E.schemaPath, schPath];
-    }
-    function extraErrorProps(cxt, { params, message }, keyValues) {
-      const { keyword, data, schemaValue, it } = cxt;
-      const { opts, propertyName, topSchemaRef, schemaPath } = it;
-      keyValues.push([E.keyword, keyword], [E.params, typeof params == "function" ? params(cxt) : params || (0, codegen_1._)`{}`]);
-      if (opts.messages) {
-        keyValues.push([E.message, typeof message == "function" ? message(cxt) : message]);
-      }
-      if (opts.verbose) {
-        keyValues.push([E.schema, schemaValue], [E.parentSchema, (0, codegen_1._)`${topSchemaRef}${schemaPath}`], [names_1.default.data, data]);
-      }
-      if (propertyName)
-        keyValues.push([E.propertyName, propertyName]);
-    }
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/boolSchema.js
-var require_boolSchema2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/boolSchema.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.boolOrEmptySchema = exports.topBoolOrEmptySchema = void 0;
-    var errors_1 = require_errors2();
-    var codegen_1 = require_codegen2();
-    var names_1 = require_names2();
-    var boolError = {
-      message: "boolean schema is false"
-    };
-    function topBoolOrEmptySchema(it) {
-      const { gen, schema, validateName } = it;
-      if (schema === false) {
-        falseSchemaError(it, false);
-      } else if (typeof schema == "object" && schema.$async === true) {
-        gen.return(names_1.default.data);
-      } else {
-        gen.assign((0, codegen_1._)`${validateName}.errors`, null);
-        gen.return(true);
-      }
-    }
-    exports.topBoolOrEmptySchema = topBoolOrEmptySchema;
-    function boolOrEmptySchema(it, valid) {
-      const { gen, schema } = it;
-      if (schema === false) {
-        gen.var(valid, false);
-        falseSchemaError(it);
-      } else {
-        gen.var(valid, true);
-      }
-    }
-    exports.boolOrEmptySchema = boolOrEmptySchema;
-    function falseSchemaError(it, overrideAllErrors) {
-      const { gen, data } = it;
-      const cxt = {
-        gen,
-        keyword: "false schema",
-        data,
-        schema: false,
-        schemaCode: false,
-        schemaValue: false,
-        params: {},
-        it
-      };
-      (0, errors_1.reportError)(cxt, boolError, void 0, overrideAllErrors);
-    }
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/rules.js
-var require_rules2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/rules.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.getRules = exports.isJSONType = void 0;
-    var _jsonTypes = ["string", "number", "integer", "boolean", "null", "object", "array"];
-    var jsonTypes = new Set(_jsonTypes);
-    function isJSONType(x) {
-      return typeof x == "string" && jsonTypes.has(x);
-    }
-    exports.isJSONType = isJSONType;
-    function getRules() {
-      const groups = {
-        number: { type: "number", rules: [] },
-        string: { type: "string", rules: [] },
-        array: { type: "array", rules: [] },
-        object: { type: "object", rules: [] }
-      };
-      return {
-        types: { ...groups, integer: true, boolean: true, null: true },
-        rules: [{ rules: [] }, groups.number, groups.string, groups.array, groups.object],
-        post: { rules: [] },
-        all: {},
-        keywords: {}
-      };
-    }
-    exports.getRules = getRules;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/applicability.js
-var require_applicability2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/applicability.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.shouldUseRule = exports.shouldUseGroup = exports.schemaHasRulesForType = void 0;
-    function schemaHasRulesForType({ schema, self }, type) {
-      const group = self.RULES.types[type];
-      return group && group !== true && shouldUseGroup(schema, group);
-    }
-    exports.schemaHasRulesForType = schemaHasRulesForType;
-    function shouldUseGroup(schema, group) {
-      return group.rules.some((rule) => shouldUseRule(schema, rule));
-    }
-    exports.shouldUseGroup = shouldUseGroup;
-    function shouldUseRule(schema, rule) {
-      var _a3;
-      return schema[rule.keyword] !== void 0 || ((_a3 = rule.definition.implements) === null || _a3 === void 0 ? void 0 : _a3.some((kwd) => schema[kwd] !== void 0));
-    }
-    exports.shouldUseRule = shouldUseRule;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/dataType.js
-var require_dataType2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/dataType.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.reportTypeError = exports.checkDataTypes = exports.checkDataType = exports.coerceAndCheckDataType = exports.getJSONTypes = exports.getSchemaTypes = exports.DataType = void 0;
-    var rules_1 = require_rules2();
-    var applicability_1 = require_applicability2();
-    var errors_1 = require_errors2();
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var DataType;
-    (function(DataType2) {
-      DataType2[DataType2["Correct"] = 0] = "Correct";
-      DataType2[DataType2["Wrong"] = 1] = "Wrong";
-    })(DataType || (exports.DataType = DataType = {}));
-    function getSchemaTypes(schema) {
-      const types = getJSONTypes(schema.type);
-      const hasNull = types.includes("null");
-      if (hasNull) {
-        if (schema.nullable === false)
-          throw new Error("type: null contradicts nullable: false");
-      } else {
-        if (!types.length && schema.nullable !== void 0) {
-          throw new Error('"nullable" cannot be used without "type"');
-        }
-        if (schema.nullable === true)
-          types.push("null");
-      }
-      return types;
-    }
-    exports.getSchemaTypes = getSchemaTypes;
-    function getJSONTypes(ts) {
-      const types = Array.isArray(ts) ? ts : ts ? [ts] : [];
-      if (types.every(rules_1.isJSONType))
-        return types;
-      throw new Error("type must be JSONType or JSONType[]: " + types.join(","));
-    }
-    exports.getJSONTypes = getJSONTypes;
-    function coerceAndCheckDataType(it, types) {
-      const { gen, data, opts } = it;
-      const coerceTo = coerceToTypes(types, opts.coerceTypes);
-      const checkTypes = types.length > 0 && !(coerceTo.length === 0 && types.length === 1 && (0, applicability_1.schemaHasRulesForType)(it, types[0]));
-      if (checkTypes) {
-        const wrongType = checkDataTypes(types, data, opts.strictNumbers, DataType.Wrong);
-        gen.if(wrongType, () => {
-          if (coerceTo.length)
-            coerceData(it, types, coerceTo);
-          else
-            reportTypeError(it);
-        });
-      }
-      return checkTypes;
-    }
-    exports.coerceAndCheckDataType = coerceAndCheckDataType;
-    var COERCIBLE = /* @__PURE__ */ new Set(["string", "number", "integer", "boolean", "null"]);
-    function coerceToTypes(types, coerceTypes) {
-      return coerceTypes ? types.filter((t) => COERCIBLE.has(t) || coerceTypes === "array" && t === "array") : [];
-    }
-    function coerceData(it, types, coerceTo) {
-      const { gen, data, opts } = it;
-      const dataType = gen.let("dataType", (0, codegen_1._)`typeof ${data}`);
-      const coerced = gen.let("coerced", (0, codegen_1._)`undefined`);
-      if (opts.coerceTypes === "array") {
-        gen.if((0, codegen_1._)`${dataType} == 'object' && Array.isArray(${data}) && ${data}.length == 1`, () => gen.assign(data, (0, codegen_1._)`${data}[0]`).assign(dataType, (0, codegen_1._)`typeof ${data}`).if(checkDataTypes(types, data, opts.strictNumbers), () => gen.assign(coerced, data)));
-      }
-      gen.if((0, codegen_1._)`${coerced} !== undefined`);
-      for (const t of coerceTo) {
-        if (COERCIBLE.has(t) || t === "array" && opts.coerceTypes === "array") {
-          coerceSpecificType(t);
-        }
-      }
-      gen.else();
-      reportTypeError(it);
-      gen.endIf();
-      gen.if((0, codegen_1._)`${coerced} !== undefined`, () => {
-        gen.assign(data, coerced);
-        assignParentData(it, coerced);
-      });
-      function coerceSpecificType(t) {
-        switch (t) {
-          case "string":
-            gen.elseIf((0, codegen_1._)`${dataType} == "number" || ${dataType} == "boolean"`).assign(coerced, (0, codegen_1._)`"" + ${data}`).elseIf((0, codegen_1._)`${data} === null`).assign(coerced, (0, codegen_1._)`""`);
-            return;
-          case "number":
-            gen.elseIf((0, codegen_1._)`${dataType} == "boolean" || ${data} === null
-              || (${dataType} == "string" && ${data} && ${data} == +${data})`).assign(coerced, (0, codegen_1._)`+${data}`);
-            return;
-          case "integer":
-            gen.elseIf((0, codegen_1._)`${dataType} === "boolean" || ${data} === null
-              || (${dataType} === "string" && ${data} && ${data} == +${data} && !(${data} % 1))`).assign(coerced, (0, codegen_1._)`+${data}`);
-            return;
-          case "boolean":
-            gen.elseIf((0, codegen_1._)`${data} === "false" || ${data} === 0 || ${data} === null`).assign(coerced, false).elseIf((0, codegen_1._)`${data} === "true" || ${data} === 1`).assign(coerced, true);
-            return;
-          case "null":
-            gen.elseIf((0, codegen_1._)`${data} === "" || ${data} === 0 || ${data} === false`);
-            gen.assign(coerced, null);
-            return;
-          case "array":
-            gen.elseIf((0, codegen_1._)`${dataType} === "string" || ${dataType} === "number"
-              || ${dataType} === "boolean" || ${data} === null`).assign(coerced, (0, codegen_1._)`[${data}]`);
-        }
-      }
-    }
-    function assignParentData({ gen, parentData, parentDataProperty }, expr) {
-      gen.if((0, codegen_1._)`${parentData} !== undefined`, () => gen.assign((0, codegen_1._)`${parentData}[${parentDataProperty}]`, expr));
-    }
-    function checkDataType(dataType, data, strictNums, correct = DataType.Correct) {
-      const EQ = correct === DataType.Correct ? codegen_1.operators.EQ : codegen_1.operators.NEQ;
-      let cond;
-      switch (dataType) {
-        case "null":
-          return (0, codegen_1._)`${data} ${EQ} null`;
-        case "array":
-          cond = (0, codegen_1._)`Array.isArray(${data})`;
-          break;
-        case "object":
-          cond = (0, codegen_1._)`${data} && typeof ${data} == "object" && !Array.isArray(${data})`;
-          break;
-        case "integer":
-          cond = numCond((0, codegen_1._)`!(${data} % 1) && !isNaN(${data})`);
-          break;
-        case "number":
-          cond = numCond();
-          break;
-        default:
-          return (0, codegen_1._)`typeof ${data} ${EQ} ${dataType}`;
-      }
-      return correct === DataType.Correct ? cond : (0, codegen_1.not)(cond);
-      function numCond(_cond = codegen_1.nil) {
-        return (0, codegen_1.and)((0, codegen_1._)`typeof ${data} == "number"`, _cond, strictNums ? (0, codegen_1._)`isFinite(${data})` : codegen_1.nil);
-      }
-    }
-    exports.checkDataType = checkDataType;
-    function checkDataTypes(dataTypes, data, strictNums, correct) {
-      if (dataTypes.length === 1) {
-        return checkDataType(dataTypes[0], data, strictNums, correct);
-      }
-      let cond;
-      const types = (0, util_1.toHash)(dataTypes);
-      if (types.array && types.object) {
-        const notObj = (0, codegen_1._)`typeof ${data} != "object"`;
-        cond = types.null ? notObj : (0, codegen_1._)`!${data} || ${notObj}`;
-        delete types.null;
-        delete types.array;
-        delete types.object;
-      } else {
-        cond = codegen_1.nil;
-      }
-      if (types.number)
-        delete types.integer;
-      for (const t in types)
-        cond = (0, codegen_1.and)(cond, checkDataType(t, data, strictNums, correct));
-      return cond;
-    }
-    exports.checkDataTypes = checkDataTypes;
-    var typeError = {
-      message: ({ schema }) => `must be ${schema}`,
-      params: ({ schema, schemaValue }) => typeof schema == "string" ? (0, codegen_1._)`{type: ${schema}}` : (0, codegen_1._)`{type: ${schemaValue}}`
-    };
-    function reportTypeError(it) {
-      const cxt = getTypeErrorContext(it);
-      (0, errors_1.reportError)(cxt, typeError);
-    }
-    exports.reportTypeError = reportTypeError;
-    function getTypeErrorContext(it) {
-      const { gen, data, schema } = it;
-      const schemaCode = (0, util_1.schemaRefOrVal)(it, schema, "type");
-      return {
-        gen,
-        keyword: "type",
-        data,
-        schema: schema.type,
-        schemaCode,
-        schemaValue: schemaCode,
-        parentSchema: schema,
-        params: {},
-        it
-      };
-    }
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/defaults.js
-var require_defaults2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/defaults.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.assignDefaults = void 0;
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    function assignDefaults(it, ty) {
-      const { properties, items } = it.schema;
-      if (ty === "object" && properties) {
-        for (const key in properties) {
-          assignDefault(it, key, properties[key].default);
-        }
-      } else if (ty === "array" && Array.isArray(items)) {
-        items.forEach((sch, i) => assignDefault(it, i, sch.default));
-      }
-    }
-    exports.assignDefaults = assignDefaults;
-    function assignDefault(it, prop, defaultValue) {
-      const { gen, compositeRule, data, opts } = it;
-      if (defaultValue === void 0)
-        return;
-      const childData = (0, codegen_1._)`${data}${(0, codegen_1.getProperty)(prop)}`;
-      if (compositeRule) {
-        (0, util_1.checkStrictMode)(it, `default is ignored for: ${childData}`);
-        return;
-      }
-      let condition = (0, codegen_1._)`${childData} === undefined`;
-      if (opts.useDefaults === "empty") {
-        condition = (0, codegen_1._)`${condition} || ${childData} === null || ${childData} === ""`;
-      }
-      gen.if(condition, (0, codegen_1._)`${childData} = ${(0, codegen_1.stringify)(defaultValue)}`);
-    }
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/code.js
-var require_code4 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/code.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.validateUnion = exports.validateArray = exports.usePattern = exports.callValidateCode = exports.schemaProperties = exports.allSchemaProperties = exports.noPropertyInData = exports.propertyInData = exports.isOwnProperty = exports.hasPropFunc = exports.reportMissingProp = exports.checkMissingProp = exports.checkReportMissingProp = void 0;
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var names_1 = require_names2();
-    var util_2 = require_util2();
-    function checkReportMissingProp(cxt, prop) {
-      const { gen, data, it } = cxt;
-      gen.if(noPropertyInData(gen, data, prop, it.opts.ownProperties), () => {
-        cxt.setParams({ missingProperty: (0, codegen_1._)`${prop}` }, true);
-        cxt.error();
-      });
-    }
-    exports.checkReportMissingProp = checkReportMissingProp;
-    function checkMissingProp({ gen, data, it: { opts } }, properties, missing) {
-      return (0, codegen_1.or)(...properties.map((prop) => (0, codegen_1.and)(noPropertyInData(gen, data, prop, opts.ownProperties), (0, codegen_1._)`${missing} = ${prop}`)));
-    }
-    exports.checkMissingProp = checkMissingProp;
-    function reportMissingProp(cxt, missing) {
-      cxt.setParams({ missingProperty: missing }, true);
-      cxt.error();
-    }
-    exports.reportMissingProp = reportMissingProp;
-    function hasPropFunc(gen) {
-      return gen.scopeValue("func", {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        ref: Object.prototype.hasOwnProperty,
-        code: (0, codegen_1._)`Object.prototype.hasOwnProperty`
-      });
-    }
-    exports.hasPropFunc = hasPropFunc;
-    function isOwnProperty(gen, data, property) {
-      return (0, codegen_1._)`${hasPropFunc(gen)}.call(${data}, ${property})`;
-    }
-    exports.isOwnProperty = isOwnProperty;
-    function propertyInData(gen, data, property, ownProperties) {
-      const cond = (0, codegen_1._)`${data}${(0, codegen_1.getProperty)(property)} !== undefined`;
-      return ownProperties ? (0, codegen_1._)`${cond} && ${isOwnProperty(gen, data, property)}` : cond;
-    }
-    exports.propertyInData = propertyInData;
-    function noPropertyInData(gen, data, property, ownProperties) {
-      const cond = (0, codegen_1._)`${data}${(0, codegen_1.getProperty)(property)} === undefined`;
-      return ownProperties ? (0, codegen_1.or)(cond, (0, codegen_1.not)(isOwnProperty(gen, data, property))) : cond;
-    }
-    exports.noPropertyInData = noPropertyInData;
-    function allSchemaProperties(schemaMap) {
-      return schemaMap ? Object.keys(schemaMap).filter((p) => p !== "__proto__") : [];
-    }
-    exports.allSchemaProperties = allSchemaProperties;
-    function schemaProperties(it, schemaMap) {
-      return allSchemaProperties(schemaMap).filter((p) => !(0, util_1.alwaysValidSchema)(it, schemaMap[p]));
-    }
-    exports.schemaProperties = schemaProperties;
-    function callValidateCode({ schemaCode, data, it: { gen, topSchemaRef, schemaPath, errorPath }, it }, func, context, passSchema) {
-      const dataAndSchema = passSchema ? (0, codegen_1._)`${schemaCode}, ${data}, ${topSchemaRef}${schemaPath}` : data;
-      const valCxt = [
-        [names_1.default.instancePath, (0, codegen_1.strConcat)(names_1.default.instancePath, errorPath)],
-        [names_1.default.parentData, it.parentData],
-        [names_1.default.parentDataProperty, it.parentDataProperty],
-        [names_1.default.rootData, names_1.default.rootData]
-      ];
-      if (it.opts.dynamicRef)
-        valCxt.push([names_1.default.dynamicAnchors, names_1.default.dynamicAnchors]);
-      const args = (0, codegen_1._)`${dataAndSchema}, ${gen.object(...valCxt)}`;
-      return context !== codegen_1.nil ? (0, codegen_1._)`${func}.call(${context}, ${args})` : (0, codegen_1._)`${func}(${args})`;
-    }
-    exports.callValidateCode = callValidateCode;
-    var newRegExp = (0, codegen_1._)`new RegExp`;
-    function usePattern({ gen, it: { opts } }, pattern) {
-      const u = opts.unicodeRegExp ? "u" : "";
-      const { regExp } = opts.code;
-      const rx = regExp(pattern, u);
-      return gen.scopeValue("pattern", {
-        key: rx.toString(),
-        ref: rx,
-        code: (0, codegen_1._)`${regExp.code === "new RegExp" ? newRegExp : (0, util_2.useFunc)(gen, regExp)}(${pattern}, ${u})`
-      });
-    }
-    exports.usePattern = usePattern;
-    function validateArray(cxt) {
-      const { gen, data, keyword, it } = cxt;
-      const valid = gen.name("valid");
-      if (it.allErrors) {
-        const validArr = gen.let("valid", true);
-        validateItems(() => gen.assign(validArr, false));
-        return validArr;
-      }
-      gen.var(valid, true);
-      validateItems(() => gen.break());
-      return valid;
-      function validateItems(notValid) {
-        const len = gen.const("len", (0, codegen_1._)`${data}.length`);
-        gen.forRange("i", 0, len, (i) => {
-          cxt.subschema({
-            keyword,
-            dataProp: i,
-            dataPropType: util_1.Type.Num
-          }, valid);
-          gen.if((0, codegen_1.not)(valid), notValid);
-        });
-      }
-    }
-    exports.validateArray = validateArray;
-    function validateUnion(cxt) {
-      const { gen, schema, keyword, it } = cxt;
-      if (!Array.isArray(schema))
-        throw new Error("ajv implementation error");
-      const alwaysValid = schema.some((sch) => (0, util_1.alwaysValidSchema)(it, sch));
-      if (alwaysValid && !it.opts.unevaluated)
-        return;
-      const valid = gen.let("valid", false);
-      const schValid = gen.name("_valid");
-      gen.block(() => schema.forEach((_sch, i) => {
-        const schCxt = cxt.subschema({
-          keyword,
-          schemaProp: i,
-          compositeRule: true
-        }, schValid);
-        gen.assign(valid, (0, codegen_1._)`${valid} || ${schValid}`);
-        const merged = cxt.mergeValidEvaluated(schCxt, schValid);
-        if (!merged)
-          gen.if((0, codegen_1.not)(valid));
-      }));
-      cxt.result(valid, () => cxt.reset(), () => cxt.error(true));
-    }
-    exports.validateUnion = validateUnion;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/keyword.js
-var require_keyword2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/keyword.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.validateKeywordUsage = exports.validSchemaType = exports.funcKeywordCode = exports.macroKeywordCode = void 0;
-    var codegen_1 = require_codegen2();
-    var names_1 = require_names2();
-    var code_1 = require_code4();
-    var errors_1 = require_errors2();
-    function macroKeywordCode(cxt, def) {
-      const { gen, keyword, schema, parentSchema, it } = cxt;
-      const macroSchema = def.macro.call(it.self, schema, parentSchema, it);
-      const schemaRef = useKeyword(gen, keyword, macroSchema);
-      if (it.opts.validateSchema !== false)
-        it.self.validateSchema(macroSchema, true);
-      const valid = gen.name("valid");
-      cxt.subschema({
-        schema: macroSchema,
-        schemaPath: codegen_1.nil,
-        errSchemaPath: `${it.errSchemaPath}/${keyword}`,
-        topSchemaRef: schemaRef,
-        compositeRule: true
-      }, valid);
-      cxt.pass(valid, () => cxt.error(true));
-    }
-    exports.macroKeywordCode = macroKeywordCode;
-    function funcKeywordCode(cxt, def) {
-      var _a3;
-      const { gen, keyword, schema, parentSchema, $data, it } = cxt;
-      checkAsyncKeyword(it, def);
-      const validate = !$data && def.compile ? def.compile.call(it.self, schema, parentSchema, it) : def.validate;
-      const validateRef = useKeyword(gen, keyword, validate);
-      const valid = gen.let("valid");
-      cxt.block$data(valid, validateKeyword);
-      cxt.ok((_a3 = def.valid) !== null && _a3 !== void 0 ? _a3 : valid);
-      function validateKeyword() {
-        if (def.errors === false) {
-          assignValid();
-          if (def.modifying)
-            modifyData(cxt);
-          reportErrs(() => cxt.error());
-        } else {
-          const ruleErrs = def.async ? validateAsync() : validateSync();
-          if (def.modifying)
-            modifyData(cxt);
-          reportErrs(() => addErrs(cxt, ruleErrs));
-        }
-      }
-      function validateAsync() {
-        const ruleErrs = gen.let("ruleErrs", null);
-        gen.try(() => assignValid((0, codegen_1._)`await `), (e) => gen.assign(valid, false).if((0, codegen_1._)`${e} instanceof ${it.ValidationError}`, () => gen.assign(ruleErrs, (0, codegen_1._)`${e}.errors`), () => gen.throw(e)));
-        return ruleErrs;
-      }
-      function validateSync() {
-        const validateErrs = (0, codegen_1._)`${validateRef}.errors`;
-        gen.assign(validateErrs, null);
-        assignValid(codegen_1.nil);
-        return validateErrs;
-      }
-      function assignValid(_await = def.async ? (0, codegen_1._)`await ` : codegen_1.nil) {
-        const passCxt = it.opts.passContext ? names_1.default.this : names_1.default.self;
-        const passSchema = !("compile" in def && !$data || def.schema === false);
-        gen.assign(valid, (0, codegen_1._)`${_await}${(0, code_1.callValidateCode)(cxt, validateRef, passCxt, passSchema)}`, def.modifying);
-      }
-      function reportErrs(errors) {
-        var _a4;
-        gen.if((0, codegen_1.not)((_a4 = def.valid) !== null && _a4 !== void 0 ? _a4 : valid), errors);
-      }
-    }
-    exports.funcKeywordCode = funcKeywordCode;
-    function modifyData(cxt) {
-      const { gen, data, it } = cxt;
-      gen.if(it.parentData, () => gen.assign(data, (0, codegen_1._)`${it.parentData}[${it.parentDataProperty}]`));
-    }
-    function addErrs(cxt, errs) {
-      const { gen } = cxt;
-      gen.if((0, codegen_1._)`Array.isArray(${errs})`, () => {
-        gen.assign(names_1.default.vErrors, (0, codegen_1._)`${names_1.default.vErrors} === null ? ${errs} : ${names_1.default.vErrors}.concat(${errs})`).assign(names_1.default.errors, (0, codegen_1._)`${names_1.default.vErrors}.length`);
-        (0, errors_1.extendErrors)(cxt);
-      }, () => cxt.error());
-    }
-    function checkAsyncKeyword({ schemaEnv }, def) {
-      if (def.async && !schemaEnv.$async)
-        throw new Error("async keyword in sync schema");
-    }
-    function useKeyword(gen, keyword, result) {
-      if (result === void 0)
-        throw new Error(`keyword "${keyword}" failed to compile`);
-      return gen.scopeValue("keyword", typeof result == "function" ? { ref: result } : { ref: result, code: (0, codegen_1.stringify)(result) });
-    }
-    function validSchemaType(schema, schemaType, allowUndefined = false) {
-      return !schemaType.length || schemaType.some((st) => st === "array" ? Array.isArray(schema) : st === "object" ? schema && typeof schema == "object" && !Array.isArray(schema) : typeof schema == st || allowUndefined && typeof schema == "undefined");
-    }
-    exports.validSchemaType = validSchemaType;
-    function validateKeywordUsage({ schema, opts, self, errSchemaPath }, def, keyword) {
-      if (Array.isArray(def.keyword) ? !def.keyword.includes(keyword) : def.keyword !== keyword) {
-        throw new Error("ajv implementation error");
-      }
-      const deps = def.dependencies;
-      if (deps === null || deps === void 0 ? void 0 : deps.some((kwd) => !Object.prototype.hasOwnProperty.call(schema, kwd))) {
-        throw new Error(`parent schema must have dependencies of ${keyword}: ${deps.join(",")}`);
-      }
-      if (def.validateSchema) {
-        const valid = def.validateSchema(schema[keyword]);
-        if (!valid) {
-          const msg = `keyword "${keyword}" value is invalid at path "${errSchemaPath}": ` + self.errorsText(def.validateSchema.errors);
-          if (opts.validateSchema === "log")
-            self.logger.error(msg);
-          else
-            throw new Error(msg);
-        }
-      }
-    }
-    exports.validateKeywordUsage = validateKeywordUsage;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/subschema.js
-var require_subschema2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/subschema.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.extendSubschemaMode = exports.extendSubschemaData = exports.getSubschema = void 0;
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    function getSubschema(it, { keyword, schemaProp, schema, schemaPath, errSchemaPath, topSchemaRef }) {
-      if (keyword !== void 0 && schema !== void 0) {
-        throw new Error('both "keyword" and "schema" passed, only one allowed');
-      }
-      if (keyword !== void 0) {
-        const sch = it.schema[keyword];
-        return schemaProp === void 0 ? {
-          schema: sch,
-          schemaPath: (0, codegen_1._)`${it.schemaPath}${(0, codegen_1.getProperty)(keyword)}`,
-          errSchemaPath: `${it.errSchemaPath}/${keyword}`
-        } : {
-          schema: sch[schemaProp],
-          schemaPath: (0, codegen_1._)`${it.schemaPath}${(0, codegen_1.getProperty)(keyword)}${(0, codegen_1.getProperty)(schemaProp)}`,
-          errSchemaPath: `${it.errSchemaPath}/${keyword}/${(0, util_1.escapeFragment)(schemaProp)}`
-        };
-      }
-      if (schema !== void 0) {
-        if (schemaPath === void 0 || errSchemaPath === void 0 || topSchemaRef === void 0) {
-          throw new Error('"schemaPath", "errSchemaPath" and "topSchemaRef" are required with "schema"');
-        }
-        return {
-          schema,
-          schemaPath,
-          topSchemaRef,
-          errSchemaPath
-        };
-      }
-      throw new Error('either "keyword" or "schema" must be passed');
-    }
-    exports.getSubschema = getSubschema;
-    function extendSubschemaData(subschema, it, { dataProp, dataPropType: dpType, data, dataTypes, propertyName }) {
-      if (data !== void 0 && dataProp !== void 0) {
-        throw new Error('both "data" and "dataProp" passed, only one allowed');
-      }
-      const { gen } = it;
-      if (dataProp !== void 0) {
-        const { errorPath, dataPathArr, opts } = it;
-        const nextData = gen.let("data", (0, codegen_1._)`${it.data}${(0, codegen_1.getProperty)(dataProp)}`, true);
-        dataContextProps(nextData);
-        subschema.errorPath = (0, codegen_1.str)`${errorPath}${(0, util_1.getErrorPath)(dataProp, dpType, opts.jsPropertySyntax)}`;
-        subschema.parentDataProperty = (0, codegen_1._)`${dataProp}`;
-        subschema.dataPathArr = [...dataPathArr, subschema.parentDataProperty];
-      }
-      if (data !== void 0) {
-        const nextData = data instanceof codegen_1.Name ? data : gen.let("data", data, true);
-        dataContextProps(nextData);
-        if (propertyName !== void 0)
-          subschema.propertyName = propertyName;
-      }
-      if (dataTypes)
-        subschema.dataTypes = dataTypes;
-      function dataContextProps(_nextData) {
-        subschema.data = _nextData;
-        subschema.dataLevel = it.dataLevel + 1;
-        subschema.dataTypes = [];
-        it.definedProperties = /* @__PURE__ */ new Set();
-        subschema.parentData = it.data;
-        subschema.dataNames = [...it.dataNames, _nextData];
-      }
-    }
-    exports.extendSubschemaData = extendSubschemaData;
-    function extendSubschemaMode(subschema, { jtdDiscriminator, jtdMetadata, compositeRule, createErrors, allErrors }) {
-      if (compositeRule !== void 0)
-        subschema.compositeRule = compositeRule;
-      if (createErrors !== void 0)
-        subschema.createErrors = createErrors;
-      if (allErrors !== void 0)
-        subschema.allErrors = allErrors;
-      subschema.jtdDiscriminator = jtdDiscriminator;
-      subschema.jtdMetadata = jtdMetadata;
-    }
-    exports.extendSubschemaMode = extendSubschemaMode;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/json-schema-traverse/index.js
-var require_json_schema_traverse2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/json-schema-traverse/index.js"(exports, module) {
-    "use strict";
-    var traverse = module.exports = function(schema, opts, cb) {
-      if (typeof opts == "function") {
-        cb = opts;
-        opts = {};
-      }
-      cb = opts.cb || cb;
-      var pre = typeof cb == "function" ? cb : cb.pre || function() {
-      };
-      var post = cb.post || function() {
-      };
-      _traverse(opts, pre, post, schema, "", schema);
-    };
-    traverse.keywords = {
-      additionalItems: true,
-      items: true,
-      contains: true,
-      additionalProperties: true,
-      propertyNames: true,
-      not: true,
-      if: true,
-      then: true,
-      else: true
-    };
-    traverse.arrayKeywords = {
-      items: true,
-      allOf: true,
-      anyOf: true,
-      oneOf: true
-    };
-    traverse.propsKeywords = {
-      $defs: true,
-      definitions: true,
-      properties: true,
-      patternProperties: true,
-      dependencies: true
-    };
-    traverse.skipKeywords = {
-      default: true,
-      enum: true,
-      const: true,
-      required: true,
-      maximum: true,
-      minimum: true,
-      exclusiveMaximum: true,
-      exclusiveMinimum: true,
-      multipleOf: true,
-      maxLength: true,
-      minLength: true,
-      pattern: true,
-      format: true,
-      maxItems: true,
-      minItems: true,
-      uniqueItems: true,
-      maxProperties: true,
-      minProperties: true
-    };
-    function _traverse(opts, pre, post, schema, jsonPtr, rootSchema, parentJsonPtr, parentKeyword, parentSchema, keyIndex) {
-      if (schema && typeof schema == "object" && !Array.isArray(schema)) {
-        pre(schema, jsonPtr, rootSchema, parentJsonPtr, parentKeyword, parentSchema, keyIndex);
-        for (var key in schema) {
-          var sch = schema[key];
-          if (Array.isArray(sch)) {
-            if (key in traverse.arrayKeywords) {
-              for (var i = 0; i < sch.length; i++)
-                _traverse(opts, pre, post, sch[i], jsonPtr + "/" + key + "/" + i, rootSchema, jsonPtr, key, schema, i);
-            }
-          } else if (key in traverse.propsKeywords) {
-            if (sch && typeof sch == "object") {
-              for (var prop in sch)
-                _traverse(opts, pre, post, sch[prop], jsonPtr + "/" + key + "/" + escapeJsonPtr(prop), rootSchema, jsonPtr, key, schema, prop);
-            }
-          } else if (key in traverse.keywords || opts.allKeys && !(key in traverse.skipKeywords)) {
-            _traverse(opts, pre, post, sch, jsonPtr + "/" + key, rootSchema, jsonPtr, key, schema);
-          }
-        }
-        post(schema, jsonPtr, rootSchema, parentJsonPtr, parentKeyword, parentSchema, keyIndex);
-      }
-    }
-    function escapeJsonPtr(str) {
-      return str.replace(/~/g, "~0").replace(/\//g, "~1");
-    }
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/resolve.js
-var require_resolve2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/resolve.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.getSchemaRefs = exports.resolveUrl = exports.normalizeId = exports._getFullPath = exports.getFullPath = exports.inlineRef = void 0;
-    var util_1 = require_util2();
-    var equal = require_fast_deep_equal();
-    var traverse = require_json_schema_traverse2();
-    var SIMPLE_INLINED = /* @__PURE__ */ new Set([
-      "type",
-      "format",
-      "pattern",
-      "maxLength",
-      "minLength",
-      "maxProperties",
-      "minProperties",
-      "maxItems",
-      "minItems",
-      "maximum",
-      "minimum",
-      "uniqueItems",
-      "multipleOf",
-      "required",
-      "enum",
-      "const"
-    ]);
-    function inlineRef(schema, limit = true) {
-      if (typeof schema == "boolean")
-        return true;
-      if (limit === true)
-        return !hasRef(schema);
-      if (!limit)
-        return false;
-      return countKeys(schema) <= limit;
-    }
-    exports.inlineRef = inlineRef;
-    var REF_KEYWORDS = /* @__PURE__ */ new Set([
-      "$ref",
-      "$recursiveRef",
-      "$recursiveAnchor",
-      "$dynamicRef",
-      "$dynamicAnchor"
-    ]);
-    function hasRef(schema) {
-      for (const key in schema) {
-        if (REF_KEYWORDS.has(key))
-          return true;
-        const sch = schema[key];
-        if (Array.isArray(sch) && sch.some(hasRef))
-          return true;
-        if (typeof sch == "object" && hasRef(sch))
-          return true;
-      }
-      return false;
-    }
-    function countKeys(schema) {
-      let count = 0;
-      for (const key in schema) {
-        if (key === "$ref")
-          return Infinity;
-        count++;
-        if (SIMPLE_INLINED.has(key))
-          continue;
-        if (typeof schema[key] == "object") {
-          (0, util_1.eachItem)(schema[key], (sch) => count += countKeys(sch));
-        }
-        if (count === Infinity)
-          return Infinity;
-      }
-      return count;
-    }
-    function getFullPath(resolver2, id = "", normalize) {
-      if (normalize !== false)
-        id = normalizeId(id);
-      const p = resolver2.parse(id);
-      return _getFullPath(resolver2, p);
-    }
-    exports.getFullPath = getFullPath;
-    function _getFullPath(resolver2, p) {
-      const serialized = resolver2.serialize(p);
-      return serialized.split("#")[0] + "#";
-    }
-    exports._getFullPath = _getFullPath;
-    var TRAILING_SLASH_HASH = /#\/?$/;
-    function normalizeId(id) {
-      return id ? id.replace(TRAILING_SLASH_HASH, "") : "";
-    }
-    exports.normalizeId = normalizeId;
-    function resolveUrl(resolver2, baseId, id) {
-      id = normalizeId(id);
-      return resolver2.resolve(baseId, id);
-    }
-    exports.resolveUrl = resolveUrl;
-    var ANCHOR = /^[a-z_][-a-z0-9._]*$/i;
-    function getSchemaRefs(schema, baseId) {
-      if (typeof schema == "boolean")
-        return {};
-      const { schemaId, uriResolver } = this.opts;
-      const schId = normalizeId(schema[schemaId] || baseId);
-      const baseIds = { "": schId };
-      const pathPrefix = getFullPath(uriResolver, schId, false);
-      const localRefs = {};
-      const schemaRefs = /* @__PURE__ */ new Set();
-      traverse(schema, { allKeys: true }, (sch, jsonPtr, _, parentJsonPtr) => {
-        if (parentJsonPtr === void 0)
-          return;
-        const fullPath = pathPrefix + jsonPtr;
-        let innerBaseId = baseIds[parentJsonPtr];
-        if (typeof sch[schemaId] == "string")
-          innerBaseId = addRef.call(this, sch[schemaId]);
-        addAnchor.call(this, sch.$anchor);
-        addAnchor.call(this, sch.$dynamicAnchor);
-        baseIds[jsonPtr] = innerBaseId;
-        function addRef(ref) {
-          const _resolve = this.opts.uriResolver.resolve;
-          ref = normalizeId(innerBaseId ? _resolve(innerBaseId, ref) : ref);
-          if (schemaRefs.has(ref))
-            throw ambiguos(ref);
-          schemaRefs.add(ref);
-          let schOrRef = this.refs[ref];
-          if (typeof schOrRef == "string")
-            schOrRef = this.refs[schOrRef];
-          if (typeof schOrRef == "object") {
-            checkAmbiguosRef(sch, schOrRef.schema, ref);
-          } else if (ref !== normalizeId(fullPath)) {
-            if (ref[0] === "#") {
-              checkAmbiguosRef(sch, localRefs[ref], ref);
-              localRefs[ref] = sch;
-            } else {
-              this.refs[ref] = fullPath;
-            }
-          }
-          return ref;
-        }
-        function addAnchor(anchor) {
-          if (typeof anchor == "string") {
-            if (!ANCHOR.test(anchor))
-              throw new Error(`invalid anchor "${anchor}"`);
-            addRef.call(this, `#${anchor}`);
-          }
-        }
-      });
-      return localRefs;
-      function checkAmbiguosRef(sch1, sch2, ref) {
-        if (sch2 !== void 0 && !equal(sch1, sch2))
-          throw ambiguos(ref);
-      }
-      function ambiguos(ref) {
-        return new Error(`reference "${ref}" resolves to more than one schema`);
-      }
-    }
-    exports.getSchemaRefs = getSchemaRefs;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/index.js
-var require_validate2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/validate/index.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.getData = exports.KeywordCxt = exports.validateFunctionCode = void 0;
-    var boolSchema_1 = require_boolSchema2();
-    var dataType_1 = require_dataType2();
-    var applicability_1 = require_applicability2();
-    var dataType_2 = require_dataType2();
-    var defaults_1 = require_defaults2();
-    var keyword_1 = require_keyword2();
-    var subschema_1 = require_subschema2();
-    var codegen_1 = require_codegen2();
-    var names_1 = require_names2();
-    var resolve_1 = require_resolve2();
-    var util_1 = require_util2();
-    var errors_1 = require_errors2();
-    function validateFunctionCode(it) {
-      if (isSchemaObj(it)) {
-        checkKeywords(it);
-        if (schemaCxtHasRules(it)) {
-          topSchemaObjCode(it);
-          return;
-        }
-      }
-      validateFunction(it, () => (0, boolSchema_1.topBoolOrEmptySchema)(it));
-    }
-    exports.validateFunctionCode = validateFunctionCode;
-    function validateFunction({ gen, validateName, schema, schemaEnv, opts }, body) {
-      if (opts.code.es5) {
-        gen.func(validateName, (0, codegen_1._)`${names_1.default.data}, ${names_1.default.valCxt}`, schemaEnv.$async, () => {
-          gen.code((0, codegen_1._)`"use strict"; ${funcSourceUrl(schema, opts)}`);
-          destructureValCxtES5(gen, opts);
-          gen.code(body);
-        });
-      } else {
-        gen.func(validateName, (0, codegen_1._)`${names_1.default.data}, ${destructureValCxt(opts)}`, schemaEnv.$async, () => gen.code(funcSourceUrl(schema, opts)).code(body));
-      }
-    }
-    function destructureValCxt(opts) {
-      return (0, codegen_1._)`{${names_1.default.instancePath}="", ${names_1.default.parentData}, ${names_1.default.parentDataProperty}, ${names_1.default.rootData}=${names_1.default.data}${opts.dynamicRef ? (0, codegen_1._)`, ${names_1.default.dynamicAnchors}={}` : codegen_1.nil}}={}`;
-    }
-    function destructureValCxtES5(gen, opts) {
-      gen.if(names_1.default.valCxt, () => {
-        gen.var(names_1.default.instancePath, (0, codegen_1._)`${names_1.default.valCxt}.${names_1.default.instancePath}`);
-        gen.var(names_1.default.parentData, (0, codegen_1._)`${names_1.default.valCxt}.${names_1.default.parentData}`);
-        gen.var(names_1.default.parentDataProperty, (0, codegen_1._)`${names_1.default.valCxt}.${names_1.default.parentDataProperty}`);
-        gen.var(names_1.default.rootData, (0, codegen_1._)`${names_1.default.valCxt}.${names_1.default.rootData}`);
-        if (opts.dynamicRef)
-          gen.var(names_1.default.dynamicAnchors, (0, codegen_1._)`${names_1.default.valCxt}.${names_1.default.dynamicAnchors}`);
-      }, () => {
-        gen.var(names_1.default.instancePath, (0, codegen_1._)`""`);
-        gen.var(names_1.default.parentData, (0, codegen_1._)`undefined`);
-        gen.var(names_1.default.parentDataProperty, (0, codegen_1._)`undefined`);
-        gen.var(names_1.default.rootData, names_1.default.data);
-        if (opts.dynamicRef)
-          gen.var(names_1.default.dynamicAnchors, (0, codegen_1._)`{}`);
-      });
-    }
-    function topSchemaObjCode(it) {
-      const { schema, opts, gen } = it;
-      validateFunction(it, () => {
-        if (opts.$comment && schema.$comment)
-          commentKeyword(it);
-        checkNoDefault(it);
-        gen.let(names_1.default.vErrors, null);
-        gen.let(names_1.default.errors, 0);
-        if (opts.unevaluated)
-          resetEvaluated(it);
-        typeAndKeywords(it);
-        returnResults(it);
-      });
-      return;
-    }
-    function resetEvaluated(it) {
-      const { gen, validateName } = it;
-      it.evaluated = gen.const("evaluated", (0, codegen_1._)`${validateName}.evaluated`);
-      gen.if((0, codegen_1._)`${it.evaluated}.dynamicProps`, () => gen.assign((0, codegen_1._)`${it.evaluated}.props`, (0, codegen_1._)`undefined`));
-      gen.if((0, codegen_1._)`${it.evaluated}.dynamicItems`, () => gen.assign((0, codegen_1._)`${it.evaluated}.items`, (0, codegen_1._)`undefined`));
-    }
-    function funcSourceUrl(schema, opts) {
-      const schId = typeof schema == "object" && schema[opts.schemaId];
-      return schId && (opts.code.source || opts.code.process) ? (0, codegen_1._)`/*# sourceURL=${schId} */` : codegen_1.nil;
-    }
-    function subschemaCode(it, valid) {
-      if (isSchemaObj(it)) {
-        checkKeywords(it);
-        if (schemaCxtHasRules(it)) {
-          subSchemaObjCode(it, valid);
-          return;
-        }
-      }
-      (0, boolSchema_1.boolOrEmptySchema)(it, valid);
-    }
-    function schemaCxtHasRules({ schema, self }) {
-      if (typeof schema == "boolean")
-        return !schema;
-      for (const key in schema)
-        if (self.RULES.all[key])
-          return true;
-      return false;
-    }
-    function isSchemaObj(it) {
-      return typeof it.schema != "boolean";
-    }
-    function subSchemaObjCode(it, valid) {
-      const { schema, gen, opts } = it;
-      if (opts.$comment && schema.$comment)
-        commentKeyword(it);
-      updateContext(it);
-      checkAsyncSchema(it);
-      const errsCount = gen.const("_errs", names_1.default.errors);
-      typeAndKeywords(it, errsCount);
-      gen.var(valid, (0, codegen_1._)`${errsCount} === ${names_1.default.errors}`);
-    }
-    function checkKeywords(it) {
-      (0, util_1.checkUnknownRules)(it);
-      checkRefsAndKeywords(it);
-    }
-    function typeAndKeywords(it, errsCount) {
-      if (it.opts.jtd)
-        return schemaKeywords(it, [], false, errsCount);
-      const types = (0, dataType_1.getSchemaTypes)(it.schema);
-      const checkedTypes = (0, dataType_1.coerceAndCheckDataType)(it, types);
-      schemaKeywords(it, types, !checkedTypes, errsCount);
-    }
-    function checkRefsAndKeywords(it) {
-      const { schema, errSchemaPath, opts, self } = it;
-      if (schema.$ref && opts.ignoreKeywordsWithRef && (0, util_1.schemaHasRulesButRef)(schema, self.RULES)) {
-        self.logger.warn(`$ref: keywords ignored in schema at path "${errSchemaPath}"`);
-      }
-    }
-    function checkNoDefault(it) {
-      const { schema, opts } = it;
-      if (schema.default !== void 0 && opts.useDefaults && opts.strictSchema) {
-        (0, util_1.checkStrictMode)(it, "default is ignored in the schema root");
-      }
-    }
-    function updateContext(it) {
-      const schId = it.schema[it.opts.schemaId];
-      if (schId)
-        it.baseId = (0, resolve_1.resolveUrl)(it.opts.uriResolver, it.baseId, schId);
-    }
-    function checkAsyncSchema(it) {
-      if (it.schema.$async && !it.schemaEnv.$async)
-        throw new Error("async schema in sync schema");
-    }
-    function commentKeyword({ gen, schemaEnv, schema, errSchemaPath, opts }) {
-      const msg = schema.$comment;
-      if (opts.$comment === true) {
-        gen.code((0, codegen_1._)`${names_1.default.self}.logger.log(${msg})`);
-      } else if (typeof opts.$comment == "function") {
-        const schemaPath = (0, codegen_1.str)`${errSchemaPath}/$comment`;
-        const rootName = gen.scopeValue("root", { ref: schemaEnv.root });
-        gen.code((0, codegen_1._)`${names_1.default.self}.opts.$comment(${msg}, ${schemaPath}, ${rootName}.schema)`);
-      }
-    }
-    function returnResults(it) {
-      const { gen, schemaEnv, validateName, ValidationError, opts } = it;
-      if (schemaEnv.$async) {
-        gen.if((0, codegen_1._)`${names_1.default.errors} === 0`, () => gen.return(names_1.default.data), () => gen.throw((0, codegen_1._)`new ${ValidationError}(${names_1.default.vErrors})`));
-      } else {
-        gen.assign((0, codegen_1._)`${validateName}.errors`, names_1.default.vErrors);
-        if (opts.unevaluated)
-          assignEvaluated(it);
-        gen.return((0, codegen_1._)`${names_1.default.errors} === 0`);
-      }
-    }
-    function assignEvaluated({ gen, evaluated, props, items }) {
-      if (props instanceof codegen_1.Name)
-        gen.assign((0, codegen_1._)`${evaluated}.props`, props);
-      if (items instanceof codegen_1.Name)
-        gen.assign((0, codegen_1._)`${evaluated}.items`, items);
-    }
-    function schemaKeywords(it, types, typeErrors, errsCount) {
-      const { gen, schema, data, allErrors, opts, self } = it;
-      const { RULES } = self;
-      if (schema.$ref && (opts.ignoreKeywordsWithRef || !(0, util_1.schemaHasRulesButRef)(schema, RULES))) {
-        gen.block(() => keywordCode(it, "$ref", RULES.all.$ref.definition));
-        return;
-      }
-      if (!opts.jtd)
-        checkStrictTypes(it, types);
-      gen.block(() => {
-        for (const group of RULES.rules)
-          groupKeywords(group);
-        groupKeywords(RULES.post);
-      });
-      function groupKeywords(group) {
-        if (!(0, applicability_1.shouldUseGroup)(schema, group))
-          return;
-        if (group.type) {
-          gen.if((0, dataType_2.checkDataType)(group.type, data, opts.strictNumbers));
-          iterateKeywords(it, group);
-          if (types.length === 1 && types[0] === group.type && typeErrors) {
-            gen.else();
-            (0, dataType_2.reportTypeError)(it);
-          }
-          gen.endIf();
-        } else {
-          iterateKeywords(it, group);
-        }
-        if (!allErrors)
-          gen.if((0, codegen_1._)`${names_1.default.errors} === ${errsCount || 0}`);
-      }
-    }
-    function iterateKeywords(it, group) {
-      const { gen, schema, opts: { useDefaults } } = it;
-      if (useDefaults)
-        (0, defaults_1.assignDefaults)(it, group.type);
-      gen.block(() => {
-        for (const rule of group.rules) {
-          if ((0, applicability_1.shouldUseRule)(schema, rule)) {
-            keywordCode(it, rule.keyword, rule.definition, group.type);
-          }
-        }
-      });
-    }
-    function checkStrictTypes(it, types) {
-      if (it.schemaEnv.meta || !it.opts.strictTypes)
-        return;
-      checkContextTypes(it, types);
-      if (!it.opts.allowUnionTypes)
-        checkMultipleTypes(it, types);
-      checkKeywordTypes(it, it.dataTypes);
-    }
-    function checkContextTypes(it, types) {
-      if (!types.length)
-        return;
-      if (!it.dataTypes.length) {
-        it.dataTypes = types;
-        return;
-      }
-      types.forEach((t) => {
-        if (!includesType(it.dataTypes, t)) {
-          strictTypesError(it, `type "${t}" not allowed by context "${it.dataTypes.join(",")}"`);
-        }
-      });
-      narrowSchemaTypes(it, types);
-    }
-    function checkMultipleTypes(it, ts) {
-      if (ts.length > 1 && !(ts.length === 2 && ts.includes("null"))) {
-        strictTypesError(it, "use allowUnionTypes to allow union type keyword");
-      }
-    }
-    function checkKeywordTypes(it, ts) {
-      const rules = it.self.RULES.all;
-      for (const keyword in rules) {
-        const rule = rules[keyword];
-        if (typeof rule == "object" && (0, applicability_1.shouldUseRule)(it.schema, rule)) {
-          const { type } = rule.definition;
-          if (type.length && !type.some((t) => hasApplicableType(ts, t))) {
-            strictTypesError(it, `missing type "${type.join(",")}" for keyword "${keyword}"`);
-          }
-        }
-      }
-    }
-    function hasApplicableType(schTs, kwdT) {
-      return schTs.includes(kwdT) || kwdT === "number" && schTs.includes("integer");
-    }
-    function includesType(ts, t) {
-      return ts.includes(t) || t === "integer" && ts.includes("number");
-    }
-    function narrowSchemaTypes(it, withTypes) {
-      const ts = [];
-      for (const t of it.dataTypes) {
-        if (includesType(withTypes, t))
-          ts.push(t);
-        else if (withTypes.includes("integer") && t === "number")
-          ts.push("integer");
-      }
-      it.dataTypes = ts;
-    }
-    function strictTypesError(it, msg) {
-      const schemaPath = it.schemaEnv.baseId + it.errSchemaPath;
-      msg += ` at "${schemaPath}" (strictTypes)`;
-      (0, util_1.checkStrictMode)(it, msg, it.opts.strictTypes);
-    }
-    var KeywordCxt = class {
-      constructor(it, def, keyword) {
-        (0, keyword_1.validateKeywordUsage)(it, def, keyword);
-        this.gen = it.gen;
-        this.allErrors = it.allErrors;
-        this.keyword = keyword;
-        this.data = it.data;
-        this.schema = it.schema[keyword];
-        this.$data = def.$data && it.opts.$data && this.schema && this.schema.$data;
-        this.schemaValue = (0, util_1.schemaRefOrVal)(it, this.schema, keyword, this.$data);
-        this.schemaType = def.schemaType;
-        this.parentSchema = it.schema;
-        this.params = {};
-        this.it = it;
-        this.def = def;
-        if (this.$data) {
-          this.schemaCode = it.gen.const("vSchema", getData(this.$data, it));
-        } else {
-          this.schemaCode = this.schemaValue;
-          if (!(0, keyword_1.validSchemaType)(this.schema, def.schemaType, def.allowUndefined)) {
-            throw new Error(`${keyword} value must be ${JSON.stringify(def.schemaType)}`);
-          }
-        }
-        if ("code" in def ? def.trackErrors : def.errors !== false) {
-          this.errsCount = it.gen.const("_errs", names_1.default.errors);
-        }
-      }
-      result(condition, successAction, failAction) {
-        this.failResult((0, codegen_1.not)(condition), successAction, failAction);
-      }
-      failResult(condition, successAction, failAction) {
-        this.gen.if(condition);
-        if (failAction)
-          failAction();
-        else
-          this.error();
-        if (successAction) {
-          this.gen.else();
-          successAction();
-          if (this.allErrors)
-            this.gen.endIf();
-        } else {
-          if (this.allErrors)
-            this.gen.endIf();
-          else
-            this.gen.else();
-        }
-      }
-      pass(condition, failAction) {
-        this.failResult((0, codegen_1.not)(condition), void 0, failAction);
-      }
-      fail(condition) {
-        if (condition === void 0) {
-          this.error();
-          if (!this.allErrors)
-            this.gen.if(false);
-          return;
-        }
-        this.gen.if(condition);
-        this.error();
-        if (this.allErrors)
-          this.gen.endIf();
-        else
-          this.gen.else();
-      }
-      fail$data(condition) {
-        if (!this.$data)
-          return this.fail(condition);
-        const { schemaCode } = this;
-        this.fail((0, codegen_1._)`${schemaCode} !== undefined && (${(0, codegen_1.or)(this.invalid$data(), condition)})`);
-      }
-      error(append, errorParams, errorPaths) {
-        if (errorParams) {
-          this.setParams(errorParams);
-          this._error(append, errorPaths);
-          this.setParams({});
-          return;
-        }
-        this._error(append, errorPaths);
-      }
-      _error(append, errorPaths) {
-        ;
-        (append ? errors_1.reportExtraError : errors_1.reportError)(this, this.def.error, errorPaths);
-      }
-      $dataError() {
-        (0, errors_1.reportError)(this, this.def.$dataError || errors_1.keyword$DataError);
-      }
-      reset() {
-        if (this.errsCount === void 0)
-          throw new Error('add "trackErrors" to keyword definition');
-        (0, errors_1.resetErrorsCount)(this.gen, this.errsCount);
-      }
-      ok(cond) {
-        if (!this.allErrors)
-          this.gen.if(cond);
-      }
-      setParams(obj, assign) {
-        if (assign)
-          Object.assign(this.params, obj);
-        else
-          this.params = obj;
-      }
-      block$data(valid, codeBlock, $dataValid = codegen_1.nil) {
-        this.gen.block(() => {
-          this.check$data(valid, $dataValid);
-          codeBlock();
-        });
-      }
-      check$data(valid = codegen_1.nil, $dataValid = codegen_1.nil) {
-        if (!this.$data)
-          return;
-        const { gen, schemaCode, schemaType, def } = this;
-        gen.if((0, codegen_1.or)((0, codegen_1._)`${schemaCode} === undefined`, $dataValid));
-        if (valid !== codegen_1.nil)
-          gen.assign(valid, true);
-        if (schemaType.length || def.validateSchema) {
-          gen.elseIf(this.invalid$data());
-          this.$dataError();
-          if (valid !== codegen_1.nil)
-            gen.assign(valid, false);
-        }
-        gen.else();
-      }
-      invalid$data() {
-        const { gen, schemaCode, schemaType, def, it } = this;
-        return (0, codegen_1.or)(wrong$DataType(), invalid$DataSchema());
-        function wrong$DataType() {
-          if (schemaType.length) {
-            if (!(schemaCode instanceof codegen_1.Name))
-              throw new Error("ajv implementation error");
-            const st = Array.isArray(schemaType) ? schemaType : [schemaType];
-            return (0, codegen_1._)`${(0, dataType_2.checkDataTypes)(st, schemaCode, it.opts.strictNumbers, dataType_2.DataType.Wrong)}`;
-          }
-          return codegen_1.nil;
-        }
-        function invalid$DataSchema() {
-          if (def.validateSchema) {
-            const validateSchemaRef = gen.scopeValue("validate$data", { ref: def.validateSchema });
-            return (0, codegen_1._)`!${validateSchemaRef}(${schemaCode})`;
-          }
-          return codegen_1.nil;
-        }
-      }
-      subschema(appl, valid) {
-        const subschema = (0, subschema_1.getSubschema)(this.it, appl);
-        (0, subschema_1.extendSubschemaData)(subschema, this.it, appl);
-        (0, subschema_1.extendSubschemaMode)(subschema, appl);
-        const nextContext = { ...this.it, ...subschema, items: void 0, props: void 0 };
-        subschemaCode(nextContext, valid);
-        return nextContext;
-      }
-      mergeEvaluated(schemaCxt, toName) {
-        const { it, gen } = this;
-        if (!it.opts.unevaluated)
-          return;
-        if (it.props !== true && schemaCxt.props !== void 0) {
-          it.props = util_1.mergeEvaluated.props(gen, schemaCxt.props, it.props, toName);
-        }
-        if (it.items !== true && schemaCxt.items !== void 0) {
-          it.items = util_1.mergeEvaluated.items(gen, schemaCxt.items, it.items, toName);
-        }
-      }
-      mergeValidEvaluated(schemaCxt, valid) {
-        const { it, gen } = this;
-        if (it.opts.unevaluated && (it.props !== true || it.items !== true)) {
-          gen.if(valid, () => this.mergeEvaluated(schemaCxt, codegen_1.Name));
-          return true;
-        }
-      }
-    };
-    exports.KeywordCxt = KeywordCxt;
-    function keywordCode(it, keyword, def, ruleType) {
-      const cxt = new KeywordCxt(it, def, keyword);
-      if ("code" in def) {
-        def.code(cxt, ruleType);
-      } else if (cxt.$data && def.validate) {
-        (0, keyword_1.funcKeywordCode)(cxt, def);
-      } else if ("macro" in def) {
-        (0, keyword_1.macroKeywordCode)(cxt, def);
-      } else if (def.compile || def.validate) {
-        (0, keyword_1.funcKeywordCode)(cxt, def);
-      }
-    }
-    var JSON_POINTER = /^\/(?:[^~]|~0|~1)*$/;
-    var RELATIVE_JSON_POINTER = /^([0-9]+)(#|\/(?:[^~]|~0|~1)*)?$/;
-    function getData($data, { dataLevel, dataNames, dataPathArr }) {
-      let jsonPointer;
-      let data;
-      if ($data === "")
-        return names_1.default.rootData;
-      if ($data[0] === "/") {
-        if (!JSON_POINTER.test($data))
-          throw new Error(`Invalid JSON-pointer: ${$data}`);
-        jsonPointer = $data;
-        data = names_1.default.rootData;
-      } else {
-        const matches = RELATIVE_JSON_POINTER.exec($data);
-        if (!matches)
-          throw new Error(`Invalid JSON-pointer: ${$data}`);
-        const up = +matches[1];
-        jsonPointer = matches[2];
-        if (jsonPointer === "#") {
-          if (up >= dataLevel)
-            throw new Error(errorMsg("property/index", up));
-          return dataPathArr[dataLevel - up];
-        }
-        if (up > dataLevel)
-          throw new Error(errorMsg("data", up));
-        data = dataNames[dataLevel - up];
-        if (!jsonPointer)
-          return data;
-      }
-      let expr = data;
-      const segments = jsonPointer.split("/");
-      for (const segment of segments) {
-        if (segment) {
-          data = (0, codegen_1._)`${data}${(0, codegen_1.getProperty)((0, util_1.unescapeJsonPointer)(segment))}`;
-          expr = (0, codegen_1._)`${expr} && ${data}`;
-        }
-      }
-      return expr;
-      function errorMsg(pointerType, up) {
-        return `Cannot access ${pointerType} ${up} levels up, current level is ${dataLevel}`;
-      }
-    }
-    exports.getData = getData;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/runtime/validation_error.js
-var require_validation_error2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/runtime/validation_error.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var ValidationError = class extends Error {
-      constructor(errors) {
-        super("validation failed");
-        this.errors = errors;
-        this.ajv = this.validation = true;
-      }
-    };
-    exports.default = ValidationError;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/ref_error.js
-var require_ref_error2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/ref_error.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var resolve_1 = require_resolve2();
-    var MissingRefError = class extends Error {
-      constructor(resolver2, baseId, ref, msg) {
-        super(msg || `can't resolve reference ${ref} from id ${baseId}`);
-        this.missingRef = (0, resolve_1.resolveUrl)(resolver2, baseId, ref);
-        this.missingSchema = (0, resolve_1.normalizeId)((0, resolve_1.getFullPath)(resolver2, this.missingRef));
-      }
-    };
-    exports.default = MissingRefError;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/compile/index.js
-var require_compile2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/compile/index.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.resolveSchema = exports.getCompilingSchema = exports.resolveRef = exports.compileSchema = exports.SchemaEnv = void 0;
-    var codegen_1 = require_codegen2();
-    var validation_error_1 = require_validation_error2();
-    var names_1 = require_names2();
-    var resolve_1 = require_resolve2();
-    var util_1 = require_util2();
-    var validate_1 = require_validate2();
-    var SchemaEnv = class {
-      constructor(env) {
-        var _a3;
-        this.refs = {};
-        this.dynamicAnchors = {};
-        let schema;
-        if (typeof env.schema == "object")
-          schema = env.schema;
-        this.schema = env.schema;
-        this.schemaId = env.schemaId;
-        this.root = env.root || this;
-        this.baseId = (_a3 = env.baseId) !== null && _a3 !== void 0 ? _a3 : (0, resolve_1.normalizeId)(schema === null || schema === void 0 ? void 0 : schema[env.schemaId || "$id"]);
-        this.schemaPath = env.schemaPath;
-        this.localRefs = env.localRefs;
-        this.meta = env.meta;
-        this.$async = schema === null || schema === void 0 ? void 0 : schema.$async;
-        this.refs = {};
-      }
-    };
-    exports.SchemaEnv = SchemaEnv;
-    function compileSchema(sch) {
-      const _sch = getCompilingSchema.call(this, sch);
-      if (_sch)
-        return _sch;
-      const rootId = (0, resolve_1.getFullPath)(this.opts.uriResolver, sch.root.baseId);
-      const { es5, lines } = this.opts.code;
-      const { ownProperties } = this.opts;
-      const gen = new codegen_1.CodeGen(this.scope, { es5, lines, ownProperties });
-      let _ValidationError;
-      if (sch.$async) {
-        _ValidationError = gen.scopeValue("Error", {
-          ref: validation_error_1.default,
-          code: (0, codegen_1._)`require("ajv/dist/runtime/validation_error").default`
-        });
-      }
-      const validateName = gen.scopeName("validate");
-      sch.validateName = validateName;
-      const schemaCxt = {
-        gen,
-        allErrors: this.opts.allErrors,
-        data: names_1.default.data,
-        parentData: names_1.default.parentData,
-        parentDataProperty: names_1.default.parentDataProperty,
-        dataNames: [names_1.default.data],
-        dataPathArr: [codegen_1.nil],
-        // TODO can its length be used as dataLevel if nil is removed?
-        dataLevel: 0,
-        dataTypes: [],
-        definedProperties: /* @__PURE__ */ new Set(),
-        topSchemaRef: gen.scopeValue("schema", this.opts.code.source === true ? { ref: sch.schema, code: (0, codegen_1.stringify)(sch.schema) } : { ref: sch.schema }),
-        validateName,
-        ValidationError: _ValidationError,
-        schema: sch.schema,
-        schemaEnv: sch,
-        rootId,
-        baseId: sch.baseId || rootId,
-        schemaPath: codegen_1.nil,
-        errSchemaPath: sch.schemaPath || (this.opts.jtd ? "" : "#"),
-        errorPath: (0, codegen_1._)`""`,
-        opts: this.opts,
-        self: this
-      };
-      let sourceCode;
-      try {
-        this._compilations.add(sch);
-        (0, validate_1.validateFunctionCode)(schemaCxt);
-        gen.optimize(this.opts.code.optimize);
-        const validateCode = gen.toString();
-        sourceCode = `${gen.scopeRefs(names_1.default.scope)}return ${validateCode}`;
-        if (this.opts.code.process)
-          sourceCode = this.opts.code.process(sourceCode, sch);
-        const makeValidate = new Function(`${names_1.default.self}`, `${names_1.default.scope}`, sourceCode);
-        const validate = makeValidate(this, this.scope.get());
-        this.scope.value(validateName, { ref: validate });
-        validate.errors = null;
-        validate.schema = sch.schema;
-        validate.schemaEnv = sch;
-        if (sch.$async)
-          validate.$async = true;
-        if (this.opts.code.source === true) {
-          validate.source = { validateName, validateCode, scopeValues: gen._values };
-        }
-        if (this.opts.unevaluated) {
-          const { props, items } = schemaCxt;
-          validate.evaluated = {
-            props: props instanceof codegen_1.Name ? void 0 : props,
-            items: items instanceof codegen_1.Name ? void 0 : items,
-            dynamicProps: props instanceof codegen_1.Name,
-            dynamicItems: items instanceof codegen_1.Name
-          };
-          if (validate.source)
-            validate.source.evaluated = (0, codegen_1.stringify)(validate.evaluated);
-        }
-        sch.validate = validate;
-        return sch;
-      } catch (e) {
-        delete sch.validate;
-        delete sch.validateName;
-        if (sourceCode)
-          this.logger.error("Error compiling schema, function code:", sourceCode);
-        throw e;
-      } finally {
-        this._compilations.delete(sch);
-      }
-    }
-    exports.compileSchema = compileSchema;
-    function resolveRef2(root, baseId, ref) {
-      var _a3;
-      ref = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, ref);
-      const schOrFunc = root.refs[ref];
-      if (schOrFunc)
-        return schOrFunc;
-      let _sch = resolve2.call(this, root, ref);
-      if (_sch === void 0) {
-        const schema = (_a3 = root.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
-        const { schemaId } = this.opts;
-        if (schema)
-          _sch = new SchemaEnv({ schema, schemaId, root, baseId });
-      }
-      if (_sch === void 0)
-        return;
-      return root.refs[ref] = inlineOrCompile.call(this, _sch);
-    }
-    exports.resolveRef = resolveRef2;
-    function inlineOrCompile(sch) {
-      if ((0, resolve_1.inlineRef)(sch.schema, this.opts.inlineRefs))
-        return sch.schema;
-      return sch.validate ? sch : compileSchema.call(this, sch);
-    }
-    function getCompilingSchema(schEnv) {
-      for (const sch of this._compilations) {
-        if (sameSchemaEnv(sch, schEnv))
-          return sch;
-      }
-    }
-    exports.getCompilingSchema = getCompilingSchema;
-    function sameSchemaEnv(s1, s2) {
-      return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
-    }
-    function resolve2(root, ref) {
-      let sch;
-      while (typeof (sch = this.refs[ref]) == "string")
-        ref = sch;
-      return sch || this.schemas[ref] || resolveSchema.call(this, root, ref);
-    }
-    function resolveSchema(root, ref) {
-      const p = this.opts.uriResolver.parse(ref);
-      const refPath = (0, resolve_1._getFullPath)(this.opts.uriResolver, p);
-      let baseId = (0, resolve_1.getFullPath)(this.opts.uriResolver, root.baseId, void 0);
-      if (Object.keys(root.schema).length > 0 && refPath === baseId) {
-        return getJsonPointer.call(this, p, root);
-      }
-      const id = (0, resolve_1.normalizeId)(refPath);
-      const schOrRef = this.refs[id] || this.schemas[id];
-      if (typeof schOrRef == "string") {
-        const sch = resolveSchema.call(this, root, schOrRef);
-        if (typeof (sch === null || sch === void 0 ? void 0 : sch.schema) !== "object")
-          return;
-        return getJsonPointer.call(this, p, sch);
-      }
-      if (typeof (schOrRef === null || schOrRef === void 0 ? void 0 : schOrRef.schema) !== "object")
-        return;
-      if (!schOrRef.validate)
-        compileSchema.call(this, schOrRef);
-      if (id === (0, resolve_1.normalizeId)(ref)) {
-        const { schema } = schOrRef;
-        const { schemaId } = this.opts;
-        const schId = schema[schemaId];
-        if (schId)
-          baseId = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, schId);
-        return new SchemaEnv({ schema, schemaId, root, baseId });
-      }
-      return getJsonPointer.call(this, p, schOrRef);
-    }
-    exports.resolveSchema = resolveSchema;
-    var PREVENT_SCOPE_CHANGE = /* @__PURE__ */ new Set([
-      "properties",
-      "patternProperties",
-      "enum",
-      "dependencies",
-      "definitions"
-    ]);
-    function getJsonPointer(parsedRef, { baseId, schema, root }) {
-      var _a3;
-      if (((_a3 = parsedRef.fragment) === null || _a3 === void 0 ? void 0 : _a3[0]) !== "/")
-        return;
-      for (const part of parsedRef.fragment.slice(1).split("/")) {
-        if (typeof schema === "boolean")
-          return;
-        const partSchema = schema[(0, util_1.unescapeFragment)(part)];
-        if (partSchema === void 0)
-          return;
-        schema = partSchema;
-        const schId = typeof schema === "object" && schema[this.opts.schemaId];
-        if (!PREVENT_SCOPE_CHANGE.has(part) && schId) {
-          baseId = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, schId);
-        }
-      }
-      let env;
-      if (typeof schema != "boolean" && schema.$ref && !(0, util_1.schemaHasRulesButRef)(schema, this.RULES)) {
-        const $ref = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, schema.$ref);
-        env = resolveSchema.call(this, root, $ref);
-      }
-      const { schemaId } = this.opts;
-      env = env || new SchemaEnv({ schema, schemaId, root, baseId });
-      if (env.schema !== env.root.schema)
-        return env;
-      return void 0;
-    }
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/refs/data.json
-var require_data2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/refs/data.json"(exports, module) {
-    module.exports = {
-      $id: "https://raw.githubusercontent.com/ajv-validator/ajv/master/lib/refs/data.json#",
-      description: "Meta-schema for $data reference (JSON AnySchema extension proposal)",
-      type: "object",
-      required: ["$data"],
-      properties: {
-        $data: {
-          type: "string",
-          anyOf: [{ format: "relative-json-pointer" }, { format: "json-pointer" }]
-        }
-      },
-      additionalProperties: false
-    };
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/runtime/uri.js
-var require_uri2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/runtime/uri.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var uri = require_fast_uri();
-    uri.code = 'require("ajv/dist/runtime/uri").default';
-    exports.default = uri;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/core.js
-var require_core3 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/core.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.CodeGen = exports.Name = exports.nil = exports.stringify = exports.str = exports._ = exports.KeywordCxt = void 0;
-    var validate_1 = require_validate2();
-    Object.defineProperty(exports, "KeywordCxt", { enumerable: true, get: function() {
-      return validate_1.KeywordCxt;
-    } });
-    var codegen_1 = require_codegen2();
-    Object.defineProperty(exports, "_", { enumerable: true, get: function() {
-      return codegen_1._;
-    } });
-    Object.defineProperty(exports, "str", { enumerable: true, get: function() {
-      return codegen_1.str;
-    } });
-    Object.defineProperty(exports, "stringify", { enumerable: true, get: function() {
-      return codegen_1.stringify;
-    } });
-    Object.defineProperty(exports, "nil", { enumerable: true, get: function() {
-      return codegen_1.nil;
-    } });
-    Object.defineProperty(exports, "Name", { enumerable: true, get: function() {
-      return codegen_1.Name;
-    } });
-    Object.defineProperty(exports, "CodeGen", { enumerable: true, get: function() {
-      return codegen_1.CodeGen;
-    } });
-    var validation_error_1 = require_validation_error2();
-    var ref_error_1 = require_ref_error2();
-    var rules_1 = require_rules2();
-    var compile_1 = require_compile2();
-    var codegen_2 = require_codegen2();
-    var resolve_1 = require_resolve2();
-    var dataType_1 = require_dataType2();
-    var util_1 = require_util2();
-    var $dataRefSchema = require_data2();
-    var uri_1 = require_uri2();
-    var defaultRegExp = (str, flags) => new RegExp(str, flags);
-    defaultRegExp.code = "new RegExp";
-    var META_IGNORE_OPTIONS = ["removeAdditional", "useDefaults", "coerceTypes"];
-    var EXT_SCOPE_NAMES = /* @__PURE__ */ new Set([
-      "validate",
-      "serialize",
-      "parse",
-      "wrapper",
-      "root",
-      "schema",
-      "keyword",
-      "pattern",
-      "formats",
-      "validate$data",
-      "func",
-      "obj",
-      "Error"
-    ]);
-    var removedOptions = {
-      errorDataPath: "",
-      format: "`validateFormats: false` can be used instead.",
-      nullable: '"nullable" keyword is supported by default.',
-      jsonPointers: "Deprecated jsPropertySyntax can be used instead.",
-      extendRefs: "Deprecated ignoreKeywordsWithRef can be used instead.",
-      missingRefs: "Pass empty schema with $id that should be ignored to ajv.addSchema.",
-      processCode: "Use option `code: {process: (code, schemaEnv: object) => string}`",
-      sourceCode: "Use option `code: {source: true}`",
-      strictDefaults: "It is default now, see option `strict`.",
-      strictKeywords: "It is default now, see option `strict`.",
-      uniqueItems: '"uniqueItems" keyword is always validated.',
-      unknownFormats: "Disable strict mode or pass `true` to `ajv.addFormat` (or `formats` option).",
-      cache: "Map is used as cache, schema object as key.",
-      serialize: "Map is used as cache, schema object as key.",
-      ajvErrors: "It is default now."
-    };
-    var deprecatedOptions = {
-      ignoreKeywordsWithRef: "",
-      jsPropertySyntax: "",
-      unicode: '"minLength"/"maxLength" account for unicode characters by default.'
-    };
-    var MAX_EXPRESSION = 200;
-    function requiredOptions(o) {
-      var _a3, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0;
-      const s = o.strict;
-      const _optz = (_a3 = o.code) === null || _a3 === void 0 ? void 0 : _a3.optimize;
-      const optimize = _optz === true || _optz === void 0 ? 1 : _optz || 0;
-      const regExp = (_c = (_b = o.code) === null || _b === void 0 ? void 0 : _b.regExp) !== null && _c !== void 0 ? _c : defaultRegExp;
-      const uriResolver = (_d = o.uriResolver) !== null && _d !== void 0 ? _d : uri_1.default;
-      return {
-        strictSchema: (_f = (_e = o.strictSchema) !== null && _e !== void 0 ? _e : s) !== null && _f !== void 0 ? _f : true,
-        strictNumbers: (_h = (_g = o.strictNumbers) !== null && _g !== void 0 ? _g : s) !== null && _h !== void 0 ? _h : true,
-        strictTypes: (_k = (_j = o.strictTypes) !== null && _j !== void 0 ? _j : s) !== null && _k !== void 0 ? _k : "log",
-        strictTuples: (_m = (_l = o.strictTuples) !== null && _l !== void 0 ? _l : s) !== null && _m !== void 0 ? _m : "log",
-        strictRequired: (_p = (_o = o.strictRequired) !== null && _o !== void 0 ? _o : s) !== null && _p !== void 0 ? _p : false,
-        code: o.code ? { ...o.code, optimize, regExp } : { optimize, regExp },
-        loopRequired: (_q = o.loopRequired) !== null && _q !== void 0 ? _q : MAX_EXPRESSION,
-        loopEnum: (_r = o.loopEnum) !== null && _r !== void 0 ? _r : MAX_EXPRESSION,
-        meta: (_s = o.meta) !== null && _s !== void 0 ? _s : true,
-        messages: (_t = o.messages) !== null && _t !== void 0 ? _t : true,
-        inlineRefs: (_u = o.inlineRefs) !== null && _u !== void 0 ? _u : true,
-        schemaId: (_v = o.schemaId) !== null && _v !== void 0 ? _v : "$id",
-        addUsedSchema: (_w = o.addUsedSchema) !== null && _w !== void 0 ? _w : true,
-        validateSchema: (_x = o.validateSchema) !== null && _x !== void 0 ? _x : true,
-        validateFormats: (_y = o.validateFormats) !== null && _y !== void 0 ? _y : true,
-        unicodeRegExp: (_z = o.unicodeRegExp) !== null && _z !== void 0 ? _z : true,
-        int32range: (_0 = o.int32range) !== null && _0 !== void 0 ? _0 : true,
-        uriResolver
-      };
-    }
-    var Ajv2 = class {
-      constructor(opts = {}) {
-        this.schemas = {};
-        this.refs = {};
-        this.formats = /* @__PURE__ */ Object.create(null);
-        this._compilations = /* @__PURE__ */ new Set();
-        this._loading = {};
-        this._cache = /* @__PURE__ */ new Map();
-        opts = this.opts = { ...opts, ...requiredOptions(opts) };
-        const { es5, lines } = this.opts.code;
-        this.scope = new codegen_2.ValueScope({ scope: {}, prefixes: EXT_SCOPE_NAMES, es5, lines });
-        this.logger = getLogger(opts.logger);
-        const formatOpt = opts.validateFormats;
-        opts.validateFormats = false;
-        this.RULES = (0, rules_1.getRules)();
-        checkOptions.call(this, removedOptions, opts, "NOT SUPPORTED");
-        checkOptions.call(this, deprecatedOptions, opts, "DEPRECATED", "warn");
-        this._metaOpts = getMetaSchemaOptions.call(this);
-        if (opts.formats)
-          addInitialFormats.call(this);
-        this._addVocabularies();
-        this._addDefaultMetaSchema();
-        if (opts.keywords)
-          addInitialKeywords.call(this, opts.keywords);
-        if (typeof opts.meta == "object")
-          this.addMetaSchema(opts.meta);
-        addInitialSchemas.call(this);
-        opts.validateFormats = formatOpt;
-      }
-      _addVocabularies() {
-        this.addKeyword("$async");
-      }
-      _addDefaultMetaSchema() {
-        const { $data, meta: meta3, schemaId } = this.opts;
-        let _dataRefSchema = $dataRefSchema;
-        if (schemaId === "id") {
-          _dataRefSchema = { ...$dataRefSchema };
-          _dataRefSchema.id = _dataRefSchema.$id;
-          delete _dataRefSchema.$id;
-        }
-        if (meta3 && $data)
-          this.addMetaSchema(_dataRefSchema, _dataRefSchema[schemaId], false);
-      }
-      defaultMeta() {
-        const { meta: meta3, schemaId } = this.opts;
-        return this.opts.defaultMeta = typeof meta3 == "object" ? meta3[schemaId] || meta3 : void 0;
-      }
-      validate(schemaKeyRef, data) {
-        let v;
-        if (typeof schemaKeyRef == "string") {
-          v = this.getSchema(schemaKeyRef);
-          if (!v)
-            throw new Error(`no schema with key or ref "${schemaKeyRef}"`);
-        } else {
-          v = this.compile(schemaKeyRef);
-        }
-        const valid = v(data);
-        if (!("$async" in v))
-          this.errors = v.errors;
-        return valid;
-      }
-      compile(schema, _meta) {
-        const sch = this._addSchema(schema, _meta);
-        return sch.validate || this._compileSchemaEnv(sch);
-      }
-      compileAsync(schema, meta3) {
-        if (typeof this.opts.loadSchema != "function") {
-          throw new Error("options.loadSchema should be a function");
-        }
-        const { loadSchema } = this.opts;
-        return runCompileAsync.call(this, schema, meta3);
-        async function runCompileAsync(_schema, _meta) {
-          await loadMetaSchema.call(this, _schema.$schema);
-          const sch = this._addSchema(_schema, _meta);
-          return sch.validate || _compileAsync.call(this, sch);
-        }
-        async function loadMetaSchema($ref) {
-          if ($ref && !this.getSchema($ref)) {
-            await runCompileAsync.call(this, { $ref }, true);
-          }
-        }
-        async function _compileAsync(sch) {
-          try {
-            return this._compileSchemaEnv(sch);
-          } catch (e) {
-            if (!(e instanceof ref_error_1.default))
-              throw e;
-            checkLoaded.call(this, e);
-            await loadMissingSchema.call(this, e.missingSchema);
-            return _compileAsync.call(this, sch);
-          }
-        }
-        function checkLoaded({ missingSchema: ref, missingRef }) {
-          if (this.refs[ref]) {
-            throw new Error(`AnySchema ${ref} is loaded but ${missingRef} cannot be resolved`);
-          }
-        }
-        async function loadMissingSchema(ref) {
-          const _schema = await _loadSchema.call(this, ref);
-          if (!this.refs[ref])
-            await loadMetaSchema.call(this, _schema.$schema);
-          if (!this.refs[ref])
-            this.addSchema(_schema, ref, meta3);
-        }
-        async function _loadSchema(ref) {
-          const p = this._loading[ref];
-          if (p)
-            return p;
-          try {
-            return await (this._loading[ref] = loadSchema(ref));
-          } finally {
-            delete this._loading[ref];
-          }
-        }
-      }
-      // Adds schema to the instance
-      addSchema(schema, key, _meta, _validateSchema = this.opts.validateSchema) {
-        if (Array.isArray(schema)) {
-          for (const sch of schema)
-            this.addSchema(sch, void 0, _meta, _validateSchema);
-          return this;
-        }
-        let id;
-        if (typeof schema === "object") {
-          const { schemaId } = this.opts;
-          id = schema[schemaId];
-          if (id !== void 0 && typeof id != "string") {
-            throw new Error(`schema ${schemaId} must be string`);
-          }
-        }
-        key = (0, resolve_1.normalizeId)(key || id);
-        this._checkUnique(key);
-        this.schemas[key] = this._addSchema(schema, _meta, key, _validateSchema, true);
-        return this;
-      }
-      // Add schema that will be used to validate other schemas
-      // options in META_IGNORE_OPTIONS are alway set to false
-      addMetaSchema(schema, key, _validateSchema = this.opts.validateSchema) {
-        this.addSchema(schema, key, true, _validateSchema);
-        return this;
-      }
-      //  Validate schema against its meta-schema
-      validateSchema(schema, throwOrLogError) {
-        if (typeof schema == "boolean")
-          return true;
-        let $schema;
-        $schema = schema.$schema;
-        if ($schema !== void 0 && typeof $schema != "string") {
-          throw new Error("$schema must be a string");
-        }
-        $schema = $schema || this.opts.defaultMeta || this.defaultMeta();
-        if (!$schema) {
-          this.logger.warn("meta-schema not available");
-          this.errors = null;
-          return true;
-        }
-        const valid = this.validate($schema, schema);
-        if (!valid && throwOrLogError) {
-          const message = "schema is invalid: " + this.errorsText();
-          if (this.opts.validateSchema === "log")
-            this.logger.error(message);
-          else
-            throw new Error(message);
-        }
-        return valid;
-      }
-      // Get compiled schema by `key` or `ref`.
-      // (`key` that was passed to `addSchema` or full schema reference - `schema.$id` or resolved id)
-      getSchema(keyRef) {
-        let sch;
-        while (typeof (sch = getSchEnv.call(this, keyRef)) == "string")
-          keyRef = sch;
-        if (sch === void 0) {
-          const { schemaId } = this.opts;
-          const root = new compile_1.SchemaEnv({ schema: {}, schemaId });
-          sch = compile_1.resolveSchema.call(this, root, keyRef);
-          if (!sch)
-            return;
-          this.refs[keyRef] = sch;
-        }
-        return sch.validate || this._compileSchemaEnv(sch);
-      }
-      // Remove cached schema(s).
-      // If no parameter is passed all schemas but meta-schemas are removed.
-      // If RegExp is passed all schemas with key/id matching pattern but meta-schemas are removed.
-      // Even if schema is referenced by other schemas it still can be removed as other schemas have local references.
-      removeSchema(schemaKeyRef) {
-        if (schemaKeyRef instanceof RegExp) {
-          this._removeAllSchemas(this.schemas, schemaKeyRef);
-          this._removeAllSchemas(this.refs, schemaKeyRef);
-          return this;
-        }
-        switch (typeof schemaKeyRef) {
-          case "undefined":
-            this._removeAllSchemas(this.schemas);
-            this._removeAllSchemas(this.refs);
-            this._cache.clear();
-            return this;
-          case "string": {
-            const sch = getSchEnv.call(this, schemaKeyRef);
-            if (typeof sch == "object")
-              this._cache.delete(sch.schema);
-            delete this.schemas[schemaKeyRef];
-            delete this.refs[schemaKeyRef];
-            return this;
-          }
-          case "object": {
-            const cacheKey = schemaKeyRef;
-            this._cache.delete(cacheKey);
-            let id = schemaKeyRef[this.opts.schemaId];
-            if (id) {
-              id = (0, resolve_1.normalizeId)(id);
-              delete this.schemas[id];
-              delete this.refs[id];
-            }
-            return this;
-          }
-          default:
-            throw new Error("ajv.removeSchema: invalid parameter");
-        }
-      }
-      // add "vocabulary" - a collection of keywords
-      addVocabulary(definitions) {
-        for (const def of definitions)
-          this.addKeyword(def);
-        return this;
-      }
-      addKeyword(kwdOrDef, def) {
-        let keyword;
-        if (typeof kwdOrDef == "string") {
-          keyword = kwdOrDef;
-          if (typeof def == "object") {
-            this.logger.warn("these parameters are deprecated, see docs for addKeyword");
-            def.keyword = keyword;
-          }
-        } else if (typeof kwdOrDef == "object" && def === void 0) {
-          def = kwdOrDef;
-          keyword = def.keyword;
-          if (Array.isArray(keyword) && !keyword.length) {
-            throw new Error("addKeywords: keyword must be string or non-empty array");
-          }
-        } else {
-          throw new Error("invalid addKeywords parameters");
-        }
-        checkKeyword.call(this, keyword, def);
-        if (!def) {
-          (0, util_1.eachItem)(keyword, (kwd) => addRule.call(this, kwd));
-          return this;
-        }
-        keywordMetaschema.call(this, def);
-        const definition3 = {
-          ...def,
-          type: (0, dataType_1.getJSONTypes)(def.type),
-          schemaType: (0, dataType_1.getJSONTypes)(def.schemaType)
-        };
-        (0, util_1.eachItem)(keyword, definition3.type.length === 0 ? (k) => addRule.call(this, k, definition3) : (k) => definition3.type.forEach((t) => addRule.call(this, k, definition3, t)));
-        return this;
-      }
-      getKeyword(keyword) {
-        const rule = this.RULES.all[keyword];
-        return typeof rule == "object" ? rule.definition : !!rule;
-      }
-      // Remove keyword
-      removeKeyword(keyword) {
-        const { RULES } = this;
-        delete RULES.keywords[keyword];
-        delete RULES.all[keyword];
-        for (const group of RULES.rules) {
-          const i = group.rules.findIndex((rule) => rule.keyword === keyword);
-          if (i >= 0)
-            group.rules.splice(i, 1);
-        }
-        return this;
-      }
-      // Add format
-      addFormat(name, format2) {
-        if (typeof format2 == "string")
-          format2 = new RegExp(format2);
-        this.formats[name] = format2;
-        return this;
-      }
-      errorsText(errors = this.errors, { separator = ", ", dataVar = "data" } = {}) {
-        if (!errors || errors.length === 0)
-          return "No errors";
-        return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text4, msg) => text4 + separator + msg);
-      }
-      $dataMetaSchema(metaSchema, keywordsJsonPointers) {
-        const rules = this.RULES.all;
-        metaSchema = JSON.parse(JSON.stringify(metaSchema));
-        for (const jsonPointer of keywordsJsonPointers) {
-          const segments = jsonPointer.split("/").slice(1);
-          let keywords = metaSchema;
-          for (const seg of segments)
-            keywords = keywords[seg];
-          for (const key in rules) {
-            const rule = rules[key];
-            if (typeof rule != "object")
-              continue;
-            const { $data } = rule.definition;
-            const schema = keywords[key];
-            if ($data && schema)
-              keywords[key] = schemaOrData(schema);
-          }
-        }
-        return metaSchema;
-      }
-      _removeAllSchemas(schemas, regex) {
-        for (const keyRef in schemas) {
-          const sch = schemas[keyRef];
-          if (!regex || regex.test(keyRef)) {
-            if (typeof sch == "string") {
-              delete schemas[keyRef];
-            } else if (sch && !sch.meta) {
-              this._cache.delete(sch.schema);
-              delete schemas[keyRef];
-            }
-          }
-        }
-      }
-      _addSchema(schema, meta3, baseId, validateSchema = this.opts.validateSchema, addSchema = this.opts.addUsedSchema) {
-        let id;
-        const { schemaId } = this.opts;
-        if (typeof schema == "object") {
-          id = schema[schemaId];
-        } else {
-          if (this.opts.jtd)
-            throw new Error("schema must be object");
-          else if (typeof schema != "boolean")
-            throw new Error("schema must be object or boolean");
-        }
-        let sch = this._cache.get(schema);
-        if (sch !== void 0)
-          return sch;
-        baseId = (0, resolve_1.normalizeId)(id || baseId);
-        const localRefs = resolve_1.getSchemaRefs.call(this, schema, baseId);
-        sch = new compile_1.SchemaEnv({ schema, schemaId, meta: meta3, baseId, localRefs });
-        this._cache.set(sch.schema, sch);
-        if (addSchema && !baseId.startsWith("#")) {
-          if (baseId)
-            this._checkUnique(baseId);
-          this.refs[baseId] = sch;
-        }
-        if (validateSchema)
-          this.validateSchema(schema, true);
-        return sch;
-      }
-      _checkUnique(id) {
-        if (this.schemas[id] || this.refs[id]) {
-          throw new Error(`schema with key or id "${id}" already exists`);
-        }
-      }
-      _compileSchemaEnv(sch) {
-        if (sch.meta)
-          this._compileMetaSchema(sch);
-        else
-          compile_1.compileSchema.call(this, sch);
-        if (!sch.validate)
-          throw new Error("ajv implementation error");
-        return sch.validate;
-      }
-      _compileMetaSchema(sch) {
-        const currentOpts = this.opts;
-        this.opts = this._metaOpts;
-        try {
-          compile_1.compileSchema.call(this, sch);
-        } finally {
-          this.opts = currentOpts;
-        }
-      }
-    };
-    Ajv2.ValidationError = validation_error_1.default;
-    Ajv2.MissingRefError = ref_error_1.default;
-    exports.default = Ajv2;
-    function checkOptions(checkOpts, options, msg, log = "error") {
-      for (const key in checkOpts) {
-        const opt = key;
-        if (opt in options)
-          this.logger[log](`${msg}: option ${key}. ${checkOpts[opt]}`);
-      }
-    }
-    function getSchEnv(keyRef) {
-      keyRef = (0, resolve_1.normalizeId)(keyRef);
-      return this.schemas[keyRef] || this.refs[keyRef];
-    }
-    function addInitialSchemas() {
-      const optsSchemas = this.opts.schemas;
-      if (!optsSchemas)
-        return;
-      if (Array.isArray(optsSchemas))
-        this.addSchema(optsSchemas);
-      else
-        for (const key in optsSchemas)
-          this.addSchema(optsSchemas[key], key);
-    }
-    function addInitialFormats() {
-      for (const name in this.opts.formats) {
-        const format2 = this.opts.formats[name];
-        if (format2)
-          this.addFormat(name, format2);
-      }
-    }
-    function addInitialKeywords(defs) {
-      if (Array.isArray(defs)) {
-        this.addVocabulary(defs);
-        return;
-      }
-      this.logger.warn("keywords option as map is deprecated, pass array");
-      for (const keyword in defs) {
-        const def = defs[keyword];
-        if (!def.keyword)
-          def.keyword = keyword;
-        this.addKeyword(def);
-      }
-    }
-    function getMetaSchemaOptions() {
-      const metaOpts = { ...this.opts };
-      for (const opt of META_IGNORE_OPTIONS)
-        delete metaOpts[opt];
-      return metaOpts;
-    }
-    var noLogs = { log() {
-    }, warn() {
-    }, error() {
-    } };
-    function getLogger(logger) {
-      if (logger === false)
-        return noLogs;
-      if (logger === void 0)
-        return console;
-      if (logger.log && logger.warn && logger.error)
-        return logger;
-      throw new Error("logger must implement log, warn and error methods");
-    }
-    var KEYWORD_NAME = /^[a-z_$][a-z0-9_$:-]*$/i;
-    function checkKeyword(keyword, def) {
-      const { RULES } = this;
-      (0, util_1.eachItem)(keyword, (kwd) => {
-        if (RULES.keywords[kwd])
-          throw new Error(`Keyword ${kwd} is already defined`);
-        if (!KEYWORD_NAME.test(kwd))
-          throw new Error(`Keyword ${kwd} has invalid name`);
-      });
-      if (!def)
-        return;
-      if (def.$data && !("code" in def || "validate" in def)) {
-        throw new Error('$data keyword must have "code" or "validate" function');
-      }
-    }
-    function addRule(keyword, definition3, dataType) {
-      var _a3;
-      const post = definition3 === null || definition3 === void 0 ? void 0 : definition3.post;
-      if (dataType && post)
-        throw new Error('keyword with "post" flag cannot have "type"');
-      const { RULES } = this;
-      let ruleGroup = post ? RULES.post : RULES.rules.find(({ type: t }) => t === dataType);
-      if (!ruleGroup) {
-        ruleGroup = { type: dataType, rules: [] };
-        RULES.rules.push(ruleGroup);
-      }
-      RULES.keywords[keyword] = true;
-      if (!definition3)
-        return;
-      const rule = {
-        keyword,
-        definition: {
-          ...definition3,
-          type: (0, dataType_1.getJSONTypes)(definition3.type),
-          schemaType: (0, dataType_1.getJSONTypes)(definition3.schemaType)
-        }
-      };
-      if (definition3.before)
-        addBeforeRule.call(this, ruleGroup, rule, definition3.before);
-      else
-        ruleGroup.rules.push(rule);
-      RULES.all[keyword] = rule;
-      (_a3 = definition3.implements) === null || _a3 === void 0 ? void 0 : _a3.forEach((kwd) => this.addKeyword(kwd));
-    }
-    function addBeforeRule(ruleGroup, rule, before) {
-      const i = ruleGroup.rules.findIndex((_rule) => _rule.keyword === before);
-      if (i >= 0) {
-        ruleGroup.rules.splice(i, 0, rule);
-      } else {
-        ruleGroup.rules.push(rule);
-        this.logger.warn(`rule ${before} is not defined`);
-      }
-    }
-    function keywordMetaschema(def) {
-      let { metaSchema } = def;
-      if (metaSchema === void 0)
-        return;
-      if (def.$data && this.opts.$data)
-        metaSchema = schemaOrData(metaSchema);
-      def.validateSchema = this.compile(metaSchema, true);
-    }
-    var $dataRef = {
-      $ref: "https://raw.githubusercontent.com/ajv-validator/ajv/master/lib/refs/data.json#"
-    };
-    function schemaOrData(schema) {
-      return { anyOf: [schema, $dataRef] };
-    }
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/core/id.js
-var require_id2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/core/id.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var def = {
-      keyword: "id",
-      code() {
-        throw new Error('NOT SUPPORTED: keyword "id", use "$id" for schema ID');
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/core/ref.js
-var require_ref2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/core/ref.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.callRef = exports.getValidate = void 0;
-    var ref_error_1 = require_ref_error2();
-    var code_1 = require_code4();
-    var codegen_1 = require_codegen2();
-    var names_1 = require_names2();
-    var compile_1 = require_compile2();
-    var util_1 = require_util2();
-    var def = {
-      keyword: "$ref",
-      schemaType: "string",
-      code(cxt) {
-        const { gen, schema: $ref, it } = cxt;
-        const { baseId, schemaEnv: env, validateName, opts, self } = it;
-        const { root } = env;
-        if (($ref === "#" || $ref === "#/") && baseId === root.baseId)
-          return callRootRef();
-        const schOrEnv = compile_1.resolveRef.call(self, root, baseId, $ref);
-        if (schOrEnv === void 0)
-          throw new ref_error_1.default(it.opts.uriResolver, baseId, $ref);
-        if (schOrEnv instanceof compile_1.SchemaEnv)
-          return callValidate(schOrEnv);
-        return inlineRefSchema(schOrEnv);
-        function callRootRef() {
-          if (env === root)
-            return callRef(cxt, validateName, env, env.$async);
-          const rootName = gen.scopeValue("root", { ref: root });
-          return callRef(cxt, (0, codegen_1._)`${rootName}.validate`, root, root.$async);
-        }
-        function callValidate(sch) {
-          const v = getValidate(cxt, sch);
-          callRef(cxt, v, sch, sch.$async);
-        }
-        function inlineRefSchema(sch) {
-          const schName = gen.scopeValue("schema", opts.code.source === true ? { ref: sch, code: (0, codegen_1.stringify)(sch) } : { ref: sch });
-          const valid = gen.name("valid");
-          const schCxt = cxt.subschema({
-            schema: sch,
-            dataTypes: [],
-            schemaPath: codegen_1.nil,
-            topSchemaRef: schName,
-            errSchemaPath: $ref
-          }, valid);
-          cxt.mergeEvaluated(schCxt);
-          cxt.ok(valid);
-        }
-      }
-    };
-    function getValidate(cxt, sch) {
-      const { gen } = cxt;
-      return sch.validate ? gen.scopeValue("validate", { ref: sch.validate }) : (0, codegen_1._)`${gen.scopeValue("wrapper", { ref: sch })}.validate`;
-    }
-    exports.getValidate = getValidate;
-    function callRef(cxt, v, sch, $async) {
-      const { gen, it } = cxt;
-      const { allErrors, schemaEnv: env, opts } = it;
-      const passCxt = opts.passContext ? names_1.default.this : codegen_1.nil;
-      if ($async)
-        callAsyncRef();
-      else
-        callSyncRef();
-      function callAsyncRef() {
-        if (!env.$async)
-          throw new Error("async schema referenced by sync schema");
-        const valid = gen.let("valid");
-        gen.try(() => {
-          gen.code((0, codegen_1._)`await ${(0, code_1.callValidateCode)(cxt, v, passCxt)}`);
-          addEvaluatedFrom(v);
-          if (!allErrors)
-            gen.assign(valid, true);
-        }, (e) => {
-          gen.if((0, codegen_1._)`!(${e} instanceof ${it.ValidationError})`, () => gen.throw(e));
-          addErrorsFrom(e);
-          if (!allErrors)
-            gen.assign(valid, false);
-        });
-        cxt.ok(valid);
-      }
-      function callSyncRef() {
-        cxt.result((0, code_1.callValidateCode)(cxt, v, passCxt), () => addEvaluatedFrom(v), () => addErrorsFrom(v));
-      }
-      function addErrorsFrom(source) {
-        const errs = (0, codegen_1._)`${source}.errors`;
-        gen.assign(names_1.default.vErrors, (0, codegen_1._)`${names_1.default.vErrors} === null ? ${errs} : ${names_1.default.vErrors}.concat(${errs})`);
-        gen.assign(names_1.default.errors, (0, codegen_1._)`${names_1.default.vErrors}.length`);
-      }
-      function addEvaluatedFrom(source) {
-        var _a3;
-        if (!it.opts.unevaluated)
-          return;
-        const schEvaluated = (_a3 = sch === null || sch === void 0 ? void 0 : sch.validate) === null || _a3 === void 0 ? void 0 : _a3.evaluated;
-        if (it.props !== true) {
-          if (schEvaluated && !schEvaluated.dynamicProps) {
-            if (schEvaluated.props !== void 0) {
-              it.props = util_1.mergeEvaluated.props(gen, schEvaluated.props, it.props);
-            }
-          } else {
-            const props = gen.var("props", (0, codegen_1._)`${source}.evaluated.props`);
-            it.props = util_1.mergeEvaluated.props(gen, props, it.props, codegen_1.Name);
-          }
-        }
-        if (it.items !== true) {
-          if (schEvaluated && !schEvaluated.dynamicItems) {
-            if (schEvaluated.items !== void 0) {
-              it.items = util_1.mergeEvaluated.items(gen, schEvaluated.items, it.items);
-            }
-          } else {
-            const items = gen.var("items", (0, codegen_1._)`${source}.evaluated.items`);
-            it.items = util_1.mergeEvaluated.items(gen, items, it.items, codegen_1.Name);
-          }
-        }
-      }
-    }
-    exports.callRef = callRef;
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/core/index.js
-var require_core4 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/core/index.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var id_1 = require_id2();
-    var ref_1 = require_ref2();
-    var core = [
-      "$schema",
-      "$id",
-      "$defs",
-      "$vocabulary",
-      { keyword: "$comment" },
-      "definitions",
-      id_1.default,
-      ref_1.default
-    ];
-    exports.default = core;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/limitNumber.js
-var require_limitNumber2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/limitNumber.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var ops = codegen_1.operators;
-    var KWDs = {
-      maximum: { okStr: "<=", ok: ops.LTE, fail: ops.GT },
-      minimum: { okStr: ">=", ok: ops.GTE, fail: ops.LT },
-      exclusiveMaximum: { okStr: "<", ok: ops.LT, fail: ops.GTE },
-      exclusiveMinimum: { okStr: ">", ok: ops.GT, fail: ops.LTE }
-    };
-    var error51 = {
-      message: ({ keyword, schemaCode }) => (0, codegen_1.str)`must be ${KWDs[keyword].okStr} ${schemaCode}`,
-      params: ({ keyword, schemaCode }) => (0, codegen_1._)`{comparison: ${KWDs[keyword].okStr}, limit: ${schemaCode}}`
-    };
-    var def = {
-      keyword: Object.keys(KWDs),
-      type: "number",
-      schemaType: "number",
-      $data: true,
-      error: error51,
-      code(cxt) {
-        const { keyword, data, schemaCode } = cxt;
-        cxt.fail$data((0, codegen_1._)`${data} ${KWDs[keyword].fail} ${schemaCode} || isNaN(${data})`);
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/multipleOf.js
-var require_multipleOf2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/multipleOf.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var error51 = {
-      message: ({ schemaCode }) => (0, codegen_1.str)`must be multiple of ${schemaCode}`,
-      params: ({ schemaCode }) => (0, codegen_1._)`{multipleOf: ${schemaCode}}`
-    };
-    var def = {
-      keyword: "multipleOf",
-      type: "number",
-      schemaType: "number",
-      $data: true,
-      error: error51,
-      code(cxt) {
-        const { gen, data, schemaCode, it } = cxt;
-        const prec = it.opts.multipleOfPrecision;
-        const res = gen.let("res");
-        const invalid = prec ? (0, codegen_1._)`Math.abs(Math.round(${res}) - ${res}) > 1e-${prec}` : (0, codegen_1._)`${res} !== parseInt(${res})`;
-        cxt.fail$data((0, codegen_1._)`(${schemaCode} === 0 || (${res} = ${data}/${schemaCode}, ${invalid}))`);
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/runtime/ucs2length.js
-var require_ucs2length2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/runtime/ucs2length.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    function ucs2length(str) {
-      const len = str.length;
-      let length = 0;
-      let pos = 0;
-      let value;
-      while (pos < len) {
-        length++;
-        value = str.charCodeAt(pos++);
-        if (value >= 55296 && value <= 56319 && pos < len) {
-          value = str.charCodeAt(pos);
-          if ((value & 64512) === 56320)
-            pos++;
-        }
-      }
-      return length;
-    }
-    exports.default = ucs2length;
-    ucs2length.code = 'require("ajv/dist/runtime/ucs2length").default';
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/limitLength.js
-var require_limitLength2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/limitLength.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var ucs2length_1 = require_ucs2length2();
-    var error51 = {
-      message({ keyword, schemaCode }) {
-        const comp = keyword === "maxLength" ? "more" : "fewer";
-        return (0, codegen_1.str)`must NOT have ${comp} than ${schemaCode} characters`;
-      },
-      params: ({ schemaCode }) => (0, codegen_1._)`{limit: ${schemaCode}}`
-    };
-    var def = {
-      keyword: ["maxLength", "minLength"],
-      type: "string",
-      schemaType: "number",
-      $data: true,
-      error: error51,
-      code(cxt) {
-        const { keyword, data, schemaCode, it } = cxt;
-        const op = keyword === "maxLength" ? codegen_1.operators.GT : codegen_1.operators.LT;
-        const len = it.opts.unicode === false ? (0, codegen_1._)`${data}.length` : (0, codegen_1._)`${(0, util_1.useFunc)(cxt.gen, ucs2length_1.default)}(${data})`;
-        cxt.fail$data((0, codegen_1._)`${len} ${op} ${schemaCode}`);
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/pattern.js
-var require_pattern2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/pattern.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var code_1 = require_code4();
-    var util_1 = require_util2();
-    var codegen_1 = require_codegen2();
-    var error51 = {
-      message: ({ schemaCode }) => (0, codegen_1.str)`must match pattern "${schemaCode}"`,
-      params: ({ schemaCode }) => (0, codegen_1._)`{pattern: ${schemaCode}}`
-    };
-    var def = {
-      keyword: "pattern",
-      type: "string",
-      schemaType: "string",
-      $data: true,
-      error: error51,
-      code(cxt) {
-        const { gen, data, $data, schema, schemaCode, it } = cxt;
-        const u = it.opts.unicodeRegExp ? "u" : "";
-        if ($data) {
-          const { regExp } = it.opts.code;
-          const regExpCode = regExp.code === "new RegExp" ? (0, codegen_1._)`new RegExp` : (0, util_1.useFunc)(gen, regExp);
-          const valid = gen.let("valid");
-          gen.try(() => gen.assign(valid, (0, codegen_1._)`${regExpCode}(${schemaCode}, ${u}).test(${data})`), () => gen.assign(valid, false));
-          cxt.fail$data((0, codegen_1._)`!${valid}`);
-        } else {
-          const regExp = (0, code_1.usePattern)(cxt, schema);
-          cxt.fail$data((0, codegen_1._)`!${regExp}.test(${data})`);
-        }
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/limitProperties.js
-var require_limitProperties2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/limitProperties.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var error51 = {
-      message({ keyword, schemaCode }) {
-        const comp = keyword === "maxProperties" ? "more" : "fewer";
-        return (0, codegen_1.str)`must NOT have ${comp} than ${schemaCode} properties`;
-      },
-      params: ({ schemaCode }) => (0, codegen_1._)`{limit: ${schemaCode}}`
-    };
-    var def = {
-      keyword: ["maxProperties", "minProperties"],
-      type: "object",
-      schemaType: "number",
-      $data: true,
-      error: error51,
-      code(cxt) {
-        const { keyword, data, schemaCode } = cxt;
-        const op = keyword === "maxProperties" ? codegen_1.operators.GT : codegen_1.operators.LT;
-        cxt.fail$data((0, codegen_1._)`Object.keys(${data}).length ${op} ${schemaCode}`);
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/required.js
-var require_required2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/required.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var code_1 = require_code4();
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var error51 = {
-      message: ({ params: { missingProperty } }) => (0, codegen_1.str)`must have required property '${missingProperty}'`,
-      params: ({ params: { missingProperty } }) => (0, codegen_1._)`{missingProperty: ${missingProperty}}`
-    };
-    var def = {
-      keyword: "required",
-      type: "object",
-      schemaType: "array",
-      $data: true,
-      error: error51,
-      code(cxt) {
-        const { gen, schema, schemaCode, data, $data, it } = cxt;
-        const { opts } = it;
-        if (!$data && schema.length === 0)
-          return;
-        const useLoop = schema.length >= opts.loopRequired;
-        if (it.allErrors)
-          allErrorsMode();
-        else
-          exitOnErrorMode();
-        if (opts.strictRequired) {
-          const props = cxt.parentSchema.properties;
-          const { definedProperties } = cxt.it;
-          for (const requiredKey of schema) {
-            if ((props === null || props === void 0 ? void 0 : props[requiredKey]) === void 0 && !definedProperties.has(requiredKey)) {
-              const schemaPath = it.schemaEnv.baseId + it.errSchemaPath;
-              const msg = `required property "${requiredKey}" is not defined at "${schemaPath}" (strictRequired)`;
-              (0, util_1.checkStrictMode)(it, msg, it.opts.strictRequired);
-            }
-          }
-        }
-        function allErrorsMode() {
-          if (useLoop || $data) {
-            cxt.block$data(codegen_1.nil, loopAllRequired);
-          } else {
-            for (const prop of schema) {
-              (0, code_1.checkReportMissingProp)(cxt, prop);
-            }
-          }
-        }
-        function exitOnErrorMode() {
-          const missing = gen.let("missing");
-          if (useLoop || $data) {
-            const valid = gen.let("valid", true);
-            cxt.block$data(valid, () => loopUntilMissing(missing, valid));
-            cxt.ok(valid);
-          } else {
-            gen.if((0, code_1.checkMissingProp)(cxt, schema, missing));
-            (0, code_1.reportMissingProp)(cxt, missing);
-            gen.else();
-          }
-        }
-        function loopAllRequired() {
-          gen.forOf("prop", schemaCode, (prop) => {
-            cxt.setParams({ missingProperty: prop });
-            gen.if((0, code_1.noPropertyInData)(gen, data, prop, opts.ownProperties), () => cxt.error());
-          });
-        }
-        function loopUntilMissing(missing, valid) {
-          cxt.setParams({ missingProperty: missing });
-          gen.forOf(missing, schemaCode, () => {
-            gen.assign(valid, (0, code_1.propertyInData)(gen, data, missing, opts.ownProperties));
-            gen.if((0, codegen_1.not)(valid), () => {
-              cxt.error();
-              gen.break();
-            });
-          }, codegen_1.nil);
-        }
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/limitItems.js
-var require_limitItems2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/limitItems.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var error51 = {
-      message({ keyword, schemaCode }) {
-        const comp = keyword === "maxItems" ? "more" : "fewer";
-        return (0, codegen_1.str)`must NOT have ${comp} than ${schemaCode} items`;
-      },
-      params: ({ schemaCode }) => (0, codegen_1._)`{limit: ${schemaCode}}`
-    };
-    var def = {
-      keyword: ["maxItems", "minItems"],
-      type: "array",
-      schemaType: "number",
-      $data: true,
-      error: error51,
-      code(cxt) {
-        const { keyword, data, schemaCode } = cxt;
-        const op = keyword === "maxItems" ? codegen_1.operators.GT : codegen_1.operators.LT;
-        cxt.fail$data((0, codegen_1._)`${data}.length ${op} ${schemaCode}`);
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/runtime/equal.js
-var require_equal2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/runtime/equal.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var equal = require_fast_deep_equal();
-    equal.code = 'require("ajv/dist/runtime/equal").default';
-    exports.default = equal;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/uniqueItems.js
-var require_uniqueItems2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/uniqueItems.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var dataType_1 = require_dataType2();
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var equal_1 = require_equal2();
-    var error51 = {
-      message: ({ params: { i, j } }) => (0, codegen_1.str)`must NOT have duplicate items (items ## ${j} and ${i} are identical)`,
-      params: ({ params: { i, j } }) => (0, codegen_1._)`{i: ${i}, j: ${j}}`
-    };
-    var def = {
-      keyword: "uniqueItems",
-      type: "array",
-      schemaType: "boolean",
-      $data: true,
-      error: error51,
-      code(cxt) {
-        const { gen, data, $data, schema, parentSchema, schemaCode, it } = cxt;
-        if (!$data && !schema)
-          return;
-        const valid = gen.let("valid");
-        const itemTypes = parentSchema.items ? (0, dataType_1.getSchemaTypes)(parentSchema.items) : [];
-        cxt.block$data(valid, validateUniqueItems, (0, codegen_1._)`${schemaCode} === false`);
-        cxt.ok(valid);
-        function validateUniqueItems() {
-          const i = gen.let("i", (0, codegen_1._)`${data}.length`);
-          const j = gen.let("j");
-          cxt.setParams({ i, j });
-          gen.assign(valid, true);
-          gen.if((0, codegen_1._)`${i} > 1`, () => (canOptimize() ? loopN : loopN2)(i, j));
-        }
-        function canOptimize() {
-          return itemTypes.length > 0 && !itemTypes.some((t) => t === "object" || t === "array");
-        }
-        function loopN(i, j) {
-          const item = gen.name("item");
-          const wrongType = (0, dataType_1.checkDataTypes)(itemTypes, item, it.opts.strictNumbers, dataType_1.DataType.Wrong);
-          const indices = gen.const("indices", (0, codegen_1._)`{}`);
-          gen.for((0, codegen_1._)`;${i}--;`, () => {
-            gen.let(item, (0, codegen_1._)`${data}[${i}]`);
-            gen.if(wrongType, (0, codegen_1._)`continue`);
-            if (itemTypes.length > 1)
-              gen.if((0, codegen_1._)`typeof ${item} == "string"`, (0, codegen_1._)`${item} += "_"`);
-            gen.if((0, codegen_1._)`typeof ${indices}[${item}] == "number"`, () => {
-              gen.assign(j, (0, codegen_1._)`${indices}[${item}]`);
-              cxt.error();
-              gen.assign(valid, false).break();
-            }).code((0, codegen_1._)`${indices}[${item}] = ${i}`);
-          });
-        }
-        function loopN2(i, j) {
-          const eql = (0, util_1.useFunc)(gen, equal_1.default);
-          const outer = gen.name("outer");
-          gen.label(outer).for((0, codegen_1._)`;${i}--;`, () => gen.for((0, codegen_1._)`${j} = ${i}; ${j}--;`, () => gen.if((0, codegen_1._)`${eql}(${data}[${i}], ${data}[${j}])`, () => {
-            cxt.error();
-            gen.assign(valid, false).break(outer);
-          })));
-        }
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/const.js
-var require_const2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/const.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var equal_1 = require_equal2();
-    var error51 = {
-      message: "must be equal to constant",
-      params: ({ schemaCode }) => (0, codegen_1._)`{allowedValue: ${schemaCode}}`
-    };
-    var def = {
-      keyword: "const",
-      $data: true,
-      error: error51,
-      code(cxt) {
-        const { gen, data, $data, schemaCode, schema } = cxt;
-        if ($data || schema && typeof schema == "object") {
-          cxt.fail$data((0, codegen_1._)`!${(0, util_1.useFunc)(gen, equal_1.default)}(${data}, ${schemaCode})`);
-        } else {
-          cxt.fail((0, codegen_1._)`${schema} !== ${data}`);
-        }
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/enum.js
-var require_enum2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/enum.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var equal_1 = require_equal2();
-    var error51 = {
-      message: "must be equal to one of the allowed values",
-      params: ({ schemaCode }) => (0, codegen_1._)`{allowedValues: ${schemaCode}}`
-    };
-    var def = {
-      keyword: "enum",
-      schemaType: "array",
-      $data: true,
-      error: error51,
-      code(cxt) {
-        const { gen, data, $data, schema, schemaCode, it } = cxt;
-        if (!$data && schema.length === 0)
-          throw new Error("enum must have non-empty array");
-        const useLoop = schema.length >= it.opts.loopEnum;
-        let eql;
-        const getEql = () => eql !== null && eql !== void 0 ? eql : eql = (0, util_1.useFunc)(gen, equal_1.default);
-        let valid;
-        if (useLoop || $data) {
-          valid = gen.let("valid");
-          cxt.block$data(valid, loopEnum);
-        } else {
-          if (!Array.isArray(schema))
-            throw new Error("ajv implementation error");
-          const vSchema = gen.const("vSchema", schemaCode);
-          valid = (0, codegen_1.or)(...schema.map((_x, i) => equalCode(vSchema, i)));
-        }
-        cxt.pass(valid);
-        function loopEnum() {
-          gen.assign(valid, false);
-          gen.forOf("v", schemaCode, (v) => gen.if((0, codegen_1._)`${getEql()}(${data}, ${v})`, () => gen.assign(valid, true).break()));
-        }
-        function equalCode(vSchema, i) {
-          const sch = schema[i];
-          return typeof sch === "object" && sch !== null ? (0, codegen_1._)`${getEql()}(${data}, ${vSchema}[${i}])` : (0, codegen_1._)`${data} === ${sch}`;
-        }
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/index.js
-var require_validation2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/validation/index.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var limitNumber_1 = require_limitNumber2();
-    var multipleOf_1 = require_multipleOf2();
-    var limitLength_1 = require_limitLength2();
-    var pattern_1 = require_pattern2();
-    var limitProperties_1 = require_limitProperties2();
-    var required_1 = require_required2();
-    var limitItems_1 = require_limitItems2();
-    var uniqueItems_1 = require_uniqueItems2();
-    var const_1 = require_const2();
-    var enum_1 = require_enum2();
-    var validation = [
-      // number
-      limitNumber_1.default,
-      multipleOf_1.default,
-      // string
-      limitLength_1.default,
-      pattern_1.default,
-      // object
-      limitProperties_1.default,
-      required_1.default,
-      // array
-      limitItems_1.default,
-      uniqueItems_1.default,
-      // any
-      { keyword: "type", schemaType: ["string", "array"] },
-      { keyword: "nullable", schemaType: "boolean" },
-      const_1.default,
-      enum_1.default
-    ];
-    exports.default = validation;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/additionalItems.js
-var require_additionalItems2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/additionalItems.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.validateAdditionalItems = void 0;
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var error51 = {
-      message: ({ params: { len } }) => (0, codegen_1.str)`must NOT have more than ${len} items`,
-      params: ({ params: { len } }) => (0, codegen_1._)`{limit: ${len}}`
-    };
-    var def = {
-      keyword: "additionalItems",
-      type: "array",
-      schemaType: ["boolean", "object"],
-      before: "uniqueItems",
-      error: error51,
-      code(cxt) {
-        const { parentSchema, it } = cxt;
-        const { items } = parentSchema;
-        if (!Array.isArray(items)) {
-          (0, util_1.checkStrictMode)(it, '"additionalItems" is ignored when "items" is not an array of schemas');
-          return;
-        }
-        validateAdditionalItems(cxt, items);
-      }
-    };
-    function validateAdditionalItems(cxt, items) {
-      const { gen, schema, data, keyword, it } = cxt;
-      it.items = true;
-      const len = gen.const("len", (0, codegen_1._)`${data}.length`);
-      if (schema === false) {
-        cxt.setParams({ len: items.length });
-        cxt.pass((0, codegen_1._)`${len} <= ${items.length}`);
-      } else if (typeof schema == "object" && !(0, util_1.alwaysValidSchema)(it, schema)) {
-        const valid = gen.var("valid", (0, codegen_1._)`${len} <= ${items.length}`);
-        gen.if((0, codegen_1.not)(valid), () => validateItems(valid));
-        cxt.ok(valid);
-      }
-      function validateItems(valid) {
-        gen.forRange("i", items.length, len, (i) => {
-          cxt.subschema({ keyword, dataProp: i, dataPropType: util_1.Type.Num }, valid);
-          if (!it.allErrors)
-            gen.if((0, codegen_1.not)(valid), () => gen.break());
-        });
-      }
-    }
-    exports.validateAdditionalItems = validateAdditionalItems;
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/items.js
-var require_items2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/items.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.validateTuple = void 0;
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var code_1 = require_code4();
-    var def = {
-      keyword: "items",
-      type: "array",
-      schemaType: ["object", "array", "boolean"],
-      before: "uniqueItems",
-      code(cxt) {
-        const { schema, it } = cxt;
-        if (Array.isArray(schema))
-          return validateTuple(cxt, "additionalItems", schema);
-        it.items = true;
-        if ((0, util_1.alwaysValidSchema)(it, schema))
-          return;
-        cxt.ok((0, code_1.validateArray)(cxt));
-      }
-    };
-    function validateTuple(cxt, extraItems, schArr = cxt.schema) {
-      const { gen, parentSchema, data, keyword, it } = cxt;
-      checkStrictTuple(parentSchema);
-      if (it.opts.unevaluated && schArr.length && it.items !== true) {
-        it.items = util_1.mergeEvaluated.items(gen, schArr.length, it.items);
-      }
-      const valid = gen.name("valid");
-      const len = gen.const("len", (0, codegen_1._)`${data}.length`);
-      schArr.forEach((sch, i) => {
-        if ((0, util_1.alwaysValidSchema)(it, sch))
-          return;
-        gen.if((0, codegen_1._)`${len} > ${i}`, () => cxt.subschema({
-          keyword,
-          schemaProp: i,
-          dataProp: i
-        }, valid));
-        cxt.ok(valid);
-      });
-      function checkStrictTuple(sch) {
-        const { opts, errSchemaPath } = it;
-        const l = schArr.length;
-        const fullTuple = l === sch.minItems && (l === sch.maxItems || sch[extraItems] === false);
-        if (opts.strictTuples && !fullTuple) {
-          const msg = `"${keyword}" is ${l}-tuple, but minItems or maxItems/${extraItems} are not specified or different at path "${errSchemaPath}"`;
-          (0, util_1.checkStrictMode)(it, msg, opts.strictTuples);
-        }
-      }
-    }
-    exports.validateTuple = validateTuple;
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/prefixItems.js
-var require_prefixItems2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/prefixItems.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var items_1 = require_items2();
-    var def = {
-      keyword: "prefixItems",
-      type: "array",
-      schemaType: ["array"],
-      before: "uniqueItems",
-      code: (cxt) => (0, items_1.validateTuple)(cxt, "items")
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/items2020.js
-var require_items20202 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/items2020.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var code_1 = require_code4();
-    var additionalItems_1 = require_additionalItems2();
-    var error51 = {
-      message: ({ params: { len } }) => (0, codegen_1.str)`must NOT have more than ${len} items`,
-      params: ({ params: { len } }) => (0, codegen_1._)`{limit: ${len}}`
-    };
-    var def = {
-      keyword: "items",
-      type: "array",
-      schemaType: ["object", "boolean"],
-      before: "uniqueItems",
-      error: error51,
-      code(cxt) {
-        const { schema, parentSchema, it } = cxt;
-        const { prefixItems } = parentSchema;
-        it.items = true;
-        if ((0, util_1.alwaysValidSchema)(it, schema))
-          return;
-        if (prefixItems)
-          (0, additionalItems_1.validateAdditionalItems)(cxt, prefixItems);
-        else
-          cxt.ok((0, code_1.validateArray)(cxt));
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/contains.js
-var require_contains2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/contains.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var error51 = {
-      message: ({ params: { min, max } }) => max === void 0 ? (0, codegen_1.str)`must contain at least ${min} valid item(s)` : (0, codegen_1.str)`must contain at least ${min} and no more than ${max} valid item(s)`,
-      params: ({ params: { min, max } }) => max === void 0 ? (0, codegen_1._)`{minContains: ${min}}` : (0, codegen_1._)`{minContains: ${min}, maxContains: ${max}}`
-    };
-    var def = {
-      keyword: "contains",
-      type: "array",
-      schemaType: ["object", "boolean"],
-      before: "uniqueItems",
-      trackErrors: true,
-      error: error51,
-      code(cxt) {
-        const { gen, schema, parentSchema, data, it } = cxt;
-        let min;
-        let max;
-        const { minContains, maxContains } = parentSchema;
-        if (it.opts.next) {
-          min = minContains === void 0 ? 1 : minContains;
-          max = maxContains;
-        } else {
-          min = 1;
-        }
-        const len = gen.const("len", (0, codegen_1._)`${data}.length`);
-        cxt.setParams({ min, max });
-        if (max === void 0 && min === 0) {
-          (0, util_1.checkStrictMode)(it, `"minContains" == 0 without "maxContains": "contains" keyword ignored`);
-          return;
-        }
-        if (max !== void 0 && min > max) {
-          (0, util_1.checkStrictMode)(it, `"minContains" > "maxContains" is always invalid`);
-          cxt.fail();
-          return;
-        }
-        if ((0, util_1.alwaysValidSchema)(it, schema)) {
-          let cond = (0, codegen_1._)`${len} >= ${min}`;
-          if (max !== void 0)
-            cond = (0, codegen_1._)`${cond} && ${len} <= ${max}`;
-          cxt.pass(cond);
-          return;
-        }
-        it.items = true;
-        const valid = gen.name("valid");
-        if (max === void 0 && min === 1) {
-          validateItems(valid, () => gen.if(valid, () => gen.break()));
-        } else if (min === 0) {
-          gen.let(valid, true);
-          if (max !== void 0)
-            gen.if((0, codegen_1._)`${data}.length > 0`, validateItemsWithCount);
-        } else {
-          gen.let(valid, false);
-          validateItemsWithCount();
-        }
-        cxt.result(valid, () => cxt.reset());
-        function validateItemsWithCount() {
-          const schValid = gen.name("_valid");
-          const count = gen.let("count", 0);
-          validateItems(schValid, () => gen.if(schValid, () => checkLimits(count)));
-        }
-        function validateItems(_valid, block) {
-          gen.forRange("i", 0, len, (i) => {
-            cxt.subschema({
-              keyword: "contains",
-              dataProp: i,
-              dataPropType: util_1.Type.Num,
-              compositeRule: true
-            }, _valid);
-            block();
-          });
-        }
-        function checkLimits(count) {
-          gen.code((0, codegen_1._)`${count}++`);
-          if (max === void 0) {
-            gen.if((0, codegen_1._)`${count} >= ${min}`, () => gen.assign(valid, true).break());
-          } else {
-            gen.if((0, codegen_1._)`${count} > ${max}`, () => gen.assign(valid, false).break());
-            if (min === 1)
-              gen.assign(valid, true);
-            else
-              gen.if((0, codegen_1._)`${count} >= ${min}`, () => gen.assign(valid, true));
-          }
-        }
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/dependencies.js
-var require_dependencies2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/dependencies.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.validateSchemaDeps = exports.validatePropertyDeps = exports.error = void 0;
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var code_1 = require_code4();
-    exports.error = {
-      message: ({ params: { property, depsCount, deps } }) => {
-        const property_ies = depsCount === 1 ? "property" : "properties";
-        return (0, codegen_1.str)`must have ${property_ies} ${deps} when property ${property} is present`;
-      },
-      params: ({ params: { property, depsCount, deps, missingProperty } }) => (0, codegen_1._)`{property: ${property},
-    missingProperty: ${missingProperty},
-    depsCount: ${depsCount},
-    deps: ${deps}}`
-      // TODO change to reference
-    };
-    var def = {
-      keyword: "dependencies",
-      type: "object",
-      schemaType: "object",
-      error: exports.error,
-      code(cxt) {
-        const [propDeps, schDeps] = splitDependencies(cxt);
-        validatePropertyDeps(cxt, propDeps);
-        validateSchemaDeps(cxt, schDeps);
-      }
-    };
-    function splitDependencies({ schema }) {
-      const propertyDeps = {};
-      const schemaDeps = {};
-      for (const key in schema) {
-        if (key === "__proto__")
-          continue;
-        const deps = Array.isArray(schema[key]) ? propertyDeps : schemaDeps;
-        deps[key] = schema[key];
-      }
-      return [propertyDeps, schemaDeps];
-    }
-    function validatePropertyDeps(cxt, propertyDeps = cxt.schema) {
-      const { gen, data, it } = cxt;
-      if (Object.keys(propertyDeps).length === 0)
-        return;
-      const missing = gen.let("missing");
-      for (const prop in propertyDeps) {
-        const deps = propertyDeps[prop];
-        if (deps.length === 0)
-          continue;
-        const hasProperty = (0, code_1.propertyInData)(gen, data, prop, it.opts.ownProperties);
-        cxt.setParams({
-          property: prop,
-          depsCount: deps.length,
-          deps: deps.join(", ")
-        });
-        if (it.allErrors) {
-          gen.if(hasProperty, () => {
-            for (const depProp of deps) {
-              (0, code_1.checkReportMissingProp)(cxt, depProp);
-            }
-          });
-        } else {
-          gen.if((0, codegen_1._)`${hasProperty} && (${(0, code_1.checkMissingProp)(cxt, deps, missing)})`);
-          (0, code_1.reportMissingProp)(cxt, missing);
-          gen.else();
-        }
-      }
-    }
-    exports.validatePropertyDeps = validatePropertyDeps;
-    function validateSchemaDeps(cxt, schemaDeps = cxt.schema) {
-      const { gen, data, keyword, it } = cxt;
-      const valid = gen.name("valid");
-      for (const prop in schemaDeps) {
-        if ((0, util_1.alwaysValidSchema)(it, schemaDeps[prop]))
-          continue;
-        gen.if(
-          (0, code_1.propertyInData)(gen, data, prop, it.opts.ownProperties),
-          () => {
-            const schCxt = cxt.subschema({ keyword, schemaProp: prop }, valid);
-            cxt.mergeValidEvaluated(schCxt, valid);
-          },
-          () => gen.var(valid, true)
-          // TODO var
-        );
-        cxt.ok(valid);
-      }
-    }
-    exports.validateSchemaDeps = validateSchemaDeps;
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/propertyNames.js
-var require_propertyNames2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/propertyNames.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var error51 = {
-      message: "property name must be valid",
-      params: ({ params }) => (0, codegen_1._)`{propertyName: ${params.propertyName}}`
-    };
-    var def = {
-      keyword: "propertyNames",
-      type: "object",
-      schemaType: ["object", "boolean"],
-      error: error51,
-      code(cxt) {
-        const { gen, schema, data, it } = cxt;
-        if ((0, util_1.alwaysValidSchema)(it, schema))
-          return;
-        const valid = gen.name("valid");
-        gen.forIn("key", data, (key) => {
-          cxt.setParams({ propertyName: key });
-          cxt.subschema({
-            keyword: "propertyNames",
-            data: key,
-            dataTypes: ["string"],
-            propertyName: key,
-            compositeRule: true
-          }, valid);
-          gen.if((0, codegen_1.not)(valid), () => {
-            cxt.error(true);
-            if (!it.allErrors)
-              gen.break();
-          });
-        });
-        cxt.ok(valid);
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js
-var require_additionalProperties2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var code_1 = require_code4();
-    var codegen_1 = require_codegen2();
-    var names_1 = require_names2();
-    var util_1 = require_util2();
-    var error51 = {
-      message: "must NOT have additional properties",
-      params: ({ params }) => (0, codegen_1._)`{additionalProperty: ${params.additionalProperty}}`
-    };
-    var def = {
-      keyword: "additionalProperties",
-      type: ["object"],
-      schemaType: ["boolean", "object"],
-      allowUndefined: true,
-      trackErrors: true,
-      error: error51,
-      code(cxt) {
-        const { gen, schema, parentSchema, data, errsCount, it } = cxt;
-        if (!errsCount)
-          throw new Error("ajv implementation error");
-        const { allErrors, opts } = it;
-        it.props = true;
-        if (opts.removeAdditional !== "all" && (0, util_1.alwaysValidSchema)(it, schema))
-          return;
-        const props = (0, code_1.allSchemaProperties)(parentSchema.properties);
-        const patProps = (0, code_1.allSchemaProperties)(parentSchema.patternProperties);
-        checkAdditionalProperties();
-        cxt.ok((0, codegen_1._)`${errsCount} === ${names_1.default.errors}`);
-        function checkAdditionalProperties() {
-          gen.forIn("key", data, (key) => {
-            if (!props.length && !patProps.length)
-              additionalPropertyCode(key);
-            else
-              gen.if(isAdditional(key), () => additionalPropertyCode(key));
-          });
-        }
-        function isAdditional(key) {
-          let definedProp;
-          if (props.length > 8) {
-            const propsSchema2 = (0, util_1.schemaRefOrVal)(it, parentSchema.properties, "properties");
-            definedProp = (0, code_1.isOwnProperty)(gen, propsSchema2, key);
-          } else if (props.length) {
-            definedProp = (0, codegen_1.or)(...props.map((p) => (0, codegen_1._)`${key} === ${p}`));
-          } else {
-            definedProp = codegen_1.nil;
-          }
-          if (patProps.length) {
-            definedProp = (0, codegen_1.or)(definedProp, ...patProps.map((p) => (0, codegen_1._)`${(0, code_1.usePattern)(cxt, p)}.test(${key})`));
-          }
-          return (0, codegen_1.not)(definedProp);
-        }
-        function deleteAdditional(key) {
-          gen.code((0, codegen_1._)`delete ${data}[${key}]`);
-        }
-        function additionalPropertyCode(key) {
-          if (opts.removeAdditional === "all" || opts.removeAdditional && schema === false) {
-            deleteAdditional(key);
-            return;
-          }
-          if (schema === false) {
-            cxt.setParams({ additionalProperty: key });
-            cxt.error();
-            if (!allErrors)
-              gen.break();
-            return;
-          }
-          if (typeof schema == "object" && !(0, util_1.alwaysValidSchema)(it, schema)) {
-            const valid = gen.name("valid");
-            if (opts.removeAdditional === "failing") {
-              applyAdditionalSchema(key, valid, false);
-              gen.if((0, codegen_1.not)(valid), () => {
-                cxt.reset();
-                deleteAdditional(key);
-              });
-            } else {
-              applyAdditionalSchema(key, valid);
-              if (!allErrors)
-                gen.if((0, codegen_1.not)(valid), () => gen.break());
-            }
-          }
-        }
-        function applyAdditionalSchema(key, valid, errors) {
-          const subschema = {
-            keyword: "additionalProperties",
-            dataProp: key,
-            dataPropType: util_1.Type.Str
-          };
-          if (errors === false) {
-            Object.assign(subschema, {
-              compositeRule: true,
-              createErrors: false,
-              allErrors: false
-            });
-          }
-          cxt.subschema(subschema, valid);
-        }
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/properties.js
-var require_properties2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/properties.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var validate_1 = require_validate2();
-    var code_1 = require_code4();
-    var util_1 = require_util2();
-    var additionalProperties_1 = require_additionalProperties2();
-    var def = {
-      keyword: "properties",
-      type: "object",
-      schemaType: "object",
-      code(cxt) {
-        const { gen, schema, parentSchema, data, it } = cxt;
-        if (it.opts.removeAdditional === "all" && parentSchema.additionalProperties === void 0) {
-          additionalProperties_1.default.code(new validate_1.KeywordCxt(it, additionalProperties_1.default, "additionalProperties"));
-        }
-        const allProps = (0, code_1.allSchemaProperties)(schema);
-        for (const prop of allProps) {
-          it.definedProperties.add(prop);
-        }
-        if (it.opts.unevaluated && allProps.length && it.props !== true) {
-          it.props = util_1.mergeEvaluated.props(gen, (0, util_1.toHash)(allProps), it.props);
-        }
-        const properties = allProps.filter((p) => !(0, util_1.alwaysValidSchema)(it, schema[p]));
-        if (properties.length === 0)
-          return;
-        const valid = gen.name("valid");
-        for (const prop of properties) {
-          if (hasDefault(prop)) {
-            applyPropertySchema(prop);
-          } else {
-            gen.if((0, code_1.propertyInData)(gen, data, prop, it.opts.ownProperties));
-            applyPropertySchema(prop);
-            if (!it.allErrors)
-              gen.else().var(valid, true);
-            gen.endIf();
-          }
-          cxt.it.definedProperties.add(prop);
-          cxt.ok(valid);
-        }
-        function hasDefault(prop) {
-          return it.opts.useDefaults && !it.compositeRule && schema[prop].default !== void 0;
-        }
-        function applyPropertySchema(prop) {
-          cxt.subschema({
-            keyword: "properties",
-            schemaProp: prop,
-            dataProp: prop
-          }, valid);
-        }
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/patternProperties.js
-var require_patternProperties2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/patternProperties.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var code_1 = require_code4();
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var util_2 = require_util2();
-    var def = {
-      keyword: "patternProperties",
-      type: "object",
-      schemaType: "object",
-      code(cxt) {
-        const { gen, schema, data, parentSchema, it } = cxt;
-        const { opts } = it;
-        const patterns = (0, code_1.allSchemaProperties)(schema);
-        const alwaysValidPatterns = patterns.filter((p) => (0, util_1.alwaysValidSchema)(it, schema[p]));
-        if (patterns.length === 0 || alwaysValidPatterns.length === patterns.length && (!it.opts.unevaluated || it.props === true)) {
-          return;
-        }
-        const checkProperties = opts.strictSchema && !opts.allowMatchingProperties && parentSchema.properties;
-        const valid = gen.name("valid");
-        if (it.props !== true && !(it.props instanceof codegen_1.Name)) {
-          it.props = (0, util_2.evaluatedPropsToName)(gen, it.props);
-        }
-        const { props } = it;
-        validatePatternProperties();
-        function validatePatternProperties() {
-          for (const pat of patterns) {
-            if (checkProperties)
-              checkMatchingProperties(pat);
-            if (it.allErrors) {
-              validateProperties(pat);
-            } else {
-              gen.var(valid, true);
-              validateProperties(pat);
-              gen.if(valid);
-            }
-          }
-        }
-        function checkMatchingProperties(pat) {
-          for (const prop in checkProperties) {
-            if (new RegExp(pat).test(prop)) {
-              (0, util_1.checkStrictMode)(it, `property ${prop} matches pattern ${pat} (use allowMatchingProperties)`);
-            }
-          }
-        }
-        function validateProperties(pat) {
-          gen.forIn("key", data, (key) => {
-            gen.if((0, codegen_1._)`${(0, code_1.usePattern)(cxt, pat)}.test(${key})`, () => {
-              const alwaysValid = alwaysValidPatterns.includes(pat);
-              if (!alwaysValid) {
-                cxt.subschema({
-                  keyword: "patternProperties",
-                  schemaProp: pat,
-                  dataProp: key,
-                  dataPropType: util_2.Type.Str
-                }, valid);
-              }
-              if (it.opts.unevaluated && props !== true) {
-                gen.assign((0, codegen_1._)`${props}[${key}]`, true);
-              } else if (!alwaysValid && !it.allErrors) {
-                gen.if((0, codegen_1.not)(valid), () => gen.break());
-              }
-            });
-          });
-        }
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/not.js
-var require_not2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/not.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var util_1 = require_util2();
-    var def = {
-      keyword: "not",
-      schemaType: ["object", "boolean"],
-      trackErrors: true,
-      code(cxt) {
-        const { gen, schema, it } = cxt;
-        if ((0, util_1.alwaysValidSchema)(it, schema)) {
-          cxt.fail();
-          return;
-        }
-        const valid = gen.name("valid");
-        cxt.subschema({
-          keyword: "not",
-          compositeRule: true,
-          createErrors: false,
-          allErrors: false
-        }, valid);
-        cxt.failResult(valid, () => cxt.reset(), () => cxt.error());
-      },
-      error: { message: "must NOT be valid" }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/anyOf.js
-var require_anyOf2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/anyOf.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var code_1 = require_code4();
-    var def = {
-      keyword: "anyOf",
-      schemaType: "array",
-      trackErrors: true,
-      code: code_1.validateUnion,
-      error: { message: "must match a schema in anyOf" }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/oneOf.js
-var require_oneOf2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/oneOf.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var error51 = {
-      message: "must match exactly one schema in oneOf",
-      params: ({ params }) => (0, codegen_1._)`{passingSchemas: ${params.passing}}`
-    };
-    var def = {
-      keyword: "oneOf",
-      schemaType: "array",
-      trackErrors: true,
-      error: error51,
-      code(cxt) {
-        const { gen, schema, parentSchema, it } = cxt;
-        if (!Array.isArray(schema))
-          throw new Error("ajv implementation error");
-        if (it.opts.discriminator && parentSchema.discriminator)
-          return;
-        const schArr = schema;
-        const valid = gen.let("valid", false);
-        const passing = gen.let("passing", null);
-        const schValid = gen.name("_valid");
-        cxt.setParams({ passing });
-        gen.block(validateOneOf);
-        cxt.result(valid, () => cxt.reset(), () => cxt.error(true));
-        function validateOneOf() {
-          schArr.forEach((sch, i) => {
-            let schCxt;
-            if ((0, util_1.alwaysValidSchema)(it, sch)) {
-              gen.var(schValid, true);
-            } else {
-              schCxt = cxt.subschema({
-                keyword: "oneOf",
-                schemaProp: i,
-                compositeRule: true
-              }, schValid);
-            }
-            if (i > 0) {
-              gen.if((0, codegen_1._)`${schValid} && ${valid}`).assign(valid, false).assign(passing, (0, codegen_1._)`[${passing}, ${i}]`).else();
-            }
-            gen.if(schValid, () => {
-              gen.assign(valid, true);
-              gen.assign(passing, i);
-              if (schCxt)
-                cxt.mergeEvaluated(schCxt, codegen_1.Name);
-            });
-          });
-        }
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/allOf.js
-var require_allOf2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/allOf.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var util_1 = require_util2();
-    var def = {
-      keyword: "allOf",
-      schemaType: "array",
-      code(cxt) {
-        const { gen, schema, it } = cxt;
-        if (!Array.isArray(schema))
-          throw new Error("ajv implementation error");
-        const valid = gen.name("valid");
-        schema.forEach((sch, i) => {
-          if ((0, util_1.alwaysValidSchema)(it, sch))
-            return;
-          const schCxt = cxt.subschema({ keyword: "allOf", schemaProp: i }, valid);
-          cxt.ok(valid);
-          cxt.mergeEvaluated(schCxt);
-        });
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/if.js
-var require_if2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/if.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var util_1 = require_util2();
-    var error51 = {
-      message: ({ params }) => (0, codegen_1.str)`must match "${params.ifClause}" schema`,
-      params: ({ params }) => (0, codegen_1._)`{failingKeyword: ${params.ifClause}}`
-    };
-    var def = {
-      keyword: "if",
-      schemaType: ["object", "boolean"],
-      trackErrors: true,
-      error: error51,
-      code(cxt) {
-        const { gen, parentSchema, it } = cxt;
-        if (parentSchema.then === void 0 && parentSchema.else === void 0) {
-          (0, util_1.checkStrictMode)(it, '"if" without "then" and "else" is ignored');
-        }
-        const hasThen = hasSchema(it, "then");
-        const hasElse = hasSchema(it, "else");
-        if (!hasThen && !hasElse)
-          return;
-        const valid = gen.let("valid", true);
-        const schValid = gen.name("_valid");
-        validateIf();
-        cxt.reset();
-        if (hasThen && hasElse) {
-          const ifClause = gen.let("ifClause");
-          cxt.setParams({ ifClause });
-          gen.if(schValid, validateClause("then", ifClause), validateClause("else", ifClause));
-        } else if (hasThen) {
-          gen.if(schValid, validateClause("then"));
-        } else {
-          gen.if((0, codegen_1.not)(schValid), validateClause("else"));
-        }
-        cxt.pass(valid, () => cxt.error(true));
-        function validateIf() {
-          const schCxt = cxt.subschema({
-            keyword: "if",
-            compositeRule: true,
-            createErrors: false,
-            allErrors: false
-          }, schValid);
-          cxt.mergeEvaluated(schCxt);
-        }
-        function validateClause(keyword, ifClause) {
-          return () => {
-            const schCxt = cxt.subschema({ keyword }, schValid);
-            gen.assign(valid, schValid);
-            cxt.mergeValidEvaluated(schCxt, valid);
-            if (ifClause)
-              gen.assign(ifClause, (0, codegen_1._)`${keyword}`);
-            else
-              cxt.setParams({ ifClause: keyword });
-          };
-        }
-      }
-    };
-    function hasSchema(it, keyword) {
-      const schema = it.schema[keyword];
-      return schema !== void 0 && !(0, util_1.alwaysValidSchema)(it, schema);
-    }
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/thenElse.js
-var require_thenElse2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/thenElse.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var util_1 = require_util2();
-    var def = {
-      keyword: ["then", "else"],
-      schemaType: ["object", "boolean"],
-      code({ keyword, parentSchema, it }) {
-        if (parentSchema.if === void 0)
-          (0, util_1.checkStrictMode)(it, `"${keyword}" without "if" is ignored`);
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/index.js
-var require_applicator2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/applicator/index.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var additionalItems_1 = require_additionalItems2();
-    var prefixItems_1 = require_prefixItems2();
-    var items_1 = require_items2();
-    var items2020_1 = require_items20202();
-    var contains_1 = require_contains2();
-    var dependencies_1 = require_dependencies2();
-    var propertyNames_1 = require_propertyNames2();
-    var additionalProperties_1 = require_additionalProperties2();
-    var properties_1 = require_properties2();
-    var patternProperties_1 = require_patternProperties2();
-    var not_1 = require_not2();
-    var anyOf_1 = require_anyOf2();
-    var oneOf_1 = require_oneOf2();
-    var allOf_1 = require_allOf2();
-    var if_1 = require_if2();
-    var thenElse_1 = require_thenElse2();
-    function getApplicator(draft2020 = false) {
-      const applicator = [
-        // any
-        not_1.default,
-        anyOf_1.default,
-        oneOf_1.default,
-        allOf_1.default,
-        if_1.default,
-        thenElse_1.default,
-        // object
-        propertyNames_1.default,
-        additionalProperties_1.default,
-        dependencies_1.default,
-        properties_1.default,
-        patternProperties_1.default
-      ];
-      if (draft2020)
-        applicator.push(prefixItems_1.default, items2020_1.default);
-      else
-        applicator.push(additionalItems_1.default, items_1.default);
-      applicator.push(contains_1.default);
-      return applicator;
-    }
-    exports.default = getApplicator;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/format/format.js
-var require_format3 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/format/format.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var error51 = {
-      message: ({ schemaCode }) => (0, codegen_1.str)`must match format "${schemaCode}"`,
-      params: ({ schemaCode }) => (0, codegen_1._)`{format: ${schemaCode}}`
-    };
-    var def = {
-      keyword: "format",
-      type: ["number", "string"],
-      schemaType: "string",
-      $data: true,
-      error: error51,
-      code(cxt, ruleType) {
-        const { gen, data, $data, schema, schemaCode, it } = cxt;
-        const { opts, errSchemaPath, schemaEnv, self } = it;
-        if (!opts.validateFormats)
-          return;
-        if ($data)
-          validate$DataFormat();
-        else
-          validateFormat();
-        function validate$DataFormat() {
-          const fmts = gen.scopeValue("formats", {
-            ref: self.formats,
-            code: opts.code.formats
-          });
-          const fDef = gen.const("fDef", (0, codegen_1._)`${fmts}[${schemaCode}]`);
-          const fType = gen.let("fType");
-          const format2 = gen.let("format");
-          gen.if((0, codegen_1._)`typeof ${fDef} == "object" && !(${fDef} instanceof RegExp)`, () => gen.assign(fType, (0, codegen_1._)`${fDef}.type || "string"`).assign(format2, (0, codegen_1._)`${fDef}.validate`), () => gen.assign(fType, (0, codegen_1._)`"string"`).assign(format2, fDef));
-          cxt.fail$data((0, codegen_1.or)(unknownFmt(), invalidFmt()));
-          function unknownFmt() {
-            if (opts.strictSchema === false)
-              return codegen_1.nil;
-            return (0, codegen_1._)`${schemaCode} && !${format2}`;
-          }
-          function invalidFmt() {
-            const callFormat = schemaEnv.$async ? (0, codegen_1._)`(${fDef}.async ? await ${format2}(${data}) : ${format2}(${data}))` : (0, codegen_1._)`${format2}(${data})`;
-            const validData = (0, codegen_1._)`(typeof ${format2} == "function" ? ${callFormat} : ${format2}.test(${data}))`;
-            return (0, codegen_1._)`${format2} && ${format2} !== true && ${fType} === ${ruleType} && !${validData}`;
-          }
-        }
-        function validateFormat() {
-          const formatDef = self.formats[schema];
-          if (!formatDef) {
-            unknownFormat();
-            return;
-          }
-          if (formatDef === true)
-            return;
-          const [fmtType, format2, fmtRef] = getFormat(formatDef);
-          if (fmtType === ruleType)
-            cxt.pass(validCondition());
-          function unknownFormat() {
-            if (opts.strictSchema === false) {
-              self.logger.warn(unknownMsg());
-              return;
-            }
-            throw new Error(unknownMsg());
-            function unknownMsg() {
-              return `unknown format "${schema}" ignored in schema at path "${errSchemaPath}"`;
-            }
-          }
-          function getFormat(fmtDef) {
-            const code2 = fmtDef instanceof RegExp ? (0, codegen_1.regexpCode)(fmtDef) : opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(schema)}` : void 0;
-            const fmt = gen.scopeValue("formats", { key: schema, ref: fmtDef, code: code2 });
-            if (typeof fmtDef == "object" && !(fmtDef instanceof RegExp)) {
-              return [fmtDef.type || "string", fmtDef.validate, (0, codegen_1._)`${fmt}.validate`];
-            }
-            return ["string", fmtDef, fmt];
-          }
-          function validCondition() {
-            if (typeof formatDef == "object" && !(formatDef instanceof RegExp) && formatDef.async) {
-              if (!schemaEnv.$async)
-                throw new Error("async format in sync schema");
-              return (0, codegen_1._)`await ${fmtRef}(${data})`;
-            }
-            return typeof format2 == "function" ? (0, codegen_1._)`${fmtRef}(${data})` : (0, codegen_1._)`${fmtRef}.test(${data})`;
-          }
-        }
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/format/index.js
-var require_format4 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/format/index.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var format_1 = require_format3();
-    var format2 = [format_1.default];
-    exports.default = format2;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/metadata.js
-var require_metadata2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/metadata.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.contentVocabulary = exports.metadataVocabulary = void 0;
-    exports.metadataVocabulary = [
-      "title",
-      "description",
-      "default",
-      "deprecated",
-      "readOnly",
-      "writeOnly",
-      "examples"
-    ];
-    exports.contentVocabulary = [
-      "contentMediaType",
-      "contentEncoding",
-      "contentSchema"
-    ];
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/draft7.js
-var require_draft72 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/draft7.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var core_1 = require_core4();
-    var validation_1 = require_validation2();
-    var applicator_1 = require_applicator2();
-    var format_1 = require_format4();
-    var metadata_1 = require_metadata2();
-    var draft7Vocabularies = [
-      core_1.default,
-      validation_1.default,
-      (0, applicator_1.default)(),
-      format_1.default,
-      metadata_1.metadataVocabulary,
-      metadata_1.contentVocabulary
-    ];
-    exports.default = draft7Vocabularies;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/discriminator/types.js
-var require_types2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/discriminator/types.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.DiscrError = void 0;
-    var DiscrError;
-    (function(DiscrError2) {
-      DiscrError2["Tag"] = "tag";
-      DiscrError2["Mapping"] = "mapping";
-    })(DiscrError || (exports.DiscrError = DiscrError = {}));
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/discriminator/index.js
-var require_discriminator2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/vocabularies/discriminator/index.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var codegen_1 = require_codegen2();
-    var types_1 = require_types2();
-    var compile_1 = require_compile2();
-    var ref_error_1 = require_ref_error2();
-    var util_1 = require_util2();
-    var error51 = {
-      message: ({ params: { discrError, tagName } }) => discrError === types_1.DiscrError.Tag ? `tag "${tagName}" must be string` : `value of tag "${tagName}" must be in oneOf`,
-      params: ({ params: { discrError, tag, tagName } }) => (0, codegen_1._)`{error: ${discrError}, tag: ${tagName}, tagValue: ${tag}}`
-    };
-    var def = {
-      keyword: "discriminator",
-      type: "object",
-      schemaType: "object",
-      error: error51,
-      code(cxt) {
-        const { gen, data, schema, parentSchema, it } = cxt;
-        const { oneOf } = parentSchema;
-        if (!it.opts.discriminator) {
-          throw new Error("discriminator: requires discriminator option");
-        }
-        const tagName = schema.propertyName;
-        if (typeof tagName != "string")
-          throw new Error("discriminator: requires propertyName");
-        if (schema.mapping)
-          throw new Error("discriminator: mapping is not supported");
-        if (!oneOf)
-          throw new Error("discriminator: requires oneOf keyword");
-        const valid = gen.let("valid", false);
-        const tag = gen.const("tag", (0, codegen_1._)`${data}${(0, codegen_1.getProperty)(tagName)}`);
-        gen.if((0, codegen_1._)`typeof ${tag} == "string"`, () => validateMapping(), () => cxt.error(false, { discrError: types_1.DiscrError.Tag, tag, tagName }));
-        cxt.ok(valid);
-        function validateMapping() {
-          const mapping = getMapping();
-          gen.if(false);
-          for (const tagValue in mapping) {
-            gen.elseIf((0, codegen_1._)`${tag} === ${tagValue}`);
-            gen.assign(valid, applyTagSchema(mapping[tagValue]));
-          }
-          gen.else();
-          cxt.error(false, { discrError: types_1.DiscrError.Mapping, tag, tagName });
-          gen.endIf();
-        }
-        function applyTagSchema(schemaProp) {
-          const _valid = gen.name("valid");
-          const schCxt = cxt.subschema({ keyword: "oneOf", schemaProp }, _valid);
-          cxt.mergeEvaluated(schCxt, codegen_1.Name);
-          return _valid;
-        }
-        function getMapping() {
-          var _a3;
-          const oneOfMapping = {};
-          const topRequired = hasRequired(parentSchema);
-          let tagRequired = true;
-          for (let i = 0; i < oneOf.length; i++) {
-            let sch = oneOf[i];
-            if ((sch === null || sch === void 0 ? void 0 : sch.$ref) && !(0, util_1.schemaHasRulesButRef)(sch, it.self.RULES)) {
-              const ref = sch.$ref;
-              sch = compile_1.resolveRef.call(it.self, it.schemaEnv.root, it.baseId, ref);
-              if (sch instanceof compile_1.SchemaEnv)
-                sch = sch.schema;
-              if (sch === void 0)
-                throw new ref_error_1.default(it.opts.uriResolver, it.baseId, ref);
-            }
-            const propSch = (_a3 = sch === null || sch === void 0 ? void 0 : sch.properties) === null || _a3 === void 0 ? void 0 : _a3[tagName];
-            if (typeof propSch != "object") {
-              throw new Error(`discriminator: oneOf subschemas (or referenced schemas) must have "properties/${tagName}"`);
-            }
-            tagRequired = tagRequired && (topRequired || hasRequired(sch));
-            addMappings(propSch, i);
-          }
-          if (!tagRequired)
-            throw new Error(`discriminator: "${tagName}" must be required`);
-          return oneOfMapping;
-          function hasRequired({ required: required2 }) {
-            return Array.isArray(required2) && required2.includes(tagName);
-          }
-          function addMappings(sch, i) {
-            if (sch.const) {
-              addMapping(sch.const, i);
-            } else if (sch.enum) {
-              for (const tagValue of sch.enum) {
-                addMapping(tagValue, i);
-              }
-            } else {
-              throw new Error(`discriminator: "properties/${tagName}" must have "const" or "enum"`);
-            }
-          }
-          function addMapping(tagValue, i) {
-            if (typeof tagValue != "string" || tagValue in oneOfMapping) {
-              throw new Error(`discriminator: "${tagName}" values must be unique strings`);
-            }
-            oneOfMapping[tagValue] = i;
-          }
-        }
-      }
-    };
-    exports.default = def;
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/refs/json-schema-draft-07.json
-var require_json_schema_draft_072 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/refs/json-schema-draft-07.json"(exports, module) {
-    module.exports = {
-      $schema: "http://json-schema.org/draft-07/schema#",
-      $id: "http://json-schema.org/draft-07/schema#",
-      title: "Core schema meta-schema",
-      definitions: {
-        schemaArray: {
-          type: "array",
-          minItems: 1,
-          items: { $ref: "#" }
-        },
-        nonNegativeInteger: {
-          type: "integer",
-          minimum: 0
-        },
-        nonNegativeIntegerDefault0: {
-          allOf: [{ $ref: "#/definitions/nonNegativeInteger" }, { default: 0 }]
-        },
-        simpleTypes: {
-          enum: ["array", "boolean", "integer", "null", "number", "object", "string"]
-        },
-        stringArray: {
-          type: "array",
-          items: { type: "string" },
-          uniqueItems: true,
-          default: []
-        }
-      },
-      type: ["object", "boolean"],
-      properties: {
-        $id: {
-          type: "string",
-          format: "uri-reference"
-        },
-        $schema: {
-          type: "string",
-          format: "uri"
-        },
-        $ref: {
-          type: "string",
-          format: "uri-reference"
-        },
-        $comment: {
-          type: "string"
-        },
-        title: {
-          type: "string"
-        },
-        description: {
-          type: "string"
-        },
-        default: true,
-        readOnly: {
-          type: "boolean",
-          default: false
-        },
-        examples: {
-          type: "array",
-          items: true
-        },
-        multipleOf: {
-          type: "number",
-          exclusiveMinimum: 0
-        },
-        maximum: {
-          type: "number"
-        },
-        exclusiveMaximum: {
-          type: "number"
-        },
-        minimum: {
-          type: "number"
-        },
-        exclusiveMinimum: {
-          type: "number"
-        },
-        maxLength: { $ref: "#/definitions/nonNegativeInteger" },
-        minLength: { $ref: "#/definitions/nonNegativeIntegerDefault0" },
-        pattern: {
-          type: "string",
-          format: "regex"
-        },
-        additionalItems: { $ref: "#" },
-        items: {
-          anyOf: [{ $ref: "#" }, { $ref: "#/definitions/schemaArray" }],
-          default: true
-        },
-        maxItems: { $ref: "#/definitions/nonNegativeInteger" },
-        minItems: { $ref: "#/definitions/nonNegativeIntegerDefault0" },
-        uniqueItems: {
-          type: "boolean",
-          default: false
-        },
-        contains: { $ref: "#" },
-        maxProperties: { $ref: "#/definitions/nonNegativeInteger" },
-        minProperties: { $ref: "#/definitions/nonNegativeIntegerDefault0" },
-        required: { $ref: "#/definitions/stringArray" },
-        additionalProperties: { $ref: "#" },
-        definitions: {
-          type: "object",
-          additionalProperties: { $ref: "#" },
-          default: {}
-        },
-        properties: {
-          type: "object",
-          additionalProperties: { $ref: "#" },
-          default: {}
-        },
-        patternProperties: {
-          type: "object",
-          additionalProperties: { $ref: "#" },
-          propertyNames: { format: "regex" },
-          default: {}
-        },
-        dependencies: {
-          type: "object",
-          additionalProperties: {
-            anyOf: [{ $ref: "#" }, { $ref: "#/definitions/stringArray" }]
-          }
-        },
-        propertyNames: { $ref: "#" },
-        const: true,
-        enum: {
-          type: "array",
-          items: true,
-          minItems: 1,
-          uniqueItems: true
-        },
-        type: {
-          anyOf: [
-            { $ref: "#/definitions/simpleTypes" },
-            {
-              type: "array",
-              items: { $ref: "#/definitions/simpleTypes" },
-              minItems: 1,
-              uniqueItems: true
-            }
-          ]
-        },
-        format: { type: "string" },
-        contentMediaType: { type: "string" },
-        contentEncoding: { type: "string" },
-        if: { $ref: "#" },
-        then: { $ref: "#" },
-        else: { $ref: "#" },
-        allOf: { $ref: "#/definitions/schemaArray" },
-        anyOf: { $ref: "#/definitions/schemaArray" },
-        oneOf: { $ref: "#/definitions/schemaArray" },
-        not: { $ref: "#" }
-      },
-      default: true
-    };
-  }
-});
-
-// node_modules/ajv-formats/node_modules/ajv/dist/ajv.js
-var require_ajv2 = __commonJS({
-  "node_modules/ajv-formats/node_modules/ajv/dist/ajv.js"(exports, module) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.MissingRefError = exports.ValidationError = exports.CodeGen = exports.Name = exports.nil = exports.stringify = exports.str = exports._ = exports.KeywordCxt = exports.Ajv = void 0;
-    var core_1 = require_core3();
-    var draft7_1 = require_draft72();
-    var discriminator_1 = require_discriminator2();
-    var draft7MetaSchema = require_json_schema_draft_072();
-    var META_SUPPORT_DATA = ["/properties"];
-    var META_SCHEMA_ID = "http://json-schema.org/draft-07/schema";
-    var Ajv2 = class extends core_1.default {
-      _addVocabularies() {
-        super._addVocabularies();
-        draft7_1.default.forEach((v) => this.addVocabulary(v));
-        if (this.opts.discriminator)
-          this.addKeyword(discriminator_1.default);
-      }
-      _addDefaultMetaSchema() {
-        super._addDefaultMetaSchema();
-        if (!this.opts.meta)
-          return;
-        const metaSchema = this.opts.$data ? this.$dataMetaSchema(draft7MetaSchema, META_SUPPORT_DATA) : draft7MetaSchema;
-        this.addMetaSchema(metaSchema, META_SCHEMA_ID, false);
-        this.refs["http://json-schema.org/schema"] = META_SCHEMA_ID;
-      }
-      defaultMeta() {
-        return this.opts.defaultMeta = super.defaultMeta() || (this.getSchema(META_SCHEMA_ID) ? META_SCHEMA_ID : void 0);
-      }
-    };
-    exports.Ajv = Ajv2;
-    module.exports = exports = Ajv2;
-    module.exports.Ajv = Ajv2;
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.default = Ajv2;
-    var validate_1 = require_validate2();
-    Object.defineProperty(exports, "KeywordCxt", { enumerable: true, get: function() {
-      return validate_1.KeywordCxt;
-    } });
-    var codegen_1 = require_codegen2();
-    Object.defineProperty(exports, "_", { enumerable: true, get: function() {
-      return codegen_1._;
-    } });
-    Object.defineProperty(exports, "str", { enumerable: true, get: function() {
-      return codegen_1.str;
-    } });
-    Object.defineProperty(exports, "stringify", { enumerable: true, get: function() {
-      return codegen_1.stringify;
-    } });
-    Object.defineProperty(exports, "nil", { enumerable: true, get: function() {
-      return codegen_1.nil;
-    } });
-    Object.defineProperty(exports, "Name", { enumerable: true, get: function() {
-      return codegen_1.Name;
-    } });
-    Object.defineProperty(exports, "CodeGen", { enumerable: true, get: function() {
-      return codegen_1.CodeGen;
-    } });
-    var validation_error_1 = require_validation_error2();
-    Object.defineProperty(exports, "ValidationError", { enumerable: true, get: function() {
-      return validation_error_1.default;
-    } });
-    var ref_error_1 = require_ref_error2();
-    Object.defineProperty(exports, "MissingRefError", { enumerable: true, get: function() {
-      return ref_error_1.default;
-    } });
-  }
-});
-
 // node_modules/ajv-formats/dist/limit.js
 var require_limit = __commonJS({
   "node_modules/ajv-formats/dist/limit.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.formatLimitDefinition = void 0;
-    var ajv_1 = require_ajv2();
-    var codegen_1 = require_codegen2();
+    var ajv_1 = require_ajv();
+    var codegen_1 = require_codegen();
     var ops = codegen_1.operators;
     var KWDs = {
       formatMaximum: { okStr: "<=", ok: ops.LTE, fail: ops.GT },
@@ -12552,7 +6880,7 @@ var require_dist = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     var formats_1 = require_formats();
     var limit_1 = require_limit();
-    var codegen_1 = require_codegen2();
+    var codegen_1 = require_codegen();
     var fullName = new codegen_1.Name("fullFormats");
     var fastName = new codegen_1.Name("fastFormats");
     var formatsPlugin = (ajv, opts = { keywords: true }) => {
@@ -28746,16 +23074,32 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
+function getDotPath(path10) {
+  if (path10.length === 0) {
+    return "object root";
+  }
+  return path10.reduce((acc, seg, index2) => {
+    if (index2 === 0) {
+      return String(seg);
+    }
+    if (typeof seg === "number") {
+      return `${acc}[${seg}]`;
+    }
+    return `${acc}.${seg}`;
+  }, "");
+}
 function getParseErrorMessage(error51) {
   if (error51 && typeof error51 === "object") {
+    if ("issues" in error51 && Array.isArray(error51.issues) && error51.issues.length > 0) {
+      return error51.issues.map((i) => {
+        if (!i.path?.length) {
+          return i.message;
+        }
+        return `${i.message} at ${getDotPath(i.path)}`;
+      }).join("\n");
+    }
     if ("message" in error51 && typeof error51.message === "string") {
       return error51.message;
-    }
-    if ("issues" in error51 && Array.isArray(error51.issues) && error51.issues.length > 0) {
-      const firstIssue = error51.issues[0];
-      if (firstIssue && typeof firstIssue === "object" && "message" in firstIssue) {
-        return String(firstIssue.message);
-      }
     }
     try {
       return JSON.stringify(error51);
@@ -35371,16 +29715,7 @@ var Server = class extends Protocol {
     if (!methodSchema) {
       throw new Error("Schema is missing a method literal");
     }
-    let methodValue;
-    if (isZ4Schema(methodSchema)) {
-      const v4Schema = methodSchema;
-      const v4Def = v4Schema._zod?.def;
-      methodValue = v4Def?.value ?? v4Schema.value;
-    } else {
-      const v3Schema = methodSchema;
-      const legacyDef = v3Schema._def;
-      methodValue = legacyDef?.value ?? v3Schema.value;
-    }
+    const methodValue = getLiteralValue(methodSchema);
     if (typeof methodValue !== "string") {
       throw new Error("Schema method literal must be a string");
     }
@@ -36568,8 +30903,17 @@ var EMPTY_COMPLETION_RESULT = {
 import process3 from "node:process";
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/shared/stdio.js
+var STDIO_DEFAULT_MAX_BUFFER_SIZE = 10 * 1024 * 1024;
 var ReadBuffer = class {
+  constructor(options) {
+    this._maxBufferSize = options?.maxBufferSize ?? STDIO_DEFAULT_MAX_BUFFER_SIZE;
+  }
   append(chunk) {
+    const newSize = (this._buffer?.length ?? 0) + chunk.length;
+    if (newSize > this._maxBufferSize) {
+      this.clear();
+      throw new Error(`ReadBuffer exceeded maximum size of ${this._maxBufferSize} bytes`);
+    }
     this._buffer = this._buffer ? Buffer.concat([this._buffer, chunk]) : chunk;
   }
   readMessage() {
@@ -36597,18 +30941,24 @@ function serializeMessage(message) {
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js
 var StdioServerTransport = class {
-  constructor(_stdin = process3.stdin, _stdout = process3.stdout) {
+  constructor(_stdin = process3.stdin, _stdout = process3.stdout, options) {
     this._stdin = _stdin;
     this._stdout = _stdout;
-    this._readBuffer = new ReadBuffer();
     this._started = false;
     this._ondata = (chunk) => {
-      this._readBuffer.append(chunk);
-      this.processReadBuffer();
+      try {
+        this._readBuffer.append(chunk);
+        this.processReadBuffer();
+      } catch (error51) {
+        this.onerror?.(error51);
+        this.close().catch(() => {
+        });
+      }
     };
     this._onerror = (error51) => {
       this.onerror?.(error51);
     };
+    this._readBuffer = new ReadBuffer({ maxBufferSize: options?.maxBufferSize });
   }
   /**
    * Starts listening for messages on stdin.
@@ -42910,7 +37260,7 @@ function resolveToSetextUnderline(events, context) {
   let index2 = events.length;
   let content3;
   let text4;
-  let definition3;
+  let definition2;
   while (index2--) {
     if (events[index2][0] === "enter") {
       if (events[index2][1].type === "content") {
@@ -42924,8 +37274,8 @@ function resolveToSetextUnderline(events, context) {
       if (events[index2][1].type === "content") {
         events.splice(index2, 1);
       }
-      if (!definition3 && events[index2][1].type === "definition") {
-        definition3 = index2;
+      if (!definition2 && events[index2][1].type === "definition") {
+        definition2 = index2;
       }
     }
   }
@@ -42939,11 +37289,11 @@ function resolveToSetextUnderline(events, context) {
     }
   };
   events[text4][1].type = "setextHeadingText";
-  if (definition3) {
+  if (definition2) {
     events.splice(text4, 0, ["enter", heading, context]);
-    events.splice(definition3 + 1, 0, ["exit", events[content3][1], context]);
+    events.splice(definition2 + 1, 0, ["exit", events[content3][1], context]);
     events[content3][1].end = {
-      ...events[definition3][1].end
+      ...events[definition2][1].end
     };
   } else {
     events[content3][1] = heading;
@@ -43752,7 +38102,7 @@ function compiler(options) {
       codeTextData: onenterdata,
       data: onenterdata,
       codeFlowValue: onenterdata,
-      definition: opener(definition3),
+      definition: opener(definition2),
       definitionDestinationString: buffer,
       definitionLabelString: buffer,
       definitionTitleString: buffer,
@@ -44275,7 +38625,7 @@ function compiler(options) {
       value: ""
     };
   }
-  function definition3() {
+  function definition2() {
     return {
       type: "definition",
       identifier: "",
@@ -44451,7 +38801,7 @@ function ccount(value, character) {
 function ok() {
 }
 
-// node_modules/mdast-util-find-and-replace/node_modules/escape-string-regexp/index.js
+// node_modules/escape-string-regexp/index.js
 function escapeStringRegexp(string6) {
   if (typeof string6 !== "string") {
     throw new TypeError("Expected a string");
@@ -48490,17 +42840,17 @@ var paperShaderDefinitions = [
   }
 ];
 var paperShaderDefinitionsById = paperShaderDefinitions.reduce(
-  (definitions, definition3) => {
-    definitions[definition3.id] = definition3;
+  (definitions, definition2) => {
+    definitions[definition2.id] = definition2;
     return definitions;
   },
   {}
 );
 function paperShaderRuntimePresetTable() {
   return Object.fromEntries(
-    paperShaderDefinitions.map((definition3) => [
-      definition3.id,
-      Object.fromEntries(definition3.presets.map((preset) => [preset.name, preset.params]))
+    paperShaderDefinitions.map((definition2) => [
+      definition2.id,
+      Object.fromEntries(definition2.presets.map((preset) => [preset.name, preset.params]))
     ])
   );
 }
@@ -48888,2672 +43238,95 @@ function parseTemplateRef(value) {
 var officialTemplatePackageVersion = "1.0.0";
 var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.2.4" };
 var officialTemplateDefinitions = [
-  definition2("welcome-to-slidex", "getting-started", false, 10, 6, "/images/workspace-welcome/welcome-to-slidex.svg", ["SlideX", "Onboarding", "Product"], {
-    en: { description: "A guided introduction to building presentations in SlideX.", name: "Welcome to SlideX", useCase: "Product onboarding and team introductions" },
-    "zh-TW": { description: "\u7528\u4E00\u4EFD\u5B8C\u6574\u7C21\u5831\u5FEB\u901F\u8A8D\u8B58 SlideX \u7684\u88FD\u4F5C\u3001\u7DE8\u8F2F\u8207\u8F38\u51FA\u6D41\u7A0B\u3002", name: "\u6B61\u8FCE\u4F7F\u7528 SlideX", useCase: "\u7522\u54C1\u5C0E\u89BD\u8207\u5718\u968A\u4ECB\u7D39" }
-  }, blueprint("Introduce a product through a clear guided tour.", ["cover", "promise", "workflow", "capabilities", "proof", "closing"], "Bright editorial product storytelling with one dominant visual per slide.", ["#111111", "#F6F2EA", "#FF5C35"], "Large modern sans-serif headlines with compact supporting copy.", "Cinematic editorial imagery with generous crops.", ["hero", "product-proof"])),
-  definition2("launch-deck", "product", true, 20, 7, "/images/workspace-welcome/launch-deck.svg", ["Launch", "Product", "GTM"], {
-    en: { description: "A polished product launch narrative for modern teams.", name: "Launch Deck", useCase: "Product launches, internal alignment, and go-to-market" },
-    "zh-TW": { description: "\u70BA\u73FE\u4EE3\u5718\u968A\u6E96\u5099\u7684\u5B8C\u6574\u7522\u54C1\u767C\u5E03\u6558\u4E8B\u3002", name: "\u7522\u54C1\u767C\u5E03\u7C21\u5831", useCase: "\u7522\u54C1\u767C\u5E03\u3001\u5167\u90E8\u5C0D\u9F4A\u8207\u5E02\u5834\u63A8\u9032" }
-  }, blueprint("Build conviction for a product launch and its next action.", ["cover", "problem", "solution", "benefits", "proof", "plan", "closing"], "Confident asymmetric product-launch compositions with strong visual pacing.", ["#111111", "#F3EFE6", "#F15A3C"], "Bold display type paired with concise operational copy.", "High-energy team and product imagery cropped to support the message.", ["hero", "team", "product"])),
-  definition2("design-team-culture", "people", true, 30, 8, "/api/template-library/design-team-culture/cover?slide=0&locale=en", ["SlideX", "Design", "Team Culture"], {
-    en: { description: "An eight-slide culture deck introducing SlideX, its product philosophy, and the way the design team works.", name: "SlideX Design Team Culture Deck", useCase: "Team culture, recruiting, company introductions, and product philosophy" },
-    "zh-TW": { description: "\u7528\u516B\u9801\u4ECB\u7D39 SlideX\u3001\u7522\u54C1\u7406\u5FF5\u8207\u8A2D\u8A08\u5718\u968A\u5DE5\u4F5C\u65B9\u5F0F\u7684\u6587\u5316\u7C21\u5831\u3002", name: "SlideX \u8A2D\u8A08\u5718\u968A\u6587\u5316\u7C21\u5831", useCase: "\u5718\u968A\u6587\u5316\u3001\u4EBA\u624D\u62DB\u52DF\u3001\u516C\u53F8\u4ECB\u7D39\u8207\u7522\u54C1\u7406\u5FF5\u6E9D\u901A" }
-  }, blueprint("Express a design team's culture through principles and proof.", ["cover", "identity", "principle", "principle", "people", "workflow", "values", "closing"], "Monochrome editorial culture deck with sharp alignment and selective branded imagery.", ["#000000", "#FFFFFF", "#D9D9D9"], "Restrained grotesk typography with strong size contrast.", "Brand imagery is treated as graphic evidence, never decoration.", ["brand", "portrait"])),
-  definition2("notion-shared-deck", "report", true, 34, 8, "/api/template-library/notion-shared-deck/cover?slide=0&locale=en", ["Notion", "Team", "Workspace", "Report"], {
-    en: { description: "A refined eight-slide template for turning shared Notion pages into a clear, decision-ready narrative.", name: "Notion Shared Deck", useCase: "Team updates, cross-functional alignment, project decisions, and product progress" },
-    "zh-TW": { description: "\u5C07\u5718\u968A\u5171\u7528\u7684 Notion \u9801\u9762\u6574\u7406\u6210\u516B\u9801\u3001\u6E05\u695A\u53EF\u6C7A\u7B56\u4E14\u4FDD\u7559\u4F86\u6E90\u7684\u7C21\u5831\u3002", name: "Notion \u5718\u968A\u5171\u7528\u7C21\u5831", useCase: "\u5718\u968A\u9031\u5831\u3001\u8DE8\u8077\u80FD\u5C0D\u9F4A\u3001\u5C08\u6848\u6C7A\u7B56\u8207\u7522\u54C1\u9032\u5EA6" }
-  }, blueprint("Turn shared work into a concise decision-ready update.", ["cover", "overview", "context", "metrics", "timeline", "decision", "next-steps", "closing"], "Calm document-inspired layouts with clear evidence and decision hierarchy.", ["#F7F6F2", "#191919", "#5B5BD6"], "Editorial headings with highly readable report text.", "Use diagrams and metrics before decorative photography.", ["evidence"])),
-  definition2("obsidian-quick-deck", "report", true, 35, 8, "/api/template-library/obsidian-quick-deck/cover?slide=0&locale=en", ["Obsidian", "Notes", "AI", "Report"], {
-    en: { description: "An eight-slide, source-linked template for turning Obsidian notes into a clear presentation.", name: "Obsidian Quick Deck", useCase: "Progress reports, proposals, research briefs, and teaching decks" },
-    "zh-TW": { description: "\u5C07 Obsidian \u7B46\u8A18\u6574\u7406\u6210\u516B\u9801\u3001\u4FDD\u7559\u4F86\u6E90\u4E14\u53EF\u5F48\u6027\u5957\u7248\u7684\u5FEB\u901F\u7C21\u5831\u3002", name: "Obsidian \u5FEB\u901F\u7C21\u5831", useCase: "\u968E\u6BB5\u9032\u5EA6\u3001\u63D0\u6848\u3001\u7814\u7A76\u6458\u8981\u8207\u6559\u5B78\u5167\u5BB9\u6574\u7406" }
-  }, blueprint("Convert linked notes into a traceable presentation narrative.", ["cover", "overview", "context", "evidence", "metrics", "timeline", "recommendation", "closing"], "Knowledge-first compositions that make citations and source relationships visible.", ["#17151F", "#F1EDF7", "#8B5CF6"], "Compact knowledge-editorial typography with clear source labels.", "Use source-linked assets only when they clarify evidence.", ["source", "evidence"])),
-  definition2("moodboard", "marketing", true, 40, 14, "/api/template-library/moodboard/cover?slide=0&locale=en", ["Moodboard", "Brand", "Creative Direction"], {
-    en: { description: "A 14-slide visual direction deck exploring typography, imagery, motion, texture, and composition.", name: "Moodboard", useCase: "Brand direction, visual research, and creative concept alignment" },
-    "zh-TW": { description: "\u4EE5 14 \u9801\u63A2\u7D22\u5B57\u9AD4\u3001\u5F71\u50CF\u3001\u52D5\u614B\u3001\u6750\u8CEA\u8207\u69CB\u5716\u7684\u8996\u89BA\u65B9\u5411\u6A21\u677F\u3002", name: "\u60C5\u7DD2\u677F", useCase: "\u54C1\u724C\u65B9\u5411\u3001\u8996\u89BA\u7814\u7A76\u8207\u5275\u610F\u6982\u5FF5\u5C0D\u9F4A" }
-  }, blueprint("Align a team on one coherent visual direction.", ["cover", "concept", "type", "palette", "imagery", "texture", "composition", "motion", "applications", "comparison", "principles", "system", "recommendation", "closing"], "Experimental editorial art direction with deliberate variation and a coherent visual world.", ["#111111", "#F5F0E8", "#D94B32", "#5C6CFF"], "Expressive display typography balanced by disciplined captions.", "Treat every image as material: crop, filter, sequence, and contrast consistently.", ["hero", "texture", "reference"]))
-];
-function definition2(id, category, featured, sortOrder, slideCount, cover, tags, locales, blueprintValue) {
-  return { blueprint: blueprintValue, catalog: { author: "SlideX", category, featured, slideCount, sortOrder, tags }, cover, id, locales };
-}
-function blueprint(objective, slideRoles, composition, colorTokens, typography, imageTreatment, imageRoles) {
-  return {
-    design: { colorTokens, composition, imageTreatment, typography },
-    imageSlots: imageRoles.map((role) => ({ aspectRatio: role === "hero" ? "16:9" : "4:3", required: false, role })),
-    layoutRoles: [...new Set(slideRoles)],
-    narrative: { objective, slideRoles },
-    prohibitions: [
-      "Do not execute template code or add unregistered components.",
-      "Do not preserve remote image URLs or Base64 media in OpenSlideX projects.",
-      "Do not repeat one generic card grid across the deck."
-    ],
-    qaRules: [
-      "Keep every visible element editable MotionDoc content.",
-      "Validate the complete source and inspect rendered slides before completion.",
-      "Preserve readable contrast, safe margins, and one dominant focal point per slide."
-    ],
-    schemaVersion: 1
-  };
-}
-
-// core/motion-doc/presets/launchDeck.ts
-var launchDeckPresentationId = "launch-deck";
-var launchDeckPresentationSource = `# Launch Deck
-
-<Slide fontSizeUnit="pt" duration={6} theme="dark" background="#989997" accent="#ff6f4e" textColor="#fff9f2" mutedColor="#d8ccc0" slideTransition="scale" transitionDuration={0.75}>
-  <Text fontSize={12.75} fontWeight={720} x={4} y={7} w={25} h={4.5} color="#fff9f2" enter="fadeIn">MORROW</Text>
-  <Text fontSize={10.5} fontWeight={650} x={79} y={7.5} w={14} h={4} color="#15120f" textAlign="right" enter="fadeIn" delay={0.12}>LAUNCH DECK</Text>
-  <Title fontSize={55.5} fontWeight={750} lineHeight={0.92} x={4} y={23} w={51} h={40} color="#fff9f2" enter="reveal" delay={0.14} duration={0.9}>Make every launch feel inevitable.</Title>
-  <Text fontSize={14.25} lineHeight={1.42} x={4.3} y={72} w={48} h={12} color="#d8ccc0" enter="fadeUp" delay={0.38}>A complete story for introducing a product, aligning the team, and taking it to market.</Text>
-  <Text fontSize={11.25} fontWeight={700} x={4} y={91} w={30} h={4} color="#ff6f4e" enter="fadeIn" delay={0.52}>PRODUCT LAUNCH / 2026</Text>
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={6.5} theme="light" background="#fff9f2" accent="#ff6f4e" textColor="#15120f" mutedColor="#6f645b" slideTransition="pushLeft" transitionDuration={0.75}>
-  <Text fontSize={10.5} fontWeight={700} x={4} y={6} w={22} h={4} color="#ff6f4e" enter="fadeIn">THE OPENING</Text>
-  <Title fontSize={36} fontWeight={750} lineHeight={0.98} x={4} y={18} w={49} h={31} color="#15120f" enter="reveal" delay={0.08}>The old way asks people to work around the product.</Title>
-  <Text fontSize={13.5} lineHeight={1.48} x={4.2} y={58} w={45} h={17} color="#6f645b" enter="fadeUp" delay={0.25}>Teams lose time moving between disconnected tools, repeating decisions, and rebuilding the same context.</Text>
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="blurIn" radius={16} x={58} y={11} w={38} h={78} alt="Team coordinating work across a shared product workspace" src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=85&w=2400" delay={0.14} duration={0.9} />
-  <Text fontSize={9.75} fontWeight={650} x={60} y={92} w={34} h={3} color="#6f645b" textAlign="right" enter="fadeIn" delay={0.48}>DISCONNECTED WORK ADDS UP.</Text>
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={7} theme="dark" background="#233c35" accent="#b7efcf" textColor="#f7fff9" mutedColor="#adc2b9" slideTransition="wipe" transitionDuration={0.78}>
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="blurIn" radius={0} x={0} y={0} w={47} h={100} alt="Editorial product visualization for the Morrow launch" src="https://animark-media-library.zz41354899.chatgpt.site/media/optimized/project/precision-canvas.webp" delay={0.05} duration={0.95} />
-  <Text fontSize={10.5} fontWeight={700} x={54} y={8} w={28} h={4} color="#b7efcf" enter="fadeIn" delay={0.12}>INTRODUCING MORROW</Text>
-  <Title fontSize={36} fontWeight={750} lineHeight={0.98} x={54} y={20} w={42} h={33} color="#f7fff9" enter="reveal" delay={0.18}>One clear place to move work forward.</Title>
-  <Text fontSize={14.25} lineHeight={1.48} x={54.2} y={58} w={35} h={18} color="#adc2b9" enter="fadeUp" delay={0.34}>Morrow keeps the brief, decisions, and next actions together so the team can work with shared context.</Text>
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={6.5} theme="light" background="#f1eadf" accent="#ff6f4e" textColor="#15120f" mutedColor="#6f645b" slideTransition="pushLeft" transitionDuration={0.72}>
-  <Text fontSize={10.5} fontWeight={700} x={4} y={6} w={26} h={4} color="#ff6f4e" enter="fadeIn">WHAT CHANGES</Text>
-  <Title fontSize={35.25} fontWeight={750} lineHeight={0.98} x={4} y={15} w={68} h={17} color="#15120f" enter="reveal">A focused system for the work that matters.</Title>
-  <Text fontSize={12.75} lineHeight={1.4} x={4.2} y={34} w={55} h={6} color="#6f645b" enter="fadeUp" delay={0.16}>Three connected capabilities replace a scattered workflow.</Text>
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="blurIn" radius={10} x={4} y={43} w={28} h={29} alt="Team reviewing a shared product brief" src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=85&w=2400" delay={0.16} duration={0.78} />
-  <Text fontSize={14.25} fontWeight={740} x={4} y={76} w={28} h={5} color="#15120f" enter="fadeUp" delay={0.28}>One brief</Text>
-  <Text fontSize={10.125} lineHeight={1.35} x={4} y={83} w={27} h={8} color="#6f645b" enter="fadeUp" delay={0.34}>Keep the source of truth visible.</Text>
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="blurIn" radius={10} x={36} y={43} w={28} h={29} alt="Colleagues making decisions together" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=85&w=2400" delay={0.24} duration={0.78} />
-  <Text fontSize={14.25} fontWeight={740} x={36} y={76} w={28} h={5} color="#15120f" enter="fadeUp" delay={0.36}>One thread</Text>
-  <Text fontSize={10.125} lineHeight={1.35} x={36} y={83} w={27} h={8} color="#6f645b" enter="fadeUp" delay={0.42}>Make decisions with context attached.</Text>
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="blurIn" radius={10} x={68} y={43} w={28} h={29} alt="Workshop turning plans into visible action" src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=85&w=2400" delay={0.32} duration={0.78} />
-  <Text fontSize={14.25} fontWeight={740} x={68} y={76} w={28} h={5} color="#15120f" enter="fadeUp" delay={0.44}>One next step</Text>
-  <Text fontSize={10.125} lineHeight={1.35} x={68} y={83} w={27} h={8} color="#6f645b" enter="fadeUp" delay={0.5}>Turn decisions into visible action.</Text>
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={6.5} theme="dark" background="#15120f" accent="#ffd45f" textColor="#fff9f2" mutedColor="#b9aea4" slideTransition="fade" transitionDuration={0.7}>
-  <Text fontSize={10.5} fontWeight={700} x={4} y={6} w={24} h={4} color="#ffd45f" enter="fadeIn">THE EARLY SIGNAL</Text>
-  <Title fontSize={41.25} fontWeight={750} lineHeight={0.98} x={4} y={17} w={50} h={30} color="#fff9f2" enter="reveal">Less coordination. More forward motion.</Title>
-  <Text fontSize={13.5} lineHeight={1.45} x={4.2} y={50} w={44} h={13} color="#b9aea4" enter="fadeUp" delay={0.2}>Pilot teams complete the weekly planning loop with fewer handoffs and clearer ownership.</Text>
-  <Shape shape="rectangle" fill="#211d19" stroke="#3c3530" strokeWidth={1} radius={14} x={59} y={11} w={36} h={75} enter="fadeUp" delay={0.14} />
-  <Text fontSize={11.25} fontWeight={650} x={64} y={18} w={25} h={4} color="#b9aea4">WEEKLY LOOP COMPLETION</Text>
-  <Text fontSize={47.25} fontWeight={760} x={64} y={28} w={24} h={17} color="#ffd45f" enter="reveal" delay={0.28}>82%</Text>
-  <Shape shape="rectangle" fill="#302a25" radius={4} x={64} y={52} w={25} h={5} enter="fadeIn" delay={0.38} />
-  <Shape shape="rectangle" fill="#ffd45f" radius={4} x={64} y={52} w={20.5} h={5} enter="reveal" delay={0.44} duration={0.8} />
-  <Text fontSize={11.25} fontWeight={650} x={64} y={64} w={25} h={4} color="#b9aea4">HANDOFFS PER CYCLE</Text>
-  <Text fontSize={27} fontWeight={740} x={64} y={71} w={25} h={9} color="#fff9f2" enter="fadeUp" delay={0.5}>7 \u2192 3</Text>
-  <Text fontSize={10.5} x={4} y={89} w={50} h={4} color="#8f867e">EXAMPLE PILOT DATA. REPLACE WITH YOUR RESULTS.</Text>
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={7} theme="light" background="#b7efcf" accent="#233c35" textColor="#183129" mutedColor="#4d6a61" slideTransition="wipe" transitionDuration={0.75}>
-  <Text fontSize={10.5} fontWeight={700} x={4} y={6} w={22} h={4} color="#233c35" enter="fadeIn">GO TO MARKET</Text>
-  <Title fontSize={41.25} fontWeight={750} lineHeight={0.98} x={4} y={17} w={55} h={24} color="#183129" enter="reveal">Launch in three focused moves.</Title>
-  <Text fontSize={13.5} lineHeight={1.45} x={4.2} y={48} w={45} h={10} color="#4d6a61" enter="fadeUp" delay={0.18}>Prove the workflow, publish the result, then expand with evidence.</Text>
-  <Shape shape="rectangle" fill="#fff9f2" radius={12} x={57} y={11} w={38} h={22} enter="fadeUp" delay={0.18} />
-  <Text fontSize={11.25} fontWeight={720} x={61} y={15} w={8} h={4} color="#ff6f4e">PILOT</Text>
-  <Text fontSize={16.5} fontWeight={720} x={61} y={22} w={29} h={6} color="#183129">Start with five teams</Text>
-  <Shape shape="rectangle" fill="#233c35" radius={12} x={57} y={39} w={38} h={22} enter="fadeUp" delay={0.28} />
-  <Text fontSize={11.25} fontWeight={720} x={61} y={43} w={10} h={4} color="#b7efcf">LAUNCH</Text>
-  <Text fontSize={16.5} fontWeight={720} x={61} y={50} w={29} h={6} color="#f7fff9">Publish the result</Text>
-  <Shape shape="rectangle" fill="#ff6f4e" radius={12} x={57} y={67} w={38} h={22} enter="fadeUp" delay={0.38} />
-  <Text fontSize={11.25} fontWeight={720} x={61} y={71} w={10} h={4} color="#15120f">EXPAND</Text>
-  <Text fontSize={16.5} fontWeight={720} x={61} y={78} w={29} h={6} color="#15120f">Grow from evidence</Text>
-  <Text fontSize={11.25} fontWeight={650} x={4} y={89} w={38} h={4} color="#233c35">PILOT. LAUNCH. EXPAND.</Text>
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={6} theme="dark" background="#ff6f4e" accent="#15120f" textColor="#15120f" mutedColor="#653226" slideTransition="scale" transitionDuration={0.72}>
-  <Text fontSize={11.25} fontWeight={720} x={4} y={7} w={22} h={4} color="#15120f" enter="fadeIn">MORROW</Text>
-  <Title fontSize={57.75} fontWeight={760} lineHeight={0.9} x={4} y={20} w={73} h={38} color="#15120f" enter="reveal" delay={0.08}>Move the work. Keep the context.</Title>
-  <Text fontSize={15} lineHeight={1.42} x={4.2} y={69} w={48} h={11} color="#653226" enter="fadeUp" delay={0.3}>Replace this closing statement with the one decision you want the audience to make.</Text>
-</Slide>`;
-var launchDeckZhTwCopy = [
-  ["# Launch Deck", "# \u7522\u54C1\u767C\u5E03\u7C21\u5831"],
-  ["LAUNCH DECK", "\u7522\u54C1\u767C\u5E03\u7C21\u5831"],
-  ["Make every launch feel inevitable.", "\u8B93\u6BCF\u6B21\u767C\u5E03\u90FD\u52E2\u5728\u5FC5\u884C\u3002"],
-  ["A complete story for introducing a product, aligning the team, and taking it to market.", "\u4E00\u5957\u5B8C\u6574\u6558\u4E8B\uFF0C\u7528\u4F86\u4ECB\u7D39\u7522\u54C1\u3001\u51DD\u805A\u5718\u968A\uFF0C\u4E26\u63A8\u5411\u5E02\u5834\u3002"],
-  ["PRODUCT LAUNCH / 2026", "\u7522\u54C1\u767C\u5E03 / 2026"],
-  ["THE OPENING", "\u554F\u984C\u958B\u5834"],
-  ["The old way asks people to work around the product.", "\u820A\u65B9\u6CD5\u7E3D\u8981\u4EBA\u5011\u7E5E\u8457\u7522\u54C1\u9650\u5236\u5DE5\u4F5C\u3002"],
-  ["Teams lose time moving between disconnected tools, repeating decisions, and rebuilding the same context.", "\u5718\u968A\u5728\u5206\u6563\u5DE5\u5177\u9593\u5207\u63DB\u3001\u91CD\u8907\u6C7A\u7B56\uFF0C\u9084\u5F97\u4E00\u518D\u91CD\u5EFA\u8108\u7D61\uFF0C\u6642\u9593\u56E0\u6B64\u6D41\u5931\u3002"],
-  ["Team coordinating work across a shared product workspace", "\u5718\u968A\u5728\u5171\u4EAB\u7522\u54C1\u5DE5\u4F5C\u5340\u5354\u4F5C"],
-  ["DISCONNECTED WORK ADDS UP.", "\u5206\u6563\u4F5C\u696D\u7684\u6210\u672C\u4E0D\u65B7\u7D2F\u7A4D\u3002"],
-  ["INTRODUCING MORROW", "MORROW \u6B63\u5F0F\u767B\u5834"],
-  ["One clear place to move work forward.", "\u4E00\u500B\u6E05\u695A\u96C6\u4E2D\u7684\u5730\u65B9\uFF0C\u8B93\u5DE5\u4F5C\u6301\u7E8C\u5411\u524D\u3002"],
-  ["Morrow keeps the brief, decisions, and next actions together so the team can work with shared context.", "Morrow \u5C07\u9700\u6C42\u3001\u6C7A\u7B56\u8207\u4E0B\u4E00\u6B65\u96C6\u4E2D\u5728\u4E00\u8D77\uFF0C\u8B93\u5718\u968A\u5728\u5171\u4EAB\u8108\u7D61\u4E2D\u5354\u4F5C\u3002"],
-  ["Editorial product visualization for the Morrow launch", "Morrow \u7522\u54C1\u767C\u5E03\u7684\u8996\u89BA\u793A\u610F"],
-  ["WHAT CHANGES", "\u6539\u8B8A\u5F9E\u9019\u88E1\u958B\u59CB"],
-  ["A focused system for the work that matters.", "\u4E00\u5957\u805A\u7126\u771F\u6B63\u91CD\u8981\u5DE5\u4F5C\u7684\u7CFB\u7D71\u3002"],
-  ["Three connected capabilities replace a scattered workflow.", "\u4E09\u9805\u76F8\u4E92\u9023\u7D50\u7684\u80FD\u529B\uFF0C\u53D6\u4EE3\u96F6\u6563\u5DE5\u4F5C\u6D41\u7A0B\u3002"],
-  ["Team reviewing a shared product brief", "\u5718\u968A\u6AA2\u8996\u5171\u4EAB\u7684\u7522\u54C1\u9700\u6C42"],
-  ["One brief", "\u4E00\u4EFD\u5171\u540C\u9700\u6C42"],
-  ["Keep the source of truth visible.", "\u8B93\u552F\u4E00\u53EF\u4FE1\u8CC7\u8A0A\u59CB\u7D42\u6E05\u695A\u53EF\u898B\u3002"],
-  ["Colleagues making decisions together", "\u540C\u4E8B\u5171\u540C\u505A\u51FA\u6C7A\u7B56"],
-  ["One thread", "\u4E00\u689D\u5B8C\u6574\u8108\u7D61"],
-  ["Make decisions with context attached.", "\u8B93\u6BCF\u9805\u6C7A\u7B56\u90FD\u4FDD\u7559\u5B8C\u6574\u8108\u7D61\u3002"],
-  ["Workshop turning plans into visible action", "\u5718\u968A\u5C07\u8A08\u756B\u8F49\u5316\u70BA\u53EF\u898B\u884C\u52D5"],
-  ["One next step", "\u4E00\u500B\u660E\u78BA\u4E0B\u4E00\u6B65"],
-  ["Turn decisions into visible action.", "\u628A\u6C7A\u7B56\u8F49\u5316\u6210\u770B\u5F97\u898B\u7684\u884C\u52D5\u3002"],
-  ["THE EARLY SIGNAL", "\u521D\u6B65\u6210\u6548"],
-  ["Less coordination. More forward motion.", "\u5C11\u4E00\u9EDE\u5354\u8ABF\uFF0C\u591A\u4E00\u9EDE\u524D\u9032\u3002"],
-  ["Pilot teams complete the weekly planning loop with fewer handoffs and clearer ownership.", "\u8A66\u9EDE\u5718\u968A\u7528\u66F4\u5C11\u4EA4\u63A5\u8207\u66F4\u6E05\u695A\u7684\u8CAC\u4EFB\u5206\u5DE5\uFF0C\u5B8C\u6210\u6BCF\u9031\u898F\u5283\u5FAA\u74B0\u3002"],
-  ["WEEKLY LOOP COMPLETION", "\u6BCF\u9031\u5FAA\u74B0\u5B8C\u6210\u7387"],
-  ["HANDOFFS PER CYCLE", "\u6BCF\u6B21\u5FAA\u74B0\u4EA4\u63A5\u6B21\u6578"],
-  ["EXAMPLE PILOT DATA. REPLACE WITH YOUR RESULTS.", "\u8A66\u9EDE\u793A\u4F8B\u8CC7\u6599\uFF0C\u8ACB\u66FF\u63DB\u6210\u4F60\u7684\u6210\u679C\u3002"],
-  ["GO TO MARKET", "\u5E02\u5834\u63A8\u9032"],
-  ["Launch in three focused moves.", "\u7528\u4E09\u500B\u805A\u7126\u6B65\u9A5F\u5B8C\u6210\u767C\u5E03\u3002"],
-  ["Prove the workflow, publish the result, then expand with evidence.", "\u5148\u9A57\u8B49\u6D41\u7A0B\u3001\u516C\u5E03\u6210\u679C\uFF0C\u518D\u4EE5\u8B49\u64DA\u64F4\u5C55\u3002"],
-  ["Start with five teams", "\u5F9E\u4E94\u500B\u5718\u968A\u958B\u59CB"],
-  ["Publish the result", "\u516C\u5E03\u6210\u679C"],
-  ["Grow from evidence", "\u4F9D\u64DA\u6210\u6548\u64F4\u5C55"],
-  ["PILOT. LAUNCH. EXPAND.", "\u8A66\u9EDE\u30FB\u767C\u5E03\u30FB\u64F4\u5C55"],
-  ["PILOT", "\u8A66\u9EDE"],
-  ["LAUNCH", "\u767C\u5E03"],
-  ["EXPAND", "\u64F4\u5C55"],
-  ["Move the work. Keep the context.", "\u63A8\u52D5\u5DE5\u4F5C\uFF0C\u4FDD\u7559\u8108\u7D61\u3002"],
-  ["Replace this closing statement with the one decision you want the audience to make.", "\u5C07\u9019\u6BB5\u7D50\u8A9E\u66FF\u63DB\u6210\u4F60\u5E0C\u671B\u89C0\u773E\u505A\u51FA\u7684\u90A3\u9805\u6C7A\u5B9A\u3002"]
-];
-var launchDeckPresentationSourceZhTw = launchDeckZhTwCopy.reduce(
-  (source, [english, traditionalChinese]) => source.replaceAll(english, traditionalChinese),
-  launchDeckPresentationSource
-);
-
-// core/motion-doc/presets/templates/designTeamCulture.ts
-var designTeamCultureTemplateId = "design-team-culture";
-var designTeamCultureTemplateSourceZhTw = String.raw`# SlideX Design Team Culture Deck
-
-<Slide fontSizeUnit="pt" duration={5} theme="light" background="#ffffff" accent="#0a84ff" textColor="#111827" mutedColor="#475569" alignX="left" alignY="center" textAlign="left" layoutPreset="title">
-  <Text x={4.4} y={6.9} w={72.8} h={30.4} enter="none" id="block-33745976-0674-4756-8bc6-fc747f8ecfae" role="title" fontWeight={700} fontSize={54} lineHeight={1.2} color="#3980ee">SlideX Design Team
-Culture Deck</Text>
-  <ImageBlock fit="cover" scaleX={1} scaleY={1.088} enter="none" radius={16} x={32.2} y={21.3} w={67.8} h={76.2} id="block-2df58f68-3ae4-4a52-9c9f-c7d769684e22" src="/images/templates/design-team-culture/deck.png" cropX={0} cropY={4.4} />
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={4.1} y={83.3} w={13.5} h={10.7} id="block-304be8a5-8f7f-41c5-b43a-e73d7f68a217" alt="SlideX mark" src="/images/templates/design-team-culture/mark.png" cropX={0.054} cropY={-2.769} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="light" background="#ffffff" accent="#0a84ff" textColor="#111827">
-  <Text enter="none" x={9.6} y={44.7} w={15.5} h={9.2} id="block-37a47ea5-352b-4c7b-9d35-ed1eeba4ccaf" fontWeight={700} fontSize={23.25}>INDEX</Text>
-  <Text enter="none" x={44.1} y={20} w={47.6} h={64.4} id="block-61ccd277-7c07-43b1-9aa4-6642fe697bfd" fontSize={21} fontWeight={700} color="#1262d7" lineHeight={1.8}>01 About SlideX
-02 What We Aim to Build
-03 Product &amp; Platform
-04 About the Design Team
-05 Why SlideX, Why Now
-06 How We Work
-07 Careers</Text>
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={83.1} y={85} w={13.5} h={10.7} id="block-8469ffc4-c813-4a73-874f-04cc893865df" alt="SlideX mark" src="/images/templates/design-team-culture/mark.png" cropX={0.054} cropY={-2.769} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="dark" background="#3980ee" accent="#f7f7f5" textColor="#f7f7f5" mutedColor="#b8b8b4">
-  <Text enter="none" fontSize={18} x={9.9} y={35.3} w={42} h={6.6} id="block-e197a6b0-c3ae-4e0f-9539-60674a9e1692" color="#ffffff">About SlideX</Text>
-  <Text enter="none" fontSize={36} x={9} y={45.1} w={81.8} h={15.1} id="block-cb1a5afd-6068-4e57-a329-7e6aefbb1bbd" fontFamily="Noto Sans TC" fontWeight={650} lineHeight={1.08} role="title" color="#ffffff">重新定義簡報的製作方式</Text>
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={83.1} y={85} w={13.5} h={10.7} id="block-908c2fa8-a23d-466b-a120-0fdfae8d38f3" alt="SlideX wordmark" src="/images/templates/design-team-culture/wordmark.png" cropX={0.054} cropY={-2.769} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="light" background="#ffffff" accent="#111111" textColor="#111111" mutedColor="#656565">
-  <Text enter="none" x={19.9} y={29.7} w={76} h={10.7} id="block-104cac80-db49-4ba9-ba49-a0eaca494a58" fontFamily="Noto Sans TC" fontWeight={650} lineHeight={1.08} role="title" fontSize={30} color="#3980ee">「做簡報」這件事，正在被重新定義</Text>
-  <Text enter="none" fontSize={18} x={19.8} y={44.1} w={58.3} h={32} id="block-95288e1c-15d7-44c3-b175-c20a99fb1dfd" color="#000000">我們相信，下一代簡報工具不該只是提供更多模板，而是讓 AI 能直接理解需求、操作畫布，並與使用者共同完成內容與設計。
-因此，我們打造了 SlideX，希望讓每一個想法，都能更快速地變成一份真正可以分享的簡報。</Text>
-  <Text enter="none" fontSize={13.5} x={4} y={6.8} w={25.5} h={7.3} id="block-49fca3e0-5284-4a3b-98e5-596b2d1eb0cd" fontWeight={500} lineHeight={1.35} role="content" color="#000000">Founder’s Message（1/2）</Text>
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={83.1} y={85} w={13.5} h={10.7} id="block-2b94a876-c2f2-45b6-a8a9-8b04aa33c458" alt="SlideX mark" src="/images/templates/design-team-culture/mark.png" cropX={0.054} cropY={-2.769} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="dark" background="#3980ee" accent="#f7f7f5" textColor="#f7f7f5" mutedColor="#b8b8b4">
-  <Text enter="none" x={19.8} y={28.6} w={76} h={10.7} id="block-ef37e9a5-2344-45e6-84ad-f8db947db704" fontFamily="Noto Sans TC" fontWeight={650} lineHeight={1.08} role="title" fontSize={30} color="#ffffff">AI 時代的簡報工作流，從 SlideX 開始</Text>
-  <Text enter="none" fontSize={18} x={19.8} y={44.1} w={68} h={37.8} id="block-6406afdb-d06a-4017-abb4-354fe2b32af1" color="#ffffff">AI 已經能快速生成內容，但真正完成簡報，仍需要整理結構、調整版面與反覆修改。
-SlideX 透過 Agent 與 MCP，讓 Claude、Cursor 等 AI 工具直接協助新增投影片、排版與迭代。
-讓人負責方向，AI 協助執行，在同一個工作空間完成簡報。</Text>
-  <Text enter="none" fontSize={13.5} x={4} y={6.9} w={28.1} h={6.7} id="block-272e0286-499a-490a-a42e-018e3f4119ad" fontWeight={500} lineHeight={1.35} role="content" color="#ffffff">Founder’s Message（2/2）</Text>
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={83.1} y={85} w={13.5} h={10.7} id="block-cdf7e890-9959-4652-bb57-e41046dab395" alt="SlideX wordmark" src="/images/templates/design-team-culture/wordmark.png" cropX={0.054} cropY={-2.769} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="light" background="#ffffff" accent="#111111" textColor="#111111">
-  <Text enter="none" x={7.3} y={30.1} w={50.2} h={36.7} id="block-2d8c2598-764e-48e6-8ed1-bf3af9224887" fontWeight={400} role="content" fontFamily="Noto Sans TC" lineHeight={1.6} fontSize={15}>我一直堅信，真正有價值的產品，來自持續動手、快速驗證與不斷迭代。
-在製作簡報的過程中，我發現即使 AI 已經能快速產生內容，使用者仍需要在不同工具之間複製、整理與重新排版。於是，我開始打造 SlideX，希望讓 AI 不只是提供建議，而是能直接參與簡報的製作與修改。</Text>
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="none" x={61.4} y={6.9} w={36.8} h={75.7} id="block-82bd609b-9be9-4cb2-b1f4-cb119e110616" src="/images/templates/design-team-culture/co-creator.webp" radius={0} cropX={0} cropY={0} alt="SlideX Co-creator" />
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={5.4} y={83.4} w={13.5} h={10.7} id="block-95458731-669e-4456-ab6f-08722c80849c" alt="SlideX mark" src="/images/templates/design-team-culture/mark.png" cropX={0.054} cropY={-2.769} />
-  <Text enter="none" fontSize={13.5} x={63.5} y={86.6} w={31.3} h={9} id="block-ca59ca75-f007-4096-8caf-647b00944652" fontWeight={500} lineHeight={1.35} role="content">SlideX Co-creator｜黃奇昌</Text>
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="light" background="#ffffff" accent="#111111" textColor="#111111">
-  <Text enter="none" fontSize={18} x={9.3} y={27.6} w={27.6} h={9.2} id="block-0ae98d62-760a-48f2-9be8-cd642d23e63c" fontWeight={700} color="#3980ee">Philosophy｜核心理念</Text>
-  <Text enter="none" fontSize={18} x={45.1} y={27.2} w={33.2} h={15.2} id="block-e2a58f56-9b55-47fd-9f5f-7dd13c9dc427" fontWeight={700}>讓每一個想法，
-都能更快成為可分享的簡報。</Text>
-  <Text enter="none" fontSize={18} x={9.8} y={61.1} w={17.6} h={9.2} id="block-7c01f8e6-456f-4a3a-9c2f-3f05e9e589bb" fontWeight={700} color="#3980ee">Vision｜願景</Text>
-  <Text enter="none" fontSize={18} x={45.2} y={60.7} w={28} h={15.2} id="block-1581dd0e-0ed4-4096-ba00-d701fd24a3af" fontWeight={700}>打造人與 AI 共同創作的
-下一代簡報平台。</Text>
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={83.1} y={85} w={13.5} h={10.7} id="block-87285af1-1181-486d-a892-0fdfae8d38f3" alt="SlideX mark" src="/images/templates/design-team-culture/mark.png" cropX={0.054} cropY={-2.769} />
-  <Shape shape="line" fill="transparent" stroke="#cdced0" operation="none" mask="none" enter="none" radius={0} x={9} y={48.8} w={75} h={2.5} id="block-1199f619-5655-46ef-8667-5d651be0163b" preset="line" strokeWidth={2} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="light" background="#ffffff" accent="#111111" textColor="#111111">
-  <Text enter="none" fontSize={18} x={6} y={24.7} w={27.6} h={9.2} id="block-d2e8eac7-95aa-4d03-b7e1-fc054cdf8215" fontWeight={700} color="#3980ee">Value｜核心價值</Text>
-  <Text enter="none" fontSize={18} x={5.9} y={38.4} w={33.8} h={28.4} id="block-cd9a457d-d630-4f73-9c53-da3e50ce0d14">我們相信，好的產品來自清楚的方向、快速的行動與持續迭代。
-SlideX 將以下三項原則，作為產品與團隊共同的工作方式。</Text>
-  <Text enter="none" fontSize={18} x={52.7} y={11} w={33.6} h={9.2} id="block-2703d97d-8e9b-4b28-9052-605d2f85d582" fontWeight={700}>Builder Mindset 動手實作</Text>
-  <Text enter="none" fontSize={18} x={52.7} y={18.3} w={34} h={13.2} id="block-104d020f-b358-4ec4-8c6a-e24719778764">快速把想法做出來，用真實成果驗證方向。</Text>
-  <Text enter="none" fontSize={18} x={52.7} y={42} w={33.6} h={9.2} id="block-84024f07-6c28-417b-8cd0-83388687db48" fontWeight={700}>Human × AI 人機共創</Text>
-  <Text enter="none" fontSize={18} x={52.7} y={49.3} w={34} h={13.2} id="block-32387f2a-0446-46c0-9a3b-b5ea45a21208">讓人負責思考與判斷，AI 協助執行與迭代。</Text>
-  <Text enter="none" fontSize={18} x={52.7} y={73} w={32.7} h={9.2} id="block-30e87c40-e73e-4f9e-bdc9-2190de5397c7" fontWeight={700}>Craft with Speed 快速且講究</Text>
-  <Text enter="none" fontSize={18} x={52.7} y={80.3} w={34} h={13.2} id="block-50e7b75e-8080-4d4f-bf9b-4ad4ae68b922">保持行動速度，同時重視內容、設計與使用體驗。</Text>
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={5.4} y={83.4} w={13.5} h={10.7} id="block-dec4d4e3-f329-413f-84e1-07c23bf43dec" alt="SlideX mark" src="/images/templates/design-team-culture/mark.png" cropX={0.054} cropY={-2.769} />
-</Slide>`;
-var designTeamCultureTemplateSourceEn = String.raw`# SlideX Design Team Culture Deck
-
-<Slide fontSizeUnit="pt" duration={5} theme="light" background="#ffffff" accent="#0a84ff" textColor="#111827" mutedColor="#475569" alignX="left" alignY="center" textAlign="left" layoutPreset="title">
-  <Text x={4.4} y={6.9} w={72.8} h={30.4} enter="none" id="block-33745976-0674-4756-8bc6-fc747f8ecfae" role="title" fontWeight={700} fontSize={54} lineHeight={1.2} color="#3980ee">SlideX Design Team
-Culture Deck</Text>
-  <ImageBlock fit="cover" scaleX={1} scaleY={1.088} enter="none" radius={16} x={32.2} y={21.3} w={67.8} h={76.2} id="block-2df58f68-3ae4-4a52-9c9f-c7d769684e22" src="/images/templates/design-team-culture/deck.png" cropX={0} cropY={4.4} />
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={4.1} y={83.3} w={13.5} h={10.7} id="block-304be8a5-8f7f-41c5-b43a-e73d7f68a217" alt="SlideX mark" src="/images/templates/design-team-culture/mark.png" cropX={0.054} cropY={-2.769} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="light" background="#ffffff" accent="#0a84ff" textColor="#111827">
-  <Text enter="none" x={9.6} y={44.7} w={15.5} h={9.2} id="block-37a47ea5-352b-4c7b-9d35-ed1eeba4ccaf" fontWeight={700} fontSize={23.25}>INDEX</Text>
-  <Text enter="none" x={44.1} y={20} w={47.6} h={64.4} id="block-61ccd277-7c07-43b1-9aa4-6642fe697bfd" fontSize={21} fontWeight={700} color="#1262d7" lineHeight={1.8}>01 About SlideX
-02 What We Aim to Build
-03 Product &amp; Platform
-04 About the Design Team
-05 Why SlideX, Why Now
-06 How We Work
-07 Careers</Text>
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={83.1} y={85} w={13.5} h={10.7} id="block-8469ffc4-c813-4a73-874f-04cc893865df" alt="SlideX mark" src="/images/templates/design-team-culture/mark.png" cropX={0.054} cropY={-2.769} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="dark" background="#3980ee" accent="#f7f7f5" textColor="#f7f7f5" mutedColor="#b8b8b4">
-  <Text enter="none" fontSize={18} x={9.9} y={35.3} w={42} h={6.6} id="block-e197a6b0-c3ae-4e0f-9539-60674a9e1692" color="#ffffff">About SlideX</Text>
-  <Text enter="none" fontSize={36} x={9} y={45.1} w={81.8} h={18.5} id="block-cb1a5afd-6068-4e57-a329-7e6aefbb1bbd" fontWeight={650} lineHeight={1.08} role="title" color="#ffffff">Redefining how presentations are made</Text>
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={83.1} y={85} w={13.5} h={10.7} id="block-908c2fa8-a23d-466b-a120-0fdfae8d38f3" alt="SlideX wordmark" src="/images/templates/design-team-culture/wordmark.png" cropX={0.054} cropY={-2.769} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="light" background="#ffffff" accent="#111111" textColor="#111111" mutedColor="#656565">
-  <Text enter="none" x={19.9} y={27.5} w={76} h={12} id="block-104cac80-db49-4ba9-ba49-a0eaca494a58" fontWeight={650} lineHeight={1.08} role="title" fontSize={28.5} color="#3980ee">Presentation-making is being redefined</Text>
-  <Text enter="none" fontSize={15.75} x={19.8} y={43} w={64} h={36} id="block-95288e1c-15d7-44c3-b175-c20a99fb1dfd" color="#000000" lineHeight={1.45}>We believe the next generation of presentation tools should do more than offer more templates. AI should understand intent, work directly on the canvas, and collaborate with people to shape both content and design.
-That is why we built SlideX—so every idea can become a presentation worth sharing, faster.</Text>
-  <Text enter="none" fontSize={13.5} x={4} y={6.8} w={25.5} h={7.3} id="block-49fca3e0-5284-4a3b-98e5-596b2d1eb0cd" fontWeight={500} lineHeight={1.35} role="content" color="#000000">Founder’s Message (1/2)</Text>
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={83.1} y={85} w={13.5} h={10.7} id="block-2b94a876-c2f2-45b6-a8a9-8b04aa33c458" alt="SlideX mark" src="/images/templates/design-team-culture/mark.png" cropX={0.054} cropY={-2.769} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="dark" background="#3980ee" accent="#f7f7f5" textColor="#f7f7f5" mutedColor="#b8b8b4">
-  <Text enter="none" x={19.8} y={26.5} w={76} h={14} id="block-ef37e9a5-2344-45e6-84ad-f8db947db704" fontWeight={650} lineHeight={1.08} role="title" fontSize={27.75} color="#ffffff">Presentation workflows for the AI era start with SlideX</Text>
-  <Text enter="none" fontSize={15} x={19.8} y={43} w={68} h={40} id="block-6406afdb-d06a-4017-abb4-354fe2b32af1" color="#ffffff" lineHeight={1.45}>AI can generate content quickly, but finishing a presentation still requires structuring the story, refining layouts, and iterating.
-With Agents and MCP, SlideX lets tools like Claude and Cursor add slides, arrange content, and refine the deck directly.
-People set the direction. AI helps execute. Everything happens in one workspace.</Text>
-  <Text enter="none" fontSize={13.5} x={4} y={6.9} w={28.1} h={6.7} id="block-272e0286-499a-490a-a42e-018e3f4119ad" fontWeight={500} lineHeight={1.35} role="content" color="#ffffff">Founder’s Message (2/2)</Text>
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={83.1} y={85} w={13.5} h={10.7} id="block-cdf7e890-9959-4652-bb57-e41046dab395" alt="SlideX wordmark" src="/images/templates/design-team-culture/wordmark.png" cropX={0.054} cropY={-2.769} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="light" background="#ffffff" accent="#111111" textColor="#111111">
-  <Text enter="none" x={7.3} y={26.5} w={50.2} h={45} id="block-2d8c2598-764e-48e6-8ed1-bf3af9224887" fontWeight={400} role="content" lineHeight={1.5} fontSize={13.5}>I have always believed the most valuable products come from building continuously, validating quickly, and iterating relentlessly.
-While creating presentations, I saw that even when AI could generate content fast, people still had to copy, reorganize, and reformat across different tools. So I started building SlideX—so AI could do more than suggest ideas and take part directly in creating and revising the presentation.</Text>
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="none" x={61.4} y={6.9} w={36.8} h={75.7} id="block-82bd609b-9be9-4cb2-b1f4-cb119e110616" src="/images/templates/design-team-culture/co-creator.webp" radius={0} cropX={0} cropY={0} alt="SlideX Co-creator" />
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={5.4} y={83.4} w={13.5} h={10.7} id="block-95458731-669e-4456-ab6f-08722c80849c" alt="SlideX mark" src="/images/templates/design-team-culture/mark.png" cropX={0.054} cropY={-2.769} />
-  <Text enter="none" fontSize={13.5} x={63.5} y={86.6} w={31.3} h={9} id="block-ca59ca75-f007-4096-8caf-647b00944652" fontWeight={500} lineHeight={1.35} role="content">SlideX Co-creator | Huang Chi-Chang</Text>
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="light" background="#ffffff" accent="#111111" textColor="#111111">
-  <Text enter="none" fontSize={18} x={9.3} y={27.6} w={27.6} h={9.2} id="block-0ae98d62-760a-48f2-9be8-cd642d23e63c" fontWeight={700} color="#3980ee">Philosophy</Text>
-  <Text enter="none" fontSize={16.5} x={45.1} y={26.5} w={38} h={18} id="block-e2a58f56-9b55-47fd-9f5f-7dd13c9dc427" fontWeight={700} lineHeight={1.3}>Help every idea become a shareable presentation—faster.</Text>
-  <Text enter="none" fontSize={18} x={9.8} y={61.1} w={17.6} h={9.2} id="block-7c01f8e6-456f-4a3a-9c2f-3f05e9e589bb" fontWeight={700} color="#3980ee">Vision</Text>
-  <Text enter="none" fontSize={16.5} x={45.2} y={59.5} w={38} h={18} id="block-1581dd0e-0ed4-4096-ba00-d701fd24a3af" fontWeight={700} lineHeight={1.3}>Build the next-generation presentation platform where people and AI create together.</Text>
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={83.1} y={85} w={13.5} h={10.7} id="block-87285af1-1181-486d-a892-0fdfae8d38f3" alt="SlideX mark" src="/images/templates/design-team-culture/mark.png" cropX={0.054} cropY={-2.769} />
-  <Shape shape="line" fill="transparent" stroke="#cdced0" operation="none" mask="none" enter="none" radius={0} x={9} y={48.8} w={75} h={2.5} id="block-1199f619-5655-46ef-8667-5d651be0163b" preset="line" strokeWidth={2} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={5} theme="light" background="#ffffff" accent="#111111" textColor="#111111">
-  <Text enter="none" fontSize={18} x={6} y={24.7} w={27.6} h={9.2} id="block-d2e8eac7-95aa-4d03-b7e1-fc054cdf8215" fontWeight={700} color="#3980ee">Values</Text>
-  <Text enter="none" fontSize={15} x={5.9} y={38.4} w={35} h={31} id="block-cd9a457d-d630-4f73-9c53-da3e50ce0d14" lineHeight={1.45}>We believe great products come from clear direction, fast action, and continuous iteration.
-SlideX follows three principles that guide both our product and how our team works.</Text>
-  <Text enter="none" fontSize={15.75} x={52.7} y={10} w={36} h={9.2} id="block-2703d97d-8e9b-4b28-9052-605d2f85d582" fontWeight={700}>Builder Mindset</Text>
-  <Text enter="none" fontSize={13.5} x={52.7} y={18.3} w={37} h={15} id="block-104d020f-b358-4ec4-8c6a-e24719778764" lineHeight={1.4}>Turn ideas into working results quickly, then validate direction through real outcomes.</Text>
-  <Text enter="none" fontSize={15.75} x={52.7} y={41} w={36} h={9.2} id="block-84024f07-6c28-417b-8cd0-83388687db48" fontWeight={700}>Human × AI</Text>
-  <Text enter="none" fontSize={13.5} x={52.7} y={49.3} w={37} h={15} id="block-32387f2a-0446-46c0-9a3b-b5ea45a21208" lineHeight={1.4}>People lead thinking and judgment; AI supports execution and iteration.</Text>
-  <Text enter="none" fontSize={15.75} x={52.7} y={72} w={36} h={9.2} id="block-30e87c40-e73e-4f9e-bdc9-2190de5397c7" fontWeight={700}>Craft with Speed</Text>
-  <Text enter="none" fontSize={13.5} x={52.7} y={80.3} w={37} h={15} id="block-50e7b75e-8080-4d4f-bf9b-4ad4ae68b922" lineHeight={1.4}>Move fast while caring deeply about content, design, and user experience.</Text>
-  <ImageBlock fit="cover" scaleX={1.116} scaleY={1.224} enter="none" radius={16} x={5.4} y={83.4} w={13.5} h={10.7} id="block-dec4d4e3-f329-413f-84e1-07c23bf43dec" alt="SlideX mark" src="/images/templates/design-team-culture/mark.png" cropX={0.054} cropY={-2.769} />
-</Slide>`;
-var designTeamCultureTemplate = {
-  category: "Team Culture",
-  description: "\u4E00\u4EFD\u4ECB\u7D39 SlideX \u8A2D\u8A08\u5718\u968A\u6587\u5316\u3001\u7522\u54C1\u7406\u5FF5\u8207\u5DE5\u4F5C\u65B9\u5F0F\u7684\u516B\u9801\u5718\u968A\u7C21\u5831\u3002",
-  duration: "40s",
-  id: designTeamCultureTemplateId,
-  name: "SlideX Design Team Culture Deck",
-  source: designTeamCultureTemplateSourceZhTw,
-  sources: {
-    en: designTeamCultureTemplateSourceEn,
-    "zh-TW": designTeamCultureTemplateSourceZhTw
-  },
-  useCase: "\u5718\u968A\u6587\u5316\u3001\u4EBA\u624D\u62DB\u52DF\u3001\u516C\u53F8\u4ECB\u7D39\u8207\u7522\u54C1\u7406\u5FF5\u6E9D\u901A"
-};
-
-// core/motion-doc/presets/templates/moodboard.ts
-var moodboardTemplateId = "moodboard";
-var moodboardTemplateSource = String.raw`# Moodboard
-
-<Slide duration={5} fontSizeUnit="pt" theme="dark" background="#000000" accent="#f7f7f5" textColor="#f7f7f5" mutedColor="#b8b8b4" alignX="left" alignY="center" textAlign="left" canvasHeight={1080} canvasWidth={1920}>
-  <Text enter="none" x={4.7} y={70.1} w={81.7} h={21.7} id="block-30cc2dc9-763f-4850-bd45-8df0eee65bb3" lineHeight={1} role="title" textAlign="left" fontFamily="Lato" fontSize={88} fontWeight={900} color="#ffffff">Moodboard</Text>
-  <Text enter="none" fontSize={18} x={4.7} y={60.6} w={42} h={7.9} id="block-69bcd8fe-9c78-416c-ad27-f66e070cd914" fontFamily="Lato">Project Name</Text>
-  <Text enter="none" fontSize={18} x={53.8} y={5.7} w={42} h={7.9} id="block-c8d4c871-7dd2-4c50-95cf-36c01509bcac" textAlign="right" fontFamily="Lato">by SlideX</Text>
-  <Text enter="none" fontSize={18} x={3.6} y={4.6} w={13.1} h={7.9} id="block-983a868e-19aa-4a7b-b096-2ff6a70e6e48" fontFamily="Lato">2026</Text>
-  <Text enter="none" fontSize={18} x={27.1} y={4.6} w={13.1} h={7.9} id="block-7a30f8f7-ba64-4078-a9f0-63f51cd9175f" fontFamily="Lato">July</Text>
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="light" background="#ffffff" accent="#111111" textColor="#111111" mutedColor="#656565">
-  <Text enter="none" x={4.7} y={70.1} w={81.7} h={21.7} id="block-2e7ad571-4e25-4468-b9e4-3e12f7eccc0a" lineHeight={1} role="title" textAlign="left" fontFamily="Lato" fontSize={88} fontWeight={900} color="#000000">Moodboard</Text>
-  <Text enter="none" fontSize={18} x={4.7} y={60.6} w={42} h={7.9} id="block-38dfdc8b-db8a-4fcb-abba-4683f9369163" fontFamily="Lato">Project Name</Text>
-  <Text enter="none" fontSize={18} x={53.8} y={5.7} w={42} h={7.9} id="block-cc237fdc-210b-4f62-ab1c-200a11dde395" textAlign="right" fontFamily="Lato">by SlideX</Text>
-  <Text enter="none" fontSize={18} x={3.6} y={4.6} w={13.1} h={7.9} id="block-c34cdcb7-faf3-4fb8-a7e8-533f7481b98c" fontFamily="Lato">2026</Text>
-  <Text enter="none" fontSize={18} x={27.1} y={4.6} w={13.1} h={7.9} id="block-a6f17a67-6738-4b28-be56-8ff943263311" fontFamily="Lato">July</Text>
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="light" background="#ffffff" accent="#111111" textColor="auto" mutedColor="auto">
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="none" radius={0} x={0} y={0} w={100} h={100} id="block-fb74a8ae-7639-4dad-b563-77ec23077609" src="https://images.unsplash.com/photo-1782241594367-31847ff5b0e1?q=80&amp;w=737&amp;auto=format&amp;fit=crop&amp;ixlib=rb-4.1.0&amp;ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" filter="fluted-glass" filterDistortion={1} filterSize={0.39} filterPreset="Abstract" filterAngle={30} />
-  <Text enter="none" x={4.7} y={70.1} w={81.7} h={21.7} id="block-33148c8a-7fe4-4e30-baea-86011d43b1e3" lineHeight={1} role="title" textAlign="left" fontFamily="Lato" fontSize={88} fontWeight={900} color="#000000">Moodboard</Text>
-  <Text enter="none" fontSize={18} x={4.7} y={60.6} w={42} h={7.9} id="block-e3c466cb-8b57-4ae9-88b2-36d9afed4cf7" fontFamily="Lato" color="#111827">Project Name</Text>
-  <Text enter="none" fontSize={18} x={53.8} y={5.7} w={42} h={7.9} id="block-89b06c58-9be4-441f-b64b-7d914c094a06" textAlign="right" fontFamily="Lato">by SlideX</Text>
-  <Text enter="none" fontSize={18} x={3.6} y={4.6} w={13.1} h={7.9} id="block-1eca5923-6c24-4971-8672-124cc9cc19bc" fontFamily="Lato">2026</Text>
-  <Text enter="none" fontSize={18} x={27.1} y={4.6} w={13.1} h={7.9} id="block-422ac654-4284-47e2-8b11-b2e39e456dbc" fontFamily="Lato">July</Text>
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="light" background="#000000" accent="#111111" textColor="auto" shaderIntensity={1} shaderSoftness={0.13} shaderSpeed={1.65} shaderScale={1.4} shaderDetail={0.09} shaderAngle={127} mutedColor="auto" shaderColor1="#ffffff" shaderColor2="#000000" shaderColor3="#000000" shaderColor4="#000000" shaderColor5="#000000" shaderColor6="#000000" shader="mesh-gradient" shaderEngine="three" shaderFrame={11683} shaderPreset="Ink">
-  <Text enter="none" x={4.7} y={70.1} w={81.7} h={21.7} id="block-efd78638-17b7-4c09-baf6-11e62e177d11" lineHeight={1} role="title" textAlign="left" fontFamily="Lato" fontSize={88} fontWeight={900} color="#ffffff">Moodboard</Text>
-  <Text enter="none" fontSize={18} x={4.7} y={60.6} w={42} h={7.9} id="block-8be7b256-f59b-4a37-bdcb-60569a80d122" fontFamily="Lato" color="#ffffff">Project Name</Text>
-  <Text enter="none" fontSize={18} x={53.8} y={5.7} w={42} h={7.9} id="block-d324b2b9-5645-40f9-a188-f7f64a208f6f" textAlign="right" fontFamily="Lato" color="#ffffff">by SlideX</Text>
-  <Text enter="none" fontSize={18} x={3.6} y={4.6} w={13.1} h={7.9} id="block-ecd62a45-93ec-4cf1-b55f-d506b898e961" fontFamily="Lato" color="#ffffff">2026</Text>
-  <Text enter="none" fontSize={18} x={27.1} y={4.6} w={13.1} h={7.9} id="block-cd753ea8-d532-43b1-a508-c303fe6b5ee6" fontFamily="Lato" color="#ffffff">July</Text>
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="light" background="#ffffff" accent="#111111" textColor="#111111" mutedColor="#656565">
-  <Text enter="none" fontSize={36} x={3.2} y={7.9} w={27.3} h={21.8} id="block-1c41692c-41c1-45b9-84fa-3b2e818de57e" textAlign="left" fontFamily="Lato" role="title" lineHeight={1.08} color="#251313" fontWeight={650}>Background
-Context</Text>
-  <Text enter="none" fontSize={18} x={40.9} y={7.9} w={53.1} h={44.2} id="block-2e6c626d-8e15-4b9c-bfe4-bc1fbd1efc18" lineHeight={1.6} color="#000000" fontWeight={300} fontFamily="Lato">This moodboard explores a modern visual direction that balances simplicity, warmth, and bold expression. Through clean typography, soft color palettes, natural textures, and structured layouts, the design creates an atmosphere that feels contemporary, approachable, and memorable.</Text>
-  <Text enter="none" fontSize={18} x={53.4} y={86} w={42} h={7.9} id="block-8d16b5b5-97e2-4094-b980-1af43895f9a8" textAlign="right" fontFamily="Lato" color="#111827">by SlideX</Text>
-  <Text enter="none" fontSize={18} x={3.2} y={86} w={13.1} h={7.9} id="block-9e2d9670-dc1c-4c43-b352-1498c94a6950" fontFamily="Lato" color="#111827">2026</Text>
-  <Text enter="none" fontSize={18} x={26.7} y={86} w={13.1} h={7.9} id="block-2fcb2f38-dead-4012-afda-2d1f56ace986" fontFamily="Lato" color="#111827">July</Text>
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="light" background="#ffffff" accent="#111111" textColor="#111111">
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="none" radius={0} x={59.8} y={0} w={40.2} h={100} id="block-228f9f2a-a426-4c87-96bf-c0e6841660bf" alt="image.png" src="data:image/webp;base64,UklGRjA1AQBXRUJQVlA4WAoAAAAgAAAAkgQADAMASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADZWUDggQjMBAHDoBZ0BKpMEDQM+YSySRyQiJiakkOu40AwJZW5zpzlN7XoHjT8CusaCmO0f3WVqYE8rX23/A8PT0rYP/jPUE41Ogn508+jzLB+Zj/3+6hNJ8X/Mfk98LHFfiP7r/G/tr/C/LV/j88u4vO889/if/b/o/za+Vn/W/a73xfq//z/n/9Cn6+fs9/qu0p/wfRX+7fqu/9/93fgp/Q/Ux/pX/R6730eP3C9W//6e0x+6v7ye1Z//9V+9of7z0vfLv6j/m/5vyp9Enzb+O/03/X/xvzKfuv/b5ovgP9H/5f7H1W/nn5w/pf47/S+vf/i/z3+s/bf2F/Qf5P/uf5v/Uftz8iP5t/T/9T/gf3X/w3yo/kftl/vPQy4r/gf/D/PexH7o/av+n/jf9N+2Pw6/i/+r/U+w/8F/sf/Z/o/gI/un+A/7X+D96v/R5JfsfsF/13/Wftv7uv+n/+v+R+b3wE+uf24+BT+d/4H/u/5btr+leZlGAFmcvxJe3yfYbKfRP2ls2ME7raqicG5ZdiK1J9q7EVAQXFXO4K6ATPunhzH14ClfuQmrMsquKmKv0eJj4xDLhy/03NlUGuowYHr5F9HHctbhczROstjhWbvxl414qk/HSjIS4TqWBDD9dtW5M0L7DtQhTObnPQryGVkWGAca/SVDxILczW63xVstazm8wzeHvb+68iQAx65dQG66eseaXH9fWMS34JOPbo4Rl73/2krzyzxzrQ8DGNyoAuDgrEgbrTNFbNpjMrXHTbGt/3TLs/XPz2/2vFwbHsyyRC8z1AEdGTJKqVdi3rkaY5lO8xUOhmanwDbhBtigUzS2wDbr8z8NmZqpb8+mziLo+L6shnTJFOfQwzc2emdwh/kcwPpRqB4sIBBRQ2W0/rYMhRDR4cSeru7hfPWJemiXtorMKC8P/1UBSScgDYPAa0XKyJx9b3gMFb+Y77xVHrCIFXYq2VWrIEYWn2xXyvZKNQOO0yChmTT3Aup9uo5ip9rmPm6Y8M5Jg+TjqdhE3519Bnl5y0AbgthBq1u0L4oyWZvO3bIXxxDLgVjG/SsXQBBW+BMU2zdbelTw77f4eI6dV1PYlOOw0VSl4cBDldZWKEV8b2ImLRmfPJC1EpcKX9jiDnfh85G4588/lOpYYCgKVedqHM5payUhm4ZTLqAlPgr3b2ZRm5Gkj2WSAp91zS5UvmJ2LAHfZCCOASX5x80rX2E/9JugsVDgZKlWoNQtK6mOjxdisYOus7FmEXR0KZCvDc/fkm8vlje50pKKImjx1U/AaU2fUuDCWNX2c5uLNe3It3aaXa9tEXqaaMTmD0XzbTaFCevXZbGt2uywKsdDafqFmXTD6O/6abbgoA5mNZ6TqrdoSsW/B8MwUAsHr9XPOL8vSHQwwG4hO+HppD7TMhfRVyLMVUZLg+R2X/1+ne2ry1b1dt+moG5bqNY1W6wQjo4TFcIlZzg4+xpR5nEWrH8sCJKsMmrIareMpr6YoE+yQERBBDqxjIkEGDDbRcxF3f3iXi7l/KO4jqMXmhbJ4x1aFkevSzqsewxrb9begivXx+Nu3HDK9k0vV5YVwYSdPwBkGvnxIzlw4sBHgPyc1MOXjHzBM//XO+SLeG8k0Pqqqwdv97CS5kaAQ2ZS4GI46EqfQ0MdmT8p1fZMemKSnbLLMECgjBMYdFBAUPbljs5cQeEA97p1Rd4Je721YNVz6n3MuLJiW6yVDRaZcni/rkB/JIm6fskUT70FD0R8ts12xCjIGEPWUoX6BkOFj4vQUd4vwRQz0iy95mEeklLxigr4AArWHK1cUE02rWGMOqGcE8kv+yrFVSC7/aGmwP1/w6zZOivpP738XQFRqVFxbMpuB9iSqdV4wJErLjYfDtIBOCdi4uVuQ2GN2iylto9OJ0R7lBO8hm2jMHYVJ1lrNfV6joqjklSUvAW9huIuIxd/no6QTf+dEvS/ldlnb0ZD+o4C9hBC3GDjml48m/LtC2XS+lN9AjEp11CG+QhWFL10fiodsRaRyeJsewZqXP3h6/MPtboRaq+lV96A/deLx+b3zVpfU+yulfzakKl5siAu7JmvLGZLLWZNfjSdYr0M0sn2eZkg6nBAzrpCXjdsUip9ZxL1gvRSdacoIngh1rNmN7n5szBIcU3FlF2MQM8rnDswQ8Le7E1L7bavEedvVpSUwAyf222YJUUti5P05C+rSMhzgyE3kyRMU8mXB77xpxvTzefEVt31z9mVgVMy/9MC0Gq677cPZ0+JqH56L831QYM3rq0bCChuyQntXChnosE6kDZBCxLfiIvMM5GznMp4nW/eSJRzPCGBnrtZbftntZAgKHM8yHR5x4HCIK7de1NUSpYH/H1cJ9IuGckQjiGMwgwHqPdg+vwfmUt/qAGRCt86clf2rwG6JA1fStlMHq+Z3jaeONB2Vk7hUJa+YtrH15xwt65ud0WzErkiG1m/7XC7c94NmX9vgbDdqJ4miTI1NBKb0eV+2JZrOcdzPnDl8Sybi6O4UQDwNzE6inLnldxK8LCiVr61Ly931BMl0zncFLVoGqgXhZWFTkG1Fmw9vAvp1F9UYTWfr2m4rID4jQTpGobz2QB/2U63j054x1kpzUqQEBvG0NCl9oFqXUwiCFXqgnkEv3Gt3LgrAvco+Tf6gBfJQKAMhrBdh9O/C6BUvyXjjZkqXNI4ocepTDdKXqnpYf7c+F7GmAOm72sIHSG2hoo87vqfTqCWC+cEOfYPD5hFasPxHk9swO2zq7qa2PEW0/gVNtDEQfHNOEfzfmjbrkr2AP8ZwypoU6qdaUMMW4/bhDWsEGHgNSmfd32D0t8lGVXjYFBc6vvCdzokKK5kelFkm7+XIb/FU4sr9jAQwkKRlg3ZmpMkq8MUJnav8xZGsmZXF7abEu47B11YdyL9/YfeNDU1NNLZAZidOXRARm0+rqJP37cT7v6sRx7Zwd2pgipXlqw9evgcffs9F9mIs0PXO7650La9L8IW4JOrlECbWMK2go1qQctb1nQ9/JpS6OHk9/SRTNsoZbLa6YhibwSRZZ1kmw8K30n0tOi3ove8xcwxmhvd0Fxp2nQxYVbf7m1uRJp2IaEVF8RoAGzkYRODfXiPPMImvxrnsUvv352RMBmGXGg8J6XbDQ28XaSdu3XV4VM9vyJreeDoCcDiL4qEFnSJsludr/2XeqdUTOUk1qfgSGJf/yDz7tFZG5x2jT3nedkOKNFWqSGtbpgVHue5WCO0qlvMqH+drn+/UdTweRfKPrkpMyBE1hytrKW0ylB6Gv8/bEEVndLCo7MY4kLq0O+CPbcq7ujqk7RcEKsNV4WNXzY21NIYd7m08GuD8BRyMsNxmJiYZO+mNtS7UauH/2/rBM+SwPfuaEPfk8J6BPwL7AGUq5b91FOfjrS8yfcXdUEJsUF4ZVXlmdU2suemjg6yvrUmLxw6m/uov2bWZ/tn4B6Cz7ObIG02q88WymKl9u8gdVi93YK51c4aXShWhBbbtLjTadDJShtLlaVZFJ2Q4kFlPeem0FDAor0wjKvv4L/qqVRI5HaXx/fnqv8qb/1X59KLC406IciD3kBIf/Lxe/Cc6gwYXmwp1Z6/U6g83omZlra1GOKVSP5P4POVZGMPdc2xaPJmfsXtM3bK6F7xEozF8TvUYU1ByGsDwntg0ED9/F1XKDW3d1nLL5OVBtacz5vLRRm2FAAuVfd5UiR0JJvgXDPQACQMBU0uNYaz9rGq1k+/1ugZgam0YuQjTAtPDsGYCCXCQVyKb7hBm7YrpQVGo96I6HkXAxc+nB2i0GHRej65EeSo3j2Z262qg64nYCxrh31J1ZAfwEHm4Y5PGs3gRMuuvkCgSnoBNgj4Rd/9yj9DYiQoyigB/XGn0QL3M4iVP0/Hcy/OvDGqmwSn77BjXSMsd0RjPbmWdZlrpNOHMtTAiVZwpjfoaNSNr7JguKeOnaiW1CRpqJZJdIlsn/JOSLGCQWJi1E1L5W639iFd5fhCW9DOIveBBLoGcCq1OzIqZT6kibWR/XXRAGhNREumhARFd4g9X1Q102HrYB7AYrKbedqZ7n45mKE37F28CVeuA6yLJ6p7WKuEzykoKEZargq8CX5s/Azu755FIyax/HyhBfXnW8o+p8ql6Dji590XwF+xu3+d/zsfdF1H+rtfnAg82/WGcPboQxZt9fuvS2SY3KoAwRFzWt0ilHLe4f3o17braw09+yjGGtszZsTi4zoePrhRkghIAXClwt4c7bKdfSqkJKBPizyNVQ5WTx4vFma79ZlnllC8mKjxEEpptpXWKORPJtSMRXo6RE5EMYm9fu/L9Jqehn3Z3vbSsxreW6T3Hx/hpMXaggYQxydYuSPTmcai7o8snT+M2EpFoDUVLfHMo9S5Ren8wdliSoUR/s+jw1pJHt53vVAmB9yRyH5DIaNJO+wPPhSjogukd6083dazDkLuIokNHNTXAzs+G4nDdoK2NAR5L9ApCpaLupSWpbx1jUOZxgs9AO5Qd5M1vw9Pv/HQM2UyJPU5LxbGQA0tSfKPmas/0erH1kYXC2shg8dpgRI4MVSJy1Ok6+64MQWAUg8quvUt0TJ0T//B4RvvOHIITIvLhT7cqKwKudRr+wmmcqyfgzgqnvmJqyutCJ3LcTTpm389kgz7PVfgj5iwlNK0B3676W91nGmE2kVYz1i0GhadxStz1sDpi59Aep2Mzpnw9njnuJukBH2839w6LCagdfId0+Y3KcnbLK0SeQDvJ5LZ/ui1LJ1dftesZblsYj+ZSvRw+WDdWCBwoQ2DY6paQbCjmrVwVQSISyx4CiHQf4pFV/0u66Zq9/rWwU/jdHVmoKexpioRa/LUF6ySTymYYN+vWhCf5U39W1ed74ny4J942sKKL2smnSgGvpN2XcRO08iPvlgjnIAfZ9nyA2mhpnQOBmcDeZX/m0hSjDD9okTgA0h8LKk/QbiabpLpEysQK9IqOSZq0SjzFAHwxxsaiLglriy7Xcpj6RBIytHBV9CvIvlHva8ZfSQNVGXRMFzb+qaowAPp9dTF6Rqi3oztmrdHstwcOjnbENbKku5LwE4bDRWD4f4sqpst4Vkh0m5YagyAyfia9UjwQdfRtI/lp3IPXA03OTeukp+/4IWinHkg0xIEh61Df6ER/6YvKj4uXrXmtn8sBjY20ayoCnjCoR7/Gf2hYJFStekpu6LcTGl7LwhGi8R2/WKLaRxa6t97rRbjPzfX92AzuC6nP0BCLicCjXszEr6Q1PRsJjNX33SWehUDkOfYB780K4ZM1Uftsa1tam+GIaYxSXsUbLZlQZ8eG4DWLPNtH37jPqm3OhJ16y6ynqfTmdSRdoNsjsHzL9bY6TLzh8ZRFPdsTZQ6HDutZpEfTaFW+gb0XWbudftQnMWiXm8sMG+b5ejHyJA4Q2fOLNjWQ4kG+7N7oS9PoLoA5RaYjwu7pJW/D1eVs67wP5iWbRAc5KIDxC1JtgweRwcckWwXnIxLS9DLZPo10qLyUimWFY3t6kbYDJT7+/KZ7E84GgtbtAjbc8xyXaq+P1LMQ0Ga7T25WIcH6TgvgkMZ3n2wjs0W3175OmNLHLMcaIuIw+NMDnqDuniAH9FHIeFh3Tq1TCjc1wmk/3fgkMlVd20bftNcoKbJuiTA9TxEaVP7r1yiRDz/mg8r2908GCSpUD0O0F0pzHnXvEH4a1j5WYYbsnEtInIMUUZr9YL6FExf929AYGE1qfTUdxNGj6KLhvlcCeANJbFB+KZX40HbMFLiadCqn1sI5b73IpBnkkLrSrVPgt/B0UYcX6WYzz+GQyM99a/OnTvZXLQ+VPY3cInyiKU9eS/7gjTWrD2JPoR7uNSVqY4kCmolTqk2mdozim7gIDP7pQiJSAvbktGuLPoaHPovP/l4Q64mqLBH2yMpQnxEpryS0pS5BHzE3T/GhjXr7/GA6+/d3HlIKzMt/dpXt6UudS+cTG4bNWWP8ak4V9SpadCRdfz9xTgDfMlut0dQvhl5Mm57ukLGEmXyHHLpH5J0UiO4JUjueZ1UoPqGs3LjoKJ4QqlAyvH2C1ll+wyb+loYKrDBftRHKladyn+ufd3lae35uzaNcpXv4Xmf4VaURcefRRMN6IlqY6K06wTwfZg56ELxmO2JuyRFM/f19ttbM5lAHmLDjjeYEMbS7YyVnzcufTapzoNE6anuHGu/K6QsCqdEhDhKSgSYMO9p3LAEQKo4y8wwq/PucbXjIUhjkp8mj617xPJgITdDHKOwVvifewqs7Fm5/ghZ2b1+rfvV5D0L81SCVaP3bGtXg5/uIFWcdQw7cvc9/3Kl+JxD8Bn236C5cJs0sp8c0bxo9QXbJWt2pcwQ8H9O3IN7HBWzWrn2qYjrSK2zGsSaEo4qEcFw6eVktK6aOslfjVRsjCy08o1oXfYvSaFcQpR8s5uiMlkRfIwMtEIyEhWFwtUwwgQVc8IcgzUoZO7xWxkmhNoKZDuBvmc7L6M3TGMO3XGxJktuwrYKk8+aKeDMAJR6lwD9cCmbZM3n8Yz2FUXrqu/3hergne06CbN1QceFQGF6h1KIaA8O9djdwt7a76qMLHcVy9n2fL/0/Om+w54oGuMVF+v3bCdIsOT+caEdldtOKrP/TctLhxuw0i09LIiZP1RdBe8P3xzMKGES4RMnHTAI+jqoNp/WaJTb/eIcN0el3rAm6UG6G4BhCPEEWMo+18VoCdlWzAtRFB46qZHPZ0c1oPwVr5f3K4Fd/1I1VVsEKVTuyMBsPgwvxmXHWV/3IVSMPS0OuO/pvNdQc3mgzps3wcZIvo5TzlW/i8ypnInGjMtDp90ZHtHM1sYZCFlinEDLjLvwwsawsfDNnvxsM2XZBXRdkXmXB+lrDjQX2KV5x2DYjeruwoZod9RAGNwOtZJtGjwv0bBXgEg0wWmzcDJmVUMlpxae3//vIwW07bPZh86aVl92jpWfgI2dQGo//999v31btQKBBycTbwkDuc5s4v7daNVY1qW8oTpc2+LJtctOS2Ynl/wPX8TQ/aICd/RH7ISa9weqY9EeSa5CS+clQVbF6ei21XUKTU2ISSyvSaAEoPl1KixlOgbv0epdsf/8sKhdsDV42YRRlxj4wDa9BBpUvh5497WVDGxfiKgYo1bEF//nkxtv5jsUmCg+TvYehVx6gZZudyngMUgTyxlOusxwa5H/u0GsOIAlB/rKc51g+R1mh/U0eDPz88J+OuNVeQ+ajf+6BUP+gcRl8ekS738ZqJe5kDd23PoRbjDycQbOkMGG4JCT0EmW/F2cahekeULnJ/Eqe7i2Rn4Zn9Uwk/rcmcNLex2t3TDuwxDuFVBJdDQnBOVjqQNxzyjXjGT0+D5DGQS2yLe/0i75y3Tlo562CHO/qonglJAuUG9zVfDst/kQGw7qo9a+ZY4Bp+UE4cINXQO3XP4U7P4wpjx/Glb+zZAIy8hYxdzD9ajFK1oY+C6P0PDcyT4mhSVsMY3Lix5yXflIeFaft6famk7g02oGv+YcfalBhgN6OVS3Qhe5wT7HOEN0mg4vPDfU+vrvdHy/yi7jixXu/Tf92MgBiajKg9ThQ5IH/xkS+L4scx4D86WohHY7dIiQ2k3kgb8/zqaQjRsn53qXwjKscCbcLiiL/3NtQh3tGjUk37O/SNibyJN92xXA/6jVDM0WQarAVFu9idLRI/t9/haM7tAAlPOU6kDa/JSDO8BWcoLyNQh5SJbZ+IfSAPLdpWr+d8EF7RLZ9zjISdAqeUZV3qAR8FG0wVc7ON3rVFM+hdWDMdtm11HSsPfeWGOTs1zsjYOA/Njuo9GlXkzX/el1NyOS1te+HkGLJ/RPKvBwJymqyw+uJ6rb75hzIYH6HvUR/558apvsGCexqk4TpcdJ6v/7YsESDJBNWbYDNQb3PIJu55WzRc6Kl5bAXTTcox8dxfIOY3w+8+X8gGJB+wbnzQDYXd3RzxOowa84deIePjmQ/WhnIvPdtrdajDmiRr/eAzjLiNefFcjwhkTgKEDr8oA6k0i/zHn0Cnya6J9ng1rv7f1egZYSqJjqfuH4yf0w2Nl/7iWrFw9Kt/hYy/w17y/jGIHQ5KdirUJkaO5FUEwoC+RFa0eijLj0y+BrclM9lzEhZT5HRsfF6looUBgyzeF6681LlBw7om3pRecxqgj3KH1jUzGUDRv5xkpqDdMErgbArZvVXdptLcu7ekMm96NqTxnNvReIIjh4Qr0EsRHE8CCw+mRJ77TRMmf8twBVY21Wevqd7JqPlFqO3PptubQnap+bUP0Ay8L+cDmwP4b5ZyGBp8/v3qym/p3s5J5pEKF1lS3/P4+1O94YBpoCgZ4qbe9i7exjYzWym4jeWrzHP9SeXOiwN1lI9hlLbaYt7SLFdfQ1ribOw9PT9tr29K5RfoYx172kgdw1Cs///FSJ5WK6+QHxxvqBHWNRGiOtRPR7w5Jd+criGf5raQGkwsyTDgmnj+v4xO+jpak6QULvu0/bshg7roD1cIBPGS+Nq6Z3dfKedJLyqho1UJtxlQJ1sf8gtwKXgdxN1Tq6mBk0fS5OLAONgGXWPhGF7E+ygQbdf6CU9MLHixCrrvZM93rfaz4ISgbcgyzMkSU66/vLb43dAFhMD6h4l8inZ+ENkRjaRiV30A0C3eRouLcWK4SpxzlLHX4XMfHDFXWJPfL90ZsUdWNQQtkLwed3R6Im3tDYXwlds9vuLWs/q+VgSFCQm/V5us8rlJHJy9yGfaaIE+7EjfR32YSCl5Ll/zMBSfHuHQeDEVmHY6LWfdmebdU8jJiYVJOc35duYv3b32cX26AospCzH6NpP8bob4+XOk9619KerlI7y4R3clN0jkZEruA/hWNuNKBtgFPSa5QkwInWbcP1MtVK9pA0/0ylTV+IDJTn6miHnnkK4+znxNkVnSJrbVIImf840RubNuIv1YCN8OZEHpMc/mhBWPxoWMPTk46Z3uSD91euhxZOOjGoXVR6Qw0u6uB0Uzv0uOP/WWiZCgMYv4VZVxOeLBYkFKQHhCP3ySvOf7nEJJrbSiL9d8DuJkb+bUZBFbtSgbz2BxpRf7fPelCcBhwutP0REGBVakwsNH2CvZ1kHSFihy+xYGi5yX5ZawmxT1aNAY17h5w1fCAOfVEmWiK3vwwoHSRE2Bh8FvZ3/xmN1oM1/mg23ZBBxzmIJS3ZWIV3xSnh+mBPKVjAfEpYvYIj7eItR8tfdtF+BTdpKXkptEazI1Fld6S3J58ctW6CgS2g7JLdWzwp0zH4JQXve9VJ70paN/2W/8cUb1HYVaBxsCQ3zed8kcOve6Fjfv6NsloveJhybQ2nz2pO9eZTzSP/0edncCYeQ3+3/9YlkBO26t6pnx68tKpAM2RDFJLo3FywGDXRV2iO5B3A/tUY7u8tefpqvoMuYYER9axaA/w7bPwl/Ov8wuHYtuUHGlH/WB86Z8yQiadovVsZb0JMgt5hVd4XLlz5xYCStmjRvAf73qd8qC8UagmgqeSvd0truDYEi4x8LISoiKJ2vQNfSKc1BHHrAYfm20cfFcDyIXkZ3Mb1O8Cky4VoJruZroxlCjijJCXWreI/aFPKs6/EZzjvLbffXUreyEGRIg9dsc8ylGEtsce6vZnZ661m4NaNKqJV3URzQB5KZa6NCffkxEjeqda2zMfrc5+AVKQ+1p3DD3bhjiYq1fmsn+41qEuMi68xRXMRLcqRl8bRzjVZtxsuyCGmgvCFNi+7/8lWh1xfjAiAOKttoRCsNJmzHU1fgl73ydEfpAjoye1gkj2gFoZu2SljD5BrNqLdgEfGBJyzuDPicSwlhXRDdpXGs28P8qfsPqFk3vuSyKDtDVXQzN5HpDXHLrooX04txzPzNsWsacZxdzpMYeTNfumraqrjNS4+DBOcKd3aqB1Mr1ol/r/dY6Nau0KRk2PdVWD/hxfS1hjbVD3L8vVMJ9BBLTYhal/tHsB//r7mZ7dRWmkGXj6pZiXc5gdc25gFtG8t9EZc1bEyuJwbdbAuT3q7HmK/1/IVVzQvDUFsbBsE4dUx073OffXoJC6psUihYEtGYozg2FApBbAIrolGRfEaAEfuDx7nXFPbxcy7BzebKSuihG4mZSVyFf9qv7wV/mGXpuszrCOQtgGnNAtG2uRpVZTq7ccGQcnXjrTmZa5twgRJtG7mn2CuAMwVUDS3e10s13WdfPLgVltpHobN0EI5kWsUhPpJhnzraE5zWFV9xitzlmWtzCJVRygo03QUvgTou54UpnaKA3MeHi8zeJBdD0e7L/6t6l+OxTZxEpz/n1HS/fpS3EaGLaO9p3ea9klVE0XWaLFdRKwEjrDUDKoDiETTkdpFHzEgT1qKWx2Ev1csCFP82mWs5xNnpfzEAug0X3u2GQ21rhs0c1XLC+46aGfGqMOWgn1odRZxJQxVj7RN2i+5KfQm4+DNuTY6ydkFnbnPJzSHk+7q+Hzi/8u+T+u64aB15DSsehkPwkpTV2iExdEHhVFicMQd/g9kliPSCj8t4vBd/3NYdL9MHWOEzagNcUu4Xw4gu2TnZJ8RnYkaRHdC+hG97cs57u2P/4kW3rLE42eUzmZ8JAqxI7fxwMq/uXW/DxZSqb4blVjZapAJPvjYj7mDy4Kpy9JlaSBr0MfppkSuXxsLqeaBEerjX/7q9dD2KEKEKQR8cWpQfIAX5zBcfJ6D0/fQbrS3WmAUpkylFUXq33/+fjDvVXYqFAfqw50neTRSR80szwaFIVhfDrr2FZBOBLRzjUdlFXp8QmonZCKDQb86qjLc1l3aW+vs+Ytb9nKL75R9lkfHHiwQCUZPc1tJglGF9ho+n+R20V9ffw/MzbZH3IXrgameqWf8Zp08PA9S6ZuS3Yb9Ip+sY1NGg2i4c8SLDntOVDc7B26Pa4XkmHYOn83QsnKAWCtEh5z3J/99rv3RiGl8MJdDrHZqnpeOjIqpxpg8k1pkyQV53CumHipImYyMpPfN7LDf9z10l8wO+f9byPEP3Yzcy/+XKZsY8LX/FAK/rfugylx3dWhsoTluz+3n1PkXF04Ad624hYJDJ3ofw84HKF9T4FTd/EcbKYgBYInN/Hj2McGYAt07tG1DJFerZ+ev5P8M2rrE3lQLtp0hJnSGGxMN77xJyE6qat7k77A5Cyp3ZT7A4BhQGJg3x3gJoKIks3xGz1w5qPh3Q5fWBUTm+vmj82riykOIu67YZ0IUEoB2xX0ZllPhDS7eGhP38cUjeGwLtlX4Mr8GWVUfHBtwP37X1vJ64Cgl3q2UQjaDPuSKB21tJegiDOpWE+amnd/YTYS5FbGVBglhTdF/gJ1sSGgl8mTLJEc75hua6uihBBuNIn9/uRu5KIpkc8Aujl02vgBCCEbTqdOnLHF6FUq9203MANFQEAmqrVq7ZoJVkbmXVBUPfc5JdyrfFhH6+rIhk/z0fjj92t8dcaP4Ef5x/Dc5pCcG4DDnqyC653T+yqkOlByiLoIYxofMmBhlYFukl8dh2PlP1XFhvj6/vXx/g5igfTTslX55EzA28ZwDElK6Ou6DNauY2yn9pE9xQcWD9nxcZnkrTWtMetZ8pr+kgJVH4vtKRmm/dCoCqIHPYsIpZ3/kLxPTDVdiCLcb0ZJCtoawZ3wjjwR7zdpBISdEkKlvS6eVhXGaLkrfGCov/hkRvUd7n61Z2MD2zudldD5OVAFT4sXHQVCCW2KtW5gagocLwClfMUwezC2hawXCnIIKsXk/n/WU5BqWRGIpfHZzVW9nzvs5CCf/exjnCxNBh1q580qvxxWwPBadfx3lO7Cw+lOCAb/rIDSXSYToY8XPjBO0Zmig9hslWpiWrV7YT3Rm3RR06/9bVgTGnmp0dcDPqgFR0UhOtxuOD5gZRrRYJ152Lnlv9SFl1WZhrnMkxiNQequDKhjAP8oEoC8J+G047F8z0HlnBFs64nQ3G1Q4jQdyKkb9OMrHW+qj/yyFLz0BzSfvtJJyiKdwgPovo2Mx9OHaAn5vvKdUxKcnK1BgcZAqyHOLgY6oPPNIc6rOGXSfG28ABbccmZocR6nMutdXoTp/6I6IAK//Kx2+4VmArqyG0kdrpW6oSnDivdCbbDkhxTzEmndFm5NE1lAhoqVLcJs1Caoub4xMSK5MUL87UiMOSU6I8g29oI3fhmXAEjMbS5tZbHngn1hRgPoNa1VN7Wi+bQOI5+vJnNPOUc6cPhAYVn2VlS0U03ls6XjG0ZkjhSh9Y2qnH7cWjaFtqI8BSniFRHGt/PHq4od7oCA7TYb0xM/jVeIyMnoGegB3BkcFNnnkqIHcoxiU0AeqcZUzogwyxE0a0lkEDC1Aj1NZ14uN7o+b3+IJWGpAPkNR6iOdMh+19/kLP/scg2fRRUGkbjbUZidi9Deq5Q0XCXswSAmbVBXQmtbmDktHE9WXDhyXhgS7OxMoIhJnN5qIRs2d0Qd9ongmJzpHxHH838p/1j5yD1iKuglLSFKFBr29usjCtQO5WpsSaKV5rs/D1dJ9tCY+cLP/z1sMJ6CLgVsD9XlzuKneGqD9gI+6BAgIIZuoDdmvLlrvhXfxlnb0DG40WeMMP4grx5VAak/UnJzJMbeigMXEn7rv+Wmso/w55qCcTrIaqhTfOkFFiHBNrE+IkPFT18FM6fhZK8bxpZ6o6CbF7+7mSK4s9zoO2usm9qu7FVcFkKqR/Py1qpVj/8moQCjfka9/TGHqqNE5IhZdX7l0veXEAnu7qQVfyD80g87YblV92taxkltV3OXLjMAgJM/v0kCrIX5XF+zFfCf6eR+fnb6b59fnxlBlhD3XaM5YP/QHR/CcN6gr5/vudeZX4vR3K+UE+5cteRkDP6eR+Tyqhau1GA+fMoW0oKhJ1HMboUsdsubhED9IagX3rj73W248+cP9xLLW+C/PA+g8q5MZC0ta+fkZIZAoqzabjINAUXtO5Qy5/REugHo9V2iOoqWWt1no4n5RAPT92nabESJD4ZjnfNfkT2NWlsdo/4Y6azUkAekAGbrm4a39CloJy/2AHQ7b8Thmup9+cNRKPIk1V6KnedK+LbHW+T1bhPxyGBozQRIkQuIAZeW38dFJmT0llKQXNUuCgNd3Z/F8+UUjBQLf1T95NL7sfYd2PCrGqQP+KXEyjtsZztPdB1t9WW0bwYpJD5aOn1Tkj6RDHpa0QuloLlGRtf7S1KvH6kqrf3CdA7nZqz/i1uPYz2XpTI2Uf35QI8dUSMRjMGdun8qBCOk6cRe1/NWYeP3nl1Z+ssqp8bBw3NY1ZGvM1exX2R8416i3l9PSmypjIgvDPFcDDdOntqE37Ii8r/80+M8gmNnUgZ5AOqGPz1tXJhttphs7eGzGq38nB/KXKN/+sr93fvp7zEOeQVglJb/dq6ndm/L/L3EBIeU7Liimvuo1Kf/946W2NmIAs+VQnrGoi7ne0HYSCZH6pbZZU1YB8p8kgfDrmCue77DTMZAqgj7AQV+hWYdxoGEvsg7UDdeGR7yupKfgyTq48YYPQbBR9nrwH/g1YL70KHJJvTru5PAwpHKJU7jDoVHvii1UIFH1Jx2Nj/SO9UPDdukBP7WNv4XtJtOV1kCs3mqyF8dzppMDFRb+uKF/DRuNjZX556Ykd4tlfToqV0YEsA8MCLAql/R1nQitqzVUhl8COJ6FzgLb2odCBIh9B2xnXwFBVIDXyaZLR06y6Pa7XTZA/qe/h5G/TS7S+bdxvuXX3Q0uQj2YkvvlWd1PzFQsYLmbykscpTFFs67EOF3Xz/XuP6qxtiAQjYbw9/6G1ijeBIMWpOnuJJdvBaNsABrhm2Py1E99N0Y2u7yJ3XAzeTVQlN0p/rI6mVR7XHVPlvMO90G48rg3/KId/71B95ebO/Pog89I7ylMZtfmGwedDqyoyEbSQDO/nICpxoyzTaa+Bcp6qc8VdxZJAk8gXOnSXD8g/7exK7KFM/9hAahJYAAvew1Qq1hrYDNsp13zgKsheBZbl0wxdCetgjahcBkyNNROOtc/WGVzbcVzSH0CH0rYYXNKLvjD9zC/6D9P/e0ZhzDEP8u937uCKP8QUBNAqpBwTPwUklm6vyt7LmIKHGqq5UzpB9QDvevH89Xv18UZeZ3yimZXkFCGeVMY5rLSlnKZ8RcnRcPn134hpbN8MCRtHDcnWNvy/rAT/ELHoeonG5JlWiioipZ4rK8KRGUmcEx8HcrRhnDzP9iYPob1OsnEJj+O0u7gGUK5Pj9cKKGJBQoj1ievCO3ekj2ktj8eGSeVjHE0Cmo1jUHBuNfB6QdpoB/IUWp/hZglo5bXzpePoOwISv2EwSyyKiBKOtOpAARORJdCtl532JX3fAZ7V42blZlF8H8Td6tc8wGAVfbtiwsgs//+dYSjtf9pS4qihg8J6EC+VGfTlfzH01nyblYMNhs/+h3d+JatFpmbteENKkzO/0/EVXksXKvMTmHfHer7J/zNeu0L4DjamZ+Lkna4hGRAfvXqt9N7lLlrVWpqSj+sFmEtPbNxQeE2tsRL63QJ//U/rqujeSzM1qg50haREIrm6gHZwv9in8l+iqkbXp8N0ZXSe0g+EInyrJoe5FyeOO0VR8BTm9LqIOEq0lMcePhtTSPLro5VLlcPQDaaZ2KMMulo5ACDu/ts7a8laEkj7lQIrtafSWrDzt+bwdyv5LdBMkiauYGnJo697TMUEegbdhVVXBbHdgJ3w+l9djA+k1i37fdH/+BGj2W5dMEqFhYS+T7KbPnf//5rOZ6HvPe//9DdCYnfVaRfeHaNVUm2ib1aiDsRFUAcDZY5BwMP3j7QaAPiyQHT1e8rzb8uiPViGSrsfbP3/mVuV//6i2OaoZlpnAOlB7SsG5777MuFW6V3zcR1/1nZioBn8rY87E492/mh0l8EZ0uE3b1+Y6vdhLYaQ5/CVwEEs6brUaY2s25POtNZE9RaKuVbJcBgtu7yRRA56WHrJQGhJq+a+4m30+hLLac5zO8E9DgCWQvUmOwQXWCIRUbyq+9b8lFFt5j7UbJuzoE0N8Gbv518g2RVDHW+k2huRugw5Yz7zFlonHH0kyNEUffK0OPuK48sDKflaBewVbg5qBUEjtSH2VV8nl/n0igGJVFx95nJeaMGjZamKNUmJFB0XqTOu+///6OHW/Hjmn3b4V/6cO84+lN4Wn6hj/r+EwCxCNQjhc4rBbz4xj01o1co/a4J6N/yZnG7gMtya6d/vy+y6YM0k1HM4wXNBZFx+sY0lqkZMVHup9TAsj+uNljTwdoqZelOdLBF/8NGlUXziyj9+RHkLB/SnLtIb6Tc7OufcyQ/We9ZcuYOiDCiPwKlgUN9f0f/BDJrpUuGaKSBJtqayoSoDZdgBoDYYrUoabnYjlergqbYXp54gqBIZKpP//0ggamlaWRXDwd3I/Zq+1Mthgyi/uP9/YKGB1/9EueP1+yvlwxCrZ9C6d+qB8zVSR6NM7rLmOaL0PvL+0Em/gT6OLzX3SwzS3a+2vUgbO+ZKevB+ZBuHkud1pJUCXYE38vAWK29ipAv5yEHdOZ/Kk2ktJNDya15zXHVm9k1FWLLIWZbSV5T0JU6xrjT+diWuHqhn7f1keG17EYuub/+yEy6mcrrklLgXhwNC6kW09jPMbLb/nBX+loV/o7/QMNur0rgp/jERmuQi29hq7x2WHrdN/Vr+260bJ1+QQX0IRAmRWespR9Knr//38yoxPJ9KU9UST9WnZAacr663j4lQ81XrLPPIOav1/06ntR5m7WHg83rrAo8Tjw6Na0G6nZ/7f/TWgMJlwiJQnPxrnmFFkSgDHk2iy/XkOOAnXs//k4TUGstYnzYKJHva8xqi541n8D0jzMv/cRbrAqNCRk403tM39vSYm4Tg2svELFRrb9quUQtHQMxLBdc6EyAFy+cSd0G5Lib4UZSmCj5BWrf12K54wa3m4OpyW3fwzs+CzMfboJGPryKjVQcdc198b/EptrUs0TgF73WWkzrCUhNRZq+Hd3iD1qi5wiS5PNj6bKfl/xSPuU9AJA+/tCZ4Cc7en8FvYsxmRRfVHXo/9Udz/Ski6MMyZq41/gS82dL9YoP4UF27/+mItrQnIrY8vx6LnxDY0Dfi5umJnfpzfAwFI/1HG/uwimrlgwIZzqqGzt3zCw9necNrjv/TUnAvSTGs5mTSfLCQz/ionVY1xnVf12pJqO7Dnb1kKw4b3s4ZcjbdYj6Hf97oAD+/PP37SLUuRv0gG/yVRa20uklCY38Tx29FJGqJnDYMg5UMddvFm/DbQX/NTQyqkMTP/Psf8nvqr9O3EHyqr++b2cE2AhWWs4LlhwkVHUhIwoP9wo3B7+SAjUMcBq8HKnylgUaAoBsA2My8LnFbgoURorevQ7kFr4oFQjf42hl30vjW+VrCG8k7SJ5gmY/04WvbWD51sSfB7ZILJFrEZcTpHWJP8uyVaXp40YEUD6o29zfMVzUoXfcSOn5HuMszRl1FRQofeF/ZhH/C6pN0QdAgMHc/4M65VmpNC0R9Qr4lPo+83aBraTamUyBPAkMHwBiphloH+jvpMiulcXo4/Q6u3LxWU3GV57HQocp/Odqb6xjPC5uFQ29WIW6BChVfmsx8bzasPWgr5uTYaq8+IOZWzG1TBjX5138k4IObXisnmdeUfBUA35zC9WU+I8sR3Kpba1V1oLuiv/eiNW/OkTtXGQdi2FhhUVEntxjorYAQlZlbF+KHKNmV7E5DK/YJint5yGyhIQf/MUaaShL4kK5Xq0UjTY+vV6Ph2TDzh259kx/SOysVmkJv9wS6HTYNJ8F/jOuIXC9Ui9PoxeHB3r6bKCQXWdP5NS/2z5pWmGy7KpidsXnAMa2AvsOYKWFQ3jGNcLsyTevQ5Fi04h/JaRBgKLhoGWZIPOIzxPXbE0HZELsigYAL40oZa/oLSY4DVW5YmVbWCkzueVe2EkN6IKONsbc6b0ZnFzKPXSKPd8U6DSkjAGWfXIqoqLAACZBoKoFf6LJ7J+aRvox8baBrOCnYJG/tHySN3Sm7snwJhb273ipiXjhNotbYwSrGSolsLBwB5VFrgLJE7dPaq4hf/258GrHVQi8vLs9Avk+2DzIn5y6GvTypA07+97hRDBOZhwL+VTfgPPQ8plXyQQf4mlggTwx86FFy+7dL3TaYe0emm2NAtcrxm4IskRw6QsaXCSQQtaxNEH+0iQ5YYLzqE7QhCRnN+9iJzNK1cbnnCpGdwxl/411JAzGquAG+kB2kZ6xeAkBhpFspPdi1ve/gnTbkdo0f5+HSPZxeElxJmf3dW+Com2I4si8rYPn/cWTsH5F0N0N/R1F2hm9NP8hkbFv6foT4AnFZwRm1KACtflsbmfRQmy+xVffJuqie0hKf6oQ9Lqxkb6s0wVYzyyOGiH9Y3HgBQ6PIDjuAelXxJhAmKRhyqWuydRauM77x58QFKOBRUZSi1JwqmsR0+1f8HNXbZ8ZFjU9CUrJdT1Aa25rDBs/UUSRaDFsCet02XBEq9hpyNnzCl+XDoGm50p24CwEdVz1fIv0sVO9zJ83MTD1kQvEfFb4mbzB5GcVn7E74BEITEv2Nv1CoUgPEYNfJsQ6IvVkJl0KRtfRn19dYdvI+HpaBimS9FJOfBMvRtRKmaYTM5OHHHFSQYtwj546H36IGqiJsqQ4zQ0mr/3AXCnMgIF5XtAH2qmnnnL0BMiTwKgtH1K8lrRdK7/dxKfoFmRVVgH4qFMbpOSYNslEWkS2yPeNRgOhRyAaYXF2x50n7o69UzC9hyyenif3Rpjb5e56Dc5NMM6UdD1h/VDwFActeBt6L3S2hPsENDeo89GTF0TZANKTJfOMi1F1kM6bGrCmmsUPRb7evfEX8VaRaysNg50yiU3K+Bn/vuP7Cuqms+t/my9XIYw/xSLQY0YCKs7tfy4XXykJk/97g4SdfNI/rCfuk4qjC1XUf1RsK8fm1IbU/7FF/57MpAaarWvl3gsER+WhbDWdZ2AlbPDik8iZv39AqlxIYgpVVKCn3JJB6IMPXjSA4R8Js3vdHuUAhnfQwcQLIAqtbM+/AClBdi/TBZtTPriSpg4FFJ12LeHLwMi21qg2p7uy8xqbZ5tbxDBEnUFAmtn1+1rs6heoHPXtH0WCPiVf4LKFyGiVEA7YcJC81bN3TfwEWtN6dxMHJxGEerNUTIFEfkP4THwKWjMGeUX7JtQPFyINNYi8AAAGY77fp7NISAYCMdXr/9NqhFSS1AFG76p2txJH0+gdPYi8rj0jNwsyGubivzfkWhAK3iZTlxEJaVArwSEke7eoWYIPquW3mlTzUq67qbXrYag66AXKC2h1ULB2WuBINeKoIrPhQaBECI7e6NW5R+Cx7EtQDqj+WaZHwEvn+k+sPWzPXjRFElCXbR8Ujxlni0UDrYZflBoMWnzXBHS+KoMyEYCJP8me3o3m4n0Fwt+TclDk7wB7RX5yLLYkyggBWZyIzCh9Sv1cfIlhequC3ylpmFXYGGRODvBAm5FYDywzyg7MHBSUVCZ3K5NcXAUnhnUoWXrctXxMHu+G3NhHmjY5FZhNDyWiqHmuCosZlqAksgzEgFBcrcUmh4dYk0Z0O4zlI7UunXI4ShUYBLf8AnvDc9maweFCsssQFUoB+CWo5La9fPHLGJrqclxkYotWeTg3lUP8+Rh1sACUg4TQEcbGFdUo5z4otxJXsCxE63HsQIyl17otOo24lkvnO4OYxBo7mMqCXcTXZGtTVVRVdZszpkNqbUwg9VrshkzrajSA48uRgoG9NwdHgBPe0KBbcYsfLu/HA0WuuYI6d1FYCK+SVoxA69l0LKL6GEm4ET3Ktv+syepugOVI5jEFTcB2NYOoXe3mEmE2p1S8PlNoI1eXelH5kjSO8BCjNb1EGt759TRsERmMgbnvUwf8MHOoDx6GzKUPkmObmRkq7OXPlvPmjWXywtifQJdH0vunHsLHwK9e6NU1lh9ipq5PLfUVgo6sK/VasOwU8JOCeKzdvIYiYCOyyk1LJxzapvZkqBNWm6gCG4Po0I5aPx/hzlu5tJ3st+VQhYr9WDJZ3ynYMtxN0/czFx+/+ZPRAxNDXTP9owIdsnc2qlD3z/2mppQN7xsw6ya8G+xaEWBQXv9fm8TFh1qCSxfTLonihampgNh8dnW6rfMxBGeTAaBwPPvEmk2rF7IrOXP7Y9z6PkFLH49zI3PphScAWm+js1FROfY36TfDv9t/QBvADKkPgAzTSo6mqd7p8RSiG+LctZzXlIYevgxvAHFki6pupUXMS82H9jVqw2cR2aP8FDWCVw0RDJCRzPpWUxhAEDRTwfMLCiXBRYVnPi4Qkr0dl4UuBD+R/xkyfEDHNmzdWrxA6A30MOYKe25GmkQM6TBgAd8ZKIS4JWnXcaGbwzM/mYf6/nGRPZMrw/fIfH7UP3A7dp0CboTpEVAdeIjdqovA4lEtJUU7/VIxrtTuCe+be/wBVtLr7AxK+8xQ9Waf7XBm9hbcsa7W0FG+QFa9y8bV9DJf4EzgHNpT5wXlSH9zgqUn40ZLvT4NSpnU51GyNA3xQT8+PkrQ5fhl6PtWYsNE3UhAeE7Aj5vKE8W4eHjF9jsB27091ZK3b6d9OAHHupUrcA47AWXxjkxXZModBmFeTtpFQLjKKYSDWWmmoFlu3541gwDuUw+USiP9mtZN+B5+7LC9/eXexZZ9XMH8TODfGX2TT9wUfPHRhgYEusIMJi5nvHCBSGq/RAg2GG7zt6XIVFDc2PrJB1Ld0Tcczhz83BwaFDQjDMPawHGzvzXJEr3A8U7EaZ72rFuk/PFt195rmfNixF2yRxG2YNVkQR6Mj07BlbbLRwrieJ8ZebcEGW4HykAM4hywvH8Jw5kLweQ6x8jEXB4kHMG0bMr9pmMzwr7ieA051ZxV7lhZCea06uj2y6pjoXFmgd9lKqLhHe553YS3Z/8G+CdXRvddAJKUHQ3cO6cLNMR3HPZL/a8z3VOmzjc+JDX1gs9CjHcQ3awn5kqG/GkRmRkzD/I4cWs6A6/gJLyo/lxpZ55/ARp80ucF+OJGNCgz90gIAzPMmSkUINGrlMvQCiEopZ6GHLQiWrkQzOB5FcEmGQgctwKMdus5+1/FRmRkUA8sT6vXCe4xpH+wqc5cKHUqpUVTxpT+KwocW+ykTTg38Mh9MNLhc16AXUA6y1H9DXITvr6cQl3am/p8szFV4aDNGu4KGROzCJ3eqYn4rjjxec2Q7cA1ED4jHdOtgm6gd1DRI9ikifdsDelT4C4YObR3mEBcewKkMH2+E0bmnYWBlJz7dSyys+zAELrZk6bwlP3nXiSBDgTPgAWJw9mJ7UYicwRiw0fhnwUwmrcx8KEQzA+XpDDKpDTXHeLjqqL5HcchwACNphz2e0Odi6Mt2A+RVnvWQAca9dVsrvgAHVx1TreQh2ztZyWpfoLG9dW3p/nxS+idPu8IcM/DB9NNxkECg7LX/ZAawL10/IHJrA7fDxRCbaf320fFAlVrgVh15OkANqVoZ1mOyHYET+auWO/boIEhOIvjGFYnSpXQrUVkSbkdTPaFzDcXWLgchXz4WcR2Gq/u8JuFkcUYZAOLUTF7LU7qyZyqLceZw/ARDk2rPpbkKsAsIMi4JCnhj8M4x4AqX1saXM7e3qH9LwU2Q1M6A+T5iasgzYZ76aDfRjerGvyK1TgPyo+FlYzbWFDYTKWwQkX81plgi+kGPjgiuTrMmiQugycGWvyFCEpOsnH90DwsbwQpZz9pIF7cS8NTnIz3J1uKpJgykV4GWmKA3AgqUe+jCQ69P2jRXOkDjfOOoAucY8yZ9HWJ5nvX8TC85PCMG+bIXzsYMOTAgSoGapdWPJA6JFNd2bgeHh8Z2x88B6KbiMla9ASFXzsJc3b8laflOiNkRHifuU82WMU40+uYZPgLqy9FV5/SZ+lLct9XvPa5xhpKv7M9c44ID9LeXG35Go/ZdahwjNF3UngOc1hi8iEISyDHngsrwwDZkMeUsDLBXGoz8s8gXJH6PWosAXk/M9a5DG6GEXVT4WcZCU0xVqmXF2qWDk42h+wluI8N2CRziT25+0c55M8bpOR5xEE4pwxAaLOTp7UZABmWVWt9xy8q+JId5RtPgD8JiINNvRnBNLgzHzo8XFyx4/nuPWYNwpTzIzVdG1LdF8xq30//nPutP8AsbmIr76OHvhXAQ2zjbdP+neq2PPxDivK4Noiwh8Eg3bVl4fRQAlb39eeievDZet/WuMpCPN873fOvbJwb7zI12P2EpXIYQA4RmBdGvuRASwHZpQvgY4U5r5IrXbXWeN+rBW57R0XuThHtC2gDto6azt28VMm02t4yXjWTqdIJMuVFnjxaTSrEhO8fAJ/5DfrAovybWdc1JgQm+JQerkcm1t8IT6xrKAAAW2ARkbBFQVZF1o+pujmhLBUzYH0PVzqhRyClQ3DhN5qfg9dAy+WwjbI2e8OwTP7Ji27LWbmY+k047dWh+S5WDEiM2il0Gll673tH7aRkjdUjQMToUTa58IvnXKOO4oyu8IYojyXg5w5+GqK+szgtOJREmVEkHWZFHe+8hYvj4UdV1TwtCUiGdZ45CFZA1t2ccc2WDh6x9B8GBqc0eLJsQrgTCvaOxHWG3rnggSaEM29dT8xAaKKWocY29ZjcpoZ9VAUAmvO9jnAgbCahkQtYjsDMOnz6WuzoyumWDGzoO1MgsbWeMabyk+YRRuLVRuU3Kk9Uqri5kmAr628usb5SvvGPKxBPIkxpC9EWZBmJ6LuM6SoGQGtAGsyR/XyZq1Ds+PkoafnN8wDyhp3JipmrQ55MMR7UBOzgSkgR0Y/obQvPvp+kgFqFg3M4eildND8vsABAmap0ISJu0qhc0e4NqjDjudAbOVuYdiTxAmWhSV6Kgt5Njo6/snS2EJrlxzQcYcjGXX4wceYdmmHzRNLVuaFu4ObbNV/ntLXHaXLa9amT0Mbz20CAdtKGXhJjm5KSJ0YfU/tPKqogALJDFwLjndYVnfCOf9J/7j31amuJwtKCGgH/RFNxeqwnkNjLDDqD/RVkKKITxABVCI+IpBq3dzdOD6Ri7y12HCIDhQlM6tBgVGUemlKEUMbAOrzNBcufDRPbWBa6sndBIefb9K3HCqee7Y84gsYkZkVTZzHlp7A22ceLvCWNLJyIjPV2xMH++fHUWLS+vZF0o2ZEIaYx3Cd7wLYuKCxVFRVagaKsA2N8n8lTi785Xzv2fKhqquRfCw+HA0Xx7KBVr9jRw48+mHputcJKS0+YrlHBUu8lFAeNdwO7j+Q8Bx7B9j8z3WGiTxNmuRA3U6AAAKk8ySy43cvKv1+WFv16a8CjWU+cwNyUO5BzzwY6XWUefRq8ZVUpSwZj6bVR7PuHXLzAFi6bfI3Zss17erwbhDt8oDpOQ7GSylC2S6Z2w54ma3e6QJs5gvJltyJEuKfjcoWKScK9k7fCNp5D1pZzJWBvw3co0Or0SX6W48NeMN5wqEkE2b6Eh9eiVkM5K8udHl0k9EgBy1n0mdeD3NWf9b+PGDPPxqSWcCEhiYUFvcQDpOQQTKfZ592uzuklzQ8w9opyo30UY1YYoB3AUl8ZPAGM/7o9qo1xUcUEL2IgBaDhHyU2unByfhJxOch8exv8hrvqAHnydbWua/8e4nqB5JrvdsSXg5fcB2zGqXUJ/ESjKqfnABVaiPdrT0NPtC63tHH4t1g9yATjC+KwOo/fdzfdOWFvHpmvkKRxVkSU1f11hT5hukrDvGiyffow78vgw2J1IDo1msjcDKle6vZEqi7eOaO8IEUeCHtWU25RSVTkiSpR09U4LRJj3G4E63y5BVvhJPDovLBDkeTdvx8dNH1wcaUKI0eJi4oBF0gNpjrXCtro4I52eSL2zRJFo3BT7AAGpM9GuU02y0TTkVomDrLH3y1IDe3yxDqW2MqEpHTXapnFW3cPJp1cOTVYH7PNM7kDbnhYlwiZvRRlGovZGCXXPem1sShJqnf7vvF0mKje6dt0CgTS8Hv31Ecb9nAulP5BakzYmM+r7agSsNVobd1MTKr6jtfMPpR8iLq7QKXORaDfbpg9aTk485Q5FwJbfr2cAl9K93P5wsLdW1/C40qiSB9ASLFcqqvd1XgUO+2ASTtSvlJirCv9z+BOP3rXjaU2AAAADliyCKn3/4bs67Pi5eo/84O4gRZb/kvAnvvFxxAC/8iOX7AjH8HHPZGCYhxR+K4pbax2QoYmFZ89VSXhgI1uDD1nfmJVyOuAABvvtKdW2j9/sYkQEfqXXI3O/dzmqV+1L+s+H62tw8qZzsKoc/ThuVhmIt7sVqdtXN5d4k1dT6WHN+Z2L9CKQENcU3rnR0sSlo4ydPeFGQ0boUdCMc1jNuxrqOfub17pNPb3Rje321IirkWkpR+Rk9Xen5IZfI/77w3+OvWK4JD8+njCGdBATy4SfxbxPSQAl1gM8NOwVLo5W+mfdbP8AL98p9vfiXB2e1etElWMJ67TqomK3nPPyzgU9vijpHDSKopAUaV/jU6CzMDZQx243yqY4z+KyRaQB6TilImAEgi0gAP9u42DOx63unVMmXYkItJxymTTCKXHqHMjtx93fu4HjJcojs2YtnFjy/1Mu0cpYrKF28sN9Tpf99gkgX41+o2220zRZpopClHn9/ZSJ+AAAf5gVpjp08OmchbDje+h9Kxk95tCEWwcnVsIvC6FkD3Y9UV+FkyBInG/VyQfafkiVSxYJWadz+vN21ghRTEsNGfy43C/YEAABt2JPKFbDGbvL+w4ugxLtqVii4loJoSnyOeUepsF40P/EhH8Wrpyoo8TGSidI+icRdFxuQsp4opDgymp+QpeD1+LX9So6B4TH1ln3932O1L5Ud1OSG4M2xYW3hmPwHa1Fpys7La31Ab/VQQ49GDKauGpLP+zvsiGOsigL5cQAZrdc5UoRMvNKx1nugWSwg30s9HMZ3T5EY5wk/SNCcXY2KoyUkuQu9XB3/5JkQCJjfdCIUIlfp7fKtMDlWoIjl1MlRzSW+INXMeMJpftBLIE2k8c9ASIlGfhZdVkNvCyQMzz0QGiAm0UAAAAdaBF1LZJSGp8q0iuBe4C6b0xY4pLe6v9s30lYmOxu58ToX6IYb7saZX7TrXU+Z5uXYWa4/tJhTYlEYorA8h/eEcTuSLwrptqgLE14EmT1K71H2ncMnEsAM12sQangD3WhhlNYyJmfd/rmeisO6/bUGOWtLvrg6Syp5Noux02RgMENK9NBHNNuqrIMrdjk/l9QRTdkTLSMewAggEONHWYeLqgZ/wp8ZaFvCyW6pV8w5XcD6K3CPqk5ReA8ZKyEgHw8n2hEVvKogC3F4+GkPHKlKTm5ppFtekjrMk9HwFyK29fGgdjNEESs1ku9f6eXy5DQnVR0brxUfO/YpYsr9W6fW+vQ0NPQkipxNKM7It+o5ymDLOHDgnIq//mPiX8DZ5DH6D5hm12L1cdJayiPLw/luNmvbmlHfAjeKpl+2TiPtIEB8CUTCsj2zjbC7lHqOMM+hINhjDRzYj/O0zzIro20RkqqYQRExhz/rbIAwVyzfI6h7dsob2fij/dfn2RGMkQoUsxjEXGWaez5qd4x25LKSwTX4BxxRPeA1gV5iRDAo40Y/k577ErELCt64PZ7a0uHITlxcxFwVXWVOKT2QgIwcDJZkFL51SoLDKrshaBH7TNaXZlVWbMtzmAvdU3zihjOr5EckNMnOydPUdnu8oOlrJhZydUvPAAvtTASD9bL3KoXVexyyZH+BV7oMM1GotujmnGhdrWvouSxZ0d6C92z0eUEnkoCIMl5hZQVeOyzublpTOd5RrBP5HVT6dP8p+JxrlZL6THWuYwbAHhEC+2peV7fTLDgIyRCC6MpteIUzWk5i2xOzb8UiHCROrjOQOXtoQln7FeJhGmTOWnzl2KUOhN9K2Uo7GXQQqF5cFfrj+k8To2MIECEnyO+Dmfjrc30K3uewqtYo+V+e/x6N6Ta9twYjpgB9N7BOKzuFHyDSh9R+KsDfgbpgaoHezh8dtd0GOCpLoP4CCwvtQApYwjoLhG8L6NK/tN0pKvZuET3Di84Qr1aef1rKTLK3gPv1O52uqF+Tji8FgIuTJNuV+pjIlvWRn8uwKhxOS2DF4fbOgq0RWi09g5KkuA1K12qrWyEzQ8fL+MszPGXdn9b3h1PGtLPEbQE+J+7w36ugkGLnxSklDs39Bo6d7JcH5fBZTwxpazNicqt4AAgevpAI8OXG2mMwAEPgwSXWDPGvQVaVDD9BQBAXB8FaLt7MQr+kGVpUwWuq8P8iR66DDTCqFdmZaxa0Pgm2f7psO7TXfiSmrbHmXKLu8+mgEF3RTMd4It3rbOIhhu//438+IGU5G6+/ffGqf73FCIXKBVlkJbvwvpljtgJGsBqL9mHuYztb/xQa+QvMRjYQS0On6rSJIJrTcoBIsJd6sNVQQVMkyewa+6LnaTaz+2PMcADV6Tz5GambvuZxSD/jB+rV7mj82q7RkK/lr/Gf1l96lyJe1sktnRKsPGw9NZRC3FOLaEjEviBpVNBHLH7w8z0HVX8ry5raZS6wwP8cDhXi4RbwHgnlDN02Dr4dp9nP7HoqGzr0kzALIOdv0NpVnc1AlSN39XKPOlgBc0aHCH31Us1eEAmYnQv49cIHu3p9meVscTFoMO88YNhM1BazLZuL19bGueg4YVYxxB81Y1IOhmqz5LcnbDsyn+V+yhnlT/3/7qgR2FtLtQNmO7vaDXT999MnUp4wRabo0lhBE+cRYFOB4lwgDlm0hi1bNl5aXgyBc0isJXs9nABrL0smtLZj+GA1pYIM0vBMRsXAAyKdjD5QsM2FTCuMmTGgGHtuTLVRenYNveznoOy7E1YU4RiFRxMFVF9nMSQ9uAxKTPR76W8UpMQw2VJC5feduhTdrbP/O7JoSsc5/BiSIRBhA1Apj6duMgJoQceMwcqbZ8LJxxdJyQJEbQ4O8/m3GR9pvHQ0FM27p3cu8M+QAoJRsUa9SljdC6/50W0UUCkiH8rZAsSQZKPwWpLyq/v3GULJZUx9ZqepAWydd3iaVUNsHmzj4umXBXcUMnvlqTc/lolOngocjXW9FHtjWV5Rv7zaco5sqhT951a4VJR0Jap7MWSdaLxrsAtJp/g+l3Nn4VYT7zKrR5var+HAIuYUbHrwqLsISETNvUyDzQwqNei1jO2wfs1RLswQ5f+9iwRbEYtIZVAYt2wjGB0X8OfGc6N5Wynp2QwyRivv5TLUCVqafXrnoRQJ8yrlogg2R+ekrzYXXrwItCkFWTOoLEuui8eq7RoGP60taOvgG76xgD35ZSLNJzWGkUhMvUYwpv3RjSAvW5RqTDeurxLaOx9BUZ1QkztMOCC+idd+GfavxSu2PoEzaW0qTnaeGe5EUoD1DtRnJ+zXWB9N9Ug8h17f6YD8GRZUSscVa4XeauoEDWrBBncuaK4YGtYhz1Ba0565bSjx0un/2jue3jSa/UK6nFxRH4L48DEwQ7xpKq+BNoylorCUeyQ+5Tz2cINcMxErOO/nWHn+LogK7KnpPk2WKlL34WtJo4jK5kj/pMzMS5ASyfp6adXP3Jr6VYtxygSUizX0YkamZvUsiKRHrX/KM7t0hbeoeDJGSFx5Bpa+WHAFGJtPLjZ4eDTbHq7+HS1ikxyoWRVs0wLYg5iDDJ0OUVq45rvq/cq2JWFrSomfBBqeq7KDHB4Tkyjq+YfBYI1eL3Lz02SgCcmEP/uUlnHPq93nI8Y94uNmVhNP5crhUG2osf1aSnkbFjEVn0uhBGX/b3krZu0g4FZFY/EY1/9sOPQ5Fz48hfVcuNh9m7Eturij5o3Nm0FKkM6RkUFxipAfHSz1zy4URWbeqsszk8aTztGOJPiFfqQCXrK3rkvKZlnhqVhi8wGOIHXNPruMtk4dGtkaVNKV/ewd0Ms/Co5gtl2ORIculXtWPlt1Bighr/0hpWEkKQ7KlQCnHOvHqfd2ObFrqGuR1bew6NSLjnABI56dGTA4fj4Nci9dVajqfl82Zis8ZNOPO982QNmjn1Ak0VV4DYk1xICy3+GuLCZ2AxgaJK+jccRQYhcRvQsq24HCnNwlfky0RSvB+3fFsMLUdcymTJgH51vIIFxZJfW/Dcg6tkKIYbth6b3WfN5t9iuuI8HWboy3/h8G7dwBwAQjsUUcEwpaeyVKo4B6VZjC+CjZTYhFHuhpfQK6+mxRQLqLjuaWV5tKLjVgxvw4S2PwT3bl0ljm3TbaDs1qkBVz9NZ7EO5Jp1+T2H/Nv+v69zNa0AmxWB0GM3XYYUvf9rGyEYiCyMTsoIpEd+nU+40kg1SvHyyVjs837ZedZkr5uIjhaikDKBGa4ZnD/H3XJQu/U6JgEA/q4G1tu4DWKAO32ED7RFq8x5TssoceO5YwVmwJLzkxV8j/Ky1xi4lmNNLvm6a4z5/JnlCR2x2UfDKHWrNgBxhgwXmTx/oQMCzxspZmlwlykXu67pkBuCMEDWPtuIkhe4DIsoLXSUH960JyT8hnAXgH1IOg8WQFJVC1kaqtT8/Tv5QvokhhFBpPouasWmJPWnJhOXVfQDgwhk4K3MvKUg4Th7UvClreEnRpwX+KI9YFVLfKkr0isY8YYEFrMJFUUaRH2GPMOBn+JN8dyoXC+rg+sDfVNKkZtKINnS/0WyclzIUJWdV+J+1u/ekBMBoVOtQsrR9MbI1bAvFfYnn/cg5Ogmi5FuYfPGbRU5hXnoyijW49u+6nW8Y/4Ur6FXBBfXpFZKxc0DWfaU6DbTu5w4fPugkJgTscTzbY6NgvIbge/7UJXHj6zaGme1EEAA/D77S+y+BroYosJOVnqGqlMix3sAkGEjQSnBgCdt0zvjw1WLNne8HHn92V3YsLISTIjkHeDEUSAKHarfcjHevkMzU4KbgAhyIWoAMwD3mFgVmJaICksUI5kumFON1AiaG81tuPlMTapR1wj++N2qJfp0+ZhiYdgBvOM8EgpKbrBBXch0p6GT7W6cUR1tKNCj17OsVKxfd73C4TMkjD982sIm9WixxXMjK7MU4Fu/Yp9QzWPFGBgfh5UNMgZl2yZNty+DhYRlYtzKRLBvAMi9EWEjkrKArVhMgujkXpUR6HUnjdpwi8jp9owbZwqYDj8iUjaThSJ2OGuj5LZGvNAr2FHd+oXlMOURLM61AMexyCGuc9xrLYN0ES9bFe82RVegyXlGhHiiafpaySVNY7UMw55Txwn0jVnDQlAth2XzetauQ18VYEgDe3E7fI5k+gV5V5NjAuJF+oZx0DKkTGhkXRd32CR9qyEDQqDF4DvQXTmy1S0vvNR5LuxiJuikfaKOAhQyTr2VrCbaE9zIgeoO9K1ZGg30EYdkqs1wOnvoSTg7GYj5u7fPRX4MctOVGuJdnd4pFNcdSrDsnrdd8yiSG6As6xXJ/1KHm3XFly+nR0rrAnlYWAjwjVH49r05fYd7SxrBvXbAMAeYPetwmOLS53VJpaT7iuucXy+lFvuFxz9ZyQLcqfwApC2jclJOE56EgfI7jCxInkP641JnClXgNdKzjR3fa0aCk/V1kjH2MYmDUC1M8/WeYK4w+LmWVa+b6Gf4o5ru9vXbJhuuSv4X5P52ThHBWbu2d/Jf+WqNdV3gYIMoFPcixC7RM5hvNZL8vi1nDDm6xe+J0OLr3JhddM/9kmgJXioMEieZAt2tt+GsinglBw/CgLpBcDQUVL0Kdf3uNYHXJqNyU4YkLW2xdDXUSUJ7qkV8JkFNn4WCrZcp7/fMg2knE+HjCfYaqKd/RO+Wh8kaxm9p7Y8ENek8yXd5oQnp6z7Es6DOrmjyV/fkM9XCODoZrLdqeqYmqd0fQC7VZDvDqlJb7a8ScTOPGDooOh5G6vSWjV8Tm/IjgZBTyPK7orow2IIUKBcZ0JbzgOFKSbdwf7xaMFCx8JOiyCNLBjXrMKfHm2AH3lmaPu7lFlYP0a1gWVt7nfeZhqcPt9jiU/JoCYUgCG154dmPs66lEVLRq1F7jZbENt9RAUf565NiWCH1IqvL31visC6kDMgjsQGKALrFQ2sNT8yzVFlEjvfrh1pEiueicEsMal1/i3zvkr67DF/GWPic/j1BE3p5jbygU08El9nruYhjrw6P+In9DAYbYZDAMSNP31kKMQJY8HWYH7INBY7HyMXP2TXtA2cvMo/Kmp8sB+inNzVTIBR0n5LO+9SuUeQBNNZ5xQ+xg72NkWdqEwLahk7AZJ4XfvutR6pGyN0W523fMBcJn3etShTbmuJrE76MiYbZL09NnhNpGRw9ywD3mRDCiV40jwYODBQUcQo24cBs1WwOUgMIXZrMImd6rFSiHqkFudJZDwKwX00yjPE4GBJ01+Rj8ZEiswJqb0UQhn6/RX/v+hmP2gC69CE3sU3p3B0G1lhTj6K5UoWeSijG+nuSEFePrdMUiOiEN9vVHW6EHSCJk0+RvoRbKqW1liGMvL9rUqP3y+5sl2u9f1pvvLA7yBO2KftCjIxcQT+PR2sMTHeOaE71NHxhb2KDwFdeuxb0H/6pRMU5xDR6auXRKZ1cxHWs+96bskOqZlKLsytNXG02zY4e12RhbqI1OOjPnls6PWa8HozXFvKl1C/eA22CfnXu3G21OWuWUHd4++yBpPzblKB+NHAEgLulkVQfj2idShZvozBvuElgoexHIR2sjfp+eyyc3oAVGBWgzGFRiWlwIZqhwYdasKNwmVGtnKnbtKjQ8maGiyuY89WL53kc4H04EpXDxRYjXlHXQi+MabqC9KzVKI88P1/Db5WrtgrAQBISChAqTzsXUCZJxZelCWxAcPjQFn9yM2BxEDswKLLFps3DkPDK6lf8LMXc5CJzLC49zONrl4bx0bxFJ30gCbwsqi/7CX7l1PvwSv5o4HNWVvKi+C/lAf6+y3MGgECUjxh335PLLS2faCPu7gDdc4xdLv/9s5DI4YjZH7uNbUn3+EPmGnrEDQ6NrAq5H/Ws1oxmuOwQB7FzjOJjnGWYF1djdI/kkYQONsjO7dH0EBojQJc+ZcfU0Ap8iOQHyLbyAWTkfrzGAO/GVWnipChT/nT68UBM4BL9w54r4/6TEizsdXYuml2WMdaaVdatA/v+7Rf8kokVwhnVYSmWS7tiJMZpHi4SeDTAYl6KMya2OBjHnMLTfvaYjTuKH9j72SKF1h/lFdPjcreALfHuPcsEVZtTlmXrVN65Qq3bqMPnh4j7x2XUgSfpFAkgwXdm+13nvzXsPeRE6F9DE90Qhscjx6/ZMeymFkLownpoBauFkMC6GWQMKlJHIOsld/VzMH4HHU+O9+VaLShCviVtyqLy6oWN+W+v5vujF+95WbKkv7oVDL615bZlHezDjwvnD5bvPPiZGvkOTnupFgFHrYkUUXB3OJyecvwzPxMNuIUTJUrWJ1ICeqBpJBbliUrNn4vhkqOa4hn7Cx+2lmhNj2gfp5mBGnfx8qkkyZsUVmLllnY0H4noGambAN88SI3CQXsmAtr2fRPnviVyimanDtSX7obcEBpPmrUv2aRv1vgzGRvA6IpFlY65Xl0X6qTvTrueuw4mE7TMxdO+cw11CA5j0dK3TZZmze9m8C4gQtLSQg75dwjyJADgigPZul4NZ7KKdBDLAOMV0Bh7+NM8CkpkI3cf96OmLFkQdWvd8GO75/+3xJrkdLSuN1Rm8Vc1WdCDNBNGSR1IhH0d1WJmZbyWfbXlRQ4soHsPgI3Iz2gQc5hFc/slLuO3bs3jG51VJc3+jQ3JpUDohMFeTg22vEYWt2AtWA8vf/HHNOr2cLw7+0Hrhvdgr6TTbqt10vECOaqkIFN/fU6zVy2MPeUF+nuCsunZ3B7IG6pvLyYxpC1gvamj12VcTzZhBqtUjsPDT0Zi7Tkdv1qF/1yhlb6+HiNzz/leEqsmnq3kZuU4j6o7xGwVSXcXYsmcvv2mLNLACOgdJKjyIk9Mb/4Q6LUDs1AqAKk1uPvVOTQD79/M4JekOVrvG2xMjWeMen1OUb/d3lvKJxrX1vh1ON8BzOweiJJL/+aLuWN6tJdR4lXrMY4cN447rO65ZRaCTdrsbD0pqhnOCLNXL+5YXUpgx5hEA7KNl0WAr3ZbELHRCy4kMh892H3CFGMy9xZ2GZbnmRZauQiIwHlNhzqNJ+81o1bS6Fvd9xgo461GBG+xswHzTs0HTxKSu5o2z+AQh5lsMawcTW60ljkz0vrK6prx2grPWVlTIS8By2n0tQHpnNTgIYrqXu1HQSpVioF39BP4hhHGWM41e0iOpiGNlMr7f3EDe2c5cKrRpTErfbZXOxGsHMX35zuMApm1EVnmqLnsnD+YL4sMtSmYVjmAQvVORoqMw0xloK9vWVEpSGANzq1vVhgPTm9U2ME77WBPzYPXdVo3yIAy3O9oBUySl5XU6w4pHDjJA8Bvzza+8nNDnKRrNw4HRrNQ24vCMFeqZjteZ23Urw8M3EtTyb6GFiT7QdDARGj8SR3mii5KMXuGOtnz7vcJtA9Vwa/CRrXarkUIYPUD67x2onyX6hjcXoy/4Jipl60x3HsKoMrzxp2JcP9xeQfLUP8cj5DCDUK+J/E393gDZWLlawxr7EbiXvbBFTIIsTSPaV9YO4PyKqEvFPN52UoKtnmt0J0XtLQc0Gem2H7qq3dL3i1WUtPK+YFYN+nNB/qzPGq3B3nNBT2RFqYWEtp9i6GFCYY7EWX9lS5ESTqlWOHAoGf3Tw8iRUV26Rcm+47vopSwKD4vj1KifmDbO+isZyMXAVS6XW4ysGsRkfeToE8Hn9AZKZ4dB/59LmZJjEc8BvxXXwSKnM7aKCprIhv4i2ymWbIVIt+42dkX5kOmXdyjxJVXWdKE0L0kgrbu5BzX9Vg5kFPES9CuzENyRpjQAf3SBVHlhBzIhj/HSZEOm0jFc+wQiEGoZ1y8ULf8A/46kpsQMgTFG61C8dPpztrEidnNEkpYVpK5YEEBCRl12+LG/F+vZBc7z1RmdZEWWlh3RtGo7h2c1aOMvObXGA46ECqbsdvaeJejQLFyfoBEDuhebqxG+cUdnvn8/NCSXo/sMrD7Rkv4AfcKP68su0nwivBqD1G17akLhvJry+ReQ23gSed+LJQiPkKkHjLdHP/HwVfnogMxMqe73eufsLUSyg+35XCSlvZeDNpjiVh3uQe2elYbS4+vEn5bLrSVgDI9lMAFVMbHlgy/9jSwrojIl3PCnhu56KsPrZZOnrADomNoyX8xSzGigsQoRPgXVftbzhcyGYZBk5TX220fpD4I7lDJY4qziettPeKmpLHxi0Zag9Wr5RgJYV5rgdoAY8bkQq9F9ptBdq58GecK0IRW8Y+TpdyLAer+10MLAJMKSzf+dpQPQD4hRjRqKHxg67IM6GG9+EXdgwq79t1cZ6ivC4fW6mzZpmgo3bXX/6e1GASEt3yhP2tLPPL4tkO1IjN+Gpi1dpMRxW+fq1kom3PZaJ+CunDr7JBXqOL8YoX0p8BCgsw4FtG4guY+CCn464RxkayUOO6yaoBkHjZKUSK0cvP9NKrxKeuFEewJk2exMlOlWUlXzFXAQPZ7sAR5vOrIRfxYOb6cK3fsQWEWif8Q+Wlcivd8SJzhyXZwlcaW2gxhVdFsAY08qXqFNixc6q6jvxLIbJBZlAh2SiALSoII3SpvozVRCSda60ThKElAS37V25lSNU+l3Nd3zfpgkIoB1YqtIvQNyjsy+2rD1GmcmU2dgLl5JvWmf+7PVU6vVC4g2FLXhhWoowGJvvjjI4uj6MKwC/OopkFuBvbRXz95jDPXsVN/pGkC6DdMNUaHlWDzaT0Szm3tE/gBIoY2QO+STY8aKEAjI+oGmrEDdIeWH/N7iWgij7rkHwFP6do9bBtY0M7fgJ+f2RD5DHgJ+Gr6fW3L1ERyszidmZXni9clxRqyC12GtqUZM8sE9xJLNhyhrqT7JrHf3/Wiau813GKO8B4vxRX0JGo7VeS9sl1mWTAgchkE6MwgR1XDjAQLs0m2sN6bKvqIVNxb1HmCMacrG3dSGFsUFDNrx3fsUz6vtF1Yw50SwDHe9eYq+a3hGssQ0IN8ChRhH0XuxQ/kyB9OCLOqF3kObturta6z3FXTXL+T9/Gde2ZnHE6an8I2U5Y0MGU75IMM12jseY27MnYzWtQK7jKrhDQMr+xnKaps1mPp40B+10++v4rmVqm7cdsMwT90+sEmA+NY4pjoiAe1enwMqQcECxMe2qyskUASrr4Z/xmrM3DLfI6YhEdQQYlNligPybKFsoNruWkg1bPqdYFJfJ62HuMB0j2qZVqSabIDkbe9RK9bwXw/zzoraQ01qqYpeOIoO6dhSb1XEJGJ8ap+Kit/oeRTNDyT3BE0aoUdU4G73EcuJRmT4mjJsVhNoQVnhSIr8Jnl82hmFyNzgGHEC3GaUKpbYJJQH/F9m1BvJSXe/+T8R8t1ZBISuHywd+NJDY8dU8f8eGHuM8VyFiNwgFaQx0tiykUTSBSFC9Ma4FATVFRkqpK7CVeRVl/JZ1z7bWxaJPhFPnBPfnXJXCSq0lrULY0JO5uM8OytNpHION/cmoxrEb3uCC1DVovIDecE3g1DCFFKhgTsm5O1mFlkVh0XIxOEMTsMnXYR3EZ0j2zHw/Mn4zj7+CmBGxgg5P+t6C12GhxtpdmlCNTSHef1bSdEYa9C0qWLEsA4VrllL2NJjzqLXCvPwzsplCT8/bQ2Cw/jb8IyxrtX3LI32sb2COQwrFS9mx7urrxDUlamP+yC9RZxXGOIrmQ0QrbUwD/CtJZiEDRi6LMfqKjv4K9fWr18WNJl4N5gN9avahNOJGe1zaUrE7JivDn2xZdEUeRTPAPILULt9Xwm6YNrPeBf5q3nKpZL/wTDR4hadKnvgEK6F67J9iXdpJB+oQu+ixdq45LVAdx+Tyki7rrf0sdlmePWTwZ9qbOtmIPNaqzrX9oMDLdG7xvwRBKWBhSrygMD3NR+M0unRsDDRwAoh6ELBe7Y3Bn+BKaeO97lRtXpgsU3y3zPAXOtuPxU+9wK/94FkkcbyzASJz6KbcqU6aAFwTs2MHmD5A1pvDXVHZ2/UsXa3dY6jcXSA30bDatUfbncJO2QnoGNSxFgeUEfVqdfRJ2I8Xj+21VaqZOmlEHvin1gqcZQhfoYd2ka3z9DYjWpm7gKt7dEDVu+GqAPVcELioQwQcNQbwoyNVv84WaZduwuAx/lOfWcRfn+ygGvBGujHadv/Z7iqqzKkZ7lzWOrFKQLujWBHeC84zDXJ5Cy0tWVTIMpv6481RV3kOB1yGrg9If/v3jvoWzP0F4ZcPnxqY4KYRp+RM/+i7OdNO9nUGByGl89s/5GwuJZNF7HjZO7BqsvYgHwddaq42EXPKbn5noyqKB47yom2bAbFZhMBhoaH69i9FjwhViIv9zxGQMYPKxVA3fifhTSSi6WzogEAC0MQKVKAZwhahGAaQMCElH6JQ6WJMTdLdYk8+B6YTdL9ZgoYDpqqDHzkzTxMhT+VvLxFEsv8IzsitY1+Ll0F6rJH7Cz0j0V5OHxN95MhlYQSv8iHmgg7L9OA93Zxc/4Nhrp1ZImLmzbFMGLgBTpewzDoabqTlfoGydZyUrypL4YERsbwbUPVYMlkBT0ZcUBtt2FnoO+3etpP6et+fpb97FsY0JKBwGEOHeb8Q0/gdTJSF9ErorHw5kRt4GpggEQqdH4aOKFxZHSgbS+7JsEhDknX8HXQnrTHIGKBfztl0T3q4etnzWHZjtWkZh1OwBVvVL+g7zebrgbHj4qHv7gQql1hSzJg5jd2sY12GmzW96ERbFx4eH+4Z7UAUPB3COHLT7iiMS6yoHsU6lWgymfE+rQlgCZPg/oY7C+wBiIlhFtN8Dikd+3BrYvm/JJGzk50aUokuJ1sTEg93Qpoa0tca0sORc/GiRmehc6Tgl9YK5Rv/Om+XzpC3XBzd6YcWv2op1mC4LdPIRET97g1jUxdsqJEoz77tFTB2RzSWeoEorh1yq21AsygZfojzPcPVvjVXztqchmtBwYf7tWEpsUYxn8XIhVTKVrWpCr8tP2QE2+qmYoAwhW08jsroR/K8EWHKbj2C1KG8G7uu+RyU8J53uV+xnmt9vEVdPbgv0esxBvu5zxc8BkkiDALvSFzKbEyatNGiWQp288JtC4lBFlDuZBL1owVw/W7Ph2qQIdNM4m/egC8V+5My6eVxpb7Ln4Vs9h0GV6aLOdzXyJkuDAhxA0ukJpOAe+EXmZafiy8ohtYsM6bCG+aIOkgMmou4VL8KFFjIa+uZfqOAYnS1uFNndYHMH0MbwOfvnQHTEU+wXyOkUahW3X8O+bowwGej9ZJSBin3QUpXyz0jMudtTOFUpz0RsucjZ3HFQ+K/b/oxoLcbzrUm64Gb8EKRYziY/HDyfy3HXWB77sV//29hRM+SvCGZDKoQkMUEQoXfwVc6u9d9s9HTYWurEqhaBGxegE4IH8Pab0+Gc/iVJZwwnBIvGzMYH/AA+3RuvFF9sevb4J7zbiQBtHKWNN3lSN0LVFV+YkJMGFd00VewzFuyQbB98WuA02OBUOgOThFZf5aRWWrMK4eZNOsPmiL4xpn+DbPtrpDykIWG5GHBezLKiuhIuiKTYQFIQFlAXRXZmjx/xmSqMe5zPkw/WCwB9hbObIjPBYqvhJZ0eTed/Mv3NaV2TIqHhwJhQY9TxMaIvSjFYknUBE360AN+mVUKipvULdEZw4l2zh2L4kUwhwMFtSlYE5tsXzSJhhSMcCuzv75BXE3rNh/re6E+zDmhiwxgR73yuLQBJsOd6lTUo9X5S87UB3MginELxyrvh5VHHof2C22igxHhaOeLHt0AeQLZaBKjSY11I0uaMXAOmLyX/YSGt3cJRwb9Qle6AMqnl4qfRK9UT7fLncoYAA/QCzsOel3W8dQ0wbZ0cXTd7Yy1i+0L4zrtsZWtmyHOyp7NwLwSZoXz7yPS6pXEmZFvh2KbweoJg15ffwtWz3ZELBpu1AItUFUNWw/UrK3I+k4lmcA0T2t5bRSl73H8ZpLXoFcVNckXnxhS37xQuBGhHqKfVAvcTRsblJkHhry4IKmgC30GoiWDTW876CrxACfgLF7LIO9SbIR/FA8d9qO+uVOYAif8HkO6lf5U0/IGvwonBCKpka/N5lnHpVqeCJRWZtu4NS+GPzOuPBhbCkYqkdBBx5Na5w638UTOBQkK85ZoP+JijLEE4g0RWBswi3J7NpdlBNjYRvI4Wfg3fMHlugJD/W519Djg3PE0HT/i1kIooBV6UeovdvEzPpVCy8QsinwKv4MJTG7/ULlmUiKqmVoWWHCLbN6RnPe08MMbqbPfTUtTj4lNUMVTGHy2BgOeLW8S4zT6FX8eJWdVlvUQu1mLE48q6tcLO3f/4H7+qE8L2dacomzAFZbcIe2piMMeju77wwoqeh3lR+wtVjrNf3SSX4H8qzEoM3e1TKgocON5WcT0JsBV9XywF8Icy73l6pUkRbYia1AzjBZhAs9GBkRkv8pf9xyBthaW2lsHlH+is0crrWmPum8t//JLl7dXn6HuAQMjtfWCXcVribKsDXDXDQBu8W4Lbh5D8ErTdQ+hAfMZ534d7tyMgQ028zd64urfwXoPtTLTaIKj4znq317DtexCeKYq6Hoa2o9cWfoVWI8wNtoFpU2o5ODLInQEj+3mkkx8sUxOJk9XuekDDno/PcR82wU83pTOjqRv1m7M1DxKY3E+v4ZtSO+I5i2M4tWzje5w28ml4KXdiSBbYgefcis31gquVnHZhwp4okdMZQJFeZqvxboOsXuzzqsqynaACLVI+1Ph7T/SeWYDhhu08KVWmXsBDm65h+GcxSFyc7SLB8gESycV5ZMUxCytOfGnoDA0T7ZnOlhtjVG88eIfiidLtWFyixRzc9HU1r9HFFK8DE7ykqd+PMk2DenNHjY4czpVOMtDKnCn7PlMVYQQZBoMFmqBKNe0MkN4kmiIyCUZGvX7BxWn43hmKXqA9NdnCO5f02in74KfD41ETH6B3Sg0/p5mBB9DQeX8ppFCKTiDPHpiFMW8jv/M5tVBHMXWOkofXqelN9EJQhJyJ0ye3yYym2vyuus03PBUsIY/gSyjCfQ72jmctW8F5LxJh2ziBILZjSauCNCyjbtOHejrlgyZq6+1/fq5U6lpLlYMFbsfI1VsLBxtqmw/07sdl9Z3pTWFfd0xSo8VU+J5kNVBmJyJi7DOs1AhIFVPhGs00XrcAjnJUP9qjHvdbfY7n5NsZqc7TI+zH4hdZGvqt6m7QO35mT2fcHVudr7Bxx5EZDu7WqRJVsfP7uXkzS1ObGK4UcVa/C5J+LyT6NMjhgnxDllZWUYjFO4UrHXTtL7XrRmoff5JOLNJegLtYG5zo+EPO99rXeX8aAU6UqN05W6hA+VFNe05MYFwysh68ed4MS2o4hQlEp8QL/B5ej+RYhvqdxWKOTJh4Nmdj1AJ7uGcL/Xshqlx3oZ1ATIMpTTrMcBmeeuPqq04M4H8uV/HiiIIQTZ06KFiK+kXHODR+IQT8JJliu6nYNpf5BE9jGelB97bVsfW+tJuqvRWy4e/jph1/KlNiE0G0FQVcG30EMkCAwP1dAU5O6JnO85vLsqw1g6yoB04QbgoxHOImFZF77Z0nStAwZ6iAQFigApztjAP8zfU1vAhT3+UkYTOdcdbrhD3fhBRnhRbjZeJywjk+WerGYXtRZRV/412WmBfGvPGXxFbrXDoETLs5UJffJpN9BnPgs+0ryohzyYzXKeX35Rmj28YFjIFgPD1AnalGV5JUC0KtVyIUH5NhEcITIrAuHYoi9UKAMzZH1NKN7xVw5j1QgeaUvExhBMHUQXyh3i1iK+wtA7FnzMQ5qbimz1utd6aSDEyaG9amDsfO0GGgp2+6NeimPUqh3HqtNvPvjETBbXOpMgf1Rg26vH2EQPx89YsIf3Urz647jCV7+RDiyXDlWdzsN5lTCrl5ZXZmBwRjDpz8ytajMIZIt2N7VEQ968RZfUFYiZSF2Cm4Qc+AC5HV4wU28Oh+8d/8Mc30BDhh/iGpKKn0L/0fM67uCuoEAKOgWFKrC1TLMl4EhjHwTKqRyFlzZD4o5oiqb35Y06hlbvb09Mhc2itSVywAiV9kdnGKCMuSYi/CHJuD4RcvE/D/ZvTTajx28xn2vNvPtotnVCI0cFpRNhO14jeBBtgeFq0LNaN4aPHHGocWZrxWi6OoQ1cD15wb9kupRrACk0PVSUTkz0kLBCoYTHx74KRNw9Q4CJqsZBvmEfxN24+L2I03suzjwQFWC2GQd2os1VhWAoypXEqbXtsyUQoxZmxZDFSDoePSSGioypScENAE9RO81oWIUtQVV+tdnVszHsFS8izv8QrvQUlqCrYb2B1SNWdx/rxOgwDE1vNQXdbYtdENErh8qVqH3clo5s9lhr8QvbiyZP4dtrXWYaLt64YAsAi8vlQsU39KIsLWoHB30EzJmp0GwqQNyEiBGvRSTvWe9EE6UWXte8X2IiPOyVXKqDucSgSk1wqLOHPnQgRXqLDC4UGoRcHzObNJ8lQVS8433zfW9ByWUvPLdGXEKAwI9yUUGB4svlQk5QyA3iuhWHUg3nt/Y6jAEl1B3vC32Jc+Jpyj9n9ozBddiIkPf2mpXmnQqvuxoPq/Kl+GkpkBgJ1kAx/DevC0SIhHTGgMNx6+HQs+IFYhFwm1LQEQwZ/f6eCldmbbLvrR4x0Uw+R6GzHiNDZpRdgm2JIaftLKu5rg1bQOMUuFU0efZwM+C8BFKnN2kUy5Uu+AK4PH1B66UplWUfcqnmJAQ1HvnEnZm+RKyRlaVfBFpRszFZz48bh1Hmrcbc/OS4LYU9WMaco17QyNfluiHoUpM7GBA0cXigbGtc3RK3zdvyudLMCh7HUaOPcmScIlKgnhKij9qW6z2JptymzZ3SPSegD6LsLTIkQnsYnYKSdoKRL8RdQOFQX5SWpIupWYiaPcpr/dpKrBhAUFKQJzMAMsBK4ELBoFWaia2KM3uzhrt36CZH7KeIGgsAkA+NzhB09z4AIi5jTDvJO3PGbbQA2uAZBmBz57xr3qr6OLD+BbGvvTNXP4HGxDHHHelFRTI2iG0ffhD9agF7IxU5O1SvpOgHp8KsMUcE0dTe50O3DWp4r9CIGYlaNwef0lbUOUfifEZ426ZAtfV1+O3Incg5uT2SPwly5kgSIHkPPc1p5r75P9y4kcoFqqra5TuctE9k7A3zSCMDhqHMJQdg3GpReoU0WyNYXAu3BMqgBI4fV3ScprlcG7de7xkFpqMpXEg3giRcK5DINn+4yjF7xWAD4tn4/Suwo0zr6EKSQKd4z3kKsuVz04ZAsX7LkBcp+e4+yyxa/NNu8BLjM8YrnFdAg2EXLuwU2Brlv99aDRGHfTmrLKJ41lPE8/O5jW/W+mypEbnU14wo0aPkXA2TKh/gBI4DmkVkePa9cUdGQyYbC7+UuHL15aHjYnxMvOw5zn57c/dA0/mX+pwJLe01hVHsaf6sRCoOGfC9Fhs9FDhlYwuCxJVSTK0M2TOf87kmIT9UjMekibMBm21tz/SRs7m73GoZcnFLyfCY37uDc88KN+WfkCN8SYR0mEvmZnIXBmJDoDsEVdfIQrcY0YTMJxsn+Y4fGRkfgPeGJt2wBxJ34ixZJgXp0ZBmaVdxDBZXcTrT/0wk+TyaJo39QjBzLDAlDtERAWI8WNl+HU/YsjvPqO3GEoSQm6RBx+txyP+mUeQYS/Y+R2wX/xekv8k53CrhHIYEn0xBGLlt3L590GsbBmh+WGASFUktIL/PLsAgaotg5Np9NvxDZrDbiziUFQPvBHlWIaBLzXsMfVOz9iESQkgyQVogKyA38GWJ7HC5kbZFmWYBXQOKU+1hNSniaFWqXO4yYJBeAAtsAVUSH4ZhoYaq9Z3Z0Svg97/kTMT5uhRJ0+tSwOhhE5ilBUrZfgq2HIwC1MZgzLlrOD+KsGM5rbcYRiugc2fRjx0EXlMXzArexOcgHc4NhBeGAAmw5mTMDzVvC6ZpaCroTh5IDbVMEwHsaDvylF4y1E//MNGovCHQSGuylIY0+grHpmqZj+oiYmbm5yqPXCGhukbkzewUL19bEx19e6HUoy/KVRzJ14WmGKTGD/8wTZ2c3iDyfj5L1tLTr5MFsvReLKQ6JGSY7c6CyL0ME74CSICyhrVoO1R6Off9UVXruf0mMKL/uULMHvlmdF4MiUIK8MwzEzfHopqYaI6qvAl7x/p64N/KcVbUxM4GaWZFOTluw7ZDC/dGIhBT0kVSonAM3RFOh5e4LdOYsYzWKGO2YwXeEnbDbx7ashG2fV3ITG/4src3hrcCrUezUHWP0GC/jraw16GG0T/iTqVaD8VBp9I7VOc8pfy+EtCOh2lDmNlqiJQQXzbze8AY81+YNBV0FKIMO+YIGRqs0RG6PDfeVDW08a01iRWh9jOcTshrLsiyYKFjFVEY4ubjIOSTpl7ewa1yTC2Pw1BiEYPvQB2qW0DsCi+9weL2/NWmn/tFB0A48Y+NztH3/hwunA7oUhy0hyIoAxc1q6gbZowXvu5Ns/3apHE9R14+fGcN60dP7zT2Pu6LbAyW8QUms3BtwIPsCkbsf0C9E06Y3nMpRPdexhcV5JGK2WfAbOy9GAS5+fI14HlFnaqMzJu5nCq7KUTAdmC8AK5Ukm2zJdFxpPS/dvmgEHxXCeR82xtIUs9S+ph9YrGd8Q0GXRpPJ4vsGQOGEqXCkkYQg812M03GGgeir4e4yyA3LNF1u9WR1shqJgPJRswPJufjzA5p8CBtsXD+eHCa4aiWqM4i+ZJLgF1lt+W2wd6sb7Vv+M5s/s871mMk27BIM3gsaycrY2Otd8YoBfcO9Yeha9HM0e8pBlHXQHXe8ebDfklp7D5eYM0lnl6jxZq20X5HE9ssFW5Zudc6BG9thGXkQB0WuPwIGe9E57D7f9kcQ/lUUCTGkb1F7UYhXk09DMEtLWFrsjdPQoFo4uA7ZXVX/RTafCpJiFoejHpSiRT/rQgJN23BA9DAQJjqnHOGepxrKFLZNMCx8vFNQ2Q1EblOX5XFYfZP3EOaac5SU3DZy9mo28gXEVK7lRmC4JyWOYiB+3KMS9BOG2ha6FXrYX6+SAzs7Yb8vLvwUJ3dKnl0ivbIffReR5KQQN5XyFVY089hOW4BrmXV5qPUn16GtrKt69UVSIqNsSXlTxFjdDUnMIIAaiwANqqLsj8VMElcXuw2GyEgfS++/LhpTXcfCciAiOSeo+/pPOFjIrF6+3nFdpytoqI68OJmSAzu+FTuCza5SrNC4weSCoMhVdYdGbaYkTzu9cBZ0x2Po7E9PtohO22wiryredLkfj6DGhpGmIS+ZZXCvUKDN4Z3LfhWw5h5OC1qVSSia0oNaBcCQJHgMry0kNuYPSM2DZYGS+TqaWUWfhEAsjKSv3cwdv7Tixy5SY3D1ZLLo/bHDRvtbe69G3ZSvxcEdtZUFEnPhZRFBsEutxqK/re+5PN4DrSENkLevCOk7/1pP6XISEmPP8Tujv3/Lp4DlsAkGmPglOkIU5y/WOM80CQK+19aze3eeRvQSeRn76Szj25EshP1dt5eVFRLfEHuJyBwVsZ/tUKnU4+BQFeV9WosAXjtFWLDf74oT8ZRuRt9q6Rd/rofJUZr8JKSHZkpcGSfmWRsGp+kSLJt1j4Rx7U19nfl6HIRv14WLwOn++sMoTVY9i4m336LHCDdDvVY+BjMTZ1pCUhFTrNTCu/WpYxYEhafUkDTvznAFib5hRz9L2BZzK3iFws6CsqQYBtPsXWwEP/Sjb1i/pTby+sJbK9FHBRD9k+8sj07wCvVBcf5WicXgR6vK6hg6l4MYObrIC0c5WpiJatmA1i6tpEaxw0mDDgO6zKYoA6BK4yxHjL0S+iromteOpzIRKY7ji4oHTVCm1iM1tBBlyC9mTfMesvUYEUQ1lIhjHp+XumE0CTDNnom1bdgOIKXZekRf8SrlRbhXZjy2WX6XN7A1EnesJxnrDGM8H9ZX5VLbku4To7cSBHtYQsrET0MlS6vslzPOrhfEJKxQBdqo/3/NnmHfdyht8Jirgm8fHsA0uJgjzNbjNENc9uZ/PeEZ9UvL9y3j0A1IRMmbTyfH8kJrofv570ElkwyoVr1ceJjAxedrxWVi5KjaMd6TBeQdN1FnYtZkIvZhX/SVaLFipYTMWeuI7lFl6ZLd3BRVYdPjBS5Jggk8exBgSFG+JFWVvedABCGZHiyHzFEPQTbis6xnsR83CO+1a+jncqxY6rywskMLjHqsTaLRDtHjfB3P5T3zjQhSc7sEQgyocYbx0XmwQmhuftHUB3y5g4vMpYWojJhynPurSWi42RCTwgbeKb0m6VDuEzTK8A+vW80ynsBZ37CflXfwQ3u64s6832XKt9me7c5ezeACJ1TAKctCx6CJE8mfdKPVZvc8wpv3aOKIKYDezDS4uCJXSYp7LScrFdXvpGf387ChXBQuriOjjunZTppPEo0m9nVP9q/1xdohF7s0jqX2IStoHRAOs6U0PcZ0iuI6huewvZP3lXBibjy/Sk+JmLVVRKqc6tuWQXQ0wCmhXqY+3VhngoetlUDj+zaUKaIvaHk0erjRiRICR3NZYzUVxez6U3Y4VYh6zU/U6Xp/L2bmxC+ww2gpBJu9VN7cTa+BdjqtWRcTo41VnS2AgsHS/pI6hBFI7q0LY5UC4jIsdrCM7TA+FaIO5DIuKlvsVWMdAq8VW1am0s7QVgMRSp1r4JtWoF8b27IEPb3e9xqpexJT9G0G7SDEdyTmKp9TJaPyjEU1LJVIrwYQpkmaBw6NOcKM/sjQHGEVanK2MUUeW8WU8ioLBeVrIZ3D0rT0G+N0D/6nTaNZ218EwD76TD8Q4OtrHuLzPTTX6Dx58f7CxZo6GHXOtbJ2m+WPsLbTvSdQYCxtp6tBvPIRd49piHXlH5ajj8fdHNPYUnEPqSrfhthUORCJWX+npzGNCcVCzU6ymyE6qM1EbRDtXKq4SMbF927cBZnTICzUs8iui0WgsvUmExPSRuuvwQA3SkeGfowLT8xlEG89MdGo35NpJ/9f9ONMaLJesZ7rWvADAjhKI3LyEzMmr/5zYZ3YO1pDTKldaY3IeifGDUUCuUMe7Am12dM3icOWZaQoA+w5+VUjnDubrOqDwbwP7vRMVfkEgVhuhZ7PRWycC9VPEWQ1mfVCFJsG97PDBWNobJco7MQzH/3IZlV9v9w+o5l+n5XjVv8g9bJ5DzLGm5nh4ypoc1kl4LfAb0VViBDDKFz6BxKJ/OqpsBzT0E2AKIFtYDBRFKnSsFtulcPGyPRAcw+tNtolt6BENCKJADhUXYUjg27vxNPoCvI+PJreqlVwmuLKxlG1D0ZeVWePItj4hIGROeeYsqlNcPLLceMmSR1svmQQLcugWmfVh1Fl/JP8CjzWJK9mUnexKQp1Vy7SyV21HlEETn6nqN/1CkFqQMjkBjb/m0GVZjx/noCDF61WgEuB0UwoH3S6mB2Jj4rfUXSMLNz67lvuulwcrOGTYAN3E368CAwsYo22INwzQ2Kpzre97agjqz7orl0V67y8QBOne0v1yJ0doiffTgq9ZzYxF+4qjP7RUNG9nuk8OQ9/V/KoWMwO/csJwrWcV0JSvh3RmotYI835PH3SZldwXhWl9UmtRHQQydhZ9UDuTPNG4wqSdnUYnEudNMQ4EMHdOyAgbJt3xPSdLvHzaBWfZ0sycB+cLGFrK/DVd5fO6Mw8UqSVZzy/Bu0OVOH7Aycp6p2SmqKkqajfCNHeUfdoVNq4dM8BSB8aodfHqNiP/KZxjA2mnqV9HAQ5erciLWIoz3pAywIBpHk5p33/YYTKrOCCUp9ttioJdPG3JeWGogU4OcjSWnSF10YljevX1PgMHZQVDGlmClRxMXYFs3IHd1tT+iX9nxddcEYF4aQZ8frQ0sU352oEWZMGpNSKXaUNw8otTEpE3x/AtmEww84QHPpU0p66tnhkt2EMa0Nt+O/jjNhGDSZ92CKdLHWC3LurbptZpa+2rsOH7ovrUoDsyXJrCtreGE7gIN3ShC+AxG6eTQG5tP2qxQMcqGiQ/M8NCd3/1ylpoDy94OK4ZxunsZKnK1NQhUGDadZ4Yu6hF5mGGsbbLYNfvzGgFEGocdoxZHuFfzG5ZzB5A9G9dNJDQ3s8pagZwWy51CkMM3TBukjH+js/4VV3ZWRUfjgazru7puYwqXMIqNk6rowm02BBv/SWje7lvb71pVm8pQn2UTaG5z8wx0vqpqYGGaRxDPIWTQyBojlnCAAQVYrvrl8VJE+HBPibn7V/o3F8txVhsThXPLT6xHEwRAxVkQgRDP3CyDUfh3a2QkQ1JwsG/wfsJ2jpq2C+AuL4kyHyrN2k3uEgQOzbzSFaBFlq4T2eYmAhnn6b3j0oVRNgygCeYqoZXiodXhCPtiJ+WNOAeLrlqQHheoNMSjkUq9xDX4PlkusGAY/eu+BslK2po76bbQzqTj7ABuV1nAQ7ffNV3FiX8SjE4YNpB0WkXhRjt0ljZ4S98ERonKP7FZ6nXXaExakIiJR+GTXrpFwhRrZiZCXHBdsih+U6lhZFHgcPiDCKuLKUnypKMNpKZcx1J3t/3BkeKK9NuBNeAEI2lONN97og0J6ZBzrIG6nnKkYOhTXgCXk9TtUuqrffEYNvo4tJVoEO/I2FOl/2qlh5m+oozD9i6YgN8BvGBQ7bYUKgws8N5S+zRKDm6ZcbAARYUZn8CvGY3zan2vUoq865FN7GrYyc3UIWXLM7tuWVYMIgWiI6oMGgW2hMfisYEwiF7iYCteu4096yytUUfZxX2zBRnWnKIspNokzb/hnHEMHhdZtBTF7EzeItjEoWYeelOdFyFbycgkqaeG4YGICBSGws1R7WE+H1vW/lk1ZPXWDXBYrf0qJ4FRN//VbbVJWSqE2uU/GedrclJH6/S6kDG/Eyz57Q/kL7GtmYa7M40zLQeFu7J23YDS/rUHB/lWiH88MqutzbtsOIjSQuLvtyhncvTsPIrM8Vr2anUdag1hWA/P3/0esOLTq3hNFKzt20VD2bioA82G/iQlqMdEl3+QfM0QoYdxyebkaIdl8Vid9BHwcEn9leg7ZTqxPIAE7s5eNbS5If1o6D4ec2KND4lIMT5L9Q9wG0PC6uollSMVdhPJ3E0yYcn6JYXJx8wcYh1evf00ttw0D7U9o+2tsZPV1ytmS9hw7hg8+Il2SSEKrZBpJPMcKCBX+HsaLwDm0SwTaSL6p37d6Ff9lPT0BqZ9wFhy45MJLP8Efg8D2RIehKLRzdsmCkeE+qNDDfhPG9zTN99s+m1G1tc1iQpJ9+lwQPVq7YJWNZ/S/fJ1O/g4vZqL8WLk3P25q7iz6aporScZd3KQdRaf1trSHpcBxKPVdJy922CA54PHZCsM3j6N7bFKazIUKcES+S6vL1UfHgeYPk/1LgKWUSDU9GrmN74M0jCmjJqYVdxMdYP4kAxq0CSOZmqW1YGkHYuP77lpFNvt1y9utOWpjUqizQngfHBk4hD0yBjolr7nDUnmPpJmI5rMrt3rLK/+V+N/HrVMuvU9p9gdNxHrF92ntxbcyqLE03qwLxw70O4CytPBPWHFm0eTsSjimHMqwMwIDkxfAjCbJBvteWsuN0w5fcAVc1BMAKYjXS+MtwHfwMfswMxQfUSOdGKHkx+fUrOA8olSb6srrPorMQ2Ccct5ZNJv/cdzysHbLfZnk+PlvPyN1xCYPxpkDX7D+I63FQ1uhNbsDvOjD8p3jFfqsbwtYhoDe9lNtgwNNe9xnBYIQ/zi1vEbAsD8AcbhjtBJ00c/3uiMKCjoovNTxJfv3MnZNOIv05w+8lIVJkP7QlGZZFz7mIvdKNMSqKO1Tn6ca+XOjkBcpIvRpBlJbgj8bS6Mk0wQvwZfrc93JvaPvNknBYYMWyFJMkXAHb4WV0A5ln/x3gQU5q5RhQLDxDWwtP1J7EO5AFNnhms/U+UPJQ1F1tx3ouINa/r6u+ETKVT4Nn5EQMKlerOjQSS00nW4MchlvOZv0iJtJVtuQFj7JKlgQdrFup0ab3clXr/XUm5/P4umbZ9k68gcYwTxETqQNRt+pJZ7k0+6++m0HjfM3EGzYYWUzZsV6vqlYHD470OwVz1rOUJoE9ja5ZTeM8fswzFUi9UsnHxjlI6SRBLU5yZPBzeZsnVBlcYy6crfhT174dh+zwBBbeHSgxlfIf7sl/VoYG1FAPwAUMx4YXDuTeTs9rljSdkTfpXDuwnhHOg4punYsLphR7QSjBWZPbQdZzmPOy/Y8kEoxtGr6vz/hnIZds7ZjzA1cYj1N7NvnzwzStyDrUTd01rJaAJT8HNKJqhldGWotbspRD1eUa8xWqiq/M6ax6TgQrBkg2eDHWdiwsZ/9MZOGwaS38ylfVYyKSx4WH0ZqZje3JbB4xNkSY2+BK+S3jDj6N0mjkNi9oHQNECidtfIINCVIDpxv4TGOFpOsbsywEXFynSRBNE0yJpe5+9UuSYXN/vwVLs3rimKLTs6cUymJ534xUFHAS9L3n2sfIjf8DR2cjyj772HtbTVNjOtYinpqXVfgUKLLMUMGqsyac0AoKmattjpMLfOmPERQ0dkFF1lYDwfKG5BkNPtdGJDXI2XnJRsAspNujPf0prT+O+kW4F2dX2/k7xZyCWmc9kr+m2JAiC4gYD2O90pFYEXkynhGW442yCOfQO0BgADfR8jqIhqLOzDVteufNgrfajCyCSECRvpjNgPCo2CaFIUBgyjyYcObqfBNIrI8InA+LduPblVgqIC1KvXapfzMTmHPwhkgVATrQd4h0/08TzsgNU1t5cTYJtOM2dJayDr6yDqTbYdXv90wOjExTmnlaDIs2QcDxooQ+NDdLXKt1neTBG+2WpmucOgovcsZ6wQkZQVnmN2LQ4cXfvt1ngMeT46xKotQzC0yb0QqDF/XLQGbdSBi7noAxmV53iMqA3qi8ooDQuh6RarOFnnq6/Ecs4xSoxPgybwbaNBCI8aPHSa9M3go3aTJyoZYk3e/031Z4SegQv83VZfpqDPDAwA7VsWvJb2qh5jxTfyCzIKBQVYTyBBOvmpfA4kihGl1dc/FMEQCRw8wih4bXgPZ9B2wuMdVLz9vtB9uaAv6QdNEsXc9l6qw/DTkgRPGpgTnDIF3cj1ytj+nuaRO+IN/dvUgYMmXmCMM/Pc9HRmNUcJLVM8ZKGKWDI6q2HkxSpF4kJrhuj+HVmKcUOeBK5OqETj4MKjtaWt+Gvxs1WqKlKJML7w1U1GtPxX7hFxG7r7Y57WictT1o6EY/Kho41Gw7MXnxcoYfklotV7PB39gJsdHpTpQENa4FmoUIwdFS/Phc1g3QixT1g6IS/BeyjjjlPz35m2kgY0pAwmC+uakuzd4d6busQcMWre6S3bA1qkoawgIphSlVOsMnL5LQOOe1unOc1AH+KDFbegr0L6V6fQwNg+Lm2W+j0EZSInYeXsVzz46iCMcnScwIlqCyX3hxijEArueOmn9syyQPaoDqLXZ2C16qr8SkRSuhcZWrTc9Ic3adTCuhtd+lMJTCUDikCtXkTHcHUwQxGZfPMF2stGt88y8umFFofTRX4Na9WMDCxNCsS1yWOkjSFj2m642ZL6vaTThy0sV1/XcURjQVlflRnzWcBO4XwR8IpnhMwmYQAX6dZwG9Q+J0N6EFm86ax8vqZb6jwQrnyJ1TmBH2crzMB95sLTufkoJ6dfTKOO4VUdmFgIYxlfEhU1jFVzcNf+ipkl1mgie51GLMr6slxa19VZSQbKSDtECQbJBJW/vKU9Jv6aBNU5EIiQF04xUCwRL8/INLmDtCAOpJKxiE8MXpQcKIaaOUHzGoVa3aDa/lGIMWv5JPD2Fl2qoNVWXKijXyQHFUXL795Tyd/sIzupsNy+65wi8wSoga6V1PYuh0u07gjo23TvJqkgVdlke9VhaAwAoW6UZIlXxTCDy1h/6ga3J8ggvhcvPFbB9uNa8oWyRQP6nrV/btkZ6bYwIXKu4fuTmcdGHHL9pwFtgomu0N29WHapOKBxrbC6YRBPKQFTvZjr3nwPn5bbkDR8gL6qO5HM+uIEhksaohnmTyj9JEOxuT5B6/7G8k/oAFiYtnTp+aWMIef+OFRYUAIyRxB05Oc2jPnE/hp5WXG4bcyVwJjSAtBeEXhW9yvb6YISS9jzwzqfDr8k8qS4RagZvWlYxvj+DdvwqTa0u232t+N4ud9YQpgfYT7HIIgNPxk8Iy5hiroBw5eLWBJugVmcj652GmgABl2OdWSB4jyshKLZIm3vXLZGU7WT6QcqUm0a0gkRs6eUlHT0YIX4e/tOCXBSDNba7gGzVAr5/ChlXED48ml+SLl+8bNupjoLkfGuXtV5N99xKMBrgG5x3WRO+7xqmAAvKBPC0+TIK0vVSHuF5Gda3RyGNelWoI4++NO8ZBhpgKq7QPlUvgClKhcqwtfakr+hvnKrlz77MnYwfDFji8uP3feVHfpjpBfYlu5d8bJr7T4TOt6tZE0F1jlvusT/C3bEGOp6WttjK2MmmtGkp4IlkrTy+pcoibyXWC2Rcv7hrxFrAt6ENH4IejDSVLWn2avhHUq5wXQwCtioTfHKpRJViDjOC4Wd6WK+x8TqAVF5+m0Bvi9C8JwynO6oAYERfkyOeDWRxW/PL3XwrpVOwmgBb5Sb37bkQByRjhrscZJOR7YMQWn0edDGyFwJh9xc6W45OGZO8HE6EjqY35jkgVoItym7yhEkRjVcm/7u0NmABoboLkG+fhI6nhkPQK6h7gNmdKfbjoUxOa+6F6qevE5ZRT97EsdFd7XVHgIRHN4l3D+Lmn4hQarv/lY/rXeNXWbYeBt+XFF+WuP9jyKc0FS+vkZnGUlzSH6b5cpphsTOUn4qyr176f87XmNEfaKSeSs3KmSc+Ms4rPw+i1iaN5JGRYZeFGV1+T6siA8FZiMkwtuNjaDesunWVi8j0TXKVeVuG985CqL2qJWS7f+UB13lc/DaREcLPViNjSjW62dsGJPcEiGZxNZPoZhrf4vUONfcTHyxsU36Dr3YQXqipDrNfGbALiF1hTQCcaje11dcBJwDXHmFHuw4HVtpav/KFlSY6OLTVxTABbN19ewGEmVRYGnaR1mhVGxDnBLK8MetcjtXyO/3dkXfNPvkQrGl73JEVOZKUF02n1wt0EgVfSdNC032dZwpKRSzvVVlpH9xRr3gR4Ck6najGGecWqSTahR+EZQ3K/NW5SNst1pbcSNRsfuczo77XtyefoiXroE0a9PfjYWDYgzkT+wyzrwPenhDnY+YyJ2vo8qohaQA05unNe8CzOcFdY67LFHIHaihzWW/+Aa/7XRm/IQZEttJWhgm8nB/ZAk9HqjoHp308u9U/W4DZZR082j29QwcBeYMAzE5gIDI2OxKULCZ7QTQkz5DphwuOUxc5klN0/vG0WBv6Auhzh1ucgSqM8M2msh2oHY9NcnxnaW5R0BYPI4T4ddE4FFB3w2urCPhuVLxwJxK5+elRL3qJCSIpwBWb34wpe0e3Be/3MWMQY1w/miip3VWa7006eaGgDsHXigP0rsjFeoOMjGccOpaoQ+F3IcNapmzeKhpUZGkRKQJNf/W9q+TiNYFy1qEKXEWRyu373li7ezxEDmIM9qP6BZ891oj+yo/xmsDoqLCKA/cC+KNjNRnx0jtdCw+RXHR8E7moGEMgwra/geD6cXAA3uQP/GbI4iEDHTO3EterBeS6T6QmMECb1zC/9rguYVNzWZtOeTtw72jhlMfvwdQDvqnIQ9x/M6yUqQ0wRZUHEoO/1mtEoxXt04Z55PwYsM6DNxNk4R4XUA0V0A2cPw3UWAqIibXc+tKibGPY4arOWtC2vbUHjEvXyJRezGEM+Xw4yUdpLgFCjnz4dxIE0fLK4e7E+psvqYZqWkXwrg3DARd0uWz+o4xvSoUQ16E8RR6o3KNJSExJ+lXWB4IoMfF3d990o6df8nGbS58m8FSm2cJKkza7lEiNxwy0Saz6FQEERGdxeU3Op6W9QJZuS0wnGGDMXhXBKjw4MPJ4K/wFhLlOneLylHRawcE3wQd1ZCIXsRZVzkVMwY1jHIviv8/p9td/NJPzufbFgpw+89ZmkTj6WJ+aDUkPu5Ukh5by3pfF0CJ8AkbLk4RlF8xp+kOOLeW6AeWqtYqB92WpH0cXIz6AecP1PXQNJd+oHW/J1dmCMTO1IHG11FXQMDbKlJmJjKCZ/wZx4CNop8O6fwLKnCz9k0+nUorXM5oUU9qToykgSnaOXIk0uQKnql73CrSflh5Ou1cfIxgVAyMg73HUVeeP8VbqeSvvIAu2uFrx9ew9aNPXISVlFoKU/zVch/CD6pPK7VyU0H4YADdIGCIfizlo7UJOBAEqNu3JhCQ9ZYh8F+A1oP5L5zoIxZ9swg/gBJ2q6Ml6thKcPHZ56TPKEZ4kVIZ9zpBOeQdPtwJQHzJTBTZ//DDrGpqxqGtywW9YgHFnQLMLT5/5qU8eDAif5pMwdxG2YLMM89TXufHXVK4UMLiFwjz5LsWC96AtqNO04f9YAlbTBbVMFQHwPXFui0JCD40V/3lKBMxM4SjL7KlwplG1t2zcX8gTwEAs63VmNURlXFOTV9w4shxHwzeCDJn/QTcy0kFuB9DuzUjvPJ/6S4z0FWJZX/Lp3uviw+wEM4muKEI95WRHZF4seP/PW/NiOxW8KUC77cOh8yrsA6smUbFtEmxifoffZOVf44jwrbfMcx20xv/vbt4GLtorZ7F24RAiIJydv/7BAcTFwz5EPUsm9ZhCE/2iB+XFTAxOnUZYC4riGI2xyX3ba0faBQfuh485n4qm2I9ILi0mIeGGcxcu4+E/ntMSHiff9rvpLBc39EssUxsBajILAEcUESjo5hMOfH9G8kT/hdMNnGtfWUh9i/W0OQGRW9Rcp4sOmyg5uVYmJjs1MkOITNWE083SoaqGNh5Aav6Qr6Tka9i8+0HGmUVmhRsF/uP81e9Bys4xE+7N/v3Gy64UU2Du+sGx6i62+6AvbvLaxDjMTwv3V+DHhl6OIHahTXjL4THOwrNqWFuIE6FoAognZNca00e609+ehLFQltYdtB8MbG7IQNMs8RJCJ08ChNcwjZa8Or8A3sFdhsJFYDpMv6CK69u7GRbVKy4WTNpHTQGapgkRW4lAS85QM8vOnPNJBUd05fj+besbQAUZQRjw/W3hj6nLMpyYuRdTzv11z0M701rGd1W4kICeW8f4P6h8lSdFihOB5gizr+vqUWSNodsF9QMUMz0KqhgGQ7NTKf+N81fGNz/iAJlFqVzxTfZnk4yE4Ao6i1xJdwATx1yJyFa/0/dqgNCorKx7b8qPNQorZ0Ex4yyV3a3nRBGjQ0yuDBJG3WtrCkt63V1y10vzsqgQ2mQCgKj459JflcXuHhZxd6Qq9M6mZZAUtDkm/fr1e3r+gWUM20HEspCLbaTqZ0nHnCO8YnwwXX8dMm4a8ZH0WqYy71gOPUI6qTdimp0K2me9gqQsM6jClFHWj49ZtQ6qAAFGdnbdst0m+Ts3eGd9Qa7hd1CnCFtefIemtQ+0O3ghRbomuN9Ns2kQLUvYviCfiYCLI5BecPSfwgXrYHMOTkpCXEne943w4+J/813a3DinsbQF2xeWEdmFcgkO9hO4E2WRTCDLnV12xgh2P0R6HHD5ZvDUXFcEoavCQh+kgHbdDisiSbv1/hxBPfMrdnTRxtkh7Rjh62N8kpGap/PZ9evGVr2XtNSqlW+DiftGm8M8xKk7TApMXw93y0tLcv80cydATUmzRQa7IPWNEyXkKH1A6tycP8m+Vsk0jci3yybKyOy7UggqoCr92Dg/rn7qZJqqJp+/fdom1zUFI2OjZW6FTlPQaZ/97yJAYUlZ5Fo4jVKY4f877o6j2fy+b644ir0tk6N6z2NXksdHCrG9+DvZ7UGxg/lIeg4Df7pxFmKe+BGGWNqZ5AlfG4TytGa8MBRTRLGGsJWiKjujwAlmXpviXjK8XRswi6iTgjkypkJfJxRpuGZ46YgpUwP+lVhMAjYJue6Jf10zm7q7ImXTTi8ZK7GP+ftL4Ahhsz6VXAwrRx8Wini0ey/Pbuixm3HYHnBDwA3MgvsSZ3x9LRpCQBfpVehpM0RE7JaF3UcMrDmnA/9whKNhZSTw3HrGV6nBU1SytqF/vJEiWqUVdAJCRH8+anl+nwuLHwKAfxXvUT6zGFfvjepYhSfuhWFvoT7Dlz5A+jrDUtcOHfAsUP7/6rFVaG/baO0FcDtj2QaACumOjPo0fbUNrgcrTLpkp0B4+wgu6aLdYg0eSrNVa0iBvqvaKncyIVj6/0aPJ8gfq61lEFAM+N24JHCMz1BWXZiFKuWp3e7lQz0pPCMh4dRgCMo5OueTg0JjhUJ8mH8IOaeLnfXgjnbwS+WhgQRI/k9DcSCPDoOJITvqxSX4kVGSF2SEUi7SuFB6eb+jPnH5ueXUT74sYWOgv2g4Kp/fRAbCA3voRoOS/8rKc4Crp71igE7HpkT1jmmyE4YMBo0VBi2ZpXhQ/VkfEtRuf54Xh1PQSMfStp5gFO/2teCwVatVyVp/b4i4YpVr4+5kq9YLYbeO24AMdQdT/1muDwnz05uvvI5TJdwSRTtT0sELRzViUiru3BmS2xVTzhCGoDrCWEvMajEjuPdMPNj/ulYAa/Gmvc2QJXSEgVQx9cUJNw1TaPSnKnZQ85DLx2Wbi7403Ezaemm4ThoXY0CwsVAbEzlUqdm/825LaaA7+D1fPqZQq/H3E7pAI0OR6i/td7yJGn07hWronNxObMi7OgwD8EEUSnauWSXTtfHl10oF4xZol5rKbsYpb8SkDA9ExYcjhGhntEFc0TtUWA4AsuXQl92ZuFxwXuPUqnXMTlN83qJY7y9NjDkvfDCymfBAgDgG/3o5WSkRADIrI4gssprcKnWML+uKJK0Slsu3Azzvp0Pmhnf3dGb8WNIOJEgvIoeP/A/M5zSESl8BEQs9uCK+kcVXhBaqGQl00Kd09CwTCLfixiI6ntTX+NLx7rG/zeziapY/fYsf1aKoE1Msm7lUX4UZelSpdgZIYC2w/PokgMV+OuYm67wsdvBa0vPPm3luljhcid+ImfrWDxA+FtdOKtCmvb5IwM+wqE59wUdAzvAC0K/t4eQhvGFFcIvpFp1gsG9nuDFtNWW9c5D1sNi+O+LW7iEih2+dJLTvB81TivmFqcqFtK1IuiHdAYEtVAWYYw88CN6R7PD/KH5L9NIBgA3zqRDibs5a6G5VJqNXqvspUvoANWd+p2g5KcsOvj5cXqTXZw4VKPdOZhWLeAoBA0eC/MzrLuGbBdHOMR0lCvw55MnMaZxMsvgwDS1RsBh8SgdKOI6FVNM7qv/F7Xx2brGUeKx4vwkhAWcanP1LW/lHityaCSuNvC0AAYlxt/ILUvxufBTBOzNSQGNaHngwyn2TMgmO1QeQGmn9nSpg2KmNzT3bDtM1VrAJR/dK1uG1J0Na4lUCDA3J24pO0quNJwppCHGCv0UBD4Os5pUx5Mn+WCLTKnCULGmafLcO//Hmt68StOhWIufYsiiD8KOr7NHvPC8p1AMfECdJRfpFyFYoZZN0jQjkVCOc3HjQEr6TDjtPUDccUSVI6pm6twLzkL2HYq8wBt/g1Tv0boApe2nCMuMUhU1M6dX1oLcD9aa2TP0gxvk6EyYBu2/7P66fGFbggLv/mmqOfl+CtCpuoY5JzZIrJhN7/EyZh8i1KbvHc9QGe2pfpVgv6pG4O3FvG0idsWYDeT4EkX6e6wXhsjg8OYBWMgqm9GvXjtGFuKqdTp3sIIKvZFXX7377KMlV7a9u9t2vBCuCaqHTPJHmqnWefqZWfag7NyAQtIY3PumjP9RMo7CMTTTZcQ3vxD02jazN5b6w7eqPO1La6Vl6nlY6EoLXlNHRWZ5/uFz7L5txI9qHZo6e3f3/oQcZUTokXiTZ2f/aQbl6C3C+1vaD+Ga2Q2QhaS7+7W+kDLVaZUSt6XGfWU7L/CV65cpCLTPJvenJrEm5VYwo2ktNfPJNNaVf05uaZqLBRYCo12BYUkw0mdfMbuf6B7/bycghqG/P6+9iKb9N1le5SH8/NdxEImh4+Lmyz8W+Jsf8RHT+hiOnUxHTECKZU1Jh4SRPMqCtDcabh/iFR52eorDHFNv2HyqVxohqnkfCrH1gEPH5zJvBh/6rqM6ZqdWndM21o+VPov4iZC9ElT2j9hrz7VN0YGZyrMU4bOQ0l/mgvOZeKtLa4Q4NB7KY+8/stKr3eCCImNWP4zcxoMD3DqB7QIBFjcgekCjZTMKPvD1S7aQhG6wI4S9zYOovkZVxuiJZWPLwuUlAOQY2qXzuI1U+7UTpp6zko2+33/cyfZAcWk5PIOw0PJZI0cV/HUWn0igThpq7h6YfAXuw7PvwwRCcFQHvqOpbnICQ2M3kIaxDDxxx4HcPWPUTWgoU04DAqp3wYsf4MBeG6Patv3JPBt9dWb04UgRwdfdpjh4OIvMhRj3hGQvf6moHXyKhovF1XyeToQ2jCJq4qtGkT8wCpLVxL4nkaSq0qYCjFNGzW+H1AZmGubg8OjgSSO4lC+0QgQW+Vo1USaOYHpFfmGZXCle2fOb4S6LNlJmlOEuvj8G1zN+WEwpes2hIv4wTfwL+PXS6KevPMbCOdbCntoOKIEpG6i9blU0BEVl0gKVIaEAfXwYO0eKjOAC1HGn2+xUTmEaWeztnhd0Kj0oKE+fTZoyfbsqmR126SlJZBt8rw3G7ksZHC/L+hgdB8CIsQqkdc53Jk2Qq83WiHXKpbKUFPwef3Z+NnkVsPw7+54Zcc/RTWREEhB+hqj+XhNIhMdDyzZzEiPP3m0iDIkAbMHZdANcAEKGZKw6bKBIjaCLpEvzwfjBAtZjbagQKpUuwV73OayTpR2PsZse+p9ueEhZRUt6kjJdPYOC5m6BgcP9zFA4lVvS8yNXilUS5rBxIGK8WRhlfr8QCHCXwYgxh5DB7saMy9Am5p8pQU++TYRtPSAtWvOIdk+NWlV9lW1qfixl0RZ1b0xoCD0B69x5AS5MpbjRDClWEKa7ZsrpcCg0swVAaj9xB19ylPyJTHC4Vlfc8RJFK7JbMukG3i2lmYo+vq9VboIIy7+6nEsf0GCGvER0VaF8MyyGAFjUx+E0v3r0+qvGIWcOoA/ycHIOwsavzON/pyJs8M+ZFR74RyVAl5v8l8s18qALSr6PvLOfP0DD/MwGpEhksE7iecsjD+dJR12nUgTSwIyl1dY7lXqrlkYf3bFoGRMmAnLwWISdxn4nyS8QBqM6azRNRzGew8tWR0o01FBODC8aaAWVfYRnsQhrKFO+/vEjXL4/A6fgP8ovA1+kUtDEsg2vbahCo11e3yvErhVMdOccoc0eXah/C56GPZtj+f300yUWvy7wtLJh5aJBN5hH3TPW+H5PW2xRuAlSsEC9fr67DkqWCLkdLqiCL3e3+XWidPyAlXUTZFn2XADoDUMDndyJIolKcA/DQsMdbGYG2ShJOaAcsj8w7MBjsCyCRWMjEzJISoxH9TaObEIriOhnC0jvvPD2JKrXox0mHFvb7h/JX2j+nZFGGaYokiJoTnM0e4lwu/wB6Rz6T2b7jTiGRKqAxscMfQOoHhzxjCXO1m9qVLW1NlKD75S9sQjSEmTQIgylLl3P0tUGMwK73otzAxOFug671ODQcAB6k1/8jYLwUuoAVljbwkFlooM8xSLv+HibW34k6/kOMxILxKyg7F0lYPjCScsdTDwlQmcZ/urfU9GLOf5fn5u426X/Uq5uVB+1WjoIn7UO5YxCLP91jBLZsbwQMXtqBwi9PO0fPT9uRzOG55hj6QWpEWz+LjfMMZEq8QNsTNcH/5kTZQEh3sk0J4cI9kesh4MRlYRQYVcT6Jd5DbVD7eXNkfH7trJCom6xosSpvRPiE64VxGUve8xw0YwfGX1wQKc43ikUth6aiTDvTalZVKx9PmzeRljcvdKsrCGo8ZnmsRUMDPvzfXY8ajoN1dHLI5ZA9AspxG5wKqyZA/M1Lm/2iU0KvTeMJCNjHCSVF/Xsls9dbhY/gJQzJcQjOcDJ8gphtT7k4yzka2SyWks+IndW99AcMhi3y0BHk3K8G38Vljdl3T1JQYuvFE9zL1Ufow3GM8R6SXo5itzihLQvTKl6uv2TUXYj3JK4jc4Iy8kel6YY3iVoxPQ4rCKLnHhpSthzqoDbvSeL+eLoAecU0MuFO6VZDC/zHeM2+5DB7B6IK+T45ifNNuPVTs1cqkXjzwWPmSeu0zdNeA9oPCWNPqZGHTJGIGBdWQ298Eht3DI47sLbBqQvkJz22QgjR04l9i7IH4sOMxNvkEI4LhpGPaXRWb0iIHumz+cyZbN6mstqi+HWM6ET2VnHChPvvQpx35FtYY5iMOph6+MISO2uUEn8pan5K5ydO+eBsFNAkfgDwy3JU5oDrrmpPltEUOr01iX8Gi7WlZx0BXr2xTfkZ3hfGz4L2I825QII0Jt/YAmUIqHZ7GuX6HtmLJHt7/obchD3o1AJxzFzVSV56jWIbAiufcdJxhMzOOTXof3Zee9OQLEQY9M/wv89aMOZNWEgAJLgQXhe1Y4W6L/YfsQu9rDj+335hn9gxzd0Atfe5FukpR+axql4qvGqF7U2XHlM8uxwOzZDIaPiLoCPXVlyS39irkkWffRYokoZiyM0gdstU4gFaqoQBRjv5kj3weWtFiDqwjFPKEQdDlFU4v2xujhjyyGZHQCkhcFWwGWihYXjehRlpFieTjZlvuSsq1Yzy9aamk+o/D/at3y2wnym5iOhZAPu47L1UHv3QWS6qjk0qwFfhh5Icmca8srjMT0SGgdc0lzuUckmfZqNHIqdbWCXzTICdJ3gd0rjb87a3g9k7hMu0FFYPtcV1VaiK1okr9OPRnFkeXOOvzCfD5/mgVB6RWV2qNc2z7tjm4OfHFoIUD6MQ/RY9rup3ldAmHxSjqs0HJP+4deR/D8eyZLWS3Hz3CxNR5cjVQ+83UtswxbMe21hdx2+hP1THmFt4o4/kofCTQLgdXM7glgCctgKrHr2+k4Z9WyGG6ufUUm7spdfxRRrl7MdksGYtWq70wIvQbYP7JGu3fougNqtf0s1eQGd/u6B0mdjbrGIc3fYT+VzuJca9BNZU/yy/1OhYBASqlpFiLfYI7J7oH/DcD1bOZjJo6Cd+8pJujeXMxfdViEIyZE/OifHLe3WRQ727yKRHsUX8vtFDkHhW/GjwuZ5QcDRaECbIYqGVDDs9pin/Ueg/uc3k5OFEx2zPtaTAs4EIKXd1yKxNWbayxDliQg6SdmjoTsecXhO17Zs/8KbMabtL2FntHnwN/2gGox/KYUfbJFM0PrPS+w3GweSf04ZiJ7ant2dYINCinIrwAMOL1PYcZDS81pFeyo9UQK+tuOpPEIsw8+ljMa2mWZ3oy2Z2R9oiyQkUJM487BFpNa0Oax68FYaO6Qm0u5X0PK4i0tKkJP6JxIBq2o4O1aKLLRHljUI8kZeRMOhLIAnBka4sfxsYYSH1jwfYwAiyXKnxhE5PyeyJQLYAr2KzcAF0bTnNKU1tnT+1iB4YTlD1lrK9X46svqAdp7wWjWKSUFVKwPP0qa5+YWNaw4Qy9mjgjZI16R24oyVFm6flz5CW47eytLQLvaBHVes+G6udouRiuLOC6V8A86e2rrbj5ystqZZFs2kcXVAvdAosAUEsBCjYI7uTX86MYSLSLp+tMKaJ19lmUlX0KffRC0tsWgDCcS9AaUHUTUcpIul64JVL+Bj4VT65j88PQqVx2uGRrOOPhIWN+xVdALUSMbSzMElZ6WPdDqlWZpuql2VT53HhwxD9wxu96EEE1lZQXaR71pEsrKaY3lE1JXe2YBYsMz5TrA6Ds3TdK1Dre7bdoXp4YCA7ApsSwNkG3eP0ZuiJPhNrRXD1g4Rbptc6PtxHp7rK6LSNvDk71X1KkMcgIPphLAhfF4whRwAWFqOzUpyCVp+zR0O25yRg3SkcrImGuzqX+wY5dPJVmiNrIOKJ0V8OuI/vO2ET6iy9qgG+oL/rudKrn24au8M8bbObvhwhhbjLoEg+1RGbpfQPKThVNF8zrBn2moisbEQoKLJj9yVdqf6HTNQyqxGoSs8XY6Ar3xXTiLDR2rEMMaAJTS5bdUblVI9NxIY2JFyzpP0OqaIIiai/Jo5HS/F2YOXjFLYGp4HBGlNDmaSP8apRYglDTmhCHctJFCy5ytEBdF+kpsKczptyCR1EKhDZpcXweL4ErGL41P4yIvpwm22AU/EJQuM9IfNPFhr5HJOE6i+slTNr4do0ecr0QkOBAS2u+StWR6paVpPdldROyWdnGaRrDyHwO3UvRkgYWwM738tjPT1FSBYqzpCLHl8xq/DNICZpFEtv3vawGsfJGkT7s0myJZ9sPD8qriSJoIBgmzTMaYxBRNLOs07MpVHCL+wXIBdbbR1oGiWXZKd+s4DlyNtaj3qJzc0SHz5dYpvZ7ZUPhTpUbx+i0GhUip1okUQdPHGgvPEjGVD/c40CI18j4md3uPNAmoxkvKatpODg21KfaShyLhKdEVz28xktUdfZRJbQWEp3C3D09u71ny1D/lQEhXBRs92HKwI3Io3nMhDSqpUceIFoq968vAJbdL7nn0tlvtZ1T9XsP+Etzyx45PFkITeA46EswJVynSKLgFG9KNSWkLteohTO0bLvZHi2oH6Ep+7p19sqmtQxW0n1bmtfBsi9Z/B/7phrPrOLYN06tpd1FuFesufv6dvAmHCq8XW3A75OSwBRVclOESsZgAeqJ+9WieSCyGtlAkD9xSsYdz6ZiRRK89XF7VFOrXz85WDCqptDpBISwxUgmkHlXxzCmfGI1HuJrL/MdAXRgLRNnxM4RireVn6pCVzPBWJvVp3r0ZL/5E695cMOmz9TYLGCOORyGKgc55MVuzL2RkKNf3Krigimuq13yOJP0T9l98bboD5rpoLNqSB5KVryLJf/qSFLdvD1OumAoHEr0izLm+ddCYfYjCtFwk9cRdrhmDdApVXeK7p077ps1S689w1k+lAZtvfGh48NGPEJBjtfAdeA8EgtUO0ZzP2Vsj+otZewpUtazb5uehjbJBfSoqRptppTvBRrPQ4SYPXFUH1kTj/W7uTyuD8CU4KcFShUfGgCsCFeqV1MAm6s9Qc50kCrlNtKYM+YDNS/2SQEn3KjTlIVB+tsENAnb/7tA5UaciEQmjDCRzg8Y+86FGzSJT61r/CidfnIMr/484wW8d0HZQ0pY8/f+vSPPcbOz4HH+0w1rFrOIJ4Lk72Ckn+bS81trvX7aSNVpWked8nxcEwt3lRylnW4LksQMDYzgS6C/Fr5bzhFQI68zxn4xPDZ/cjzMR6gC/CVcnR16ZMOOLq6CI+bB/rcax0IGaE15OJaBmtXhQAHO1hYFslf0/YoZhmZibzQaazSSyY0aUSUirvSf58Ia4Ys3FCwecx99eO23AO8CV7Zfz0yQBkAofdasaFOT5vTjpneqBzTZJUCQdS6fT/zMNQBVY/UOiBp3B34gah0tDAHT7ERDyJjjKoC7kFSSQRuWixVp9e91ZZulSlsM7kWVoG0NqjlA8HsMoX/UsOpsIWFdWn7uu5td6Now0edeeD3gSl9X5f2kuUsIHBUZV+AecR9nJiDRIx7dnGBStM+LchwCFDz7GbRIupJDakCa/a7ODtmDSNx/fVYDhImMSoLFFS1P8W7Ph/nHmwr3+yfjCHAt9bKK5AOEmEPr7ls9pv+nsyljw46vqSMEyNwmUi8bZqtSEcgv8QV7CTaEQb+iiMp1c06OqxRdkzYuNrOsPb4f4DwGQOC7y1YxWyJEcOYyt22Q9KEywYFWKvTZHHkFrYM6+CLKvDBe0OgObDRQDcVP4/Ln47iWrTjs+bzS+cc9rFxCVqWPfgosLiBwcAbhruvXSfIasbFxUFWdi40MmrEs2MWQ5EdPu5eOm3pVGN/TO7eW1eIOuIId2h2fGMPkf7Tq1q6Hf6FkfCS7cNJREB5n3YTeqffRBgE8gl0NQJ3fJ050yDOkYustiDAp0+//7ZYr1YC5BG33BPuWZDkc0/5ATblbE4UNHfVfLOopdffoKH/e2ohwur9jxWDWEbKhChqjCg6S5nP7pu8FXkZGCmFS35X2QFUpymbjlxTbMlHERBTXyucTR3POzI33iTTUhqkMRfwV/VkGt13kRRDL+yy8a020aMcNAD4ZkniJPu14lNxvKvYNV0v/68CMJ/r0IeOrN17pTZ8T3nj3uXn9o4qIDioNRhDIFGGqgAvUvFIe0lK2EjeOCtQuYTOv4kdPZRN/KVG0HP4QGVqyLrIB55wqY0dbN+3GZUxZsgcjoBZqn+8fUhV6tOy1X3DG0VDBUFTOm7u3rlLpbVh5j1SeuXI9VXSj1qd1CgsvXOcIw17tJ4yb9rHl/OhoBXuxAEaMfcq7udpIPervvojwKrwjdU5flsm1Bzk2eOSvr9EI9XNwV0JsOYM995y+cEMS4CG6YeExHxOnvw632QcSxuxayz3eljwPcuwfLZ8jvGtCcThTiTamhfs1rCIiVuNxvz8HCHvIzEbsTTuE9jn9ZIw/6Py5PwNZz3o78hW77B/19Dhbt+TIGn5GQ3HjU8+ENvhQ2ST7NeGBYUF/Mi5RVeViy5+h3cUT7MwC/0T9xWGIb2lxmucgv7OkG6ygOcMMknOs2lnhLND51BGFGGVdWZjroeC9+EIL92yNHgDJ1SVEPHS+w/4Hm54wzrrKbyk7rD57g1VOsOsoLWXHUZ/m9dnBdHX1uEoreEzmSWdUSOGVpy7Ju5TDjh6BczA6h5waKumT55oEF1sbo/xf7N1o+f+tjfPfK6oJfxsOqXHhuI9cqIeGbVQ8/MLblIJtPa48aa+bNfaxNAitNVrGPuOhsYW5UqiMeQFczaCfUN9sMHOkThAYoiI4AwfD6InZ8E6unmAw9g6p71j0ukFo9A5hAiCb0E+Uly0KG0OgReKNvjyFzBbj92Zb4103b0mVgs9iyHAJigCnWrSnAAB9aEsgO6D/gWF3z8cl49HGk2Q5XAxNWbDHrASqmqpQ1ejUNNwy6U7nUUZ6kOyDosx4YKe0LRwVqDQP9j9riUhanHYvfBaATbXJ62i7/7y2rGqxqrFprnY565q0/DWnndRijoiTnhRt7iHzUrvyYypo5XwOvZuKLnQnrEwmfI+mjVIm7wRcXobA9wi1dLNNjhkTgSU3xVrpZIm0wARg2cYhlOv/xJDZ3f7LaQ5biK5IanZ8/2BpLBNfFcRjVFjTKX8+0gHQzev4+9GazGAw+1EKL6/XqPY3e5K2N+fwfCESaoMjbCp6iuwWBNbMKjN7v6kGlML/OR3ecyrdFsJ3hDpNaUILRrzQ2Cb/KsnVJoZzwglU4N54JsywdIykT3NKbZnRJg+UjmSnlTU3QFg1TBCGPlZsgSEhPEav5/legYnxnYj3yAQb+wz3Iq3UDqT+pByq+ElFntpJPT6MEHG6z0MceQAXEIoeGtR58kjTpAOqdnnLmKQJtg9/xt7643q4xNA/fi0F2JedJfulsE6BblSbMJqgd+bjyUoxG9OgfwfebhfKQq/C2957HsHWctRwOirgrf9jDAZ2COq5C7h5/7BuRSSy/9YZxWTOnpJZkmoaVzc4vQU58NHFaWCuOFIGgmAkrPTjoYxeTKFBouokS1xd1bpc4MISAoPxcIAGMNDfa8n1F0E4YGbOrpG2Vv2ZxIWlCTJtXeVCQLMoTkek1cnHtpqjnIuW+J2grndCesWAdWccIaa2K/l8IJ7WKJrLIXhHHYY7FMXJgmfDkX3fs0xUEiw9rqojdQmomgeaRY95JzACwirjpOGLuNnyKw4axwyrFEUosHoZHHDYV0CLbBPKu2Gg5PdkA59LbOIhPg9CtIScU02VFxYAw2wEJw/tJL4Aw7lqVWUJ6wH3Z4Fj+4Qx6wCk0toVzMMIeHx71Sjl1ZWG+lv0DtsW7yLFPgxYQLCDkY8uORDwUVNSQL9VcRhs20uOLJT3OeYu0thhrwFKJkGJLIvY9cUaeZcWclNYW/Uq/niTeuxSUT/yt2HZKNUjW+blRqU57EafPQy7UUXLm8XZ6usU3Yebdrn3vc+PduHBF8mbfY53jHqq0aJKgANwzLRldCViySXZ5T0ts89JrwA9GWQnFlrSuIyOgLQWlq6wr3ctSGq0wP75OQe99ozOr7Qmw5XEP5sktXINLl2GIszikt+as/20M8nKXmB3nZSfJsDSbH7Ubc8lw5AmaHu71+9Zrk4Prhxq78yalldXrWaU2WlOkYQTPWKwI2JnZfyrqP0bgFN755KnYJipsz4jHPELot6dkgIwedarsdS11SxkoyVdrmlUpp45atsym08NLylWnbm+NTVCWe8YDcYNCV1kaxzg9Kt/LqWINONNckyx4mk1L+6CoZ7oN5oiUwiACTIs1NaGGOV16lhVmossRKU7434ByhBADazrDW6EyVjs5APUeusZAJZfnBJ9QILqd8Q+wvs2pJmdmIFW8KFd7KA1HeO0rZlAb22E9kmt7a4H1LuwlBeF8vJqpaG31UPGUVUcCgt8ve6drY+px5p7CruD5dtTpgB7kQpCn57FenVOInmpTVpZqS/leELO6aNq/2+2nt2oMLq4BKrmoas/b93L+ZDdsU2QMaDV5L/NQhVzyEeVkXrRx306PJUPS72Cb5BEAvplyfgj15QMUDMU4GfQlmsJRlIeCu6U1t4gcYGFjKABMaZ8JyJ4ZX5rs4D1b2mpi+57vez7T+7NgFrzg65o43jIQ/WWmN02P9vvLvygEhTI+AuDfct3bau6S3/R9AdDIT+DNCHadOvrTY37lBsKLEGznZC14ekASA6f5kofUC7lz5OneuwWLQPAi/hsdJXr421bOwPYRFQa4tULO2TLzhux84BwA0yjhTLW7s6v9mXycTGXzuX9fx2viMOLJW5aulOqbZUbMLpAK5KOwlie3HXnareubN1865BtP6Sofu9UZR5rbwObmbesyjYEjfbXuQom7Iihv1N0vJ4Qwk81u9BfNJ2ahDgiNgNkXWItJfFONeHgiW3zYw4Blr99fpX+m0zxKdLBKJh6dONFfGCfX07wTgvF84J3GwcPzR2fRbnbjiowS2Pt1nvAhbD3ZMGgrjbEgLiEEw0akm8PcYlQx1Ghy+snpeDNHpYWHtkRwxaINZvjM0PaInu3EFS0CLkBrPMNL4Iu5xrvO5sw03khEmykkHu8ALhMkVjaD6wAXjojiebi5LgBT24BwnJdNkC6J3huyx4ofCMJ7CZtVbXTCYNGFVqoKGfp0akM9hdhu4b1aM4ATGeKZWu1+cN4Wg1//MNeKEKgzRo2ktIKxPDEDEmSGeudhti+qPJmkAJJoTw3cJl3pdqvGrK/PJJ+n1g0hCgIk0Kdl7WL8z89BAlcTlnG+6zX6I0Cq8GDimpsLO6bU3M3Zh+tgXzkNY2fSm/Buzf31DgrIdOF5vDBUQ0jg9/ra40jLmeHtFDQNY+sZ6tZeaYitoApxD5PzaB7arNkZ5KG/dQ1M5SOsweaLKUMcjyuRIqdMIFFxZyJsSsNnDne62qsHybD50mAW4/OcHkt+Ipj+p+eQgnuOYmAthCqcDEu+Bu7lfzA7JmySaSBN3h8YHTakTSoRryDAv9JCb2AkTu14KGlmsDdrOnwFsYRm/BMed2U3F90XLRGGjlvrnXPcA5m4aCeYob2BbBdhNnjNc3b5nu8Pbx/GNc/VHThH1L62Bz8FawHyOt6vhhv6Zrew33rLS0n4r1ZQ6LqbRr2gA1Ty8f4+B/SS0AmMPqJXzaK4JUvKiQpeZskFD1S1cA6QfntcmpSOhodSbKPOVqVeg2PGqyRcwpeZA7zS+oRmNVWZfKgxkWgX8MGeCmt9Z2nHAmt30lRS8f0k0Jq6WgN7TEmEQqzHc3ttoZQskoVjY6lFeKCaEGPyTfJwvZL1hQSztPxMvciswhkDW1xWYusfO4YazJagrEoNQk8kSw5ETnRrnqs4maEFuDbzt7GHviCpmLEZlTSiggNfCd4V/aowB8mgcqOKkRhtk/k+C65KlppTSCPPhVTR7etXKT3RDwdfAoTmRB30VGefp0vMQIjL5gtkqQrPuueNQEPc3KrqgnLwJclmtNMVi0IUdA2n6fitMc6u3GI3VIHIU0glPRaiqa/vkzCg5CRdmTMCYEx0p5mDVg+m76tAiBIr/vkyF+OYsSEUI+PH+1eXSmQdE207zHYxYNNP/5XGsy5a4+3+wxn1vnzsILTrigOWf+uH4+d4aL4+RoCODbR//7XBlBwDff40xyPYfLX5NiFNoP+z2/G3tNA4Amg1fwhUP2YwDT5F4uv8gIMMbUv494JF7vNMvL7Q1s0u3CWQZGQyoZVSxXzirHsE26cZjwpB6WDRSN7YycCM5t/U5dX/AjCS/VV/86PNVYHkGFQf/AMVW5IcweSY+tZtsVFcRi9SKufrPflnh8J/ypYNviJHEhJQzTn0CNIzTxKT39zl5B3oJ+t5XFqBYVIaZAlcY1X6evRTdB+zG5A/MzvUuaEvcfLHxcQwQ15UZdef5euXmgbonawY4384GeFcxTifabSgseHgUg2yk/M1D8UCMrRKyDyceIlVUAG0wg4pH2D15B0idiaPASTrzTYq5iPaDpR2TRP0waDJwhEBh40Hw9xte4ERB/FcD0pZfCSHZvsATnSL0WGK3d6LKQ1kqGRGia6mVeROfNUwEugxFens68t2AsBIc2bahDMXNhR4HUyyt/yJPf44SFq7KeXsr9MNAVay/OqDomlgMU6G8fFrmhMVO3iWSGlcd3wFBmc75PIlSZa5c4IfDf76ciOa9o4LnIqJsyx1gQWJ0iMq/E9rGaU3OTuElXH1VqwburqyenZGb62rrGDzEVKZrRHmEiHyuU+EJtLNViKRTD8Bb+ewsiTNi8VwgUhMXhJMrikaG3+XD3La4zs/04gyqKvEAI5cujbLLXXp4ZExcYHrM4QjOCG24TNcliAV3Ak1C1o8BLmSCCKKJMzACgVA78PL0DUuDTBZOZHCx6pupj2FmT0hA/FzLHOreXgYbm9lXY4ZST5SY1frzXznEZO4yngZN2uXr2TUmyaMCx2oCwRNl55T+IbUPo3JCB4+eUkKRiQZAVSFjsBw1yZkiQohzvtwRqj/3lZGQcWX7XAhabB5XZ4vkgMIHK7Wp1r6glRPw9m9flAWkKk1vSUJH+O6+Jp+Bp5HZdaGDKEODnwaKvnsyY8tnctHI3Oe5MiAEuZ//JlngD+OWhR5yI0MSiv/8zKvakXhnBNENCKavU2J6DhRNB6nxJ2F6wXFQ5fbwNJrCi4GkODB/fhm3Lt2U/SKxQAPgElHvGZnN/CXv/KP/b77BezXedrU1SeWAHacYdQdIwzebYLKXoyGMoaHDlkquPFNs+cGygEXsfyPwIlz6id58YNAQu4p8322FrTbC2Q+CJlLJinODzg2q8ZLLN2fU7vZjQCdTfy39QqrDMihRyMSSFrQcGKoi4xdiDVCmsQBQYZtYFf9pb+IytXmiuHGIl248pQwT1ab1Jsh3LcSlu9csESj+4GxMtVxdPAwrYjN17+i/ZtVQU85g8AhhPlUKoF9shGN1yuqmAaDtFIGm2kWD7OuuWfdohtfmG2gvQctsQViXFeK5TsHw9xjFH6yxqOOU1RVYqzaB6F3wYxtOlYjTEEfLJrwwsUYjOHXNJPuPMGI+E8bZ0jibszbENzAUKMX9ej8F4EpSXvbLCdP6jqaneufiitMZy/BgMiObS7XtsRTlXEXsX+6hNCy4L0OD6OZGLc0y1G6tLhgbTz/bmzOtw4AJozI9zhRu+GABLA1m7nD+BfUWPIQGnbO5cz+Je3i59jK2K5gov3PdKMdQzzrFzhvaT3jrKsQxP/GUByYuJVPf2FNs7lUOaAYrF2V96a7H2Nd1Uk96ag0EHnFmptv+1S41XmUezCWybhFpf3KcILeX6FuMbGLpylp7IkX1ynZPQJopz5OeYniiiDAUskywPcb7EplzVB/CJsXfcsscL8S86T9lWyu6G6y9/pKeW6d5KQtoxvUAnxlhIoiGed1es1Z33t3XwrefEsy1qLFpJwRZWVkpsWCG1uIZOfDhN8cBzUv/O4+0BMzrNkOgIzSaVRCtPXpqqRePi5C5s8wGe7PB9KsLN1QREnhZh4C1qQbVRi4ETufKJg+RY1cqJxgL+FgVXj+/IayCsEJx3EmKeqO6Yfhn3LGKdv7/uFpxv/iGsBuBWlrqdUdtFcuZl/sKLND1BBgu82dd1HppyttrdelN1P/9Ny4cYUuuzqGgjE/+08Yw6qbYomW9UaMyXLZihO0Ibyb70hL7L8ZhbFjZvGIQlvc1Oy3Bo8YZ/oyUTP7NBGgJ8ceyxxyUHz1xcY+vdQNKsdC+VGrFVMdN9c4dkd/2CMSYrwpdfq0LhpRww3I+p9eHRN+I9s319Ldl2HwBtd16eiWsJmQWJAGRja6ntn5pEy0zcyQBe62OGar71RuBADojz5OcoeHnIiMgzTIh+ofXr3wdkWOM/oLDFB9QVDb9GfoiWBvOCI4NqGYGrJS+3QAB78LAzu/EgHXh6l6ulJgmL5iGfKBirtpFdH615qTD/lBcgKPTq1gw9bSRUoCZtAvR8jGzkGoV3RIkGkBOJc16avcAggfe8kgr4e0sqNol1UCwX/hvmFOjrctJa3lBqdD3Ogo3mEpS8Uu8KO7R8ajZYi5r/foIECvMC1IhjZL683h7KyMdcDQUkBmhY/lkMlpH+aSk16BGmbkZOowvkn9HvUxq28eS1lQXrQ13tG9vu7otDtOv9W56grLCilZgyRKkecjcAwZsufwVy4lO9r0W+ftAx/ekqPfegWpunIilW9C7aTSm4AlsAiRTTPLSNVzJzaRo7gULIxC3poCbY6KXqbUqJ0KK3tQnH+DJVpwivpNOI/Aum6GCGLaSpSPocKV1f8/lanDYuqHTNk1mKYTTPVjbBZetjaRC1u5PQg3GqEXkKuwLQQPTNfDf2ry/J7hoxVVlpTxI2V2CcNA7KwJK9W7MPT3yirtKcf0EAm8alBZM+4HgSnQmGOS0ciivsGUtmwpBLLBUMs1WiJsipplNEYBxB1SolW1YQ8YWV28bUmgn/2k0w+2fye8XXogbygfAaVwqHhDkW0JCOAbgClQU1SDDkFLtlYf/xT8N7ny4jWe1YKTv/81d24IXtTfMBopS5Y7X3GIVVt9iSXZrjXOEerFyR8eLg+Gn2FocjWEdSSrDAenoaN13InCmbgeWybvgnZG+xmflQzy6IRWehQaklyVFbjiQJJHo2G1/P4LzEfkIeB7MuXHoZTuI6JxY/EhHBn6gOrf2BSOd9RYbthIC+O1NJM/Pr4qL6LhrYNsgDH9ME18lRKp6Ef429KH+ggBpK7rMGbLcj63MmIElM7vPShbSmDPJGCYFaEJXn0NqXpPt6eh23TFJfKVlC7vXhQwcqYYMk6uYA6VwVMjJzqT4l2WOzQMQ42DTai1UTGrB3eBJXPe02Xdd254hjtEO9YEiy4qzrtRmNS/TpmVYUCIo+uBaGbyoZq4zvFay3cvo7ICfTDgRObnoO/s1vuhkSwEjCogp14xR+m5F+R/V0vjBlnTu2iiHtJ6achOJ39+kQg8EgdKSpmIispH/xjUxyM2VXoJd4+dMB9xQjH4RQlgytIA6iqZBsFPKrSV4aycTSDywcrS2xeg+fxXlwu3csjZL9YuYh66NeSF6zBroBD39Yr4yhHDaSe4WAe/blbDgsmfKA/k3A+gnGaF/c7bXLKvZTLeJ1XY27PHG/9tr41ARnYUEakxRd/UWP6cEL10uDq9RS8KEh03/9n3UQKYdOwra2vZdNvbfv60NR9KfZ+6B9po1TzOC8x3THFOY3i13bYGe+ChNaveOtXu1GXk4HXCaHPMj3PlNE+Pc1ctvatTd0P/hKyrPJuEEUSlP6eokggAysrIHd42MetASnjehACkbBuFy3nzXXTXCVrAVuiM00Fxup/K8+3ciwaXbkG+12YHC4MEYli936uo56r1vTVBTLVMOw5yXQDsnkJjjPZfbPNNP++CJxegHcdMr2mtkUidDt7AmnOep2RgNxarTGLoY+IWKz9ZsC4wSzDzBVsXdXNSpYzfZK65O3/bHKhWKDf4yQ3KSn9bOo17dEPJUA46woDiUO0f8mimy/qo3yJWN9RiVwcg2GtGaxIRKSe2ut8iysVaMPa+x/i5viKlLccUTz52M9hyF9LgFL0pJORW4PklpKnK5l54lwUf2zAWSLfCQIyMq0GMBCnqW9tj0Kjg/jS2OaIlNCl8Ba9lxw61nPMZ+QuBAhJOtp2zzoA30SOEDxjd6lEipdynsDLnLUMZ7U0sosC55MlAXRJkoBez4vC7JOH1fQRS+Ti3Jrwgqhogjps03523t9U7CPef4UbmZqH32Oyi+txEfa+/Ukkf+UcPcvM3dPTSx62uEq2Dll5s8y+cx4QzGndacO4l/xC2/Npk+EqxNIY1LYvE8elzWoFKY43TeNOlGx+9lsvZ44qNJkuTAWejV8UxDTwNpv22G+6lcLE1Z9UjY6S0qWR7EbvugJOagAhejc3x1b+P0T7RhtDsiscGCwUxHCCdh1PcTDSyWiWjkfIHl5ZyCozZKsPj7hUyeIMvUkpFwoJ+A2iFENoYHBPGPk20e41Uxj31lDK+Lp013EmOoWOjVt7xi5xNKNHHXhGaczQaaRE60zn+JAK2mFdb4WxhLhjPK7rgOs0OVWTcTvGQt1dZ+wB4CmYBVNZKuTI3WNfIONKdmWVuD7qbK71fieE4OVjZ761N60R5Uat9FmmHwbTiBEFlcppqiTV5BIcvSLBiF+x6CPV1GHNUAiptOU77ccamOKvPVBU++lk+wGdX0dWIME+vagoljs5MVKsqSqHffaD/WJiBCU90dJhr7kxbiGhCfomY1uhHwSkyWtld7qw41pRoPPR0cdDrigKqECzFqmq2SDryUqkdINredam12EdQfnbW1eS/9D0t/X2imvIyR5XaPUU4+WuogPWVkFcxhkBMiTUmQW1gllJqFU2UmpdgsRAPOEQCrRxn7A3BFw57/j6MQV6YAFCXHHzWEr2WDl1hJQAnXAu5CM1/m4ZTTwDDZ/LleE0QHyUGUaYkJ40abF0dVbwMnUAMd7XNfutlgF2fESeKevGLsSWxHMhU8JfvhhoE0QSAwmCKvxu29s8GwXwb0f4D63wxaFzIaCFwGsd0IjBZTeLRbA8GBVPhMthsE0W5G/p+Q8Msqmt64hv6OU6JgZcHBOcQRoUTfOMpK04LmS/t1RtuZhtfQMK+O1tpYnAOpPDC86rsxYFDBU9K92OzsCbVuQq+4pOJ8nRqFAAqQAT2Ify/kqiNihld8G2log0gZsjBMiQN92dn2eKS1BMmMK6nZXrwNpFDqxIYeBq6yyfTfIcPI/DN9oSQ05P5cq+64GSEaRMLkAa0joDOqSTWJwJH/5QjaBVVP/zF3t5vHRungCweDrocHCndhJu7Rhz/+cB5LVwhKDeT8O67lV4UJLSm6zHdj5f5HELHAVU7dtxPr2vauiprMMQ4XAifQWMemwFsSTCXpSOiuV/XHD+PhA6jnu5x4pHkbC0vdAGdKqXOG2OUe3VyJtRStu5TYRlt3KY8RJcBP/DNwH+0wzzsO4jlg+AR4tyq9kYuBHlnL1v6C2aInU30OTG01BpffG9FZJJRuR/umi90NXwCu0f7oAAAH4SYDTklKtyJJ9/Q/TS5ip+f611snJizPA8clbFVRYCsP7jzLGPqgoVwTL3kLgyH/T7NCNgK7WDmIQY0inzXOR9CeariLd7roAi1qehEfMu7y13s/DWNBwaVpBNW7Sh52bx6P/QosUsXseLrY+WIXmHSfSylsBP7GxH19T11LdWAoHAfHdh8ZkIF1Gigl0uzL2Dz/unAMKBNUoeUZWFwgwSJtUg1nuXHP9Jay7lgklt3ykLejlMr6tuUWCCuefWRhX0Ed57wXWZmGsnvEQlJLMenGTPb4/5GXLeNhv5EuB7BDyLMBFr6if3MdN37ONXsE0m8sM5VU53wO7y8ExgNrRgxvS3e+Z/EdIduNtvMnXxWpWp0BAlGsFhhQ4d79EBYaYqnZhD2x2WEdct3e9aW5n+/kHA1URkW1WmfsRUD0z2Ilr2AdippIP9D9hzeNy9chk6dgl+hbrFBt1oLvAWQNlQf0YVOemwthNve5Be0xbDv50QriUMYjlPwEI5MuAyxP5vQo53e0gOwt0mjlWByCdH6fi0Qs1R53pVfSC7qMBMZsZfLGou1OlCfF+VR2mx3tb2LNw6xxzeDxovBHZ6LnC6r/b73cROXzPVtHPHQyHoOMzegfr6dtLOgaAPbQgO+5R1PxvnPdcI6AGInDuHwyj96LcYyoP7Ue+CbTq062NAzZdkZfBmxn1nU8KAqDqNSXOaNYsYZ739Q/UJIQRoMTxtXHNcGuaivHqdsHYyonUAkhpPKtFeukjQXNlIJdgbfiZ0MmMTlSKX9a7K65Zsbm33WJuz3aQWVIGaOt0lMqtbh1xmPaq7eshY3TD+i5SPX+LWmMQzfwUxQMZC7e+cYscQX6mcjAyrLmWw1clFhHeTkRV3Ww8GqT0krJQtVjW4SNR8bJppEjyY7XwFck/SOW+1grIUVpkn3qQMXz3+fT0b4l7oGX6jN1erfVSgnjk2uqoEp74qPe+t55oWfQt3UOYfq2XHCLsMmgxpmOpU7+vC7/FqNYugHug9sOYWRnhJ/tb1+xSQcw3/Je+wB4F3a119laqMJCOPdAA5I3RJMifGCcCsMyfVjXHubk4qHaRK2ef8VHZmpAufsYFOlQ9ik1j37axdXAlqT6lIdBaw7P2W1YwJq4DvJlLWQqmgd6ORf+TI6KhJIVRerzwFIgBFzYvb44lFMrZ/gN9+JHcbOM9Bm2HP3QU8/3oWxa3hfKC7a23+C4mbMzsyIw+suWR3asRg8ZH86e1IOHnCl0S/+bXZf22w/N20xqpC1Ts5jeIQV+QEMeyPgYgj599oxhSATI8muzjWM8FZTM9bhgELhEaJHGM+n+YFs8rU11u59pq7r28ipGNaoALvAY1M9hsmtBMpfYlgNIBkFmyLcHvTgHUtbk5CLd8NUyu0E69PmUETf5ASyRAXepr2t/HtkFXao9CeBns/XHbiqvjF3INeaxy/wmXjfS9tlH/2P4nYPVM1ylWeqjLdedCYVDJqSmPOaOB/zyvJjOHvAVD9j0Mr0/5rUxy6b8OsMVRURmQzt60nbbMKoQm9jU4Yvz2n7F0JIwcyAkddsGHIef9eNJQR5LSd2czSXygjTduZCc2BPNcevOoJu7i2/KdXn3r6yzHS6YyQ18vFxL4+ixfjD2ReYqviA+eAP7AX+xPMXHFn+NUZIeJ4Ryh4q7nRi7wkt2EejjRC2ktTNNrfEaSWzIAAC0tx3nAbDZ65Mkhssfp1GA8hb6KEfU3PoLgKKPnEL8YRdtWrROfaTuGhF9LGMaz1JnieovrXrSRL8+LGSbSz0xt89idcVktxOW99pI5uQTB7RlPaMCprL+GX5Rqvvq34Wxd7kowgRcBZyf1M0m00YhrT6PugzT6FaM8K7tPOu6vE/71MWhUG8WPu6IomFiOKqnMFaCbZ3K+LZVJsSawY+HVSr7WuBh68Mh1oj392iA+3UCzb19zcCDGaNOPHAwqMoUfeQZ8r05U7orhQ+rQ1nzvvwNan7wHFDPHWj0jqVmYLXkb63HA8X8KWSX+sTyCIc245OBYPX45zZ/Kj/UUe2EgNkCsJZqxvW1fHgMMZHpqxdC7F0QP7ymA+mHMDNYRhBJC3bj5wi3RZeNijSADbFEV9+e6C2x+7YCG4pGLs/vAya7SQnFJqTSHe6k13/++OtbHALixbCLBcsb6Y2hubmuPumMX6ppZrOuU0S+s/Ue5uASjSkYvpz5yJOU0AG6g9JgdbEPSZGlx/6icU+SDOdquKTczsp2kbiLGat5sba28mKA26vLrz9UPy/wtBDh+np6UHrz9tMfp7L1KvyMNjnVir3mePeqXesnlixCLoGnDmF9tQObCnFQ1EuupLVmyK3yj5uAtmp8WVETQWvihtMgReLpYjba+qy4XXaTnhmzbjU2P8skKSlD5QsfI3oGfsDdJqp14vLM//Yxel+q3flC7uOrlQPuBFOKOcRxE8YAxAv7Iq96apqiXpOS22oW2wCl29ca3My7GlkphT0KHw8B4Rj2sxtkQBaJ0sMfcjAJ7XEuDdh9dk7xpNgkccABpgTEDmTWD+nedckqH5aWsorVLrx0Fwy6wDQAj7cYBVF+qP2eP0SxOcJwd1VVL6sQaR0aFZF0FGAe1IETrZTggayrXvmoJrvvZLBhRpXKDXiaY94c8a2yZj2Ly8KJTMfj3HSmBLQ68sUN2oPWDeNM2PXt1JVP54BWVdDNvLst853Tw82T4A00tu5BbsGrtD5vQoeV5cHfQ4PhK3qm7vkl2/5nnD2AogmKC79N7wLXIAzFx+a2usnnyngeMr3ZydCD44ja2EEXVmKbHU7PJIKpZsqtV7xyVHK6J+jsLpSoKgiJVRozCKvyQ6+/Gv5NE4NJsgLyAEMawzBoPjuD0Pr/U+4Qx5W44vGhvQabss3qJTjzurCEruT4onKGnkN2Rya+hujOP4KAc/DjhEfuzRFHYc8mQBZZIJT6mNs7l33vCeqMVR2Vk9kuWdxSQ2jcDCfgDc1+rYG3RjpJMzXWfyas1A5nRWRspATRg8o2S4B6aEjurq75G4uts2ud2D1GbJUoa/HKAIEmA7kcyHrJz1rqwFRedd0itLhZxqrXOaYzEDizoQwFGn/tEiFd8ZPDzk3IyGx+s4EyIBctJua/Z3WEi9hA1aTnfG6DxMDdUz+a8LKKi3ZFPK0NAq6s+9h6f/EpQb5ce2CwH4khzM1W/oFoyey09AX/U0XlxZZJkgZNHd19aEkDN3HvIK6pdc/owaYI9LPpGE1Wd4MtdoAxcP+GP5vfGn/s0Gmm0s+P/7flW5QkKAdmZOlQGFw90XyW+p3EEy/tS6nxm+0Tm/cEdFpmc03QW0rSw8FCLDAqCO9lmZrtZGVLqXwUpNCuHWHlKFZJ5YeGXTHzWHYcDGb1iYxCX5mmh/d2B4NaDYO8BOWsMJ4JMxkvzxqiDPoFV+9cKlG8xzrOFiGnL5hZDHnsV/3V/7eTATFTM7qqt08QD93XaK+sT1VTaxT77Bwjuu6JPwcwSEBAbdVlmpWN3So7XOHrIzhCQcjceiqFjClbceqVC/5ySWpTnY9ywNwgNJP/0LKkGgFUk9MJX/eMwAmQmKzuyT1WjIwVWRGydgTNVREXBwM8feqBWP3eou1jnwfTD3RUa0dAFan1wrKRwLQKxpEIYB+iiCVgFNfzZDHbjVC3Sxn8cwwoPxIPxhyrXjhPA51tpjH2U/W3E86uSCwV++CfHXAwAQP6jprlj7iYCM/gsG4v8jrdhbuaDaWGCkUPdscFVdaXoWwUTZfrv4Qcjn8bH3VXPPLKyXXIK6ZAyDWBX5FyYWAvnAwtT5csin9Fwx3zQbpC42km8h43oEw43OpYqcAkuoFgYrmxDRKbzj2WNrt7k5C/Qkl98ey8vFP21yLcr4r5oCradKe013DO3D9jTaSG6KJhgXVKHNogiu2gI9TSxhf1EHUPxp5qdViJsHDn/0od8Ixk4c33Db0Pctf6YELEcic2Kao0kK+rjqKRsxDkFDDFbGcK8GCLsCeqSZs1tDQr5/jNri8yZDhWtqa34fnAJG8TaFZhEFXhEsiZ/wIwO3fC3m/nteMZp0ARP8pH+Jr3TLJzihpOQypzWR/PknfvVncB0wduYNJnPDsxOl/KA9y0PBjyXkHB144qHPUeP5hC9Ghoi3M4ajaTRPi97EjWDFNttUYN+UOaCxIR3l+9gbqJbVCbB/Cu+KrAnC2mLGuanY8j0sX/a+o/unZweGOjtiWS2ZF4XbfPH+eI5FqKNfJygLbAXEI90TKmo1CnBz3XaGlI0vK6L4k7ZE47HaHnGdeiNoEQCXplU+NgS9CZIC0laD0e3JlIfp0VHUhdT+Rw2DfYKluAJca5V7cEV0zTbC4AEfQpRyH0QkUi0OxnU1JCXUbCJP+OnibCJ+E7FPOk6AABWEZHsKr8oJ5ikwGpMyslOwpPKdQ/pC2P5R7SxRw7ZlJoTfhan2d+mqg48dk9kUtOlGuXrWMjbHBiuZdWLeD1/hnqadlAXptl3kCgCCB/yWvTqIRF00m7mdCvIR9ZnDZJmV8fX4hrtkc7elsWksRj6kKBkc4oSdZIJZuLjGlHjGjDRy+zWnGjCr6WEROsTJKI0cff1vSDHZVelR54xfhnu+6YiW7jMxI8GujgVBPLxa9G+UDrpPEsUeEbiEh9D6WvskWwoQdYOLNm7fDGQPY3xhz/w2ffjyPXznvLanxpGipk1E1LyZvHpumQd+EvopnxsSOUu5Vo4OpvcjmCXlNSyb9UFsEK8YpAzSQxpYcab0PNy2DmvXTg5eUToafbKYq1eWIElk6fSLGkdmS4/EexTaxeASajuW8dCCxxemNdyxfEPnJ9i0/mf7sMkBZwm7pyJCSsdrjqRduI5Q4LMZ1gpqYYS64hdGqXdKYaChm+t7cncGDPKgyhDFsRTTA+2zmAAgavh9YTul8Uco4loxHKYt/jYlWsAmGd7r80uUydsKz80n6QlaZNdIbMqoB8HnV/VBr07SHvM+I9QYbWbW9INcbbz3vlnweyr7IUNzqcAyHvVhr5LbYZ1S931Ov937YHNc5/3MZ/pqIAnbXpTxgPErNhSEZgRBmW8JdLUOuqVeIQtiFqMkOTDqwqF0UwSS10qY4fvZ7KAQMu2mjISjbLpaaYHNJv5U97ERIrOYLEYQtBgQT5oQ7VQ5ynuCcewpRsyA/aCCkMnLU0A92Jo4yH4jJgki4qtKN9zxFpG31bUWa/Kaax2c/PrHa9iiR4dqFRrxN+2gsiQ1QBHig1D9eA7W8QfJBdwiGTLo2YVHXR1doDp9zKLtrZI1SDZGPf91QsSA5wkXbjJ2HVkmDhEQKrXTukMgOLBlxtCx5mFcebf+qtM2m9hFjQMF2j+/t82oF6ix6AR9yP2ZDLsesV6Dl7bPpzy2Ycmo0BazoXWEcUnitxgESlKZooQUYGNvYBlPva5f0EBZk/xUkgW3mBD4hWjJj/YQoE8it1mRrLI07Bdq2D9iQMhG0f3TI0qXhPi+qWGDtP29lJm769mSFsAZu6hWFwgMv/ujenXAzLByIeqwDTefG98Sl6JfLtadcYyNUYfErb2A8eq4hJxlRsQASzTYoWh1NHprGr/W09jKTq0qO/YUgtJY6UtUlmw9DoV9hvqn519p72xFsyluRUhvqITkoNgDEmZ0HpTXlgbuAELCvUQnUxVy1qtAJOc0t0OVwAFlDWUlHRqyC7lQr+IlF2vnTwUMISel5cerX+G7+6rVvn7XmRwMtQBi2KGZefx2b6mpdd9FzGzmcatkTyNFC5EbOwbpPvpuEGwRHRqNOAD3ZkLoezXcA+UkF6On/L39VhSkMbAzuK5icNeGaeOWGE6R9G4ZistGL3iAA4hn3gx2G6omodoC91TbbAFQOQmBQyKbpQ8vlQ2yoZRbesTv3ysthpP8WgE6GH/wQ0FJcwNnrom8UYmcaS1V7wWQSRrMuGKY2shIZyeSa7ym2DmNGxrNkGmGE+XAfjWriA6TXNs7M8XlAlkDhNxJvN5vMo1jeIiC1nFRaypf8ZfEyazUVt6gen7GbBXVYz5e5S7461tFkdb5GJ24gaEomofv7gs95rTR+OJTL8QBYjeft9dmEN5J20y3BTpWU1Kp31gadTtseLIlxnreG6Q8ya5w9zASlxm67LIQ2Mx+ZPGK69tcjlBmge12gBv8h3Q5W8vNgcwHeniYqg3cv047ChYMCPagAIfyS5kTC8/qaS/JE07qSW730FDQLCSAolGJpqoR93BB8o9u3SEzTi+BukCgeyhPbY8EpJZaTPB0y/xWLfH8nRoZOgRsYVOgsv6NPvepMbgsAY7IpYJeXdLYmUm1Mw35bdKqZBQu2sMy1u4SOIHsAiWKnugj6McZeBFaEjtn4ceLdzW5cVn2d2unapnHwxNvQ4Xz2L70RA5KdfqXU1oOT9EWcV1xJP1c7ZfDiGxhnVvR6JWu+ujfbVsRXDpBRlkWfZIWYugskRjgPTizfPgmwy6gmdDPKMvjoni+p6s4ofweFm21lrSLdOw7QooIBNa4/+I6JoXz1CcZFXpDb2BIH+HD0fh0aO53hCTzoIqcIj79fWbRVsSSCF9HYIMG190pvWuUMghxx/uVCAIRAzoIC1rQfmBPZeMnPxq6/pIWjsQNgI9WyVuCL8/zuCCcNsmceJD9S+mfBLJFrsoRgcLD9bWtD0frH+xa9a3DqDC1na42UIKxaLWJCKwyq/l6rwMdhvNNBT3Qdr81HPO7RVubeo4cQKivtNuRZNyPnbLnhEYphUgHjJADbgl80qxJfsY3mN8cO0ctcmVr3mpPe+8AQ1/Z48cmQwJGmQbIVh6V5Ek1O1dxQMFlZtREbT/WheNOK12d4SIY9y47dQ3kX5UIe0vUQ+V1yzpcQAjeoDyyOO06B8O2kmjakQNfoPHFJTce+I89+sFcESEAALcdLaOM8y8Ej6vNI7ywLH6C/FknyaQmTAEccfylQ2V/qAjejlt5Zqu3Fb0QZ6Aa/+0bvBRTnhmjLxg4rwm3Q2vlUe2+g6xOG0KQqOIUSY0yG5ntDkizrYVSRXgDPAwBrDp3xmZpOwoXI0IqY0mCmPi0a1SYAG9aQ7OrQAtuHELiASStHenMGA14RWas4AdFSXsWXqzwIY9t7vIeELp0UPmTttFH1pz7y3lwrx3DAcDd+YSF2FvlZIqta1oexFFiJ+Eqhl3L3+9so43Jpw0kI+PCHKlGvfv5f6ycfhzc1TZ3xnXd/VHssZ/kZqjRHREZmaArCubcPdj7caGD2q3ap7uG6mr2V2S7f2xQZkQFtSDCw7b8Pl74bKdY4ll0IRuxpIb9g8E8JF594P+fSIrBwtU+CVC3uF1MG0w3d40GgJCSrEGGvCyPfYrpOnIaDzbcODEE5OH8iFZT15pXlz76bwDFounTzbaebhkvte2fu9xt9c+wa0rdYQR3OZuLHWnvoc/vDTxRpcITVn2w9T4c8Rp0DE3vxUFXpQjyCSq/u4uwhoyjKskySb+jyXjZpy1X73JlF8j60mp2gcceXKn5VelGE1ReMAfT0yQktcCNLPjfRU4SxNd666E18aAESxEIMU8HswiPe4sTF8Ock8De7Sk1X92mIFSU1TSBOrqlUBCHC5fNkHvutd9JObrLOvmZfnxj20++UlpbGu0uTYyXSBxABNVydQ34zZpqOb1k4EABvMkWHieRo4bOrpFmxmnZjtm9y7ZGl9oS4ZGPFVAyKogHw/6oYtbfV8CU5AIWqeBq9Zo/Yf6vqnzX8cSr1ltd5xhTYEwZlurhPPA1ObJe5II7hyppi5aA9jXb8yf3+tghKLxQu7erxC8r9qRVxYhZ53JKHBQaL4f9jaKs3Ht/hnA60feDVaY2jbxowUn57AOiwhwknhYbNWH5KnthV/ACH6PC74M2NGgqgTki29ntmGj89yntnGvEOmwxFK38IBPzdGVPHTaOFo8Vvej+8NMfYtC2FP850hxFZfZtUPXJpNYvWHBicgf7YVybEKX0O0ZX1VEYm/MGhoixiHGLicq6m2/SpTKEJzhJ3dQXFuoSHiOtKO5VRgUe87hdspXwypYYvkh0/oawr4vsy9VhRh4sxDbelp64uTwFiGjo3iBBkjO4hb667KG5gEM7FLVTtBJ7FI4k56WcL3GHi5xYcQCjJ3hN3p0yI+L1+EzimtH0kgpfS6620W0bW4bIkDAV6nGl4vQyMyfK9FNVoXaLvX3p5YtwJ5akbqf2+ig5yYrRS2KlRxEot0WNl9vlsMmj8y1U87as2oP9t260jtrvTCXpq5YGteuFK0lh5xV3FvUcrqJMiJvWv0LrbzNxrnn8yZVISqq24n9bZVojGX5xeG5sjkb+ljSz3eCNZiHx1yPxfVHP2LH6AO5y0qYCL7sIW4v/DXbGHGCfPEmsp5iKKGvpoquEw0qlL19M/XF8c6rVeL5XFTQUgG3cZJIeBkPETxZCpYQ8X0EHvyyGN9Dn+K0v797pO+KfSU2HtOakT+rdbJGo2h2IC847TRLZuvB/G2nlg4jFvuwWjmPN9mmPx4hEq3R+gc7NCUGa1prxsgFc8UkfVYgonmjjtc/aEhHpFR37sS8RmDurgAOC3atbBdcA+Z2ESn3UczHbLw0om8vlbVxjWtzI8GiZc81nMSUYBctouTE4ArYcIT457hvLhaeHKRnt7WTO9xLvRKv36Sojt0MpJ3BnOQkoNTpZTQF12T0haWjaOlRY50PqYD1gvG/Xh5wT5/N2vBlMUCu02jpjXdCb6MGTs9TXtGULCP1XbFtwJ1GjvHb8sMSongS5oF9dIiGDn2fYOKWrQM+gVT5C5vVluRcUXQ/V8SAEr0LNxzYR39Uvhmiw6UmmYUbCoWjzdhRUBvMkPIPziEpcVU4DFFvoVK4r8ekaCgEkFm6paQT2A0T5kkStCp4jg164c1NHCT8lHzOLKxkOgm2/UubpJPf9t6mjzF+GgmcmEN9T9Sekv3hgIG+/gtGdhDajemJJsT9yyDqlb5qnlExSpWBGqlClyuhY+8sYm2TAbW5iKrdaWI5ruq93unygGq4AjefR+ki8GBFt6f8iTCeJm7PRkgZGlqfh6CrJH4esk8dhVMcy8GyYtRl9IxoCNoS7BwvDM67SSasxGe3w69wgVXnwLJVWjOaSL++d0g8nKE3OWQLfgOdvmdiu1sdIdDoNuEmAZnSSX9sukY0ivRep6Iso2TwiMhfy4AlQEGNkNO+9ZgBkQ17R/C2twJ8Jgja8ae2IWCOerkjiE3PZrLar80darHQqTvz5AoO/aLbPjFfeABe4QF5TOQ3PT9IF5aM9yO8eqkQuhbv/0IRkNmlRFlql6px9OcGT7AcGWQSM874FyoHoFkfHlhVuACN/bnyUpxR6o+1Skegx2FcDJCmJBZcPMnK1+PAjZqe83Rc3IFGBhY4Kln/6mCqxP6qeqM97aswoLOf48LRApYUm7yUM+B78ZHzSijsZUn/i4XfXFarXfeuAXKtB1/wytQGDtNv5mDXBsJ1NyrUctRksrVWLj7bb7tP0eoK/4YxLY/gyiWHxOEb0c+RKdmhyWmhy/O5uN7Evt5JgmFue1nj4u+qKCEiK7zbIfIZVrSCJWPKRf9BHMetDKVeSFo0GfKAMca7RGg5kNdX/QW2DD3IHYyDQ66cWUK0YfvxPSX7wIw2zymmrzu7vPX4nSpmU0ygrLt99MtL1uylI3FVNzkYRRrlwDRznTyN+TDT4FG4mhylbfXxeMhRRqHq8zkwwnEqoKiuUy0t38vvJ5JcU1JNGrwAPoi50yQl1HcmiAP/n42H+oyw/Cd5PuZe1sAHSbEyptJT7ezpQofhpX+Iy80yF99+aW4iZwk69gxOYrGymZX52+93UGbtL82Z1oorcpct+TfCa1tgMil/qowBzOrujC5qf+5Aigm/DrzRhwVO+louF0/ekN1cJcl8PWf8iiECGuC4itn1zebclP4q7ftTN0twLvX4MihafWTnXhEEJvuBcDgM+383o/T1BB1bcANS0+G12cjHikOO3+GituHdrN1ChTQcTdTAV/ekHB5fbpEApwE3u+5XvAxrEEWetH5zApRzrYHmE+LCf30kzXoA5b62Fp7lCua8oA9Lg/dfu4O8v6YOvCivK/zCu7S+COxW0oBJ4Oc0wXZlNaxJlRKK+avfU23AcBZK5pccof241/D8dB/Ii0n0/y0T7J4XNK23qb+aEVnH/+3YqDfBJn1YVKI2Q2Nj4U0aurFKxVcD9ZA7hf88Yuc7d2+FK6aYCh/2rtNDZpLLfcSkEtQK/4qz5lt0EvtprEsKud4gXlNIeyCTvRIjPCa4yRvmyiK7d2B1qiM/i/smM1JidztgBttgcXdVDNRUq4CTfFMYZY3rPQEKwCZbi3Wb+fMGNDu6KYU80uigkSeCfTrgXOTzZTUCo40CFcUBxcM8ZpjtfiBSDruZntDj27QyVrMZajBuE6H7mhg/rZmfzeDX+vmZdmYK1luO1yt36z0/+T6eQAse0cLQTC57OMP+mg7kJ+P6cA96KFHwEUsKk2WwE+Dmx4hoEyDL4FsRzvDwIJVjuzla4Lc10z/qAWHz9Busmj4mEOdJ9umRtiZVcRR4GvQpodhjM+23Z9HqI6OEVXrgJxTeMAiV3yatIRiHa2/cLcCrPG2dDTSOOEVFWBvzH1vxkW6XzabghgbA4J1mU7bMXYDi1Bj5YHZ1Z7oqNFoN2GuVqlgV26hcoD2PnUxD3mbVgiIbV4bkzVL1b4UCIGbK+l6Jv7tnmVbJL/Qq6b/Dc28msHfkjK/tR7rLdq71ju3+5x0yYQmT2VSUIVwCTw1DHOm5CMsnq4M2kDRYHUeOFnMBsXoaLomdrD4sr+HSfGWxAxO8HBR+yW0W+X6Wjh/Mq1WJmPV/hwJkXut/lBfcoTpqB1AYPN2WAHeQJ6cTZr/tHYBvqyFfjdnothw6y0T8n2088g1gcuOiBmrXt+tFJZspOVWHAh5Rz6ET9yQpBAbcmhwG8AijnskG5lA5QE0ZTm5H5YrLoY+p5ZGcwzX+sAKgFxHAAjV+oOzufSQZ2OQTr2pE4jRyRnbyy7meRXTAc1Hhr5+qeT99OXjERFfe+K/nJG8mftngtzV9+NC6n7252PRIcuEp2BLVAprpPvUunlAdAZ3tIyA25ZhZM9hwgEa87AnxbytvbceGBvEy3Vdx00du195ohYdtTDirGfudvFqHYfinUYFpjrY4ktp1mpI7Raqx/HveBRuzsUBTmB8mCompiizvPFl2i8ALTohVytR03olipNvqE4wJzqJFWLI7v/G4n7YNBooWI9Dz4X+nnG/211TW7kYzjq6C7cJLvhx5eRYQH42bs++gAAAgdJU6Nvb0BznZVltncyl6f+IWzlEO9+w4Aim1loP08DUb5K0fQJdeYle4NDr3p4umvfs6RFclcyHr5+vrYzS7L7Smn2cuxkNQPQHywrlzJMntqmVsr+BIZqXem3uaq+wR/rhVHDMzuY1OmdFMFzuM6h/hlt2rxA2RuL8/kghLzVsfcKxT17c8PDz9PjCHrkimVZJwXu68VBl9XBFQYwFxnH8moVt9tVqRjVrwAl7NppqilNer9YzHxDJBNPNIGYvYL7BSSfGaVJDy358zwHqAs6qqgKPamnU2wZxIPQlv8pyEV6m06Y/na9erARIWlNsFiRJ+LrGlkzNMoUhSX+tB/fXu09xge48I7Abh7vC85lilraqbLErdJO052lTwliZcIVn9DzA53znU2dZGh/5wm2VBJsgDgIdLv0cOFKaEvSTzyt5GIwjq7DV0AKtxQV95Jv4jeOBaQ8NJNmINN+VfAmS+w5iGfuhBxgBI2cM/uOre2uFoUfFfwmv+flX9hBlP/v0bS3skbqkOdCsmmFopu4eeq6E0bowuKy3PuUrR0XJDdfG3drXG2mjhzUCFQRLXr12IjPxlFNUU654vaHvzUyGcLRMvUjBREmtuWpfvuRe9iJLLoRnrBTCF7l9ApiGzrtbmzybd/H8K8eOUbsqjfVfGPpVhnVcG89W3SpUKHOg6wTbvgxd3DrG5KGSVCuIJSObqHGQOgemqwzyOThv4cXKE/733u4zxPD8YJqNz5DQDoVxSBaCBBnsGdHq1n9Gyvdb9moQQkbLJ26cDD1K6TXmqYcOBPrXAcivtFXf0dCK8JvPaOfYQMKQUhFc1LZ96ABwhxSXwG9zVbohKEjvQ42wAHy4ENL/0AKSWngMHxofIwryCj4cqwavCJNfDGHUNkipxFWs6ZTo+PNT3bDygDy5z9s9cBswe+ivcmwU65dDmwEFOKUeTEH1ziNTv4s4+3MKuPIaPbBp0hOLQ2y5Ie6kPQbTTomXkSfIQ9xV7YJPXiAfl55sbzr1n9C25Uu80MOn+0217U5Z1jGMSeNMVOGWHIuoTRVgJ+i6rx9vfuyfoW78vW7j28hKNIPtjBUnvC/VmLmQGa1VMGbT2F0yd5NFeSNlLjubptINnlrIS5xXtBKWFR+8vtxgaTskTc5QsSvYKvhS0Z94e+MLbw+curSWEI2y9i57s0kgDxDHiEOPnQpDqvHuR+9ufwWL3P+zgo3E+pk67bVsGPcRMAxnv4u/F48h9yW6Bvsblj9/a3mn0ySpTBAh8iczxItjmJt1vXlbMRMX4uFoGaXRP0RFVkVGQi5jkbgxBsKIEkhVkMKnKzSZRkgu2+BBO3CiEUEyuZTY3Y8CqvTf45WlTqbDc4MnzZjE/+friPpO4n8rv2FbQYxmgCilZBysFDUOGllkX4MMhLAS3rORRshKmHrjXCD2s03wVPqwj8Gnpm1QgyHIiMjc1wIDMKBBwFdqz0QtHsByp5h8zpSUdxegyeRRqhnNcbbTLcyZg5I/JSsAxYfYCISA4EhCkRTa3foeLB/5BMEpq34+979FLQPmNmdBRV8i/JYveVjaOJkolDWM7J/qNquvUtbaRO0SVFIObJdfuruMEtQAm+OGP71jl3IidqZ4R1hOGjXQCJ08qFwSx1FxhSGu9H5ZIrHdGUfpcU94jN3Bk6nx0YqMWaYAUo4l5bE0Wxpi4euKTiN+okhbVy33fxr6OeGUujU+tPnIRlgaKXEJbHga2c0cOIVftLIewEXsm2fy0DfPD9+pZw+ehwqU4YzCI08SsSGvGTxJafQ4amsJhqLGIeZY6qBl2Qf2rTk40ZLkoKqL7BL83wA1U1yVTDYbuBf+Zyx4SNAnYQasvlyzw4oxHiG43xl4BnNKbqlZWSbLAlGWFkFf+MtP7iQ74BTtPxwo/DAiOKdc69uEdzge1FQxp/1hCOqci/gPUwZDXPoy35TD4I0ppFrVVDVL5wGZi0NHLFjrHLBTXrbayDEepsld3UBKPLRuHBFVvXu7CV0Z0M3P3tkqFxMo+33FSVIb/Mn9H05kcrC4DkJZXA06tAd0jZWBlWh7gc9oFpQ1H73zmg2L/M2ts1JLOJGMgOyVBcAACqzqjy/5SHUtGs3REEVPVOdEgg74re/NcoX3JNzJCg4V+BY5kNfLHMQ7weD6x+QbZZNVUyDVw/FDiWDOpjlS89BJpT5ir6YhYktqgoFpaMmXgtl3AznBnjFo9FE22fET549FCfojCv0rfv+AlVf+Yfd5BIY6DLnY5ZBqjDhS6pEKVag3amb79n/eBzB7cDT0MhTztgAAgTuRyfk462u1CEJ95r0xJtIMOpvVhQxFRY90HQgzD7GyTcsiw0K+tKIzJ7qdqWqC35dhEIwOk9kbmHG8I7HzxsjXXkKutrYp/GpVmaw8N7ERXHrNaGV33iYvSFsYfVzwPNganb3rN7ArdzmYJFtOwM3jivMLBvyHUyssHt/IPHIbw9fOlE5A+yYwoS+WcM6DVTyK1myF592V3CVJeYLpNZgzVSziI1n4owln3C/L2KHbCNLPXY05MB2hWvgJG7/ZXG8fE98js6REMpQXcslkOfJBsjOJ+dEclLShe3n3WsTqLXrKX70s4CW2taBiAmo8i7N5vIMBv1U2+Ul4XgZJ9k3RRDVMJei5wYvjrht40j4n8Pv0yDDjn1/2OoA+NfkT2ShRo3k5jpk9bjm3jnrRNnrKSrNLDusHT96ovDzDz0rX0P1dv9B2Kl7G4cjXDICnhT4D1Y69393OhDy3Z7GXB1POr+sYuybRp3Xe/y/wTj0j2ZZlsQCHyUrGXyNm1fvtAp6txnHvc5moEjogWO/pUN8EowP3m6JdCSGQENw5F2UwaS9n+CGAwBlok62S86wqKImtLEIdZLUF/EpiM5hk39kdieK5Swza3ZmhlLdHwTSDL/CaYkCrYaqXtM1qB+w0DEKgxj1ZSwWjklrgkCeKv1auBISV4anC35fSP6y+n7b2XHS0UBZ8niw7e2+ohFNdNICu38YtMPcT/AAZ856ixVg2u6HwU7bEXDi5Be/xxwAY2PslEHn5eziNv3/lFQ9devJovG6WPUMomem1c4e00929rExItUUI+rHpd1a7jIOzU//uEadl6MjJtqQN4tnrI/4/LMskjby/YfJ37Hyp2q91l6uAlX9SHmhQBbWk9f2avfNd5v9kx7jMmHL0BQjPPgeHEb6FthjwW1n1/M3QO8Aew025HdHQCBn2jzmqm7VKXVq7/CCHB5TTWeEdaf1B3r/S0ohTL2fQTPHPfils7RleWOkseylRP1Hd0wd34sDN8hY4lbbC/4w9OXaFbLke3uvd0DmCEhqT3LWKQ+zbLCRnm62YtgPoIUZyJvgAwuEx804Ar2atVwX5pGPHHHCHTun8oQ+z0+bExVAaBPyr6ph8vReEwBGGj4GjRcQHPsPBOCgfIQtZKU+FlePyr5c57+8XmdJFwAOUBAPlCuk4LL5e3YxkBDTY957sCFFcAYku52/nQso/L9/OSn3CJYBRAj+Eb0xUDbz3X4072dkQ9UEXQZvknZ8VGhjBSIyRbFWPPPjG3juNS0Vw/atwrXf+89+X/6ACP8B+uzGVq9vbAaqbFrsaEhx8NoxjkCps7KwAJfMOk+zc32hcjMobBQV2+EuVNwT9qdLKBjQ3Zj9UH6MATzSCXOEb343XIXvw2oJvEeQBgSX6lM/DDToYzMc5pSXrCc1YkvriJCxEqu6N7RVze1Xwg0pBJn0fOjdD8LpXUxeU+FaSDYznEFc/mG0dOlwOhlwMZxAu0GbO4v1jPzEL8pgU0c2unaezP46nMdAOEMLOyziYPMrSkS1TKSzN1KN/otTmBp8Tv0xyKm9ZSbTSYp3gDup9l8FvxBLPbeo9p4tgEWIRCM8FNkcFV9gu2aQrXCeiFqkCejaUYK+Tdci0/4uVvs5AUR8HfcaDWcqT31NaUz6nhdJG33t69kU26OHDKCXW8MsfvbMLEx/pUisgjMybz//vTVOmInaeKtaOiHqnQiQF8FfUtI9HBNmmqKsKYMSlVZmir8kCYC+FFKXlasTAJnYLEQai1hXQpUNJq7r/tWEshKsqd3Wc8aKvz9bxk1dK+lTETaJj16/F1yNWcXgWK9sHCAM3Axw8w+9IyifFaJj1rB1eOpvilHfyipFeA8eoTJW5hjGIPfAsjDWReqQh6U76j64YNpFY5KE+4+EENaBQ0Ejv4pEyOPDJNruwBp7i5hra3sglAjOzBxaH8MtK7sf7EK2ymkVUg0u9RC/I43OaxqKbzs79IBBXCIGsg6IPpEAkXuvW+qHeNG+qlPLy743b6P3cgsWtoktsRVSxAdFyTJFPP4F3A1mN58QqPQt8YJHH/CiW1YAv64crckMCBQi83ZwOtrsouvLrfkeoJUaosmtoypSz9uCTXtyylMkZccqSCac8owKo8Jj9VAljyvGPQj+dtCkGu+IWFLJCongpqsDfqNvi1223ycF1favZ2iZfPSIzsRTtD6XmaJRjxnguB3Mb6kky1X4PkmUHjUH1XxLXuDmprA6q7KG+r7PogKq7hwuAQhaL+SlthT1owxZ4CD6eFtKhLdCx/bpfAADwb+bVQPjAhTjV72Eo107Wpc3d34EesVsy1dM+gMWH/5EKGUODPWlbqG7dDT63b5+whBr8oqx83SZpwfrn8rTWjIuuvYucggVcZiYtDp0iJSucVYiiLi2wSliHaPhC2MVgOne+5RnqYdz1h433AQET3DeEZ6LbLWppY0POEA/tCbTjeqnlmOyAFFU93kWnVq7dn7Cyyp6UNTs4KDdifsmu96qvwZVtll882Xk9Wn/ybZuNjKTAfDqffXfFAoXy8hewCr84PvgD3S83O4KJ/CT2gJSlL29OBm/uQfYcREY0/2wbZwG9RAqxb+Xf0M+zPC7KnP/mgMYfcpuZKpuvqiJGyXSKySIywvPl5wtbSo9DoFSnj1BjGHSXxSmLBSZtbCTR3VSsHaL6njKY8rqWgsc6W2lJlwSqsIboRnCR8GORqeDWtyStspVjKEK7IhWbmkiPMPDq0WnP/9+MngfgcJT0g+xFkVS4UehowYo+HslviK/hJzSJaRdwU2g2v9ChxfRqfhvEDeAVsAcBj2ND6PDf1cJFqgW6MycXymoKIrhTd0x6Ts62wd2Ac1FXCPsQB9EDoLMyPa63Mlw84uuSBPtbLGkvIhSd00jamvoKspR36vgySt6XLauIP562DG1jS6blaBq1eN8+MsiT/msTJcvoAs8zIWl2cejRP0v99hKPmUZBhbXoe+OpM5nwpHSUDSX2JDsjMPRxNDCVYyY337ytaY5Sv4Qr7ebqOEwrSNLyqnDxAfPVXKtFCSQsYMQZERSSqCuGTi3RlQh+bUDmVl7FbLk7YqFhJMwF4qkFUM4m0c02a/XYGqGNtV5nvXQMr2mEbt1DxSUTZZHlzSnK7tyTiFB30itgl8SWH7AI8WFkiN7nvnistQEtm8dfmbK+hyWFGZjLPImpKzlxjTh5pIt622SqjyiuM0Akki43eGHUQ9G9jc0z4kx5IIKLYDW30cUhslfaiND5TPae3Qmedsj0a8FyzhKoynxSNVTL1t/zOae2Uw9TDUG44iwQ/KhLPMVbQQ/6JRFKOw0qnYv05VLg8b/Tes2Jl4kLlw1Rt4igO6pwGCqT/wbiKAeBk2nl8Z25C+KZ8a4yb1yLz8f11U0qWAsjMnFuIEOoWNmvaXrbJqGBk8ChHTJbYbL/ncJnj1FxXGdAe6Ee+cwIjkYl4XUYitKZfBFSBaaoC3TybN+CrE2IqVb9QWT4JTz3DB4n59uqWiDQhGdGHHJANkr1yfoXLmfrOZn5w+toJ+ykz1oBy8sEnW3JuozPGH0lXnomhyfTzTQ/urXlqBOF60wtMnAAO7hDzlzlkZIrJ4MY7l3SHsoU5TnZ+OTbcn435SgJRcm1mAam8cnrPwHqZtyi9m27kTADQv/n5Kb7exhg4jS422kP7P4+m23y0ELNXzPTJh4+PD35qiuoUXa3CNzR/EU35zgYUryj9FXbGdWYoQx6BvXQHNeQ0pbfdufpuvIXf87z59oVOKJnd/7U+KKQa4QFW+egj9+W9wGsXmO5Fxa0PT98ap8/AcKVjIQT5XaXN+dmzZJUD35a2YSdpub5bUT1yR4NOckTcc1CpOa2PvzZWcAXQYDMtbXRXcK5pI4q8NwVGPizsOatcF+jtVtBY8tla/Mt2DdrkD5AbzS4s9tniQzreENf3IJY/V1+ceEwWu118Fh6U2/riFeVrI+mTvlAzFt54aUPmnudXwsLbKry8i13MvKaJ4Ve5lZ627y7baiI2YzZR5d9LxmlB9HM7XFgehooesf+ASaT3t/t6RCp/kNN9z5C610KOzRrDXgtrPr7c7cC1cGUMNXIdqr9Q+N3s2uJxq7MdYTNq7V9NfYswmiL2taZUrVq9OG/sla1g+fYbqYyHV+T3XdyeRHGrD1idFrrsSA4/rY60GF5L9+p88JIcNA72nziijdJ2RcsIVuGV7opEZF4YTfvg5Z17dBBujVL3c4RfT3mnQpdxQFWmD//StVdqI/JD35hS/cCFKqIchUMJo3uE4k7c9w9k/XCBamZx5SRPVwHiM3JNwPclWv7n8kRZ6uA8peuGfCp5AsitUstrxzn3X52fAXpty5DQA/f1LTZFjRRBIck1JPvzymAqe2k7NYvkuUlqH0pGSfZ/HhJjL4DG1SkxxZeYP3+SJBTUvkFGIDS0/x74aCMAG16nX26DdTg/fuBFyu/OCTM8un9yODiFdxoFSLCzZYOFve7uWcdFwF1GntBj1Qd5P/DegTrBwMedU6KlT5k07stCbuj2eAXrzakpP1reEXVspRpXCh3x0Hro3SkLwWzD9a6XAB182K6vHB3lpsBPh3St5ZAebMpeJMwRiU0dg8NwcCCvBg0EaTixcng6BD5sUpIo9MVZHj5xh7ViY+6hFjqgWOn4tVTVPc5D2jchHRQfQAyKQhV5kX56ewaAJC3Bn0Lkji2Ep/RctkrmrBa1FUieb5q60cW2R0RkZqJAq8brW8MjQa5lpcipU+EOF5siAy1/qiMB+X+xPJ0dLJMCXqs3cuEzSIRz5JIRI2FybGHB/wY+nP0gvfoh7Ma965yDfxyj2kIUPXOnfTqv7nX6t3jvcw64Z8d0CQ1H7A3832QWEvSf5OYUs+UocZoNsi074MLdXqSt/WGGVcbyABXUWeaDRn1FjK1uew+hVfoDNAMU1gPFDb+or5UBH3kJez94DA+LN24rpHQED8tXQS+ZzJ8xn5QmY+5339Ovrs5YiSdPqCR16+BRw29kaN2MkndUz5jkqcBK02ag5YgasbD5iJV8iJ78ALJwYstO9qmaYfjM3rPCZ/RKLE49A/s1as2FaMwiAymxvfqol5NJmoAJWkFGWoY4DrfRRb2t2cPKOnsJ8CzP86I2TYqhCwtQmb4j38XA/AvuMVmkNhsQmUlNWaJQlwb0g/VANg1jVpLe5lor/S/0gqVF6u63sLDMMYg+cD2/Mex8IVpw+A0elCI2tdLRRvKlcMQ8quaLaCXejSyUIFlf/1vT6N/hT6S7zBJ0JkPEr/rNBHO1mfJI4AandfThLfyNXH6RPxozzoxP5w+nzZpQ8RT56fogR91HCToc6QtfL47LVRcEUH6fNroiVrUHxFsFegYtBxUNbu46caVjLlH1STcVqvTd6u3I7Qkk9K+xP7ihScHipH4ZwINQ2lPpkH92i1dtVFA0dlpj34oO6jBmMfyR79gVLq4R7aFqoEwWL5E1GA8VOSWJP0TBO/9XhlHlqrTRM0qCwDxeT2nAihVNZr9sMmVUXy9UtnC5DdpHu3ctb90Rnl4946WWHZqcYUeks4Ur9ZnbkLJIPEqCE/FQ2Z1FJllYbO4nnzlblYXFda8HqLVHl7MXerznxoqAqLjp3iJY3lWrE28wW4SEyViSVtByNghPZfH6ZwArHb7JRrmy2J3xkbQSHk51os3bJmidCOu85BGuf9q2KVS4w7aS/0SE7Ntt7c11wP0yelL5zeEGo5OtG8k9XB2dFMC/CjpMst4MIMuC1ZPIPJd5uLhHv0ezKLcngGCwI9cFF1tRHtIo1m5HeFE0k1UroxuSidZtivZ9Rre4vC4PzLVb2j06tK4SSqlcJWjWsvCh4tgWYcxNhoXEfU+iGdGHCWCDbAeSuzUbM4sV79spluTnG+n8bze+kZVcCFt6fJ0cppTCsAvR+u1dM6y9yG3j/cLISPDj7xUINYs/1YPEg2+CR9RkAtvQw8T4efAA/iJ+pgY0V17kKlDty3zGbM1VrWx6f/ptn3fz2HRu38qce0FMU1+KkYQRexXJ4oVZEfE0ioaSLEG2sVRR1INJEp4lSAjKTxlk1AbAd7+OQy7G9LUPFhaLBbbbB95VJpimus3ERH1xUmRi3+Qi2jh4anBjqzYcPGaL2WDP/zKXXVe2GzCxsj2nfuKNa9E96JiDMYXivF/nlhhJeexz4+PyARAr4mqibZsW0EoWbNavspWrDNZbZby9uP546kxkQRMl/ev2M60mnWu3ylhdQyegWIsau9VxnoAicVC8uO/8zXiMBMGJReOvLN5OVnf2LdlVB5ReoXshSASXtzcYk2v64bw3zswvp454qQ6MHXpGqBbgwVMsqWZpdwhjKXcOfuxx9KFd2FSnKYeTLlQp5QfOdpk68/GY2smob3qwN9Guy0Uqk4UqOtKnqOwIjzWnNgC6w/kzImrbj3nGLXUkBBhXVLx0bkkoLAU1NeqHWd/0ocqz8+ZCVU24/MrcePP1hcsT/bcXma79l2CA8WjZngYmbksKfeOINYhMT1v9Q9G9/HYK0g7fOhYxa2qtc76gcTE4cF5sarsAAWaf9EVBo3gHYWqd6PAfF6lAf7LzL/xs0oTu/9hd5K4RPjq04wPWNyaZ836FcLCElzQAVZJe5d3fT1ZqfA/kmu7Gc/yGLdO66ZvSWLxwTP0Q6OoCvnUHK1sOkMnz/EGy9CRbbkuNhXixujqPmYJHCLj7/uea/fzb6v5s1t1kIRO7TVWcq92SKKgadspNgj+XS1iBM7mxJ5VZ9cMS+KDI/VBApIwvNSANRXhdP2sGW1DTmXs51Iam5Y18h/c/xiPTg1Sg4XL+DneCBrnBPwcBcejig2EZAcqNSzo/a/964HvSIZ7/Ftffais8XfkPOX4bLi8AgvwzhdTub1l/1Q2rEFXLqigPVyMVR4+TtZ+UL9JKMNyDECU4NaAir8ZG2X356FFfy384spX6Mh/vUzQ3IIaH91RZlFBbEuK9HnIVcEUYGMHUTc4o1GRicnKbIFhymL5eeR1LrX7Z+WzrxFZvr9mKajJvjbekVxZSPaXcs1z9oM+4/anU8JL1Dk4qnpfA+OKTgV5N8bVe4N5IpJrig1unk+TBPejAPxscoBzps0PE+jocRJo+AmaYh5++Yx6T3gZqWvFkECRTsvdLc/LLsDdIHO5Gfo3ISw7EfdNEUOkuBHWHrVN0iEL/f2rY9w5VwFQUVjwb3+5FAXuD0GZGVPYpK9tE20PnntSQK7InJIyAtg+80Bru5t0XGVyjQJv+zd48vPb40v+hpieVtBfi4gPT5Kfv+GKNAB78HMdOg4993dV3NHat6HnDjWV1sbnRY7fIYfYiozFkEovmY95hjZugO/tl+RFfwfKxa8RneXAUfoUcZGKBYiFSczPjtD2an/Rg+HqU7U7w+bTpiDES/B4C7fQl/sDtd0vrE74424h1mJLqnxnQtM5Z8FN6Z/NFU4094sKF90z2SMhCTUv1N+CWA49qPBtBOytNi0dVo8scodADDOuTR3Ig/acTO2FAoWU/cVOZlsMTMicvqmP0KevUdzLNcANPACO2y9nstthKFPUFgXhz1spsQTySdtFRzcdqseAaTWcBR/axEpPcCXfxtviBTPzmhD2B3xbknbb4Z7+ZLt0lrb9F0/2jXZLZzvuwuewDkQ1RNXMnk/KsB5lh0VMar6Ki7qukup33XRF0jjSrTBWDeo9nwYdU5YWs8AXWEwB1+lyhYMauoo/ZZSipLzkIYGRqOZZgmBPrqAbaJhao0Ts2PC5/sTRD20VaHNIGFZA51UTNSJ27reZheSMDz/mNjEmtSrgQ3CIa8z4bJh8Sr/ZNciAWyW2Ei2cbKDafWyXLtWmxYrZHsj9lrrK7QpcUSMdvjRH2+59oyjHjGlj5kkXIs3TccF4XEAZ9608ZuEUJGrGOJ1t1P89e8aT8taKNh3IKFN5fT4SuhWkeY26Zw/PD+Fncx95gtRFFYWGhiFmJjUV/jpQoeILmY3t29B4x79TknwkYZRJ0NADYeFksCPPPhuL2bj8cXAnO5CUXoyK1GZfD0T7NAiTHs1CzQmpaEc9ttnLHNZRZvn0mnNvWjxXWqzezWlHr4nNBmSlOHYkzZBojOHcqIa3IFjmzIq7RnBGvQTXzQpEdqLSG354FGfgkKMgYDUlX4Nw6Qwd3MGTsKdzfYAv4aL4d3T6S5WycCi2jj4VBeuMyY90Dt3ztWcOFjr6oOMtj00T6zn7eK6oZ4ImoMG/gWm/aUXM2Et95EDFXTJwZ4U0tRaPTpim1UDMTtjHevMmz9ymmh5/o6E7nujZd6aiPvXtKhm6gBoOx5kHOArsYHwN7ZezlLrq5VLGYXAmdnrKLYJZrIVZRmu/OOYQJxOoSvrlV3yzE1T4V90Gfe3t+uAgdmIx9o3ukMODBpoBKw3eAeHMWvRZab6wgkqAe21wtIAAI61m0fRnYDkhj0Yyb/OR/6sgjopSRSqTfmXoHgsG+1lK004OHxZj/UlEF7n7Fw5vj8l/KZxDgsrPIBUYGPqUbs8rATn7H9l8hk7TcG6NARkrQpHhNKCWGJkT84ZtBco/aHfIzeBk8ukCsbvR/dYtxCPvPvHV7JVtxQvAnVxtxTTP1/FLmZt51dR/07YN45SW6RbY+C1A6yE1X1KLJRbs2XgGW3BKuWB/deLNuFWjUx1r/MskhSxBnoeCjGWUbobBKaV2sxL8TeQCDP2ZaKnJ0B1FRtbxakFWD+XFcCc7UZwDa5edDXaOvIxg8/d+2OMRHTMYGW5Bc6o+aY4OH9/GBy3g+IwHrmX4zBHqM7/WrV/SXTpFOluQaQVkfcugHdJNnmhYaLQKUyelYCmaJsAt3FKn4wxFrUrmj7VKcMvW06Nm0IRoJpWp/spBf57wYzVnRbqIAdHVA1Ah6fb5fkpYC/k14Ep+leDHeCx9fv2CY7GoMRzAzsE5/mS0S62IObTZl9yTc1vuMYkV73tjf/rsyRmGaAT6JvP5ifXLOuEIf4j9MDnTZB+jwT8GjxGNq4re5id2fDeSQ0yetKudPNxazyh6QiPbTxS2Vki/FzPGEzyByPAGJMHAMoYMNbvoE7aAepD/OtjMUSCewnb45X59As3F1t/X6gQwA/12cJmI/KXVzjNEeb7RvBucTYCOoRcvwO9lD8jqHkH5RPOxRwjLzixTvmt5GfwVGL/p3iOj+iIjK+e5evUjYEgTfUKXH2zmm/WRij7P+kSWIlMe99kwcMwvTqzgCyNWQciv+Svw8i7wIDL3Xmhckm9pHeyF6Vcjz0CbmnKlO1Xe1F9zfeJH8gdDbJPB9JT4OLHP/EykosAlml0arj0kMHa/A+eaiJcRB8919oSkwtYp64XkOHqeKuHwgeaePEkntxaMDydnhHPg11dJwdRQMD63F9zTnDY8yJJEVBLsBNPQid/n0ZeKx/KAh/QLpsgr2ZvV8DvmGHZMJN0M0imEIDUBL1DBjBESsLXyVMZL4Lp8pM5V4Bo+91gJiTWxAt09my2woAvYdqQyvzr4Cp8v4FXb2s18XTLiFnEzziTN65emgCIu8BWO1mn4445MUqpAPke6vBbSbJMwxz/Qo/396XDuWegd17LYStRpm+9YOHXzLBVRLoOmYe5o3hpqNuMnd+rap+X467OVPJlxMYTmf1oiwTK/Nxt85ZFdHdBFgW5VVCywwep5Ry+5Yhmvn13M83i6Gne5zY/TbK64xZVaaWFXkXzQY/E1IiNft7WDUiiRzwQ1lGnd8MpdazB/sCe3cWIbyfW3Kv77vrDYH77z41aj72AiyZEY0uZtJuWntCNpI9Dx9oxlGtiC1F/GNmXvFUgktxSgJQqmtaM65SnhNcwbkGUzFFDZVWwSZNT++nZHrvxipUKdjgLl5kUKj5rf+lFMNyG3YgHsMMdKTtA7ZF/4ZMAhGeelG55wYRazA0uGSTwCHs+a/gvPo69Vg3Pm8bB6sm5ktvFXwBoi7cfPEjGICYv2PsGJJQO2n1bxi5gbFW42Y95ZDq9v+l/gbC87W6UlTKnoc9zkIeRpOMMngu2Uct1NpuXnDA+33+ubZsnJl9Ng5dfH0LgoW5/Snvj30w6dleQ6lS7vaTsOGWLso+vYq399pQDIT7fidtuORVtaWBOu0FrAZvbn0jxnhkYa1T2dJy9emWKlRXUJ/j7WQ2zq/iEcrc0ktxo+iCPVcB6TDKZOwJiQMzCdu3UftjNPqIMaE6LdaKRKAB8l3Q/QeksLksW2zBYZ93X6yMc1nhjKlbKEVe5jGth1P/bOmkCX0v9zhrI5iN1v8mlNp3Qf91XwhBBtNSZ4+M6/VDHH0AkZf1pJkCRkDRjkH7rBq38e0hX+VfylTj/TcJvYek7xXHWD/9zf8Pzfl5m45Vezu7qdc/QGWPnuFhPHvc6v4pY7lrXoSm3R8+arDyCvcHcuwvP1Lif/FTSfBtS+dMfazniGaP9lcBsfHlBIInaFugrR9nXSjtGwMXkd974qlYKGIhP/ZEtOyF7JR9vupVcg001uFD2epwuYUYz4BSBvFe/O6sThneeKzi+H2sLeOeR5Sf0g4+LpAWx/CeGzv6RNmBgnxLv04TAIt+gQcg5Trha4BrTJ/eQCNeHl/Vic5mlaBy0/3Q04MaYED2m/8c/2Xjs4Vwjvjd0D2tfV9i7iObSA7wvI8/WEBpyLoQwVn+nh7F1Bo2tLVm+fcF3f7nysxEOTZSLmdF2c3Hg5DXJqxrZ2gcLHFB+kWwQkA0oCbI5Dh5/JJT2HhX/uz4eBHThQ3+/6SxXTXlLzCDFmutbQeHEbx4m59DgJnq97aSWU3mTiPHky1lnuAHP2Ai1pMJ4f9YFN2jg0QRFusDJkmDeatCb6FRH50WpgAW6Wdk4wOT9MiuqoUKASCm+GLkZwoaMpY6EgiUv4T9cwx6Dxe9qM4kEZQJfGIZZPu2Lf6e9JcMMdWxVVcIjze1yF8u2hwAfSyiE4EpGUC/++QeZqdSkgpjJl/FXiRBL8vEAY0kig5a70jBsKJqQj6Oqm1+qXkuSkAPl1Cckzl819mjM2g97aWdI2wCDHq9FNILorvlIaXvS3/9n8YgjawNgTBoxeQ3Oxk4eKQ4+iaz5/l6cD+unB1bbBqD39/m6q6ik/xiRqBf7YvnHBPTdIvxRUVX5myDY5BVuH1QdIejBUF4bw8b7oDzT821qlYS0V+sc21vMw4YBPQBgSJ6muu5ZXSGhH1NWbACoq6IWPUBrmSsVuTiIjJ+oz4E6i++wS8TznDKiv6lWZnMLFbuCD4pj/vH8RXal+BBDUaKPP/E3DskiaOR+I9q4ueQL+nEtBhyU/x7JXYiXpt8Zn36G4KrXAsapaQl1vkUK354I/Zr5DdYJuEqEiNMd8GDdgcV4nDq21Cs4+QJvHWpmeIrg1bUbDB0L8hAuH4vkU9KgK8jLBnyLSp1lSbyCJgnPXw3X2//qr9dHfdGwUa5PMsu/P2phTtA9WonoYsIuViKnMHwwqBDHjcoXqyPx8R2supKcrF08Cx32grEQWT8XN4QOtiGb6qACbdFTCOLpM713669NGeRVMvmptN9BuhO5ZJW6CdzsvvQDD5+3ql/qlKrZgR4Hq2q3tc5Iy7SfFacs5P6avHsxasCp77UPPsZ1nQY3lfKTh6z5lBg9LnlDnqrS7sm2qKNoe3tyZxekQA+AEQyBpYniwqEyVZTnRUTtPOYfQgA1SU1YqbNULPuuV/jOfZ6kxZs/xulBe9wOQVjv+IsvKhybWiWcSmdFyqYa4WcV2zfX5cAqGJ2WXLajWycCrJQr4iDD9OuS1MzoYx3whBbEwIUgwO2tpqwZ6RVajI70ZEwtzXBe1H/QP1y0eUfL5JFegmy6dJ406+V7G1qYpcf01HoCbiQWZBKcng2+M67++f4W+ETQcEm2WdCJ3PfG1c/c7nkbtan9j1IHya28Apm19bEtm/zgwkgsOfIMiUUIBjdfrE/mmzEw2FF8vAVskkrL7w6pQpgZDDq2z4K1V7abdSc5k+ae/drSV6unqRWYLPOLAhz2DrKEJeWiiTcdOkHsEk8tn1OJfTO9N2lck/zVpruRtDFZlfuOrzyxcFDYdZVF1zT9RfsRxq5LCEKEROefbOC8OE9keV9AKUsiZbgK4dy+p00ZwIkybmEHQtOBG8RxchUnrfVaprvLBT53D3uscjm6/yz7YeraLxA6CypIDfZtfCWvzFK44yifNeC5MwsO479rI1zAzFuHiGIwYXWof3FXDpQ5tie8YgR7CxnASneIxaKdsLFq/79gUWuX9BAWSnFvIzJPqw89S7PoxjrN0aEuaaj1nj1DdI8gu/Qnphg/EKqmlHAsy6aIwpWFFJQekArOirDzEYkVRL1/trtacn/ej6bN1qkeqi8PGq9KQg1MA4Up3vMBm/27kzgYxqbLosp4p2rIQngmf+Zav6dU/B7wJ0kHivgsysT5uFLjX9cq3Pnh1Mc2M1DFQvVxr9H2UPb/lSD9GCLNx9Tp6NbrV6W80IEDhLrySZatqX/6mu+DxXlq1F2Vda1QvWTJuDHchEg7hwJ83nTv/UsjAzibbI4IJ7bRNzqzOb5nXiNqQ6D81dXUku/tOidXA1kUSWBLxNJYIgVdHG9c0Dz2VzpK+mtAk5N8uDoenYjEld5aJSHutfOGvVc18XfI9SFTgDwxCMBVLb7MYYuv52IxDlzLoHLTi5UM8k16sgRHpkgPIKuB8feuqae4ItvD/Al8gwt1ecHvudgEIgRYbaQvjbIktxG5AD3er4GStvwYKDdnIqPsm2Nxr1sp+IQXZ6i358WsggNTdUMnYkVquCXcWzDkI2LH07DsBQchkwhMvFUpfFa8Qx8xMcSR2xn726O8f/eu50Qaq+dN5iUrcb19zOVje9FagYOYXXqS28gPP1v4/41GQAoku82XhEN/7b0DC8TGOndHJWp6XjM8F0Qj9T9/DemyRbJf84F/+vug799N4U1v0ZyJJuPtGpz5flRc/1DsYj0XZBm1+w5onJGUkZdVykjC3c6mTZrw+alvagCIbOQuHXw+BS1fv14z1XyUUCF/ojSV3fAZIM8TEhE+U8B+bf9/UBSZvx7ouHVVFq8dAlcmZMb2e/9uE5KJS6BQ7VaxkvimQ7msP6Ij75dUT2x+31Ex/u9Z/en1IhnSK3bv7Q8zwdX1kybZfu4NyHdIwSQpN+N383WhycnFLkp6F8gN2x8qlczHrrxvE1vLufZWrhhrfQFqngZMjZ2zyztv94bczef4f6FIsw6PNUB4xLWBGZQ+934k4C9UIszrvbeU5rcykbOd+jG0kMpxfb4qTy/IKcppj5B3iQd8gZp39VWpTonNjd7243f8hXCopvUJp0XPBn8K1orUFQ+FNW3NLQBCuiLp7LjGLGTqSY0tvCUtmiKR9o2XF4lZPCbfYUduyFARd6B6x97XtPuiCnJwdzLlXQcOl1HtWM3oyzpa3jm9HlLCModmSj5rL6PXBtb5unRx/1d0kRXz+Xsi10x8hAFzTHSVvOCcTISmxWBI6C2g1DBUQ/eAPWH9BQq+0YkCoWKWgB7yxAnzrP1mQGGwftwPs1zqsaknSH9OpPvs4hJGw6QQ6EIIgD7tFEG3AOsYJOrA/sa22mGM+CStnPurq7RV2+zcbk1Nm9hkn/cpYUBdf1wsT0xfdOb6F3X75TSL5suIdHBn4qHfwRk0zrA/QtLtPLd4sY+Lz07jHd8v0j+mN6u3YYsMv9916i50bIOu9rSkoRQvNBPs/CftEpnE+l6oWfYCaRF6PMHZhIHqd5/TMGviHlLgPSLiDyMYedZLh3+xqT2T3ttOUWTTb957YqYtA2h/etALXw1OTBzk30Ws2OCYNxHkiBt9dFhTPUFs+MMSjHPUSBnFEh/YuIPDnizJ5XEqrnYLnewKwQaTPYXuUXAeOTS7EhyjGJxcI5Lt6EL+fs2308Zzu+nJTbx9nnj5wjVir9Ru48xeAfhcagkmXRVLIElxselV+s0gfyM5XO0GS9TyT/lLYsL+N82h4wO4amiS/dpAY7B/NqTV1deJoAWQ8IIWwMK+ZqfWdxiFXRQcyMpIIHtaT7oU4AlJdTLI2eWBQk46yRdc3N1n3RmXBW8HLZdHumIPXEn4H4ektkdN4166NtTgE/w40Z7yZ74DVV6Xk3tcdkZZw1uq+plIjvmVcJzeJAbnBO1P/X4meDpOLl2j1oHF6MmANwaBpgbeSs4Dc2L5HvfR/pqXRVLPH6DxQcw7JubSTghXHGUtyk3ap/sUPpuUrbn6coEFSOJ3fqwz9Co3bNFQ9tlzqT8ltOaNTHr2ck/wgZ00MSZ+g30xozudWyNH3HUEG5WYMOwwejaMJrtEAzdudz+EcIvng3/UyXkNPdCszmFCxnMB0aq7QKIDnZIZ7XMQhaeNAV9wWM/fxZCnL8P6HEejgkbuDe1Aurn8RwcHm387/3+Mi6HNxjjBHRsPKipEiGeQg/V3Ht7Apo8gyXp3ZXk/WrUpO9OQuSVfSdiwVHuR04nzfi9erOELPggVzgfGUY/mCz14vET8Ahi5oRyPrHqpmmTDzVke9OE+RGRrIz4uQyX+Uv2hCvSk156/gOjiFt6ZQGXRdZtwwTNT5JYKMk/145MaKSYHhIaxPyI6XpWafuB/DrtptO4rktqdofs1rkpaiwbnKFNnq+rXlRChlHDXC9Aw0sVfQry+Hvy6BcogCgyTMNWZoTGVprUy7wIYT67wbPvIHWcH8MhIhiZz5Ot4ScPsVahKHbmrfqntqVUM2odAvrznpMyMTkSS/3C8BjrdsvW1aJ56j0Stv0vqb3Js9lcz+s7ZnRkMkaL25osAAvpamHaxaQD6NjwEyfL+RxtdTWVEJsfs3m1rioR8Mi9+prO/rwpAhIFjsclRtmvLKzHyzhhPUkj/MbLfh6zdC8Twqr0BCFwBN8F1cVnJTbFzmO+Y1K2ik69b+2DnpqisZvCeHG22C40fw6Gen0KUdG7mmQFD0lqFtub0VXQbffdcJkIaIoOUiBHAE6o3EH4gg5c87k9U2zlfC9TMhtY9G/PR9PVcbUnXZiN3M5oGLKIcW/A6OaKw+FK9jXyk2OAEFRb6P34kroD5ITQvfnKP3Gp9yEwSmcu5zEorx1fGRcvkYM0Agc/BYgNuiphyVDSmjSXguy4cPF7aYURTwDFTcRgpj5EH1Xsga5tZhOIT4Fmg0uEcRrBQN0i0U2cFpmIAkEMoJ7TAI6xf+4xy/syR9/DdUW9dK7FcGoYxlt47WmQsPG+6CgrIyTlA9EKrBsQmSKskcMT89HNfwyNlQ+VIbYGD8V30VVZ0CrSZU+dVb9O/OsqAdaCiJ2q/No86VT5DHTZrKDnw0f8EB99nRrqYyAe7CQ1jMCL58QNEyGtjFnvwUUq3DM/WfkKfb+qlpTGMxzKx0us3+T00XQ61801sQYjsl3L5htFTICp/7x2PrIGCXYwCCBQ5b7Ovf0pWarg2tpu73vFpJ54UEkWF0ONSpIKHgaWTapyTs6ILGjtu7dKpoMtIXxi/WVtRT9BEehZIqrBA0ucbZRnSlrrr2+V9lJFWhnh0EJUkw+7mn+VgCwK4xdjvo7NHTHPM1nxTvkggRNOdsfbPMtcRsfVpEYF5A0Hmiks8l05yyPNYDBzBWVsANytvH9q6e260llQGT3ZD06MB9tMrGOBwmzccRHvpntwtn/f4ON5dt9IpoMK7SDJtm2zTB4hqTvujcjqvi3ASYO+L9j58KtcmSYs5VkqZ3BRT7o8fZ3ftdA1nrMUSF7+eG59Jhiyatc4TTszLOtT+TwAkMNsdvszhgvw+3hubUhh8a02N6fFEALld8XGKnr9fumcgvcmxUNY5DoCJPWKYQGBeYc8tPR4DCACCfDuVwhAGQwR8ofyL0H9gjtRDKhXvKR2lNKXd0ak8jOo+XLyguNtx0vs2ZnzmjUkx0SFxKAulWY2RRMt7cfnLEej+0fkIyLmdRyhTMki4k2Tu5aVNe3i8Yj0ZZaQRNSrEZRjAUmNqodt5AYHSN+MkscQKxgCdwC/bAM+NYyQF3y+KrUbZSxCOQvUT44yArAQngYzAbYzUd2vQvc6IA1K+EjZQAr45nmebIXzw0BOEmFfTjw6XklUi8Yfe1ONbuPcY+ex17Zxuyf4InUBybNqOMF/m/2kQBPCZaiv1j2hareo+pkpMuHYRtIccjyBkLM+/TtDYLSuryhWlEWMRTJfeYxRenCFj0xM3UjyXHLYrqCPrs+OvWimDCv9HACeNUQIw6brAtesYKnAT3J8p0oYroEn1Vpa9LKLocaGPBglm30hjprR6rBb8+OnnVjUpF+FhTk5K6edCc5NmArNMZoopo5lyxmaHvf6aAVKCgxG0SPQctMnKB2IVRRb1RCxhHVwcgi1vH/iIe33HaZJ8Y//X7WzQrft6CN+6CBj2X6R2Ck5VZRDq+wOGFsChfW3c0k+uKp+rF9tCpXl+yxT77DBXQTBf7Rg4LLcVc0wtOonAWGbw0+zyGPRcwd01LFqy5ow/0kZzdgkKPprCh08qnhUvjODV/Xy1w6C8hvOswN4RwszZPLfw1wfBNlnRDo91qpSVLgNKn7UFFkh1z0RABqBtVX1R29U9IdTwWMsjEGNM4wEvHNc2+ayofK8dj28BNrUKW3yO8J4JQsFdkWxiq18PsvGnhTypt8nFWcPsW22LZUONxPoxkUn8FohGXRo7Cnc8yVLvCVokh55CMTw2mq+l/yL0379LmC50v8R/jPgwc056agL6/ilQLryUMY5p/xYEsp/WEo+XNhZrF7c5sdMYCiInlPTD5tkll5oQW4LBajXleuPjUxj/aZw6KzeotFgr+Du3OfTyf6eD2u5VD6d121pmDSJthgw/H1bzrYM452GllMSNIWHm8jm3kx++A664QW1OMVfwnHc8Yfhi/eEpq4SAmoGmGtrwlXO1LXh37Oyhhy0irfJ66YcbOI9xWjZqBcc4jkTm8xM4ue8cJCU8WJMQMw9ETq06LIDfPOLqL7dTc+d5/bF+QthElcx/poqRkxtUTFphM/4BR6cSvZpNX4d04hQF/ecFRu/lVfx7Z+cXg+NXK1jth33rUlQZx/AMAB1pDElTkvuUMbNTyHNZ3xhg1tbkaKIXnaXLfq9X4+mVUUDCMdXhdp5h0xkzdFuI2m5Sdq1pavczoNQC8FGAyJbVakWWX+Kp+Bt7V2tkih4PIUdRr+MWM4nuizX74puihoYyP3zYlncr3ucrCmVjhYz7pvQmCpPTbpZIyA/6sAdMXiaN+OcGZ4fkWwjtZNlSWdqA3W6rQnNXa6uruf/f6xV94iTuzVFLoN7q68jz33Ffpmm7BNE/W7BqsDqG3QY7S2Om9SEe16fCSnDfxY+JcbcqiMJejD8PrcM0TW2AUhXManL5y+87hoPZfhvjfs3M22/5b+ubT25q60I+sm1zoWxGo/GMJYKmzpK7DsgATydhMvCRd4E7kbmym1In/No8FNg+zIZhWbwKM+T0P8PVdYneLkZq6yrAaiHwUeK7rncUflzWA8lfGpsDMEJqsBnMRc9dfo+1nMG1T+xoGv/vrR7XNVPAt9fyAE2oAT/egMongPm53v/jVWoCCteAX9rKaRG8S4XJZezV/tdG/ZR/Gv7L/f1rlIzMVTwhNl6GzOBVo2tVIhzToLxMjk4TiK58ynFv9ozYcHMh1la0U+Y+keSe/oFrM22mpUzBn+Ibp31kpwMlZxFjiHJ6Bgcvz2h7yvbP7PtDUD2ASdyOq1EOeqCq8Eh4G/Fp3loF597Qml6qq445HT4HDFvrZqBzysDQxybF1KpBURaclDY6UpFBXcrn4WnyucPQHey3b6m31OwdT48rK5MYHY8soVvA8vafgLGdwG7qJ3jxtAqI1oKjY4lJDeOHt20aSYPZ03q7xOJforoiEoME8AMX/8BeFFxANZh7W29sXkPhF4A23LLn/PJO52FJfMLyGMTmxcOESzQX3tRx7OzFxOEWMeer1nF+yucUXjlqkI70FJPmLAnpjccxQBM5sx7qgCX2FP3ugUen8vFvDE+3v6543COp82x1e9OQ689MrzinPvbscnilnTCOdlHe9yDGY5nWVsg8U9/TIR2pWZgnTVp8vDXfXASppCjHshI+/zwJ/xvjI9oAK9lsjW/RCcL2VuYy2HlhrKA2R52A0Yqo8Yg1NByr9buScRKD/rxfqvr4jWFiU3oNfe+GdBxoOvLyYl/BUQL8gXvHVHTF80lv4mFH+KkP8LGM12+5i6Mpk/OVAYA4aT6tzH8ayQwSIy/+ZKL15w/opPIKaWIhzqnWs1MAvT8N0PhQZHZogQs9TsMaymImx5QyCQv0y4lrmv/dlws+VxyNWhTpjRE4K58Qur67FlZZwC3m0UCpsVhgUbOw+Nv8GBStxWAAgV8UfXwFSSAnzowU6JyfGweLGm9r/47FtZ7oBF5aDkaJRSEfPuDleTsD+pStRxSzd4w/LxBfAicSxrNUOeTenHUtamGUovMy4Lkej1rqljcc5Ivt5mwVucUK2AsWwOLY71+8iNhOWf+S6f8zj0lMYxFuLCgBXFS+gqaKbLp3S2KIMr7RRLuTDDAVpIEdmKkW9CL5Qt3p/SPkFDK5peniQr7HYCw6y1QjV6H+QPuvijIevk366MfjhSIJjuC7doPtAm8mIWITpj5mWvCwUwOsFNKL7JD8CvrmhFPQkaOpZ3zE3zw5fr0JMkgZPTpP2LUmfS+qt58p2omV/O4ESrCeVp+rMRLkT7N+bq1/FdmTfzIxWGrzrReqDeWy1KzVcoQtc0EjDmVzD5zci3vsBB+xR3ZLigb22mWbFv60oEwksIOBlm1Wv0ocwxEj/MzWwFoTLTj6tEW0YzotBWpPjW0y+jg/QHIBODlnj5WsGhMukWnF/lhWRKoOAvbe4AQuPPgVq4gAVEbWvRu4472L1bZ2zHQzKOtrwZ7LeFqbbYU0cK94ghY64Lv3Nnnsmkg13MxZJLluVBfOxrjvK4J/heLpfkUMGVtTyYrLg7ZEvMz9Z/DYYe4NiSPX2TcD1xPRJLXJO+vq5DbVYlp8GCiqI3fakBynZrC09v//WEeq17rZfUEwfOjHzpDZ8Cl87FMTntS7u2cI5OO2MpgYjlHc892oeI1tw4+kTmfml/OJh/BNJrAA/SH6bGe9GkRiz4sbyn/ffV6y6nl9dR0aOVcjH+KhSWWckRsne7wsoPhKIEkoJpGf3RLYaZQcVgbwTQX9p+KAi/OR32ZRTWjrRfOElxhvTa8vU+lik5GkQyKllhe7+bZfq9owULWM23ExiNLBJLaUeOt6+9CRxu+ZS55+/iNxQpReBj0FhpFQjgzOo+E+wmDGvC910SM8BRRj4UumyvsXnfcMbfO2tm/2W53ebCECQ5Lg5v0x6lbgJkEdhuyZUAOYMj1Cm8vBipv2UZfrAq54EUNCAtmPikunOJbhsy5dsDgPd+IogzlK4xB/yHY4uR5sUF+70L/Thv3CnoIjnJnmec9wCU5epZ2BGQ3LZhtOuFrj/MGPwzGe7Z8B/e48icBmlfMQA09G/OXmsP39WEMqDzQw4FfAWaP99DRf93is39bvao0Sd48fR6keQdFLIHoR1aln54+hR3VgOYtlGxTfvgvP8R5uo/Ab17f3Y3SiFSm4RzXDrNPHB4D8Md4UZmJGyW68uLl2FG06u0zdteA24IZEXmEQEjKXfX8cscMbGQ6jrDvdS02vG/lnO55+8DYIlM7WUPX9FuvJsA6lwaZxT8Y00M1P85fr5y4fYCIWJDrK208xXUABRLhDR/63E1fry2ygCs86t7Kc3IPni3zI7eUXbcOxGQIQSQrobyI23XQjh/1GgX0LDsGgw3rwqc475n+0HBnTcG7Hpy2qdRrY0Kb7Ojc+G/3zI/vXhmiOaHDlABTAXNZoTr4XwBEwXnZf+5+87SIohGimDkrdisDz5U0SbjJYOJQS3AEnLZI5gttPQ60aG+1CljEAKe0PDEiwBLla/ars4t/8kuAf6NdlPWx/TzIKv2Wu0+hoOv0D20Lr4TwA/d9LrK3ZWbwzx7kfoUdC3HZnqs+1g0XRDQ/tDsal0FmtTN72/CiCteid+PGt8MoUccHlaOq7AphQlkwxmXKA4okU/d3M7qy717HO609fKQUXLRoUmib13bRrNU/2x9B1pRPy64ZzoVk13duUKkTAVTfRPp3cSazfglItDI81um+bnhkqbvXiC+1UWMac/X8eiecLFyCECJrvtpAEF4MDjDm02V1ZUlW2EBvc5seZGYNUoOngPkpiOqdydXZ24xI5aKQb18ThzYu9XsIoxeM/27aHtbU4xsxsAb0Crtq/Ai2GP2T/J8hQmQjKePZP4lCi2/Cj7Wbfwh8tUy3NCoxagQPDDOLR69f+TkIGqhZbzIHWnf7ROppfagVvsIvKNShPMgY0ko5nH/n29w0RqeDuVCxR6PXbFV3sYx41hUghxUCI5HnPZsujc5CPXZ8K3uFV5xorS2PLinyqpqdZYL2vpgik+XVN0m/5+4WTiyQdMfByTyDu1AHIgwwv9vCQE9JM1zqwAWIY4fj3K/+V2Uj/ewcjn0RvpWT77uxSvPSg7L+J5ImeCOM9FYzWobTJJg0JDa2h6e+bf0/Zy6uvkI6pfZ0cRPIyK7WT/xYD0UBYmfehcCDsYxsACfg2HKfqYbdW6MpTdZsoUBkHN4QSxAO8aB9OQTBLosbR1xASjKjcdZZ0ecvCJfYUSwQO+5MQiiTwnBKC5iP62AwTLUJWn4vv6zwcaEvWblqnp6kpqtWfeba3IzXLWoRLC/a4/PC5qDUdXZIq2JlayoQa8rXPaJJYxv6r5Vwd41wC+IYcemDzazHJlp8c3hzFQ4sW8Nrn6/80GDXqteTP3P6/NJBa77YH6TO9GZ8JI7xk5eVHDXyctXBme+uNhr6mZ2ybpZ9bRt7L32qx1yFDw6ADDRcta8/rPb+QJ/82pYyguNgoF0Znpk1KR2SqTrfArkas/CKiHK79ujrggLbnpLFwc7FAcrOMoMMK6A/kkI5/YYICA3C3sgXDWT78Dq0U8Qc0DbWqvuG7e9FdADSTIvDHK0IbO2vSiv8tnhZJfbkxvFNYy6gbt1PDenxCC6J8wwtyK/Nt75+b4c6Dx4fHyZBuOVfJpk7vbxLl4gGoNfoyHlmsOnNsIn7uqpidH+kGEo41Vvj1lJtaeDFoJ2Dhw8HqP1CBJBkClidJiGqWTeruAliPAlGHz6YqaXQA78yxPTPqFKdRHPIbtOkp29lSQHkDvEnHF9Rd+C2NtS/GK7K7wGyCQu6IfF687e3sVWd7G513xTdcwZwu5FNhbytOYnLI4OI0FTB+qVXQOFATtSzzGsan0DRVEn1AULP/SHOV4XSaqUmHCPmYlpUD9NWoaNgGxcs57A8ZKNWqKl39SZ+I7+nULWRUf5IVjb8ME01D4Wh8ISLRDxgIq+y7Ujyi4VaHgRiVPJ/8Wx1yGsTkrEmX5Ov7ZhSsR2NEM1mNWKb+1KkVo1uugtfbZ8rsY12v7M2EB2e7YZ0aruetVcJYmsBVKzr8ZeoA/E05E7btx58DsIg7JdTkdJVuOcgROWotlBlUFjimXzNGwJd6xq75NYT5VSV93xG/K1ewOuml7Of3fOspBWWeU4CDq1ZUo5lwywV1CU2nO1m4M8buLpqQkZP/iy5BLe+k+Uc9nHGh4WOqoHsjLquupzkTk9dxylP/RhGxOwfTk6vDtf/uwRETcd79gAAA=" />
-  <Text enter="none" fontSize={22.5} x={4} y={25.9} w={49.2} h={9} id="block-f37c3442-ab3b-41a4-8c43-329f68d4231d" lineHeight={1.28} role="content" fontWeight={700} fontFamily="Lato">Designing the Future</Text>
-  <Text enter="none" fontSize={18} x={4} y={37.9} w={46.2} h={32.1} id="block-d60c3fe4-7a99-4d09-9aa8-587003403761" fontFamily="Lato">A visual exploration of color, typography, texture, and composition, created to define a modern, expressive, and memorable design direction.</Text>
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="light" background="#ffffff" accent="#111111" textColor="#111111">
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="none" radius={0} x={0} y={0} w={33.1} h={100} id="block-720403f9-0490-4c1c-be41-39e11505c8c3" src="https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&amp;w=764&amp;auto=format&amp;fit=crop&amp;ixlib=rb-4.1.0&amp;ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
-  <Text enter="none" fontSize={22.5} x={44.6} y={30.8} w={49.2} h={9} id="block-ee28d3b0-24e9-4952-9020-885013b3e581" lineHeight={1.28} role="content" fontWeight={700} fontFamily="Lato">Beyond the Ordinary</Text>
-  <Text enter="none" fontSize={18} x={44.6} y={42.8} w={46.2} h={32.1} id="block-08fa2dd7-5a78-4351-a377-66470f316271" fontFamily="Lato">A curated collection of visual references exploring bold ideas, refined details, and unexpected combinations to shape a distinctive creative direction.</Text>
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="dark" background="#000000" accent="#f7f7f5" textColor="#f7f7f5" mutedColor="#b8b8b4">
-  <Text enter="none" x={3.1} y={69.1} w={81.7} h={21.7} id="block-5cb5361e-0c58-455c-9cb1-8b77550f8f27" lineHeight={1} role="title" textAlign="left" fontFamily="Lato" fontSize={88} fontWeight={900} color="#ffffff">Typography</Text>
-  <Text enter="none" x={75.2} y={7.8} w={20.2} h={41} id="block-c3e88848-2ce6-4d12-a173-10949e94b3fc" fontSize={120} fontFamily="Lato" fontWeight={700}>01</Text>
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="light" background="#ffffff" accent="#111111" textColor="#111111" mutedColor="#656565">
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="none" radius={0} x={3} y={4} w={94.4} h={63.3} id="block-eb16a7d0-ad9b-471d-b3ee-f12edac7e7f5" src="https://images.unsplash.com/photo-1581080247575-12fa86f6ef6e?q=80&amp;w=1169&amp;auto=format&amp;fit=crop&amp;ixlib=rb-4.1.0&amp;ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
-  <Text enter="none" fontSize={18} x={3} y={78.8} w={81.5} h={7.9} id="block-f4799c30-3f6a-4c91-88fa-44e26fb2d4b9" fontWeight={100} fontFamily="Lato">Typography shapes how a message feels and flows.</Text>
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="dark" background="#000000" accent="#f7f7f5" textColor="#f7f7f5" mutedColor="#b8b8b4">
-  <Text enter="none" x={3.1} y={69.1} w={81.7} h={29.5} id="block-9372f023-c468-45e7-88ab-eb2f97f229b1" lineHeight={1} role="title" textAlign="left" fontFamily="Lato" fontSize={88} fontWeight={900} color="#ffffff">Animations</Text>
-  <Text enter="none" x={75.2} y={7.8} w={20.2} h={41} id="block-6a18663e-98cf-4f2e-8053-c4c293f35aef" fontSize={120} fontFamily="Lato" fontWeight={700}>02</Text>
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="dark" background="#000000" accent="#f7f7f5" textColor="#f7f7f5" layoutPreset="photo">
-  <VideoBlock src="https://ik.imagekit.io/9ttej0nsg/slideX%20demo%20launch_IZkFldyGE.mp4" fit="cover" controls="false" loop="true" muted="true" enter="none" radius={16} x={0} y={0} w={100} h={100} id="block-aca0ba12-b9c2-4855-80bc-b21d447db99a" />
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="dark" background="#000000" accent="#f7f7f5" textColor="#f7f7f5">
-  <Text enter="none" x={3.1} y={69.1} w={81.7} h={29.5} id="block-9531013f-4697-428b-b371-a778b266ecef" lineHeight={1} role="title" textAlign="left" fontFamily="Lato" fontSize={88} fontWeight={900} color="#ffffff">Textures</Text>
-  <Text enter="none" x={75.2} y={7.8} w={20.2} h={41} id="block-1b6ab347-3baf-4f6e-9c5d-a378461e1519" fontSize={120} fontFamily="Lato" fontWeight={700}>03</Text>
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="light" background="#ffffff" accent="#111111" textColor="#111111" mutedColor="#656565" layoutPreset="photos-3">
-  <ImageBlock src="https://images.unsplash.com/photo-1623410439361-22ac19216577?q=80&amp;w=687&amp;auto=format&amp;fit=crop&amp;ixlib=rb-4.1.0&amp;ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Photo 1" x={8} y={10} w={40} h={80} fit="cover" radius={0} enter="none" id="block-ac7168b0-9844-442a-8ee0-c38c55f606cd" />
-  <ImageBlock src="https://images.unsplash.com/photo-1554755229-ca4470e07232?w=500&amp;auto=format&amp;fit=crop&amp;q=60&amp;ixlib=rb-4.1.0&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHRleHR1cmV8ZW58MHx8MHx8fDA%3D" alt="Photo 2" x={52} y={10} w={40} h={38} fit="cover" radius={0} enter="none" id="block-618169a9-6bd6-4ae7-9da8-f9758d8aac78" />
-  <ImageBlock src="https://images.unsplash.com/photo-1614292264554-7dca1d6466d6?q=80&amp;w=687&amp;auto=format&amp;fit=crop&amp;ixlib=rb-4.1.0&amp;ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Photo 3" x={52} y={52} w={40} h={38} fit="cover" radius={0} enter="none" id="block-4aa97f2b-fe6d-432f-a7b0-7ce962a19d07" />
-</Slide>
-
-<Slide duration={5} canvasHeight={1080} canvasWidth={1920} fontSizeUnit="pt" theme="dark" background="#000000" accent="#f7f7f5" textColor="#f7f7f5" mutedColor="#b8b8b4">
-  <Text enter="none" x={3.1} y={69.1} w={93.5} h={29.5} id="block-1cde3972-8c25-45e4-85d6-4abb8c044f96" lineHeight={1} role="title" textAlign="left" fontFamily="Lato" fontSize={88} fontWeight={900} color="#ffffff">Hello@gmail.com</Text>
-  <Text enter="none" x={75.2} y={7.8} w={20.2} h={37} id="block-911e19ad-a070-4249-b97d-b0eeecea327c" fontSize={120} fontFamily="Lato" fontWeight={700}></Text>
-  <Text enter="none" fontSize={18} x={53.8} y={5.7} w={42} h={7.9} id="block-7fde3cde-3a7e-4bfc-9f21-fa9788a177f6" textAlign="right" fontFamily="Lato">by SlideX</Text>
-  <Text enter="none" fontSize={18} x={3.6} y={4.6} w={13.1} h={7.9} id="block-8a98b55f-02f0-4e3d-b80b-33d513dcb47d" fontFamily="Lato">2026</Text>
-  <Text enter="none" fontSize={18} x={27.1} y={4.6} w={13.1} h={7.9} id="block-36b7955a-cbec-438a-817c-78a6f0a7c041" fontFamily="Lato">July</Text>
-</Slide>
-`;
-var moodboardTemplate = {
-  category: "Brand & Design",
-  description: "A 14-slide visual direction deck for exploring typography, imagery, motion, texture, and composition.",
-  duration: "70s",
-  id: moodboardTemplateId,
-  name: "Moodboard",
-  source: moodboardTemplateSource,
-  sources: {
-    en: moodboardTemplateSource,
-    "zh-TW": moodboardTemplateSource
-  },
-  useCase: "Brand direction, visual research, and creative concept alignment"
-};
-
-// core/motion-doc/domain/deckPlanV1.ts
-var DECK_PLAN_SCHEMA_VERSION = 1;
-var DECK_PLAN_MIN_SLIDES = 6;
-var DECK_PLAN_MAX_SLIDES = 16;
-var deckPlanKinds = [
-  "progress-report",
-  "proposal",
-  "research-brief",
-  "teaching-deck"
-];
-var deckPlanSlideRoles = [
-  "cover",
-  "overview",
-  "context",
-  "goals",
-  "key-point",
-  "evidence",
-  "metrics",
-  "comparison",
-  "process",
-  "timeline",
-  "decisions-risks",
-  "next-steps",
-  "closing",
-  "appendix"
-];
-var stableIdPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
-var vaultRelativeMarkdownPathPattern = /^(?!\/)(?![A-Za-z]:[\\/])(?![A-Za-z][A-Za-z0-9+.-]*:)(?!.*(?:^|\/)\.\.(?:\/|$))(?!.*\\)(?!.*\0)[^\r\n]+\.md$/i;
-var sourceLabelPattern = /^[^<>\r\n]+$/;
-var blockIdPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
-var requiredText = (max) => external_exports.string().trim().min(1).max(max);
-var deckPlanSourceRefSchema = external_exports.strictObject({
-  blockId: external_exports.string().regex(blockIdPattern).optional(),
-  heading: requiredText(240).regex(sourceLabelPattern).optional(),
-  path: requiredText(1024).regex(
-    vaultRelativeMarkdownPathPattern,
-    "Source paths must be vault-relative Markdown paths without '..', URI schemes, drive letters, or backslashes."
-  )
-});
-var deckPlanAssetRefSchema = external_exports.strictObject({
-  alt: requiredText(240).optional(),
-  assetId: external_exports.string().regex(stableIdPattern)
-});
-var deckPlanMetricSchema = external_exports.strictObject({
-  detail: requiredText(240).optional(),
-  label: requiredText(80),
-  value: requiredText(80)
-});
-var deckPlanSlideV1Schema = external_exports.strictObject({
-  assetRefs: external_exports.array(deckPlanAssetRefSchema).max(4),
-  bullets: external_exports.array(requiredText(220)).max(6),
-  id: external_exports.string().regex(stableIdPattern),
-  metrics: external_exports.array(deckPlanMetricSchema).max(4),
-  role: external_exports.enum(deckPlanSlideRoles),
-  sourceRefs: external_exports.array(deckPlanSourceRefSchema).min(1).max(32),
-  summary: requiredText(700).optional(),
-  title: requiredText(160)
-});
-var deckPlanTemplateRecommendationSchema = external_exports.strictObject({
-  alternatives: external_exports.array(external_exports.string().regex(stableIdPattern)).max(5),
-  reason: requiredText(500),
-  styleTags: external_exports.array(requiredText(40)).min(1).max(8),
-  templateId: external_exports.string().regex(stableIdPattern)
-});
-var deckPlanV1Schema = external_exports.strictObject({
-  audience: requiredText(300).optional(),
-  kind: external_exports.enum(deckPlanKinds),
-  locale: external_exports.enum(["zh-TW", "en"]),
-  objective: requiredText(500).optional(),
-  period: requiredText(120).optional(),
-  planId: external_exports.string().regex(stableIdPattern),
-  schemaVersion: external_exports.literal(DECK_PLAN_SCHEMA_VERSION),
-  slides: external_exports.array(deckPlanSlideV1Schema).min(DECK_PLAN_MIN_SLIDES).max(DECK_PLAN_MAX_SLIDES),
-  templateRecommendation: deckPlanTemplateRecommendationSchema.optional(),
-  title: requiredText(160)
-}).superRefine((plan, context) => {
-  if (plan.slides[0]?.role !== "cover") {
-    context.addIssue({
-      code: "custom",
-      message: "The first slide must use the cover role.",
-      path: ["slides", 0, "role"]
-    });
-  }
-  const slideIds = /* @__PURE__ */ new Set();
-  plan.slides.forEach((slide, index2) => {
-    if (slideIds.has(slide.id)) {
-      context.addIssue({
-        code: "custom",
-        message: `Duplicate slide id: ${slide.id}`,
-        path: ["slides", index2, "id"]
-      });
-    }
-    slideIds.add(slide.id);
-    if (index2 > 0 && slide.role === "cover") {
-      context.addIssue({
-        code: "custom",
-        message: "Only the first slide may use the cover role.",
-        path: ["slides", index2, "role"]
-      });
-    }
-    const sourceKeys = /* @__PURE__ */ new Set();
-    slide.sourceRefs.forEach((sourceRef, sourceIndex) => {
-      const sourceKey = [sourceRef.path, sourceRef.heading ?? "", sourceRef.blockId ?? ""].join("\0");
-      if (sourceKeys.has(sourceKey)) {
-        context.addIssue({
-          code: "custom",
-          message: "Duplicate source reference on the same slide.",
-          path: ["slides", index2, "sourceRefs", sourceIndex]
-        });
-      }
-      sourceKeys.add(sourceKey);
-    });
-  });
-  const recommendation = plan.templateRecommendation;
-  if (recommendation) {
-    const templateIds = /* @__PURE__ */ new Set([recommendation.templateId]);
-    recommendation.alternatives.forEach((templateId, index2) => {
-      if (templateIds.has(templateId)) {
-        context.addIssue({
-          code: "custom",
-          message: `Duplicate recommended template id: ${templateId}`,
-          path: ["templateRecommendation", "alternatives", index2]
-        });
-      }
-      templateIds.add(templateId);
-    });
-  }
-});
-var deckPlanV1JsonSchema = external_exports.toJSONSchema(deckPlanV1Schema, {
-  target: "draft-7"
-});
-var DeckPlanValidationError = class extends Error {
-  issues;
-  constructor(issues) {
-    super(issues[0]?.message ?? "DeckPlanV1 validation failed.");
-    this.name = "DeckPlanValidationError";
-    this.issues = issues;
-  }
-};
-function validateDeckPlanV1(value) {
-  const result = deckPlanV1Schema.safeParse(value);
-  if (result.success) {
-    return { data: result.data, issues: [], success: true };
-  }
-  return {
-    issues: result.error.issues.map((issue2) => ({
-      code: issue2.code,
-      message: issue2.message,
-      path: formatValidationPath(issue2.path)
-    })),
-    success: false
-  };
-}
-function parseDeckPlanV1(value) {
-  let candidate = value;
-  if (typeof value === "string") {
-    try {
-      candidate = JSON.parse(value);
-    } catch (error51) {
-      throw new DeckPlanValidationError([
-        {
-          code: "invalid_json",
-          message: error51 instanceof Error ? error51.message : "Deck plan is not valid JSON.",
-          path: "$"
-        }
-      ]);
-    }
-  }
-  const result = validateDeckPlanV1(candidate);
-  if (!result.success) throw new DeckPlanValidationError(result.issues);
-  return result.data;
-}
-function formatValidationPath(path10) {
-  if (path10.length === 0) return "$";
-  return path10.reduce((result, segment) => {
-    if (typeof segment === "number") return `${result}[${segment}]`;
-    const value = String(segment);
-    return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(value) ? `${result}.${value}` : `${result}[${JSON.stringify(value)}]`;
-  }, "$");
-}
-
-// core/motion-doc/domain/deckPlanTemplate.ts
-function validateDeckPlanTemplateComposition(composition) {
-  const issues = [];
-  const blueprintIds = /* @__PURE__ */ new Set();
-  const coveredRoles = /* @__PURE__ */ new Set();
-  if (!composition.templateId.trim()) {
-    issues.push({ message: "templateId is required.", path: "templateId" });
-  }
-  if (composition.blueprints.length === 0) {
-    issues.push({ message: "At least one blueprint is required.", path: "blueprints" });
-  }
-  composition.blueprints.forEach((blueprint3, blueprintIndex) => {
-    const path10 = `blueprints[${blueprintIndex}]`;
-    if (blueprintIds.has(blueprint3.id)) {
-      issues.push({ message: `Duplicate blueprint id: ${blueprint3.id}`, path: `${path10}.id` });
-    }
-    blueprintIds.add(blueprint3.id);
-    blueprint3.roles.forEach((role) => coveredRoles.add(role));
-    if (blueprint3.roles.length === 0) {
-      issues.push({ message: "Blueprint roles cannot be empty.", path: `${path10}.roles` });
-    }
-    const slotIds = /* @__PURE__ */ new Set();
-    blueprint3.slots.forEach((slot, slotIndex) => {
-      if (slotIds.has(slot.id)) {
-        issues.push({
-          message: `Duplicate slot id within blueprint: ${slot.id}`,
-          path: `${path10}.slots[${slotIndex}].id`
-        });
-      }
-      slotIds.add(slot.id);
-    });
-    if (!blueprint3.slots.some((slot) => slot.kind === "title" && slot.required)) {
-      issues.push({
-        message: "Every blueprint requires a title slot.",
-        path: `${path10}.slots`
-      });
-    }
-    for (const [capacityName, capacity] of Object.entries(blueprint3.capacities)) {
-      if (!Number.isInteger(capacity) || capacity < 0) {
-        issues.push({
-          message: `${capacityName} capacity must be a non-negative integer.`,
-          path: `${path10}.capacities.${capacityName}`
-        });
-      }
-    }
-    if (!Number.isInteger(blueprint3.minimumAssets) || blueprint3.minimumAssets < 0 || blueprint3.minimumAssets > blueprint3.capacities.assets) {
-      issues.push({
-        message: "minimumAssets must be an integer between zero and the asset capacity.",
-        path: `${path10}.minimumAssets`
-      });
-    }
-  });
-  for (const role of deckPlanSlideRoles) {
-    if (!coveredRoles.has(role)) {
-      issues.push({
-        message: `No blueprint supports the ${role} role.`,
-        path: "blueprints"
-      });
-    }
-  }
-  return issues;
-}
-function assertDeckPlanTemplateComposition(composition) {
-  const issues = validateDeckPlanTemplateComposition(composition);
-  if (issues.length > 0) {
-    throw new Error(
-      `Invalid deck-plan template composition '${composition.templateId}': ${issues.map((issue2) => `${issue2.path}: ${issue2.message}`).join("; ")}`
-    );
-  }
-  return composition;
-}
-
-// core/motion-doc/application/deckPlanMaterializer.ts
-var renderAssetFrame = (context, binding, props) => binding.asset ? imageBlock(context, binding, props) : imagePlaceholderBlock(context, binding, props);
-function materializeDeckPlan(value, composition, options = {}) {
-  const plan = parseDeckPlanV1(value);
-  assertDeckPlanTemplateComposition(composition);
-  if (!composition.supportedKinds.includes(plan.kind)) {
-    throw new Error(
-      `Template '${composition.templateId}' does not support deck kind '${plan.kind}'.`
-    );
-  }
-  const warnings = [];
-  const usedBlueprints = /* @__PURE__ */ new Map();
-  const slides = plan.slides.map((slide, slideIndex) => {
-    const requestedBlueprintId = options.blueprintIdBySlideId?.[slide.id];
-    const blueprint3 = requestedBlueprintId ? selectRequestedBlueprint(slide, composition, requestedBlueprintId, usedBlueprints) : selectDeckPlanBlueprint(slide, composition, usedBlueprints);
-    usedBlueprints.set(
-      blueprint3.id,
-      (usedBlueprints.get(blueprint3.id) ?? 0) + 1
-    );
-    const assetBindings = slide.assetRefs.map((assetRef, index2) => {
-      const candidate = options.assets?.[assetRef.assetId];
-      const safeSource = candidate ? sanitizeMotionDocMediaSource(candidate.src) : "";
-      const asset = candidate && safeSource ? { ...candidate, src: safeSource } : void 0;
-      if (!candidate) {
-        warnings.push({
-          assetId: assetRef.assetId,
-          code: "unresolved-asset",
-          message: `Asset '${assetRef.assetId}' was not resolved; its template slot remains empty.`,
-          slideId: slide.id
-        });
-      } else if (!safeSource) {
-        warnings.push({
-          assetId: assetRef.assetId,
-          code: "invalid-asset-source",
-          message: `Asset '${assetRef.assetId}' did not resolve to a safe MotionDoc media source.`,
-          slideId: slide.id
-        });
-      }
-      return { asset, index: index2, ref: assetRef };
-    });
-    const scene = renderBlueprint({
-      assetBindings,
-      blueprint: blueprint3,
-      composition,
-      plan,
-      slide,
-      slideIndex,
-      tone: toneForBlueprint(composition, blueprint3)
-    });
-    return {
-      blueprint: blueprint3,
-      scene,
-      slide: {
-        blueprintId: blueprint3.id,
-        role: slide.role,
-        slideId: slide.id
-      }
-    };
-  });
-  const missingRequiredBlueprint = composition.blueprints.find(
-    (blueprint3) => blueprint3.required && !plan.slides.some(
-      (slide) => blueprint3.roles.includes(slide.role)
-    )
-  );
-  if (missingRequiredBlueprint) {
-    throw new Error(
-      `Template '${composition.templateId}' requires blueprint '${missingRequiredBlueprint.id}'.`
-    );
-  }
-  const source = `# ${safeDeckTitle(plan.title)}
-
-${slides.map(({ scene }) => generateSlideString(scene)).join("\n\n")}`;
-  const validation = summarizeMotionDoc(source).validation;
-  const errors = validation.issues.filter((issue2) => issue2.severity === "error");
-  if (errors.length > 0) {
-    throw new Error(
-      `Materialized MotionDoc is invalid: ${errors.map((issue2) => issue2.message).join("; ")}`
-    );
-  }
-  return {
-    planId: plan.planId,
-    slides: slides.map(({ slide }) => slide),
-    source,
-    templateId: composition.templateId,
-    title: plan.title,
-    warnings
-  };
-}
-function selectRequestedBlueprint(slide, composition, blueprintId, usedBlueprints) {
-  const blueprint3 = composition.blueprints.find((candidate) => candidate.id === blueprintId);
-  if (!blueprint3) {
-    throw new Error(`Template '${composition.templateId}' has no blueprint '${blueprintId}'.`);
-  }
-  if (!blueprint3.repeatable && (usedBlueprints.get(blueprint3.id) ?? 0) > 0) {
-    throw new Error(`Template blueprint '${blueprint3.id}' cannot be repeated.`);
-  }
-  if (blueprint3.minimumAssets > slide.assetRefs.length || blueprint3.capacities.assets < slide.assetRefs.length || blueprint3.capacities.bullets < slide.bullets.length || blueprint3.capacities.metrics < slide.metrics.length) {
-    throw new Error(`Template blueprint '${blueprint3.id}' cannot contain slide '${slide.id}'.`);
-  }
-  return blueprint3;
-}
-function selectDeckPlanBlueprint(slide, composition, usedBlueprints = /* @__PURE__ */ new Map()) {
-  const candidates = composition.blueprints.filter((blueprint3) => {
-    if (!blueprint3.roles.includes(slide.role)) return false;
-    if (!blueprint3.repeatable && (usedBlueprints.get(blueprint3.id) ?? 0) > 0) {
-      return false;
-    }
-    return blueprint3.minimumAssets <= slide.assetRefs.length && blueprint3.capacities.assets >= slide.assetRefs.length && blueprint3.capacities.bullets >= slide.bullets.length && blueprint3.capacities.metrics >= slide.metrics.length;
-  });
-  const selected = candidates.map((blueprint3) => ({ blueprint: blueprint3, score: blueprintScore(blueprint3, slide) })).sort((left, right) => right.score - left.score)[0]?.blueprint;
-  if (!selected) {
-    throw new Error(
-      `Template '${composition.templateId}' has no compatible blueprint for slide '${slide.id}' (${slide.role}).`
-    );
-  }
-  return selected;
-}
-function blueprintScore(blueprint3, slide) {
-  let score = 0;
-  if (blueprint3.layout === "cover" && slide.role === "cover") score += 200;
-  if (blueprint3.layout === "closing" && slide.role === "closing") score += 200;
-  if (blueprint3.layout === "timeline" && (slide.role === "timeline" || slide.role === "process")) score += 160;
-  if (blueprint3.layout === "metrics-grid" && (slide.role === "metrics" || slide.metrics.length > 0)) score += 140;
-  if (blueprint3.layout === "image-gallery" && slide.assetRefs.length >= 2) score += 220;
-  if (blueprint3.layout === "image-split" && slide.assetRefs.length === 1) score += 180;
-  if (blueprint3.layout === "list-grid" && ["overview", "goals", "next-steps"].includes(slide.role)) score += 100;
-  if (blueprint3.layout === "editorial") score += 60;
-  if (blueprint3.layout === "image-split" && slide.assetRefs.length === 0) score -= 50;
-  score -= Math.abs(blueprint3.capacities.bullets - slide.bullets.length);
-  return score;
-}
-function renderBlueprint(context) {
-  const blocks = (() => {
-    switch (context.blueprint.layout) {
-      case "cover":
-        return renderCover(context);
-      case "editorial":
-        return renderEditorial(context);
-      case "image-gallery":
-        return renderImageGallery(context);
-      case "image-split":
-        return renderImageSplit(context);
-      case "list-grid":
-        return renderListGrid(context);
-      case "metrics-grid":
-        return renderMetricsGrid(context);
-      case "timeline":
-        return renderTimeline(context);
-      case "closing":
-        return renderClosing(context);
-    }
-  })();
-  const notes = sourceNotes(context.slide.sourceRefs, context.assetBindings);
-  return {
-    blocks,
-    duration: 6,
-    notes: {
-      markdown: notes.markdown,
-      plainText: notes.plainText
+  {
+    id: "open-slidex-starter",
+    cover: "",
+    catalog: {
+      author: "OpenSlideX Contributors",
+      category: "getting-started",
+      featured: true,
+      slideCount: 2,
+      sortOrder: 10,
+      tags: ["OpenSlideX", "Starter", "Local"]
     },
-    props: {
-      accent: context.tone.accent,
-      background: context.tone.background,
-      duration: 6,
-      fontSizeUnit: "pt",
-      mutedColor: context.tone.muted,
-      slideTransition: context.composition.motion.slideTransition,
-      textColor: context.tone.text,
-      theme: context.tone.theme,
-      transitionDuration: context.composition.motion.transitionDuration
+    locales: {
+      en: {
+        description: "A neutral two-slide starting point for a local presentation.",
+        name: "OpenSlideX Starter",
+        useCase: "New local decks and quick experiments"
+      },
+      "zh-TW": {
+        description: "\u4E00\u4EFD\u4E2D\u6027\u7684\u5169\u9801\u672C\u6A5F\u7C21\u5831\u8D77\u9EDE\u3002",
+        name: "OpenSlideX \u8D77\u59CB\u7BC4\u4F8B",
+        useCase: "\u5EFA\u7ACB\u672C\u6A5F\u7C21\u5831\u8207\u5FEB\u901F\u5BE6\u9A57"
+      }
+    },
+    blueprint: {
+      schemaVersion: 1,
+      narrative: {
+        objective: "Turn one clear point into an actionable presentation.",
+        slideRoles: ["cover", "next-steps"]
+      },
+      design: {
+        colorTokens: ["#111827", "#F8FAFC", "#A7F3D0", "#0F766E"],
+        composition: "Clear editorial hierarchy with one focal point per slide.",
+        imageTreatment: "Images are optional; prefer editable shapes for the starter.",
+        typography: "Large concise titles with restrained supporting copy."
+      },
+      imageSlots: [],
+      layoutRoles: ["cover", "next-steps"],
+      prohibitions: [
+        "Do not depend on Cloud authentication or remote persistence.",
+        "Do not use remote or Base64 media in local projects."
+      ],
+      qaRules: [
+        "Keep every visible element editable MotionDoc content.",
+        "Validate and render the deck before completion."
+      ]
     }
-  };
-}
-function renderCover(context) {
-  const { composition, plan, slide, tone } = context;
-  const assetBinding = context.assetBindings[0];
-  const hasImage = Boolean(assetBinding);
-  const titleWidth = hasImage ? 49 : 78;
-  const blocks = [
-    shapeBlock(context, "cover-accent", {
-      fill: tone.accent,
-      h: 2.2,
-      radius: 3,
-      w: 18,
-      x: 5,
-      y: 8
-    }),
-    textBlock(context, "Text", "eyebrow", coverEyebrow(plan), {
-      color: tone.muted,
-      fontFamily: composition.style.fontFamily,
-      fontSize: 10.5,
-      fontWeight: 720,
-      h: 5,
-      letterSpacing: 0.08,
-      w: 50,
-      x: 5,
-      y: 13
-    }),
-    textBlock(context, "Title", "title", slide.title, {
-      color: tone.text,
-      fontFamily: composition.style.fontFamily,
-      fontSize: fitTitleSize(slide.title, hasImage ? 49.5 : 57),
-      fontWeight: 760,
-      h: 37,
-      lineHeight: 0.98,
-      w: titleWidth,
-      x: 5,
-      y: 25
-    })
-  ];
-  if (slide.summary) {
-    blocks.push(textBlock(context, "Text", "summary", slide.summary, {
-      color: tone.muted,
-      fontFamily: composition.style.fontFamily,
-      fontSize: fitBodySize(slide.summary, 14.25),
-      h: 18,
-      lineHeight: 1.4,
-      w: hasImage ? 47 : 62,
-      x: 5.2,
-      y: 68
-    }));
   }
-  if (assetBinding) {
-    blocks.push(renderAssetFrame(context, assetBinding, {
-      h: 82,
-      radius: composition.style.radius,
-      w: 40,
-      x: 57,
-      y: 9
-    }));
-  } else {
-    blocks.push(
-      shapeBlock(context, "cover-orbit-large", {
-        fill: composition.style.surface,
-        h: 44,
-        radius: 100,
-        w: 24,
-        x: 76,
-        y: 48
-      }),
-      shapeBlock(context, "cover-orbit-small", {
-        fill: tone.accent,
-        h: 18,
-        radius: 100,
-        w: 10,
-        x: 70,
-        y: 36
-      })
-    );
-  }
-  blocks.push(...renderMetricStrip(context, 88));
-  return blocks;
-}
-function renderEditorial(context) {
-  const { composition, slide, tone } = context;
-  const blocks = commonHeader(context, 72);
-  const editorial = usesEditorialKnowledgeProfile(context);
-  if (slide.summary) {
-    blocks.push(textBlock(context, "Text", "summary", slide.summary, {
-      color: tone.text,
-      fontFamily: composition.style.fontFamily,
-      fontSize: fitBodySize(slide.summary, editorial ? 22.5 : 16.5),
-      ...editorial ? { fontWeight: 620 } : {},
-      h: slide.bullets.length > 0 ? editorial ? 38 : 24 : 44,
-      lineHeight: editorial ? 1.28 : 1.48,
-      w: editorial && slide.bullets.length > 0 ? 44 : 62,
-      x: 7,
-      y: 32
-    }));
-  }
-  if (editorial && slide.summary && slide.bullets.length > 0) {
-    blocks.push(shapeBlock(context, "editorial-divider", {
-      fill: tone.accent,
-      h: 50,
-      radius: 1,
-      w: 0.32,
-      x: 53,
-      y: 35
-    }));
-  }
-  blocks.push(...verticalBullets(
-    context,
-    editorial && slide.summary ? 38 : slide.summary ? 61 : 36,
-    editorial && slide.summary ? 37 : 82,
-    editorial && slide.summary ? 58 : 7
-  ));
-  blocks.push(...renderMetricStrip(context, 87));
-  blocks.push(...renderCornerImage(context));
-  return blocks;
-}
-function renderImageSplit(context) {
-  const { composition, slide, tone } = context;
-  const assetBinding = context.assetBindings[0];
-  const blocks = commonHeader(context, 48);
-  if (slide.summary) {
-    blocks.push(textBlock(context, "Text", "summary", slide.summary, {
-      color: tone.muted,
-      fontFamily: composition.style.fontFamily,
-      fontSize: fitBodySize(slide.summary, 14.25),
-      h: 24,
-      lineHeight: 1.45,
-      w: 42,
-      x: 6,
-      y: 33
-    }));
-  }
-  blocks.push(...verticalBullets(context, slide.summary ? 62 : 38, 43));
-  if (assetBinding) {
-    blocks.push(renderAssetFrame(context, assetBinding, {
-      h: 80,
-      radius: composition.style.radius,
-      w: 45,
-      x: 52,
-      y: 10
-    }));
-  } else {
-    blocks.push(shapeBlock(context, "image-placeholder", {
-      fill: composition.style.surface,
-      h: 80,
-      radius: composition.style.radius,
-      w: 45,
-      x: 52,
-      y: 10
-    }));
-  }
-  blocks.push(...renderMetricStrip(context, 90));
-  return blocks;
-}
-function renderImageGallery(context) {
-  const { composition, slide, tone } = context;
-  const blocks = commonHeader(context, 82);
-  if (slide.summary) {
-    blocks.push(textBlock(context, "Text", "summary", slide.summary, {
-      color: tone.muted,
-      fontFamily: composition.style.fontFamily,
-      fontSize: fitBodySize(slide.summary, 11.25),
-      h: 9,
-      lineHeight: 1.3,
-      w: 88,
-      x: 6,
-      y: 30
-    }));
-  }
-  const hasFooter = slide.metrics.length > 0 || slide.bullets.length > 0;
-  const galleryTop = slide.summary ? 41 : 33;
-  const galleryBottom = hasFooter ? 82 : 93;
-  const frames = galleryFrames(
-    context.assetBindings.length,
-    galleryTop,
-    galleryBottom - galleryTop
-  );
-  context.assetBindings.forEach((assetBinding, index2) => {
-    const frame = frames[index2];
-    if (!frame) return;
-    blocks.push(renderAssetFrame(context, assetBinding, {
-      ...frame,
-      radius: Math.min(14, composition.style.radius)
-    }));
-  });
-  if (slide.metrics.length > 0) {
-    blocks.push(...renderMetricStrip(context, 84));
-  }
-  if (slide.bullets.length > 0) {
-    blocks.push(textBlock(
-      context,
-      "Text",
-      "bullet",
-      slide.bullets.map((bullet) => `\u2022 ${bullet}`).join("   "),
-      {
-        color: tone.muted,
-        fontFamily: composition.style.fontFamily,
-        fontSize: 8.25,
-        h: slide.metrics.length > 0 ? 5 : 10,
-        lineHeight: 1.2,
-        w: 88,
-        x: 6,
-        y: slide.metrics.length > 0 ? 94 : 86
-      }
-    ));
-  }
-  return blocks;
-}
-function galleryFrames(count, y, height) {
-  if (count === 2) {
-    return [
-      { h: height, w: 43, x: 6, y },
-      { h: height, w: 43, x: 51, y }
-    ];
-  }
-  if (count === 3) {
-    const secondaryHeight = (height - 2) / 2;
-    return [
-      { h: height, w: 55, x: 6, y },
-      { h: secondaryHeight, w: 31, x: 63, y },
-      { h: secondaryHeight, w: 31, x: 63, y: y + secondaryHeight + 2 }
-    ];
-  }
-  const rowHeight = (height - 2) / 2;
-  return [
-    { h: rowHeight, w: 43, x: 6, y },
-    { h: rowHeight, w: 43, x: 51, y },
-    { h: rowHeight, w: 43, x: 6, y: y + rowHeight + 2 },
-    { h: rowHeight, w: 43, x: 51, y: y + rowHeight + 2 }
-  ].slice(0, count);
-}
-function renderListGrid(context) {
-  const { composition, slide, tone } = context;
-  const blocks = commonHeader(context, context.assetBindings.length > 0 ? 68 : 82);
-  if (slide.summary) {
-    blocks.push(textBlock(context, "Text", "summary", slide.summary, {
-      color: tone.muted,
-      fontFamily: composition.style.fontFamily,
-      fontSize: fitBodySize(slide.summary, 12.75),
-      h: 13,
-      lineHeight: 1.42,
-      w: 70,
-      x: 6,
-      y: 31
-    }));
-  }
-  const columnCount = slide.bullets.length <= 3 ? Math.max(slide.bullets.length, 1) : 3;
-  const rowCount = Math.max(1, Math.ceil(slide.bullets.length / columnCount));
-  const gap = 2.5;
-  const cardWidth = (88 - gap * (columnCount - 1)) / columnCount;
-  const cardHeight = Math.min(25, (45 - gap * (rowCount - 1)) / rowCount);
-  slide.bullets.forEach((bullet, index2) => {
-    const column = index2 % columnCount;
-    const row = Math.floor(index2 / columnCount);
-    const x = 6 + column * (cardWidth + gap);
-    const y = 47 + row * (cardHeight + gap);
-    const editorial = usesEditorialKnowledgeProfile(context);
-    blocks.push(
-      shapeBlock(context, `bullet-${editorial ? "rule" : "card"}-${index2}`, editorial ? {
-        fill: tone.accent,
-        h: 0.28,
-        radius: 1,
-        w: cardWidth,
-        x,
-        y
-      } : {
-        fill: composition.style.surface,
-        h: cardHeight,
-        radius: composition.style.radius,
-        w: cardWidth,
-        x,
-        y
-      }),
-      textBlock(context, "Text", "bullet", String(index2 + 1).padStart(2, "0"), {
-        color: tone.accent,
-        fontFamily: composition.style.fontFamily,
-        fontSize: 9.75,
-        fontWeight: 760,
-        h: 4,
-        w: cardWidth - (editorial ? 0 : 4),
-        x: x + (editorial ? 0 : 2),
-        y: y + (editorial ? 2.2 : 2.5)
-      }, index2, "index"),
-      textBlock(context, "Text", "bullet", bullet, {
-        color: tone.text,
-        fontFamily: composition.style.fontFamily,
-        fontSize: fitBodySize(bullet, editorial ? 14.25 : 12.75),
-        fontWeight: editorial ? 650 : 600,
-        h: cardHeight - (editorial ? 6 : 8),
-        lineHeight: editorial ? 1.22 : 1.28,
-        w: cardWidth - (editorial ? 0 : 4),
-        x: x + (editorial ? 0 : 2),
-        y: y + (editorial ? 7 : 8)
-      }, index2, "content")
-    );
-  });
-  blocks.push(...renderMetricStrip(context, 89));
-  blocks.push(...renderCornerImage(context));
-  return blocks;
-}
-function renderMetricsGrid(context) {
-  const { composition, slide, tone } = context;
-  const blocks = commonHeader(context, context.assetBindings.length > 0 ? 68 : 82);
-  if (slide.summary) {
-    blocks.push(textBlock(context, "Text", "summary", slide.summary, {
-      color: tone.muted,
-      fontFamily: composition.style.fontFamily,
-      fontSize: fitBodySize(slide.summary, 12.75),
-      h: 11,
-      lineHeight: 1.38,
-      w: 70,
-      x: 6,
-      y: 31
-    }));
-  }
-  const metrics = slide.metrics.length > 0 ? slide.metrics : slide.bullets.slice(0, 4).map((bullet, index2) => ({
-    detail: "",
-    label: `${index2 + 1}`,
-    value: bullet
-  }));
-  const columnCount = metrics.length <= 2 ? Math.max(metrics.length, 1) : 2;
-  const rowCount = Math.max(1, Math.ceil(metrics.length / columnCount));
-  const cardWidth = columnCount === 1 ? 55 : 42.5;
-  const cardHeight = rowCount === 1 ? 31 : 18;
-  metrics.forEach((metric, index2) => {
-    const column = index2 % columnCount;
-    const row = Math.floor(index2 / columnCount);
-    const x = 6 + column * 45;
-    const y = 45 + row * (cardHeight + 3);
-    blocks.push(...usesEditorialKnowledgeProfile(context) ? editorialMetricBlocks(context, metric, index2, {
-      h: cardHeight,
-      w: cardWidth,
-      x,
-      y
-    }) : metricCardBlocks(context, metric, index2, {
-      background: composition.style.surface,
-      color: tone.text,
-      h: cardHeight,
-      radius: composition.style.radius,
-      w: cardWidth,
-      x,
-      y
-    }));
-  });
-  if (slide.metrics.length > 0 && slide.bullets.length > 0) {
-    blocks.push(textBlock(context, "Text", "bullet", slide.bullets.map((bullet) => `\u2022 ${bullet}`).join("   "), {
-      color: tone.muted,
-      fontFamily: composition.style.fontFamily,
-      fontSize: 9.75,
-      h: 10,
-      lineHeight: 1.25,
-      w: 88,
-      x: 6,
-      y: 88
-    }));
-  }
-  blocks.push(...renderCornerImage(context));
-  return blocks;
-}
-function renderTimeline(context) {
-  const { composition, slide, tone } = context;
-  const editorial = usesEditorialKnowledgeProfile(context);
-  const blocks = commonHeader(context, context.assetBindings.length > 0 ? 68 : 82);
-  if (slide.summary) {
-    blocks.push(textBlock(context, "Text", "summary", slide.summary, {
-      color: tone.muted,
-      fontFamily: composition.style.fontFamily,
-      fontSize: fitBodySize(slide.summary, 12.75),
-      h: 12,
-      lineHeight: 1.4,
-      w: 72,
-      x: 6,
-      y: 31
-    }));
-  }
-  const steps = slide.bullets.length > 0 ? slide.bullets : [slide.summary ?? slide.title];
-  const columnCount = editorial ? Math.min(2, steps.length) : Math.min(3, steps.length);
-  const rowCount = Math.ceil(steps.length / columnCount);
-  const rowHeight = editorial ? rowCount === 1 ? 28 : rowCount === 2 ? 20 : 14 : rowCount === 1 ? 36 : 24;
-  const rowGap = editorial && rowCount >= 3 ? 3.5 : editorial ? 5 : 4;
-  steps.forEach((step, index2) => {
-    const column = index2 % columnCount;
-    const row = Math.floor(index2 / columnCount);
-    const x = editorial ? 7 + column * 45 : 6 + column * 30;
-    const y = (editorial ? 47 : 48) + row * (rowHeight + rowGap);
-    blocks.push(
-      shapeBlock(context, `timeline-node-${index2}`, {
-        fill: tone.accent,
-        h: editorial ? 4.3 : 5,
-        radius: 100,
-        w: editorial ? 2.4 : 2.8,
-        x,
-        y
-      }),
-      textBlock(context, "Text", "bullet", String(index2 + 1).padStart(2, "0"), {
-        color: tone.accent,
-        fontFamily: composition.style.fontFamily,
-        fontSize: editorial ? 10 : 10.5,
-        fontWeight: 760,
-        h: 5,
-        w: 5,
-        x: x + (editorial ? 3.5 : 4),
-        y
-      }, index2, "index"),
-      textBlock(context, "Text", "bullet", step, {
-        color: tone.text,
-        fontFamily: composition.style.fontFamily,
-        fontSize: fitBodySize(step, editorial ? 13.25 : 12.75),
-        fontWeight: 600,
-        h: rowHeight - (editorial ? 6 : 7),
-        lineHeight: 1.3,
-        w: editorial ? 38 : 24,
-        x: x + (editorial ? 3.5 : 4),
-        y: y + (editorial ? 6 : 7)
-      }, index2, "content")
-    );
-  });
-  blocks.push(...renderMetricStrip(context, 89));
-  blocks.push(...renderCornerImage(context));
-  return blocks;
-}
-function renderClosing(context) {
-  const { composition, slide, tone } = context;
-  const editorial = usesEditorialKnowledgeProfile(context);
-  const blocks = [
-    textBlock(context, "Text", "eyebrow", deckKindLabel(context.plan.kind, context.plan.locale), {
-      color: tone.muted,
-      fontFamily: composition.style.fontFamily,
-      fontSize: 10.5,
-      fontWeight: 720,
-      h: 5,
-      textAlign: editorial ? "left" : "center",
-      w: 50,
-      x: editorial ? 7 : 25,
-      y: editorial ? 12 : 18
-    }),
-    textBlock(context, "Title", "title", slide.title, {
-      color: tone.text,
-      fontFamily: composition.style.fontFamily,
-      fontSize: fitTitleSize(slide.title, editorial ? 51 : 51),
-      fontWeight: 760,
-      h: 30,
-      lineHeight: 1,
-      textAlign: editorial ? "left" : "center",
-      w: editorial ? 70 : 78,
-      x: editorial ? 7 : 11,
-      y: editorial ? 25 : 31
-    })
-  ];
-  if (slide.summary) {
-    blocks.push(textBlock(context, "Text", "summary", slide.summary, {
-      color: tone.muted,
-      fontFamily: composition.style.fontFamily,
-      fontSize: fitBodySize(slide.summary, 14.25),
-      h: 17,
-      lineHeight: 1.4,
-      textAlign: editorial ? "left" : "center",
-      w: editorial ? 48 : 62,
-      x: editorial ? 45 : 19,
-      y: editorial ? 72 : 66
-    }));
-  }
-  if (editorial) {
-    blocks.push(shapeBlock(context, "closing-rule", {
-      fill: tone.text,
-      h: 0.35,
-      radius: 1,
-      w: 31,
-      x: 7,
-      y: 77
-    }));
-  }
-  blocks.push(...renderMetricStrip(context, 87));
-  blocks.push(...renderCornerImage(context));
-  return blocks;
-}
-function commonHeader(context, width) {
-  const { composition, slide, tone } = context;
-  return [
-    textBlock(context, "Text", "eyebrow", roleLabel(slide.role, context.plan.locale), {
-      color: tone.accent,
-      fontFamily: composition.style.fontFamily,
-      fontSize: 9.75,
-      fontWeight: 760,
-      h: 4,
-      w: 36,
-      x: 6,
-      y: 6
-    }),
-    textBlock(context, "Title", "title", slide.title, {
-      color: tone.text,
-      fontFamily: composition.style.fontFamily,
-      fontSize: fitTitleSize(slide.title, 31.5),
-      fontWeight: 730,
-      h: 16,
-      lineHeight: 1.05,
-      w: width,
-      x: 6,
-      y: 13
-    })
-  ];
-}
-function verticalBullets(context, startY, width, startX = 7) {
-  const { composition, slide, tone } = context;
-  const bottomY = slide.metrics.length > 0 ? 84 : 90;
-  const availableHeight = bottomY - startY;
-  const rowHeight = Math.min(9, availableHeight / Math.max(slide.bullets.length, 1));
-  const compactRows = rowHeight < 8;
-  return slide.bullets.flatMap((bullet, index2) => {
-    const y = startY + index2 * rowHeight;
-    return [
-      shapeBlock(context, `bullet-dot-${index2}`, {
-        fill: tone.accent,
-        h: 2.8,
-        radius: 100,
-        w: 1.6,
-        x: startX,
-        y: y + 1
-      }),
-      textBlock(context, "Text", "bullet", bullet, {
-        color: tone.text,
-        fontFamily: composition.style.fontFamily,
-        fontSize: fitBodySize(bullet, compactRows ? 10.5 : 12.75),
-        h: Math.max(5, rowHeight - (compactRows ? 0 : 1)),
-        lineHeight: 1.28,
-        w: width - 5,
-        x: startX + 4,
-        y
-      }, index2)
-    ];
-  });
-}
-function editorialMetricBlocks(context, metric, index2, frame) {
-  const metricSlotId = slotId(context.blueprint, "metric", index2);
-  return [
-    shapeBlock(context, `metric-rule-${index2}`, {
-      fill: context.tone.accent,
-      h: 0.32,
-      radius: 1,
-      slotId: `${metricSlotId}.rule`,
-      w: frame.w,
-      x: frame.x,
-      y: frame.y
-    }),
-    textBlock(context, "Text", "metric", metric.value, {
-      color: context.tone.text,
-      fontFamily: context.composition.style.fontFamily,
-      fontSize: frame.h >= 26 ? 36 : 27,
-      fontWeight: 790,
-      h: frame.h >= 26 ? 12 : 7.5,
-      letterSpacing: -0.045,
-      lineHeight: 0.95,
-      slotId: `${metricSlotId}.value`,
-      w: frame.w,
-      x: frame.x,
-      y: frame.y + 3
-    }, index2, "value"),
-    textBlock(context, "Text", "metric", metric.label, {
-      color: context.tone.text,
-      fontFamily: context.composition.style.fontFamily,
-      fontSize: 9.25,
-      fontWeight: 700,
-      h: frame.h >= 26 ? 3.5 : 3,
-      slotId: `${metricSlotId}.label`,
-      w: frame.w,
-      x: frame.x,
-      y: frame.y + (frame.h >= 26 ? 16 : 11)
-    }, index2, "label"),
-    ...metric.detail ? [textBlock(context, "Text", "metric", metric.detail, {
-      color: context.tone.muted,
-      fontFamily: context.composition.style.fontFamily,
-      fontSize: 7.5,
-      h: frame.h >= 26 ? 4 : 3,
-      lineHeight: 1.2,
-      slotId: `${metricSlotId}.detail`,
-      w: frame.w,
-      x: frame.x,
-      y: frame.y + (frame.h >= 26 ? 20.5 : 14.5)
-    }, index2, "detail")] : []
-  ];
-}
-function usesEditorialKnowledgeProfile(context) {
-  return context.composition.visualProfile === "editorial-knowledge";
-}
-function renderMetricStrip(context, y) {
-  if (context.slide.metrics.length === 0 || context.blueprint.layout === "metrics-grid") {
-    return [];
-  }
-  const metrics = context.slide.metrics;
-  const width = Math.min(21, 88 / metrics.length - 2);
-  return metrics.flatMap((metric, index2) => metricCardBlocks(context, metric, index2, {
-    background: context.composition.style.surface,
-    color: context.tone.text,
-    h: 9,
-    radius: 8,
-    w: width,
-    x: 6 + index2 * (width + 2),
-    y
-  }));
-}
-function renderCornerImage(context) {
-  const assetBinding = context.assetBindings[0];
-  if (!assetBinding || ["image-gallery", "image-split"].includes(context.blueprint.layout)) return [];
-  return [renderAssetFrame(context, assetBinding, {
-    h: 18,
-    radius: Math.min(12, context.composition.style.radius),
-    w: 16,
-    x: 80,
-    y: 5
-  })];
-}
-function textBlock(context, type, slotKind, text4, props, itemIndex, instance) {
-  return {
-    props: {
-      delay: contentDelay(context, itemIndex),
-      enter: slotKind === "title" ? context.composition.motion.titleEnter : context.composition.motion.contentEnter,
-      id: blockId(context, instance ? `${slotKind}-${instance}` : slotKind, itemIndex),
-      slotId: slotId(context.blueprint, slotKind, itemIndex),
-      ...props
-    },
-    text: text4,
-    type
-  };
-}
-function shapeBlock(context, suffix, props) {
-  return {
-    props: {
-      enter: context.composition.motion.contentEnter,
-      id: blockId(context, `shape-${suffix}`),
-      operation: "none",
-      shape: "rectangle",
-      slotId: `${context.blueprint.id}.decoration.${suffix}`,
-      ...usesEditorialKnowledgeProfile(context) ? { stroke: "transparent", strokeWidth: 0 } : {},
-      ...props
-    },
-    type: "Shape"
-  };
-}
-function metricCardBlocks(context, metric, index2, frame) {
-  const metricSlotId = slotId(context.blueprint, "metric", index2);
-  const compact = frame.h <= 10;
-  const labelY = compact ? frame.y + 5.2 : frame.y + 2;
-  const valueY = compact ? frame.y + 0.7 : frame.y + 5;
-  const valueHeight = compact ? 4.6 : frame.h >= 26 ? 10 : 7;
-  const blocks = [
-    shapeBlock(context, `metric-card-${index2}`, {
-      fill: frame.background,
-      h: frame.h,
-      radius: frame.radius,
-      slotId: `${metricSlotId}.card`,
-      w: frame.w,
-      x: frame.x,
-      y: frame.y
-    }),
-    textBlock(context, "Text", "metric", metric.value, {
-      color: frame.color,
-      fontFamily: context.composition.style.fontFamily,
-      fontSize: compact ? 13.5 : frame.h >= 26 ? 30 : 22.5,
-      fontWeight: 760,
-      h: valueHeight,
-      lineHeight: 1,
-      slotId: `${metricSlotId}.value`,
-      w: frame.w - 3,
-      x: frame.x + 1.5,
-      y: valueY
-    }, index2, "value"),
-    textBlock(context, "Text", "metric", metric.label, {
-      color: compact ? context.tone.muted : frame.color,
-      fontFamily: context.composition.style.fontFamily,
-      fontSize: compact ? 7.5 : 8.25,
-      fontWeight: 700,
-      h: compact ? 2.8 : 3,
-      letterSpacing: compact ? 0 : 0.06,
-      slotId: `${metricSlotId}.label`,
-      w: frame.w - 3,
-      x: frame.x + 1.5,
-      y: labelY
-    }, index2, "label")
-  ];
-  if (!compact && metric.detail) {
-    blocks.push(textBlock(context, "Text", "metric", metric.detail, {
-      color: context.tone.muted,
-      fontFamily: context.composition.style.fontFamily,
-      fontSize: 7.5,
-      h: 3.5,
-      lineHeight: 1.15,
-      slotId: `${metricSlotId}.detail`,
-      w: frame.w - 3,
-      x: frame.x + 1.5,
-      y: frame.y + frame.h - 4.5
-    }, index2, "detail"));
-  }
-  return blocks;
-}
-function imageBlock(context, binding, props) {
-  const asset = binding.asset;
-  if (!asset) return imagePlaceholderBlock(context, binding, props);
-  return {
-    props: {
-      alt: binding.ref.alt ?? asset.alt ?? context.slide.title,
-      enter: context.composition.motion.imageEnter,
-      fit: "cover",
-      id: blockId(context, "image", binding.index),
-      scaleX: 1,
-      scaleY: 1,
-      slotId: slotId(context.blueprint, "image", binding.index),
-      src: asset.src,
-      ...props
-    },
-    type: "ImageBlock"
-  };
-}
-function imagePlaceholderBlock(context, binding, props) {
-  return {
-    props: {
-      alt: binding.ref.alt ?? context.slide.title,
-      enter: context.composition.motion.contentEnter,
-      fill: context.composition.style.surface,
-      id: blockId(context, "image-placeholder", binding.index),
-      operation: "none",
-      shape: "rectangle",
-      slotId: slotId(context.blueprint, "image", binding.index),
-      ...props
-    },
-    type: "Shape"
-  };
-}
-function blockId(context, kind, itemIndex) {
-  const raw = [
-    "deck",
-    context.composition.templateId,
-    context.slide.id,
-    context.slideIndex,
-    kind,
-    itemIndex
-  ].filter((value) => value !== void 0).join("-");
-  return raw.replace(/[^A-Za-z0-9._:-]+/g, "-").slice(0, 180);
-}
-function slotId(blueprint3, kind, itemIndex) {
-  const base = blueprint3.slots.find((slot) => slot.kind === kind)?.id ?? `${blueprint3.id}.${kind}`;
-  return itemIndex === void 0 ? base : `${base}.${itemIndex}`;
-}
-function contentDelay(context, itemIndex) {
-  if (itemIndex === void 0) return 0.08;
-  return Math.min(0.52, 0.12 + itemIndex * 0.07);
-}
-function toneForBlueprint(composition, blueprint3) {
-  if (blueprint3.tone === "dark") {
-    return {
-      accent: composition.style.accent,
-      background: composition.style.darkBackground,
-      muted: composition.style.darkMuted,
-      surface: composition.style.surface,
-      text: composition.style.darkText,
-      theme: "dark"
-    };
-  }
-  if (blueprint3.tone === "accent") {
-    return {
-      accent: composition.style.darkText,
-      background: composition.style.accent,
-      muted: composition.style.darkMuted,
-      surface: composition.style.background,
-      text: composition.style.darkText,
-      theme: "dark"
-    };
-  }
-  return {
-    accent: composition.style.accent,
-    background: composition.style.background,
-    muted: composition.style.muted,
-    surface: composition.style.surface,
-    text: composition.style.text,
-    theme: "light"
-  };
-}
-function sourceNotes(sourceRefs, assetBindings) {
-  const credits = assetBindings.flatMap((binding) => {
-    const credit = binding.asset?.credit;
-    if (!credit) return [];
-    const profileUrl = safeUnsplashProfileUrl(credit.profileUrl);
-    const name = escapeNotesText(singleLineNotesText(credit.name));
-    return [{
-      markdown: `Image: ${name} \xB7 ${credit.provider}${profileUrl ? ` \xB7 ${escapeNotesText(profileUrl)}` : ""}`,
-      plainText: `Image: ${singleLineNotesText(credit.name)} \xB7 ${credit.provider}${profileUrl ? ` \xB7 ${profileUrl}` : ""}`
-    }];
-  });
-  const creditMarkdown = credits.length > 0 ? `
-
-## Image credits
-
-${credits.map((credit) => credit.markdown).join("\n")}` : "";
-  const creditPlainText = credits.length > 0 ? `
-Image credits
-${credits.map((credit) => credit.plainText).join("\n")}` : "";
-  if (sourceRefs.length === 0) {
-    return {
-      markdown: `## Sources
-
-- No source reference supplied.${creditMarkdown}`,
-      plainText: `Sources
-No source reference supplied.${creditPlainText}`
-    };
-  }
-  const markdownLines = sourceRefs.map((sourceRef) => {
-    const details = [
-      sourceRef.heading ? `heading: ${escapeNotesText(sourceRef.heading)}` : "",
-      sourceRef.blockId ? `block: ^${escapeNotesText(sourceRef.blockId)}` : ""
-    ].filter(Boolean);
-    return `- ${escapeNotesText(sourceRef.path)}${details.length > 0 ? ` \u2014 ${details.join("; ")}` : ""}`;
-  });
-  const plainLines = sourceRefs.map((sourceRef) => [
-    sourceRef.path,
-    sourceRef.heading ? `heading: ${sourceRef.heading}` : "",
-    sourceRef.blockId ? `block: ^${sourceRef.blockId}` : ""
-  ].filter(Boolean).join(" \u2014 "));
-  return {
-    markdown: `## Sources
-
-${markdownLines.join("\n")}${creditMarkdown}`,
-    plainText: `Sources
-${plainLines.join("\n")}${creditPlainText}`
-  };
-}
-function singleLineNotesText(value) {
-  return value.replace(/[\r\n]+/g, " ").trim();
-}
-function safeUnsplashProfileUrl(value) {
-  try {
-    const url2 = new URL(singleLineNotesText(value));
-    const hostname3 = url2.hostname.toLowerCase();
-    if (url2.protocol !== "https:" || hostname3 !== "unsplash.com" && !hostname3.endsWith(".unsplash.com")) {
-      return "";
-    }
-    return url2.toString();
-  } catch {
-    return "";
-  }
-}
-function escapeNotesText(value) {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-}
-function safeDeckTitle(value) {
-  return value.replace(/[\r\n]+/g, " ").replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
-}
-function fitTitleSize(value, preferred) {
-  const length = visualTextLength(value);
-  if (length > 100) return Math.max(20.25, preferred * 0.52);
-  if (length > 70) return Math.max(22.5, preferred * 0.64);
-  if (length > 45) return Math.max(24.75, preferred * 0.78);
-  return preferred;
-}
-function fitBodySize(value, preferred) {
-  const length = visualTextLength(value);
-  if (length > 500) return Math.max(9.75, preferred * 0.68);
-  if (length > 300) return Math.max(10.5, preferred * 0.78);
-  if (length > 160) return Math.max(11.25, preferred * 0.88);
-  return preferred;
-}
-function visualTextLength(value) {
-  return Array.from(value).reduce(
-    (total, character) => total + (/[^\u0000-\u00ff]/.test(character) ? 1.6 : 1),
-    0
-  );
-}
-function coverEyebrow(plan) {
-  return [deckKindLabel(plan.kind, plan.locale), plan.period].filter(Boolean).join(" / ");
-}
-function deckKindLabel(kind, locale) {
-  const labels = {
-    "progress-report": { en: "PROGRESS REPORT", "zh-TW": "\u968E\u6BB5\u9032\u5EA6\u5831\u544A" },
-    proposal: { en: "PROPOSAL", "zh-TW": "\u63D0\u6848\u7C21\u5831" },
-    "research-brief": { en: "RESEARCH BRIEF", "zh-TW": "\u7814\u7A76\u6458\u8981" },
-    "teaching-deck": { en: "TEACHING DECK", "zh-TW": "\u6559\u5B78\u7C21\u5831" }
-  };
-  return labels[kind][locale];
-}
-function roleLabel(role, locale) {
-  const normalized = role.replaceAll("-", " ").toUpperCase();
-  if (locale === "en") return normalized;
-  const labels = {
-    appendix: "\u88DC\u5145\u8CC7\u6599",
-    closing: "\u7D50\u8A9E",
-    comparison: "\u6BD4\u8F03",
-    context: "\u80CC\u666F",
-    "decisions-risks": "\u6C7A\u7B56\u8207\u98A8\u96AA",
-    evidence: "\u8B49\u64DA",
-    goals: "\u76EE\u6A19",
-    "key-point": "\u91CD\u9EDE",
-    metrics: "\u95DC\u9375\u6307\u6A19",
-    "next-steps": "\u4E0B\u4E00\u6B65",
-    overview: "\u7E3D\u89BD",
-    process: "\u6D41\u7A0B",
-    timeline: "\u6642\u9593\u8EF8"
-  };
-  return labels[role] ?? normalized;
-}
-
-// core/motion-doc/presets/deckPlanTemplates.ts
-var OBSIDIAN_QUICK_DECK_TEMPLATE_ID = "obsidian-quick-deck";
-var NOTION_SHARED_DECK_TEMPLATE_ID = "notion-shared-deck";
-var allKinds = [
-  "progress-report",
-  "proposal",
-  "research-brief",
-  "teaching-deck"
 ];
-var narrativeRoles = [
-  "context",
-  "key-point",
-  "evidence",
-  "comparison",
-  "decisions-risks",
-  "appendix"
-];
-var listRoles = [
-  "overview",
-  "goals",
-  "next-steps"
-];
-var contentRoles = [
-  "overview",
-  "context",
-  "goals",
-  "key-point",
-  "evidence",
-  "metrics",
-  "comparison",
-  "process",
-  "timeline",
-  "decisions-risks",
-  "next-steps",
-  "appendix"
-];
-var metricsRoles = [
-  "metrics",
-  ...narrativeRoles,
-  ...listRoles
-];
-function templateSlots(prefix, assetCapacity) {
-  return [
-    { id: `${prefix}.eyebrow`, kind: "eyebrow", maxItems: 1, required: false },
-    { id: `${prefix}.title`, kind: "title", maxItems: 1, required: true },
-    { id: `${prefix}.summary`, kind: "summary", maxItems: 1, required: false },
-    { id: `${prefix}.bullets`, kind: "bullet", maxItems: 6, required: false },
-    { id: `${prefix}.metrics`, kind: "metric", maxItems: 4, required: false },
-    { id: `${prefix}.image`, kind: "image", maxItems: assetCapacity, required: false },
-    { id: `${prefix}.sources`, kind: "source-notes", maxItems: 32, required: true }
-  ];
-}
-function blueprint2(templateId, id, layout, roles, tone, repeatable = true, required2 = false, assetCapacity = 0, minimumAssets = 0) {
-  const prefix = `${templateId}.${id}`;
-  return {
-    capacities: { assets: assetCapacity, bullets: 6, metrics: 4 },
-    id: prefix,
-    layout,
-    minimumAssets,
-    required: required2,
-    repeatable,
-    roles,
-    slots: templateSlots(prefix, assetCapacity),
-    tone
-  };
-}
-function templateBlueprints(templateId, tones) {
-  return [
-    blueprint2(templateId, "cover", "cover", ["cover"], tones.cover, false, true, 1),
-    blueprint2(templateId, "overview", "list-grid", listRoles, tones.content),
-    blueprint2(templateId, "editorial", "editorial", narrativeRoles, tones.content),
-    blueprint2(templateId, "image-story", "image-split", contentRoles, tones.content, true, false, 1, 1),
-    blueprint2(templateId, "image-gallery", "image-gallery", deckPlanSlideRoles, tones.content, true, false, 4, 2),
-    blueprint2(templateId, "metrics", "metrics-grid", metricsRoles, tones.content),
-    blueprint2(templateId, "timeline", "timeline", ["timeline", "process"], tones.content),
-    blueprint2(templateId, "closing", "closing", ["closing"], tones.closing, false, false, 1)
-  ];
-}
-var obsidianQuickDeckComposition = assertDeckPlanTemplateComposition({
-  blueprints: templateBlueprints(OBSIDIAN_QUICK_DECK_TEMPLATE_ID, {
-    closing: "accent",
-    content: "light",
-    cover: "dark"
-  }),
-  motion: {
-    contentEnter: "fadeUp",
-    imageEnter: "blurIn",
-    slideTransition: "rise",
-    titleEnter: "reveal",
-    transitionDuration: 0.68
-  },
-  name: "Obsidian Quick Deck",
-  style: {
-    accent: "#6651e6",
-    background: "#f5f2ea",
-    darkBackground: "#17141d",
-    darkMuted: "#bbb4c8",
-    darkText: "#fbf8f1",
-    fontFamily: "Noto Sans TC",
-    muted: "#6b6571",
-    radius: 6,
-    surface: "#e8e2f3",
-    text: "#18151d"
-  },
-  supportedKinds: allKinds,
-  templateId: OBSIDIAN_QUICK_DECK_TEMPLATE_ID,
-  version: 1,
-  visualProfile: "editorial-knowledge"
-});
-var notionSharedDeckComposition = assertDeckPlanTemplateComposition({
-  blueprints: templateBlueprints(NOTION_SHARED_DECK_TEMPLATE_ID, {
-    closing: "dark",
-    content: "light",
-    cover: "dark"
-  }),
-  motion: {
-    contentEnter: "fadeUp",
-    imageEnter: "blurIn",
-    slideTransition: "fade",
-    titleEnter: "reveal",
-    transitionDuration: 0.62
-  },
-  name: "Notion Shared Deck",
-  style: {
-    accent: "#2f76d2",
-    background: "#faf9f6",
-    darkBackground: "#292927",
-    darkMuted: "#d4d2ca",
-    darkText: "#f8f7f2",
-    fontFamily: "Noto Sans TC",
-    muted: "#77766f",
-    radius: 4,
-    surface: "#eceae4",
-    text: "#292927"
-  },
-  supportedKinds: allKinds,
-  templateId: NOTION_SHARED_DECK_TEMPLATE_ID,
-  version: 1,
-  visualProfile: "editorial-knowledge"
-});
-var launchDeckComposition = assertDeckPlanTemplateComposition({
-  blueprints: templateBlueprints("launch-deck", {
-    closing: "dark",
-    content: "light",
-    cover: "dark"
-  }),
-  motion: {
-    contentEnter: "fadeUp",
-    imageEnter: "blurIn",
-    slideTransition: "pushLeft",
-    titleEnter: "reveal",
-    transitionDuration: 0.75
-  },
-  name: "Launch Deck",
-  style: {
-    accent: "#ff6f4e",
-    background: "#fff9f2",
-    darkBackground: "#233c35",
-    darkMuted: "#adc2b9",
-    darkText: "#f7fff9",
-    fontFamily: "Inter",
-    muted: "#6f645b",
-    radius: 16,
-    surface: "#f1eadf",
-    text: "#15120f"
-  },
-  supportedKinds: allKinds,
-  templateId: "launch-deck",
-  version: 1
-});
-var designTeamCultureComposition = assertDeckPlanTemplateComposition({
-  blueprints: templateBlueprints("design-team-culture", {
-    closing: "accent",
-    content: "light",
-    cover: "light"
-  }),
-  motion: {
-    contentEnter: "fadeUp",
-    imageEnter: "blurIn",
-    slideTransition: "fade",
-    titleEnter: "reveal",
-    transitionDuration: 0.6
-  },
-  name: "SlideX Design Team Culture Deck",
-  style: {
-    accent: "#3980ee",
-    background: "#ffffff",
-    darkBackground: "#3980ee",
-    darkMuted: "#dbe8ff",
-    darkText: "#ffffff",
-    fontFamily: "Noto Sans TC",
-    muted: "#475569",
-    radius: 16,
-    surface: "#eef4ff",
-    text: "#111827"
-  },
-  supportedKinds: allKinds,
-  templateId: "design-team-culture",
-  version: 1
-});
-
-// core/motion-doc/presets/templates/notionSharedDeck.ts
-var notionSharedDeckTemplateId = NOTION_SHARED_DECK_TEMPLATE_ID;
-var sourcePath = "Notion/Product pulse.md";
-var samplePlans = {
-  en: {
-    audience: "Cross-functional collaborators",
-    kind: "progress-report",
-    locale: "en",
-    objective: "Turn a shared Notion workspace into a concise, decision-ready narrative.",
-    period: "AUGUST 2026",
-    planId: "notion-shared-deck-sample-en",
-    schemaVersion: 1,
-    slides: [
-      {
-        assetRefs: [],
-        bullets: [],
-        id: "cover",
-        metrics: [],
-        role: "cover",
-        sourceRefs: [{ heading: "Product pulse", path: sourcePath }],
-        summary: "A shared workspace becomes a clear story for the people moving the work forward.",
-        title: "The team brief"
-      },
-      {
-        assetRefs: [],
-        bullets: [
-          "What changed since the last review",
-          "Signals that deserve a decision",
-          "Work that needs a clear owner",
-          "The smallest useful next move"
-        ],
-        id: "overview",
-        metrics: [],
-        role: "overview",
-        sourceRefs: [{ heading: "Agenda", path: sourcePath }],
-        summary: "A short shared structure keeps the conversation focused.",
-        title: "This week, in one page"
-      },
-      {
-        assetRefs: [],
-        bullets: [
-          "Research and delivery now share one decision log",
-          "Project status is visible before the meeting starts",
-          "The original page context remains easy to revisit"
-        ],
-        id: "context",
-        metrics: [],
-        role: "context",
-        sourceRefs: [{ heading: "What changed", path: sourcePath }],
-        summary: "One source of truth should make the next decision feel lighter, not louder.",
-        title: "The shared page is doing more of the coordination"
-      },
-      {
-        assetRefs: [],
-        bullets: ["Every number can still be checked in the original page."],
-        id: "metrics",
-        metrics: [
-          { detail: "Pages included in this update", label: "Shared pages", value: "24" },
-          { detail: "Items with a current owner", label: "Clear ownership", value: "86%" },
-          { detail: "Decisions ready to close", label: "Decisions", value: "5" },
-          { detail: "Items needing attention", label: "Open threads", value: "3" }
-        ],
-        role: "metrics",
-        sourceRefs: [{ heading: "Signals", path: sourcePath }],
-        summary: "The signals worth acting on are visible at a glance.",
-        title: "A few numbers, with the right context"
-      },
-      {
-        assetRefs: [],
-        bullets: ["Choose source pages", "Keep the key context", "Shape the shared story", "Review before sharing"],
-        id: "process",
-        metrics: [],
-        role: "timeline",
-        sourceRefs: [{ heading: "Team rhythm", path: sourcePath }],
-        summary: "The work stays editable from source selection through to presentation review.",
-        title: "A calmer rhythm for shared work"
-      },
-      {
-        assetRefs: [],
-        bullets: [
-          "Decide who owns the final customer segment",
-          "Confirm the scope for the next research cycle",
-          "Resolve the three open dependencies before Friday"
-        ],
-        id: "decisions",
-        metrics: [],
-        role: "decisions-risks",
-        sourceRefs: [{ heading: "Open questions", path: sourcePath }],
-        summary: "Make the open questions explicit before they become silent blockers.",
-        title: "What needs a decision, not another update"
-      },
-      {
-        assetRefs: [],
-        bullets: [
-          "Name the owner for every next action",
-          "Keep only the pages needed for the next review",
-          "Bring unresolved choices back with evidence"
-        ],
-        id: "next-steps",
-        metrics: [],
-        role: "next-steps",
-        sourceRefs: [{ heading: "Next actions", path: sourcePath }],
-        summary: "A clean handoff is more valuable than a longer status update.",
-        title: "Make next week smaller"
-      },
-      {
-        assetRefs: [],
-        bullets: [],
-        id: "closing",
-        metrics: [],
-        role: "closing",
-        sourceRefs: [{ heading: "Summary", path: sourcePath }],
-        summary: "One shared source. A presentation that keeps the work moving.",
-        title: "Ready to share"
-      }
-    ],
-    title: "Notion Shared Deck"
-  },
-  "zh-TW": {
-    audience: "\u8DE8\u8077\u80FD\u5354\u4F5C\u8005",
-    kind: "progress-report",
-    locale: "zh-TW",
-    objective: "\u5C07\u5718\u968A\u5171\u7528\u7684 Notion \u5DE5\u4F5C\u5340\u6574\u7406\u6210\u7CBE\u7C21\u3001\u53EF\u6C7A\u7B56\u7684\u6558\u4E8B\u3002",
-    period: "2026 \u5E74 8 \u6708",
-    planId: "notion-shared-deck-sample-zh-tw",
-    schemaVersion: 1,
-    slides: [
-      {
-        assetRefs: [],
-        bullets: [],
-        id: "cover",
-        metrics: [],
-        role: "cover",
-        sourceRefs: [{ heading: "\u7522\u54C1\u9031\u8A0A", path: sourcePath }],
-        summary: "\u628A\u5171\u7528\u5DE5\u4F5C\u5340\u6574\u7406\u6210\u6E05\u695A\u7684\u6545\u4E8B\uFF0C\u8B93\u63A8\u9032\u5DE5\u4F5C\u7684\u4EBA\u90FD\u80FD\u5C0D\u9F4A\u3002",
-        title: "\u9019\u4E00\u9031\u7684\u5718\u968A\u7C21\u5831"
-      },
-      {
-        assetRefs: [],
-        bullets: ["\u9019\u6B21\u66F4\u65B0\u4E86\u4EC0\u9EBC", "\u54EA\u4E9B\u8A0A\u865F\u503C\u5F97\u6C7A\u7B56", "\u54EA\u4E9B\u5DE5\u4F5C\u9700\u8981\u660E\u78BA\u8CA0\u8CAC\u4EBA", "\u4E0B\u4E00\u6B65\u6700\u5C0F\u800C\u6709\u7528\u7684\u884C\u52D5"],
-        id: "overview",
-        metrics: [],
-        role: "overview",
-        sourceRefs: [{ heading: "\u8B70\u7A0B", path: sourcePath }],
-        summary: "\u7528\u4E00\u500B\u7C21\u77ED\u7684\u5171\u7528\u7D50\u69CB\uFF0C\u8B93\u8A0E\u8AD6\u805A\u7126\u5728\u771F\u6B63\u91CD\u8981\u7684\u4E8B\u3002",
-        title: "\u4E00\u9801\u638C\u63E1\u9019\u9031\u91CD\u9EDE"
-      },
-      {
-        assetRefs: [],
-        bullets: ["\u7814\u7A76\u8207\u4EA4\u4ED8\u5171\u7528\u540C\u4E00\u4EFD\u6C7A\u7B56\u7D00\u9304", "\u958B\u6703\u4E4B\u524D\uFF0C\u5C31\u80FD\u770B\u898B\u5C08\u6848\u72C0\u614B", "\u539F\u59CB\u9801\u9762\u7684\u8108\u7D61\u96A8\u6642\u53EF\u4EE5\u56DE\u67E5"],
-        id: "context",
-        metrics: [],
-        role: "context",
-        sourceRefs: [{ heading: "\u672C\u9031\u8B8A\u5316", path: sourcePath }],
-        summary: "\u771F\u6B63\u7684\u55AE\u4E00\u4E8B\u5BE6\u4F86\u6E90\uFF0C\u61C9\u8A72\u8B93\u4E0B\u4E00\u500B\u6C7A\u7B56\u8B8A\u5F97\u66F4\u8F15\uFF0C\u800C\u4E0D\u662F\u8CC7\u8A0A\u66F4\u591A\u3002",
-        title: "\u5171\u7528\u9801\u9762\u958B\u59CB\u627F\u64D4\u5354\u4F5C\u7BC0\u594F"
-      },
-      {
-        assetRefs: [],
-        bullets: ["\u6BCF\u4E00\u500B\u6578\u5B57\u90FD\u80FD\u56DE\u5230\u539F\u59CB\u9801\u9762\u6838\u5C0D\u3002"],
-        id: "metrics",
-        metrics: [
-          { detail: "\u672C\u6B21\u66F4\u65B0\u7D0D\u5165\u7684\u9801\u9762", label: "\u5171\u7528\u9801\u9762", value: "24" },
-          { detail: "\u5DF2\u6709\u76EE\u524D\u8CA0\u8CAC\u4EBA\u7684\u9805\u76EE", label: "\u660E\u78BA\u8CA0\u8CAC", value: "86%" },
-          { detail: "\u5DF2\u6E96\u5099\u6536\u6582\u7684\u6C7A\u7B56", label: "\u5F85\u6C7A\u7B56", value: "5" },
-          { detail: "\u4ECD\u9700\u95DC\u6CE8\u7684\u5DE5\u4F5C\u7DDA", label: "\u672A\u7D50\u8B70\u984C", value: "3" }
-        ],
-        role: "metrics",
-        sourceRefs: [{ heading: "\u95DC\u9375\u8A0A\u865F", path: sourcePath }],
-        summary: "\u503C\u5F97\u63A1\u53D6\u884C\u52D5\u7684\u8A0A\u865F\uFF0C\u4E00\u773C\u5C31\u80FD\u770B\u898B\u3002",
-        title: "\u5E7E\u500B\u6578\u5B57\uFF0C\u4E5F\u4FDD\u7559\u6B63\u78BA\u8108\u7D61"
-      },
-      {
-        assetRefs: [],
-        bullets: ["\u9078\u53D6\u4F86\u6E90\u9801\u9762", "\u4FDD\u7559\u91CD\u9EDE\u5167\u5BB9", "\u6574\u7406\u6210\u7C21\u5831\u6545\u4E8B", "\u5206\u4EAB\u524D\u5B8C\u6574\u78BA\u8A8D"],
-        id: "process",
-        metrics: [],
-        role: "timeline",
-        sourceRefs: [{ heading: "\u5718\u968A\u7BC0\u594F", path: sourcePath }],
-        summary: "\u5F9E\u9078\u53D6\u4F86\u6E90\u5230\u78BA\u8A8D\u7C21\u5831\uFF0C\u6574\u500B\u904E\u7A0B\u90FD\u7DAD\u6301\u53EF\u7DE8\u8F2F\u3002",
-        title: "\u8B93\u5171\u7528\u5DE5\u4F5C\u66F4\u6709\u7BC0\u594F"
-      },
-      {
-        assetRefs: [],
-        bullets: ["\u78BA\u8A8D\u6700\u5F8C\u7684\u5BA2\u7FA4\u6C7A\u7B56\u7531\u8AB0\u8CA0\u8CAC", "\u5B9A\u7FA9\u4E0B\u4E00\u8F2A\u7814\u7A76\u7684\u7BC4\u570D", "\u5728\u9031\u4E94\u524D\u6392\u9664\u4E09\u500B\u672A\u7D50\u4F9D\u8CF4"],
-        id: "decisions",
-        metrics: [],
-        role: "decisions-risks",
-        sourceRefs: [{ heading: "\u672A\u7D50\u554F\u984C", path: sourcePath }],
-        summary: "\u5728\u5B83\u5011\u8B8A\u6210\u7121\u8072\u7684\u963B\u585E\u4E4B\u524D\uFF0C\u5148\u8B93\u6240\u6709\u958B\u653E\u554F\u984C\u6E05\u695A\u53EF\u898B\u3002",
-        title: "\u9700\u8981\u6C7A\u7B56\uFF0C\u800C\u4E0D\u662F\u518D\u4E00\u6B21\u66F4\u65B0"
-      },
-      {
-        assetRefs: [],
-        bullets: ["\u6BCF\u500B\u4E0B\u4E00\u6B65\u90FD\u6307\u5B9A\u8CA0\u8CAC\u4EBA", "\u53EA\u4FDD\u7559\u4E0B\u4E00\u6B21\u56DE\u9867\u9700\u8981\u7684\u9801\u9762", "\u5E36\u8457\u8B49\u64DA\u56DE\u4F86\u8655\u7406\u672A\u89E3\u9078\u9805"],
-        id: "next-steps",
-        metrics: [],
-        role: "next-steps",
-        sourceRefs: [{ heading: "\u4E0B\u4E00\u6B65", path: sourcePath }],
-        summary: "\u6E05\u695A\u4EA4\u63A5\uFF0C\u6BD4\u66F4\u9577\u7684\u72C0\u614B\u66F4\u65B0\u66F4\u6709\u50F9\u503C\u3002",
-        title: "\u8B93\u4E0B\u9031\u66F4\u805A\u7126"
-      },
-      {
-        assetRefs: [],
-        bullets: [],
-        id: "closing",
-        metrics: [],
-        role: "closing",
-        sourceRefs: [{ heading: "\u6458\u8981", path: sourcePath }],
-        summary: "\u4E00\u500B\u5171\u7528\u4F86\u6E90\uFF0C\u4E00\u4EFD\u6301\u7E8C\u63A8\u9032\u5DE5\u4F5C\u7684\u7C21\u5831\u3002",
-        title: "\u6E96\u5099\u5C31\u7DD2"
-      }
-    ],
-    title: "Notion \u5718\u968A\u5171\u7528\u7C21\u5831"
-  }
-};
-var notionSharedDeckTemplateSourceEn = materializeDeckPlan(
-  samplePlans.en,
-  notionSharedDeckComposition
-).source;
-var notionSharedDeckTemplateSourceZhTw = materializeDeckPlan(
-  samplePlans["zh-TW"],
-  notionSharedDeckComposition
-).source;
-var notionSharedDeckTemplate = {
-  category: "Notion",
-  description: "\u5C07 Notion \u5171\u7528\u9801\u9762\u6574\u7406\u6210\u6E05\u695A\u3001\u6709\u7BC0\u594F\u4E14\u53EF\u8FFD\u6EAF\u4F86\u6E90\u7684\u516B\u9801\u7C21\u5831\u3002",
-  duration: "48s",
-  id: notionSharedDeckTemplateId,
-  name: "Notion Shared Deck",
-  source: notionSharedDeckTemplateSourceZhTw,
-  sources: {
-    en: notionSharedDeckTemplateSourceEn,
-    "zh-TW": notionSharedDeckTemplateSourceZhTw
-  },
-  useCase: "\u5718\u968A\u9031\u5831\u3001\u8DE8\u8077\u80FD\u540C\u6B65\u3001\u5C08\u6848\u6C7A\u7B56\u8207\u7522\u54C1\u9032\u5EA6"
-};
-
-// core/motion-doc/presets/templates/obsidianQuickDeck.ts
-var obsidianQuickDeckTemplateId = OBSIDIAN_QUICK_DECK_TEMPLATE_ID;
-var sampleAsset = {
-  "obsidian-workspace": {
-    alt: "Notes arranged into a presentation narrative",
-    src: "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?auto=format&fit=crop&q=85&w=2400"
-  }
-};
-var sourcePath2 = "Projects/SlideX/Weekly Review.md";
-var samplePlans2 = {
-  en: {
-    audience: "Project stakeholders and collaborators",
-    kind: "progress-report",
-    locale: "en",
-    objective: "Turn working notes into a concise, source-linked progress story.",
-    period: "JULY 2026",
-    planId: "obsidian-quick-deck-sample-en",
-    schemaVersion: 1,
-    slides: [
-      {
-        assetRefs: [],
-        bullets: [],
-        id: "cover",
-        metrics: [],
-        role: "cover",
-        sourceRefs: [{ heading: "Weekly review", path: sourcePath2 }],
-        summary: "A source-linked progress update shaped directly from the project vault.",
-        title: "From notes to a clear progress story"
-      },
-      {
-        assetRefs: [],
-        bullets: [
-          "What changed this cycle",
-          "Signals worth sharing",
-          "Decisions and risks",
-          "The next focused actions"
-        ],
-        id: "overview",
-        metrics: [],
-        role: "overview",
-        sourceRefs: [{ heading: "Agenda", path: sourcePath2 }],
-        summary: "A short structure keeps the discussion anchored in evidence.",
-        title: "Four questions guide this update"
-      },
-      {
-        assetRefs: [{ assetId: "obsidian-workspace", alt: "A focused note-taking workspace" }],
-        bullets: [
-          "Selected notes were filtered by project and date",
-          "Original headings remain attached as source references",
-          "The narrative was organized without changing the facts"
-        ],
-        id: "context",
-        metrics: [],
-        role: "context",
-        sourceRefs: [{ heading: "Context", path: sourcePath2 }],
-        summary: "The deck starts with the context already present in the vault.",
-        title: "The source stays visible while the story gets sharper"
-      },
-      {
-        assetRefs: [],
-        bullets: ["All reported values come from the selected notes"],
-        id: "metrics",
-        metrics: [
-          { detail: "Notes selected for this report", label: "Source notes", value: "12" },
-          { detail: "Decisions captured with context", label: "Decisions", value: "7" },
-          { detail: "Items closed during the period", label: "Completed", value: "18" },
-          { detail: "Open items needing attention", label: "In progress", value: "4" }
-        ],
-        role: "metrics",
-        sourceRefs: [{ heading: "Metrics", path: sourcePath2 }],
-        summary: "Numbers remain exact and traceable to the original note.",
-        title: "The signals at a glance"
-      },
-      {
-        assetRefs: [],
-        bullets: [
-          "Scope the relevant notes",
-          "Extract facts and source links",
-          "Shape the deck plan",
-          "Choose a SlideX template",
-          "Review the final preview"
-        ],
-        id: "timeline",
-        metrics: [],
-        role: "timeline",
-        sourceRefs: [{ heading: "Workflow", path: sourcePath2 }],
-        summary: "Each stage has a clear owner and an explicit confirmation point.",
-        title: "A controlled path from vault to presentation"
-      },
-      {
-        assetRefs: [],
-        bullets: [
-          "Keep the selected source snapshot for auditability",
-          "Confirm stock images before they enter the deck",
-          "Cancel stale jobs instead of accepting late submissions"
-        ],
-        id: "decisions",
-        metrics: [],
-        role: "decisions-risks",
-        sourceRefs: [{ heading: "Decisions and risks", path: sourcePath2 }],
-        summary: "Human confirmation remains the boundary for Cloud writes.",
-        title: "Decisions stay explicit, and risks stay reversible"
-      },
-      {
-        assetRefs: [],
-        bullets: [
-          "Review the recommended official templates",
-          "Confirm every image candidate",
-          "Inspect the complete deck preview",
-          "Create the presentation only after approval"
-        ],
-        id: "next-steps",
-        metrics: [],
-        role: "next-steps",
-        sourceRefs: [{ heading: "Next steps", path: sourcePath2 }],
-        summary: "The user keeps control of both the visual direction and the final write.",
-        title: "Ready for the final review"
-      },
-      {
-        assetRefs: [],
-        bullets: [],
-        id: "closing",
-        metrics: [],
-        role: "closing",
-        sourceRefs: [{ heading: "Summary", path: sourcePath2 }],
-        summary: "One source-linked plan. Any compatible official template.",
-        title: "Your notes, ready to present"
-      }
-    ],
-    title: "Obsidian Quick Deck"
-  },
-  "zh-TW": {
-    audience: "\u5C08\u6848\u5229\u5BB3\u95DC\u4FC2\u4EBA\u8207\u5354\u4F5C\u8005",
-    kind: "progress-report",
-    locale: "zh-TW",
-    objective: "\u628A\u5DE5\u4F5C\u7B46\u8A18\u6574\u7406\u6210\u7CBE\u7C21\u3001\u53EF\u8FFD\u6EAF\u4F86\u6E90\u7684\u9032\u5EA6\u6558\u4E8B\u3002",
-    period: "2026 \u5E74 7 \u6708",
-    planId: "obsidian-quick-deck-sample-zh-tw",
-    schemaVersion: 1,
-    slides: [
-      {
-        assetRefs: [],
-        bullets: [],
-        id: "cover",
-        metrics: [],
-        role: "cover",
-        sourceRefs: [{ heading: "\u6BCF\u9031\u56DE\u9867", path: sourcePath2 }],
-        summary: "\u76F4\u63A5\u5F9E\u5C08\u6848 Vault \u6574\u7406\u3001\u6BCF\u4E00\u9801\u90FD\u4FDD\u7559\u4F86\u6E90\u7684\u968E\u6BB5\u9032\u5EA6\u5831\u544A\u3002",
-        title: "\u628A\u6563\u843D\u7B46\u8A18\uFF0C\u6574\u7406\u6210\u6E05\u695A\u7684\u9032\u5EA6\u6545\u4E8B"
-      },
-      {
-        assetRefs: [],
-        bullets: ["\u672C\u9031\u767C\u751F\u4EC0\u9EBC\u8B8A\u5316", "\u6709\u54EA\u4E9B\u91CD\u8981\u8A0A\u865F", "\u505A\u4E86\u54EA\u4E9B\u6C7A\u7B56\u3001\u9084\u6709\u54EA\u4E9B\u98A8\u96AA", "\u4E0B\u4E00\u6B65\u805A\u7126\u4EC0\u9EBC"],
-        id: "overview",
-        metrics: [],
-        role: "overview",
-        sourceRefs: [{ heading: "\u8B70\u7A0B", path: sourcePath2 }],
-        summary: "\u7528\u56DB\u500B\u554F\u984C\u56FA\u5B9A\u8A0E\u8AD6\u7D50\u69CB\uFF0C\u8B93\u5167\u5BB9\u59CB\u7D42\u56DE\u5230\u8B49\u64DA\u3002",
-        title: "\u56DB\u500B\u554F\u984C\uFF0C\u5FEB\u901F\u638C\u63E1\u9019\u6B21\u66F4\u65B0"
-      },
-      {
-        assetRefs: [{ assetId: "obsidian-workspace", alt: "\u5C08\u6CE8\u7684\u7B46\u8A18\u5DE5\u4F5C\u7A7A\u9593" }],
-        bullets: ["\u4F9D\u5C08\u6848\u8207\u65E5\u671F\u7BE9\u9078\u6307\u5B9A\u7B46\u8A18", "\u4FDD\u7559\u539F\u59CB heading \u4F5C\u70BA\u4F86\u6E90", "\u53EA\u6574\u7406\u6558\u4E8B\uFF0C\u4E0D\u6539\u5BEB\u4E8B\u5BE6"],
-        id: "context",
-        metrics: [],
-        role: "context",
-        sourceRefs: [{ heading: "\u80CC\u666F", path: sourcePath2 }],
-        summary: "\u7C21\u5831\u5F9E Vault \u88E1\u5DF2\u5B58\u5728\u7684\u8108\u7D61\u958B\u59CB\uFF0C\u800C\u4E0D\u662F\u5F9E\u7A7A\u767D\u9801\u958B\u59CB\u3002",
-        title: "\u4F86\u6E90\u6301\u7E8C\u53EF\u898B\uFF0C\u6545\u4E8B\u8B8A\u5F97\u66F4\u7CBE\u6E96"
-      },
-      {
-        assetRefs: [],
-        bullets: ["\u6240\u6709\u6578\u503C\u90FD\u76F4\u63A5\u53D6\u81EA\u4F7F\u7528\u8005\u9078\u5B9A\u7684\u7B46\u8A18"],
-        id: "metrics",
-        metrics: [
-          { detail: "\u672C\u6B21\u5831\u544A\u9078\u53D6\u7684\u7B46\u8A18", label: "\u4F86\u6E90\u7B46\u8A18", value: "12" },
-          { detail: "\u9644\u5E36\u8108\u7D61\u7684\u6C7A\u7B56", label: "\u6C7A\u7B56", value: "7" },
-          { detail: "\u671F\u9593\u5167\u5B8C\u6210\u7684\u9805\u76EE", label: "\u5DF2\u5B8C\u6210", value: "18" },
-          { detail: "\u4ECD\u9700\u6301\u7E8C\u8655\u7406", label: "\u9032\u884C\u4E2D", value: "4" }
-        ],
-        role: "metrics",
-        sourceRefs: [{ heading: "\u6307\u6A19", path: sourcePath2 }],
-        summary: "\u6578\u5B57\u4FDD\u6301\u539F\u503C\uFF0C\u800C\u4E14\u80FD\u56DE\u5230\u539F\u7B46\u8A18\u6838\u5C0D\u3002",
-        title: "\u4E00\u773C\u770B\u61C2\u9019\u671F\u7684\u91CD\u8981\u8A0A\u865F"
-      },
-      {
-        assetRefs: [],
-        bullets: ["\u6846\u5B9A\u76F8\u95DC\u7B46\u8A18", "\u64F7\u53D6\u4E8B\u5BE6\u8207\u4F86\u6E90", "\u5EFA\u7ACB DeckPlan", "\u9078\u64C7 SlideX \u6A21\u677F", "\u78BA\u8A8D\u5B8C\u6574\u9810\u89BD"],
-        id: "timeline",
-        metrics: [],
-        role: "timeline",
-        sourceRefs: [{ heading: "\u5DE5\u4F5C\u6D41\u7A0B", path: sourcePath2 }],
-        summary: "\u6BCF\u500B\u968E\u6BB5\u90FD\u6709\u6E05\u695A\u7684\u8CAC\u4EFB\u8207\u78BA\u8A8D\u9EDE\u3002",
-        title: "\u5F9E Vault \u5230\u7C21\u5831\u7684\u53EF\u63A7\u6D41\u7A0B"
-      },
-      {
-        assetRefs: [],
-        bullets: ["\u4FDD\u7559\u9078\u5B9A\u4F86\u6E90\u5FEB\u7167\u4EE5\u4FBF\u7A3D\u6838", "\u5916\u90E8\u5716\u7247\u5FC5\u9808\u5148\u78BA\u8A8D", "\u53D6\u6D88\u904E\u671F\u5DE5\u4F5C\uFF0C\u4E0D\u63A5\u53D7\u9072\u5230\u56DE\u50B3"],
-        id: "decisions",
-        metrics: [],
-        role: "decisions-risks",
-        sourceRefs: [{ heading: "\u6C7A\u7B56\u8207\u98A8\u96AA", path: sourcePath2 }],
-        summary: "\u53EA\u6709\u5728\u4EBA\u70BA\u78BA\u8A8D\u4E4B\u5F8C\uFF0C\u7CFB\u7D71\u624D\u6703\u5BEB\u5165 SlideX Cloud\u3002",
-        title: "\u6C7A\u7B56\u4FDD\u6301\u660E\u78BA\uFF0C\u98A8\u96AA\u4FDD\u6301\u53EF\u53CD\u6094"
-      },
-      {
-        assetRefs: [],
-        bullets: ["\u6AA2\u8996\u7CFB\u7D71\u63A8\u85A6\u7684\u5B98\u65B9\u6A21\u677F", "\u9010\u5F35\u78BA\u8A8D\u5716\u7247\u5019\u9078", "\u6AA2\u67E5\u5B8C\u6574\u7C21\u5831\u9810\u89BD", "\u78BA\u8A8D\u5F8C\u624D\u5EFA\u7ACB\u7C21\u5831"],
-        id: "next-steps",
-        metrics: [],
-        role: "next-steps",
-        sourceRefs: [{ heading: "\u4E0B\u4E00\u6B65", path: sourcePath2 }],
-        summary: "\u4F7F\u7528\u8005\u4FDD\u6709\u8996\u89BA\u65B9\u5411\u8207\u6700\u7D42\u5BEB\u5165\u7684\u63A7\u5236\u6B0A\u3002",
-        title: "\u6E96\u5099\u9032\u5165\u6700\u5F8C\u78BA\u8A8D"
-      },
-      {
-        assetRefs: [],
-        bullets: [],
-        id: "closing",
-        metrics: [],
-        role: "closing",
-        sourceRefs: [{ heading: "\u6458\u8981", path: sourcePath2 }],
-        summary: "\u4E00\u4EFD\u4FDD\u7559\u4F86\u6E90\u7684 Plan\uFF0C\u53EF\u81EA\u7531\u5957\u7528\u4EFB\u4F55\u76F8\u5BB9\u7684\u5B98\u65B9\u6A21\u677F\u3002",
-        title: "\u4F60\u7684\u7B46\u8A18\uFF0C\u5DF2\u7D93\u53EF\u4EE5\u4E0A\u53F0"
-      }
-    ],
-    title: "Obsidian \u5FEB\u901F\u7C21\u5831"
-  }
-};
-var obsidianQuickDeckTemplateSourceEn = materializeDeckPlan(
-  samplePlans2.en,
-  obsidianQuickDeckComposition,
-  { assets: sampleAsset }
-).source;
-var obsidianQuickDeckTemplateSourceZhTw = materializeDeckPlan(
-  samplePlans2["zh-TW"],
-  obsidianQuickDeckComposition,
-  { assets: sampleAsset }
-).source;
-var obsidianQuickDeckTemplate = {
-  category: "Obsidian",
-  description: "\u5C07 Obsidian \u7B46\u8A18\u6574\u7406\u6210\u6709\u4F86\u6E90\u3001\u53EF\u5957\u7248\u7684\u516B\u9801\u5FEB\u901F\u7C21\u5831\u3002",
-  duration: "48s",
-  id: obsidianQuickDeckTemplateId,
-  name: "Obsidian Quick Deck",
-  source: obsidianQuickDeckTemplateSourceZhTw,
-  sources: {
-    en: obsidianQuickDeckTemplateSourceEn,
-    "zh-TW": obsidianQuickDeckTemplateSourceZhTw
-  },
-  useCase: "\u968E\u6BB5\u9032\u5EA6\u3001\u63D0\u6848\u3001\u7814\u7A76\u6458\u8981\u8207\u6559\u5B78\u5167\u5BB9\u6574\u7406"
-};
-
-// core/motion-doc/presets/templates.ts
-var motionTemplates = [
-  designTeamCultureTemplate,
-  notionSharedDeckTemplate,
-  obsidianQuickDeckTemplate,
-  moodboardTemplate
-];
-var defaultTemplate = motionTemplates[0];
-
-// core/motion-doc/presets/welcomeToSlideX.ts
-var welcomePresentationId = "welcome-to-slidex";
-var welcomePresentationSource = `# Welcome to SlideX
-
-<Slide fontSizeUnit="pt" duration={6} theme="dark" background="#ec5f39" accent="#f7f7f5" textColor="#f7f7f5" mutedColor="#b8b8b4" alignX="left" alignY="center" textAlign="left" slideTransition="scale" transitionDuration={0.8}>
-  <Title fontSize={54} fontWeight={700} x={3.2} y={22.9} w={86.8} h={47.7} enter="reveal" color="#ffffff" lineHeight={1.25} delay={0.24} duration={0.92}>Create presentations that feel like modern websites.</Title>
-  <Text fontSize={13.5} fontWeight={600} x={3.6} y={4.7} w={40} h={4.5} enter="fadeIn" color="#ffffff" delay={0.1} duration={0.4}>2026</Text>
-  <Text fontSize={13.5} fontWeight={600} x={3.4} y={87.9} w={40} h={4.5} enter="rise" color="#ffffff" delay={0.64} duration={0.65}>Level up team collaboration</Text>
-  <Text fontSize={13.5} fontWeight={600} x={67.7} y={90.3} w={28.9} h={4.3} enter="fadeIn" color="#ffffff" textAlign="right" delay={0.76} duration={0.5}>SlideX.com</Text>
-  <Text fontSize={13.5} fontWeight={600} x={56.4} y={4.4} w={40} h={4.5} enter="fadeIn" color="#ffffff" textAlign="right" delay={0.18} duration={0.4}>SlideX</Text>
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={6.5} theme="light" background="#ffffff" accent="#111111" textColor="#111111" mutedColor="#656565" slideTransition="pushLeft" transitionDuration={0.82}>
-  <Title enter="reveal" fontSize={36} x={3.5} y={23.1} w={50.4} h={13.7} fontWeight={650} color="#000000" lineHeight={1.2} delay={0.22} duration={0.78}>Meet SlideX</Title>
-  <Text enter="fadeUp" fontSize={18} x={3.7} y={40.5} w={51.7} h={32} delay={0.36} duration={0.82}>SlideX is a presentation platform designed for modern teams, creators, and product builders.
-Instead of working with static slides, you can create flexible, web-based presentations that are easier to design, update, and share.</Text>
-  <Text fontSize={13.5} fontWeight={600} x={3.6} y={88.9} w={40} h={4.5} enter="rise" color="#020617" delay={0.78} duration={0.58}>Level up team collaboration</Text>
-  <Text fontSize={13.5} fontWeight={600} x={67.7} y={90.2} w={28.9} h={4.3} enter="fadeIn" textAlign="right" color="#020617" delay={0.88} duration={0.48}>SlideX.com</Text>
-  <Text fontSize={13.5} fontWeight={600} x={56.3} y={4.3} w={40} h={4.5} enter="fadeIn" textAlign="right" color="#020617" delay={0.18} duration={0.38}>SlideX</Text>
-  <Text fontSize={13.5} fontWeight={600} x={3.5} y={4.6} w={40} h={4.5} enter="fadeIn" color="#000000" delay={0.12} duration={0.38}>2026</Text>
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="blurIn" radius={16} x={61} y={15} w={36} h={65.1} alt="Astronaut and android looking toward Earth from the moon" src="https://animark-media-library.zz41354899.chatgpt.site/media/optimized/project/moon-collaboration.webp" delay={0.06} duration={0.9} />
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={7} theme="light" background="#f2eee8" accent="#111315" textColor="#111315" mutedColor="#65615b" slideTransition="fade">
-  <ImageBlock fit="cover" scaleX={1} scaleY={1} enter="blurIn" radius={18} x={55} y={11} w={40} h={76} alt="Editorial 3D visualization of the SlideX presentation canvas" src="https://animark-media-library.zz41354899.chatgpt.site/media/optimized/project/precision-canvas.webp" delay={0.08} duration={0.9} />
-  <Title fontSize={33} fontWeight={700} lineHeight={1.02} x={3.5} y={17} w={44} h={30} enter="slideLeft" color="#111315" delay={0}>Keep every element exactly where it belongs.</Title>
-  <Text fontSize={13.5} lineHeight={1.48} x={3.7} y={53} w={42} h={20} enter="fadeUp" color="#4f4b46" delay={0.12}>Arrange text, data, and media on one precise canvas. Keep every position intact from editing through playback and export.</Text>
-  <Text fontSize={12} fontWeight={700} x={3.6} y={4.7} w={30} h={4} enter="fadeIn" color="#111315">03 / PRECISE CANVAS</Text>
-  <Text fontSize={12} fontWeight={600} x={3.6} y={90} w={45} h={4} enter="fadeUp" color="#111315" delay={0.18}>EDIT \xB7 PLAY \xB7 EXPORT</Text>
-  <Text fontSize={12} fontWeight={600} x={70} y={90} w={26} h={4} enter="fadeUp" textAlign="right" color="#111315" delay={0.18}>SlideX.com</Text>
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={7} theme="dark" background="#111315" accent="#c4ee87" textColor="#f7f7f4" mutedColor="#a3a5a7" slideTransition="pushLeft">
-  <Shape shape="rectangle" fill="#191b1e" stroke="#34373c" strokeWidth={1} radius={12} x={3.5} y={42} w={29} h={43} enter="fadeUp" delay={0.1} />
-  <Shape shape="rectangle" fill="#191b1e" stroke="#34373c" strokeWidth={1} radius={12} x={35.5} y={42} w={29} h={43} enter="fadeUp" delay={0.16} />
-  <Shape shape="rectangle" fill="#191b1e" stroke="#34373c" strokeWidth={1} radius={12} x={67.5} y={42} w={29} h={43} enter="fadeUp" delay={0.22} />
-  <Title fontSize={34.5} fontWeight={700} lineHeight={1.02} x={3.5} y={12} w={82} h={19} enter="slideLeft" color="#f7f7f4">A small set of blocks. A complete visual language.</Title>
-  <Text fontSize={13.5} lineHeight={1.4} x={3.7} y={33} w={72} h={6} enter="fadeUp" color="#a3a5a7" delay={0.08}>Compose the story from real, editable layers\u2014not flattened screenshots.</Text>
-  <Icon icon="FileText" background="#c4ee87" color="#111315" strokeWidth={2.4} radius={12} x={6.5} y={48} w={6} h={10} enter="zoomIn" delay={0.18} />
-  <Text fontSize={17.25} fontWeight={700} x={6.5} y={62} w={23} h={6} enter="fadeUp" color="#f7f7f4" delay={0.2}>Text + layout</Text>
-  <Text fontSize={12} lineHeight={1.45} x={6.5} y={71} w={22} h={10} enter="fadeUp" color="#a3a5a7" delay={0.24}>Typography, alignment, and exact frames stay editable.</Text>
-  <Icon icon="BarChart3" background="#9ad7ff" color="#111315" strokeWidth={2.4} radius={12} x={38.5} y={48} w={6} h={10} enter="zoomIn" delay={0.24} />
-  <Text fontSize={17.25} fontWeight={700} x={38.5} y={62} w={23} h={6} enter="fadeUp" color="#f7f7f4" delay={0.26}>Data blocks</Text>
-  <Text fontSize={12} lineHeight={1.45} x={38.5} y={71} w={22} h={10} enter="fadeUp" color="#a3a5a7" delay={0.3}>Tables and structured data live inside the same visual system.</Text>
-  <Icon icon="Image" background="#ff8aa1" color="#111315" strokeWidth={2.4} radius={12} x={70.5} y={48} w={6} h={10} enter="zoomIn" delay={0.3} />
-  <Text fontSize={17.25} fontWeight={700} x={70.5} y={62} w={23} h={6} enter="fadeUp" color="#f7f7f4" delay={0.32}>Media layers</Text>
-  <Text fontSize={12} lineHeight={1.45} x={70.5} y={71} w={22} h={10} enter="fadeUp" color="#a3a5a7" delay={0.36}>Images, video, shapes, and icons share one canvas.</Text>
-  <Text fontSize={12} fontWeight={600} x={3.6} y={91} w={38} h={4} color="#c4ee87">04 / BUILDING BLOCKS</Text>
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={7} theme="light" background="#f7f7f4" accent="#111315" textColor="#111315" mutedColor="#666a6d" slideTransition="wipe">
-  <Shape shape="rectangle" fill="#ffffff" stroke="#d8d9d5" strokeWidth={1} radius={12} x={3.5} y={45} w={29} h={39} enter="fadeUp" delay={0.1} />
-  <Shape shape="rectangle" fill="#ffffff" stroke="#d8d9d5" strokeWidth={1} radius={12} x={35.5} y={45} w={29} h={39} enter="fadeUp" delay={0.16} />
-  <Shape shape="rectangle" fill="#ffffff" stroke="#d8d9d5" strokeWidth={1} radius={12} x={67.5} y={45} w={29} h={39} enter="fadeUp" delay={0.22} />
-  <Title fontSize={37.5} fontWeight={700} lineHeight={1.02} x={3.5} y={12} w={82} h={19} enter="slideLeft" color="#111315">One composition, every destination.</Title>
-  <Text fontSize={14.25} lineHeight={1.45} x={3.7} y={33} w={72} h={8} enter="fadeUp" color="#666a6d" delay={0.08}>Build, present, and hand off without rebuilding the story for each format.</Text>
-  <Icon icon="Layers" background="#111315" color="#ffffff" strokeWidth={2.4} radius={10} x={6.5} y={50} w={5.5} h={9} enter="zoomIn" delay={0.18} />
-  <Text fontSize={16.5} fontWeight={700} x={6.5} y={63} w={22} h={6} color="#111315" enter="fadeUp" delay={0.2}>Build</Text>
-  <Text fontSize={11.25} lineHeight={1.45} x={6.5} y={72} w={22} h={8} color="#666a6d" enter="fadeUp" delay={0.24}>Arrange slides, layers, data, and media on the precise canvas.</Text>
-  <Icon icon="Presentation" background="#8176ff" color="#111315" strokeWidth={2.4} radius={10} x={38.5} y={50} w={5.5} h={9} enter="zoomIn" delay={0.24} />
-  <Text fontSize={16.5} fontWeight={700} x={38.5} y={63} w={22} h={6} color="#111315" enter="fadeUp" delay={0.26}>Play</Text>
-  <Text fontSize={11.25} lineHeight={1.45} x={38.5} y={72} w={22} h={8} color="#666a6d" enter="fadeUp" delay={0.3}>Preview transitions and motion as one composed presentation.</Text>
-  <Icon icon="Download" background="#c4ee87" color="#111315" strokeWidth={2.4} radius={10} x={70.5} y={50} w={5.5} h={9} enter="zoomIn" delay={0.3} />
-  <Text fontSize={16.5} fontWeight={700} x={70.5} y={63} w={22} h={6} color="#111315" enter="fadeUp" delay={0.32}>Export</Text>
-  <Text fontSize={11.25} lineHeight={1.45} x={70.5} y={72} w={22} h={8} color="#666a6d" enter="fadeUp" delay={0.36}>Take the deck to MDX, HTML, PPTX, or images.</Text>
-  <Text fontSize={12} fontWeight={600} x={3.6} y={91} w={42} h={4} color="#111315">05 / BUILD \xB7 PLAY \xB7 EXPORT</Text>
-</Slide>
-
-<Slide fontSizeUnit="pt" duration={15.02} theme="dark" background="#000000" accent="#ffffff" textColor="#ffffff" slideTransition="fade" transitionDuration={0.5}>
-  <VideoBlock title="SlideX intro" fit="cover" src="https://animark-media-library.zz41354899.chatgpt.site/media/optimized/project/slidex-intro.mp4" controls={false} loop={false} muted={true} radius={0} x={0} y={0} w={100} h={100} enter="fadeIn" delay={0} duration={0.4} />
-</Slide>`;
-var welcomePresentationZhTwCopy = [
-  ["# Welcome to SlideX", "# \u6B61\u8FCE\u4F7F\u7528 SlideX"],
-  [
-    "Create presentations that feel like modern websites.",
-    "\u6253\u9020\u5982\u73FE\u4EE3\u7DB2\u7AD9\u822C\u6D41\u66A2\u7684\u7C21\u5831\u3002"
-  ],
-  ["Level up team collaboration", "\u63D0\u5347\u5718\u968A\u5354\u4F5C"],
-  ["Meet SlideX", "\u8A8D\u8B58 SlideX"],
-  [
-    `SlideX is a presentation platform designed for modern teams, creators, and product builders.
-Instead of working with static slides, you can create flexible, web-based presentations that are easier to design, update, and share.`,
-    `SlideX \u662F\u70BA\u73FE\u4EE3\u5718\u968A\u3001\u5275\u4F5C\u8005\u8207\u7522\u54C1\u6253\u9020\u8005\u8A2D\u8A08\u7684\u7C21\u5831\u5E73\u53F0\u3002
-\u4E0D\u518D\u53D7\u9650\u65BC\u975C\u614B\u6295\u5F71\u7247\uFF0C\u4F60\u53EF\u4EE5\u88FD\u4F5C\u9748\u6D3B\u7684\u7DB2\u9801\u5F0F\u7C21\u5831\uFF0C\u66F4\u5BB9\u6613\u8A2D\u8A08\u3001\u66F4\u65B0\u8207\u5206\u4EAB\u3002`
-  ],
-  [
-    "Astronaut and android looking toward Earth from the moon",
-    "\u5F9E\u6708\u7403\u773A\u671B\u5730\u7403\u7684\u592A\u7A7A\u4EBA\u8207\u6A5F\u5668\u4EBA"
-  ],
-  [
-    "Editorial 3D visualization of the SlideX presentation canvas",
-    "SlideX \u7C21\u5831\u756B\u5E03\u7684 3D \u7DE8\u8F2F\u8996\u89BA"
-  ],
-  ["Keep every element exactly where it belongs.", "\u8B93\u6BCF\u500B\u5143\u7D20\u7CBE\u6E96\u5C31\u4F4D\u3002"],
-  [
-    "Arrange text, data, and media on one precise canvas. Keep every position intact from editing through playback and export.",
-    "\u5728\u540C\u4E00\u500B\u7CBE\u6E96\u756B\u5E03\u4E0A\u5B89\u6392\u6587\u5B57\u3001\u8CC7\u6599\u8207\u5A92\u9AD4\uFF0C\u5F9E\u7DE8\u8F2F\u3001\u64AD\u653E\u5230\u532F\u51FA\uFF0C\u6BCF\u500B\u4F4D\u7F6E\u90FD\u5B8C\u6574\u4FDD\u7559\u3002"
-  ],
-  ["03 / PRECISE CANVAS", "03 / \u7CBE\u6E96\u756B\u5E03"],
-  ["EDIT \xB7 PLAY \xB7 EXPORT", "\u7DE8\u8F2F\u30FB\u64AD\u653E\u30FB\u532F\u51FA"],
-  [
-    "A small set of blocks. A complete visual language.",
-    "\u5C11\u91CF\u5143\u4EF6\uFF0C\u5B8C\u6574\u7684\u8996\u89BA\u8A9E\u8A00\u3002"
-  ],
-  [
-    "Compose the story from real, editable layers\u2014not flattened screenshots.",
-    "\u7528\u771F\u6B63\u53EF\u7DE8\u8F2F\u7684\u5716\u5C64\u7D44\u6210\u6545\u4E8B\uFF0C\u800C\u4E0D\u662F\u6241\u5E73\u5316\u622A\u5716\u3002"
-  ],
-  ["Text + layout", "\u6587\u5B57\uFF0B\u7248\u9762"],
-  [
-    "Typography, alignment, and exact frames stay editable.",
-    "\u5B57\u9AD4\u3001\u5C0D\u9F4A\u8207\u7CBE\u6E96\u6846\u67B6\u90FD\u80FD\u6301\u7E8C\u7DE8\u8F2F\u3002"
-  ],
-  ["Data blocks", "\u8CC7\u6599\u5340\u584A"],
-  [
-    "Tables and structured data live inside the same visual system.",
-    "\u8868\u683C\u8207\u7D50\u69CB\u5316\u8CC7\u6599\u5171\u7528\u540C\u4E00\u5957\u8996\u89BA\u7CFB\u7D71\u3002"
-  ],
-  ["Media layers", "\u5A92\u9AD4\u5716\u5C64"],
-  [
-    "Images, video, shapes, and icons share one canvas.",
-    "\u5716\u7247\u3001\u5F71\u7247\u3001\u5F62\u72C0\u8207\u5716\u793A\u5171\u7528\u540C\u4E00\u5F35\u756B\u5E03\u3002"
-  ],
-  ["04 / BUILDING BLOCKS", "04 / \u57FA\u790E\u5143\u4EF6"],
-  ["One composition, every destination.", "\u4E00\u6B21\u7DE8\u6392\uFF0C\u9069\u7528\u6240\u6709\u8F38\u51FA\u3002"],
-  [
-    "Build, present, and hand off without rebuilding the story for each format.",
-    "\u5EFA\u69CB\u3001\u5C55\u793A\u8207\u4EA4\u4ED8\uFF0C\u7121\u9808\u70BA\u4E0D\u540C\u683C\u5F0F\u91CD\u505A\u540C\u4E00\u6BB5\u6545\u4E8B\u3002"
-  ],
-  [
-    "Arrange slides, layers, data, and media on the precise canvas.",
-    "\u5728\u7CBE\u6E96\u756B\u5E03\u4E0A\u5B89\u6392\u6295\u5F71\u7247\u3001\u5716\u5C64\u3001\u8CC7\u6599\u8207\u5A92\u9AD4\u3002"
-  ],
-  [
-    "Preview transitions and motion as one composed presentation.",
-    "\u4EE5\u5B8C\u6574\u7C21\u5831\u9810\u89BD\u8F49\u5834\u8207\u52D5\u614B\u6548\u679C\u3002"
-  ],
-  [
-    "Take the deck to MDX, HTML, PPTX, or images.",
-    "\u5C07\u7C21\u5831\u532F\u51FA\u70BA MDX\u3001HTML\u3001PPTX \u6216\u5716\u7247\u3002"
-  ],
-  ["05 / BUILD \xB7 PLAY \xB7 EXPORT", "05 / \u5EFA\u69CB\u30FB\u64AD\u653E\u30FB\u532F\u51FA"],
-  ["Build", "\u5EFA\u69CB"],
-  ["Play", "\u64AD\u653E"],
-  ["Export", "\u532F\u51FA"],
-  ["SlideX intro", "SlideX \u4ECB\u7D39"]
-];
-var welcomePresentationSourceZhTw = welcomePresentationZhTwCopy.reduce(
-  (source, [english, traditionalChinese]) => source.replaceAll(english, traditionalChinese),
-  welcomePresentationSource
-);
 
 // core/motion-doc/presets/templateLibrarySources.ts
-var motionTemplateSources = new Map(
-  motionTemplates.map((template) => [
-    template.id,
-    {
-      en: materializeFreeformSource(template.sources.en),
-      "zh-TW": materializeFreeformSource(template.sources["zh-TW"])
-    }
-  ])
-);
-var normalizedWelcomePresentationSources = {
-  en: materializeFreeformSource(welcomePresentationSource),
-  "zh-TW": materializeFreeformSource(welcomePresentationSourceZhTw)
-};
-var normalizedLaunchDeckPresentationSources = {
-  en: materializeFreeformSource(launchDeckPresentationSource),
-  "zh-TW": materializeFreeformSource(launchDeckPresentationSourceZhTw)
+var publicStarterSources = {
+  en: `# Untitled presentation
+
+<Slide duration={6} fontSizeUnit="pt" theme="dark" background="#111827" accent="#A7F3D0" textColor="#F9FAFB" mutedColor="#CBD5E1" slideTransition="fade" transitionDuration={0.7} canvasHeight={1080} canvasWidth={1920}>
+  <Text id="starter-1-kicker" fontSize={14} fontWeight={700} letterSpacing={1.2} x={7} y={8} w={34} h={5} color="#A7F3D0">PROJECT STARTER / 01</Text>
+  <Title id="starter-1-title" fontSize={58} fontWeight={700} lineHeight={1.08} x={7} y={28} w={62} h={24} color="#F9FAFB">Start with one clear question.</Title>
+  <Text id="starter-1-body" fontSize={20} lineHeight={1.5} x={7} y={58} w={42} h={13} color="#CBD5E1">Replace this example with your point, evidence, and next action.</Text>
+</Slide>
+
+<Slide duration={6} fontSizeUnit="pt" theme="light" background="#F8FAFC" accent="#111827" textColor="#111827" mutedColor="#475569" slideTransition="pushLeft" transitionDuration={0.7} canvasHeight={1080} canvasWidth={1920}>
+  <Text id="starter-2-kicker" fontSize={14} fontWeight={700} letterSpacing={1.2} x={7} y={8} w={34} h={5} color="#0F766E">PROJECT STARTER / 02</Text>
+  <Title id="starter-2-title" fontSize={48} fontWeight={700} lineHeight={1.12} x={7} y={18} w={55} h={19} color="#111827">Let every slide move one decision forward.</Title>
+  <Text id="starter-2-body" fontSize={19} lineHeight={1.5} x={7} y={43} w={42} h={12} color="#475569">Point \u2192 evidence \u2192 next step.</Text>
+</Slide>`,
+  "zh-TW": `# \u672A\u547D\u540D\u7C21\u5831
+
+<Slide duration={6} fontSizeUnit="pt" theme="dark" background="#111827" accent="#A7F3D0" textColor="#F9FAFB" mutedColor="#CBD5E1" slideTransition="fade" transitionDuration={0.7} canvasHeight={1080} canvasWidth={1920}>
+  <Text id="starter-1-kicker" fontSize={14} fontWeight={700} letterSpacing={1.2} x={7} y={8} w={34} h={5} color="#A7F3D0">PROJECT STARTER / 01</Text>
+  <Title id="starter-1-title" fontSize={58} fontWeight={700} lineHeight={1.08} x={7} y={28} w={62} h={24} color="#F9FAFB">\u5F9E\u4E00\u500B\u6E05\u695A\u7684\u554F\u984C\u958B\u59CB\u3002</Title>
+  <Text id="starter-1-body" fontSize={20} lineHeight={1.5} x={7} y={58} w={42} h={13} color="#CBD5E1">\u628A\u9019\u4EFD\u7BC4\u4F8B\u63DB\u6210\u4F60\u7684\u89C0\u9EDE\u3001\u8B49\u64DA\u8207\u4E0B\u4E00\u6B65\u3002</Text>
+</Slide>
+
+<Slide duration={6} fontSizeUnit="pt" theme="light" background="#F8FAFC" accent="#111827" textColor="#111827" mutedColor="#475569" slideTransition="pushLeft" transitionDuration={0.7} canvasHeight={1080} canvasWidth={1920}>
+  <Text id="starter-2-kicker" fontSize={14} fontWeight={700} letterSpacing={1.2} x={7} y={8} w={34} h={5} color="#0F766E">PROJECT STARTER / 02</Text>
+  <Title id="starter-2-title" fontSize={48} fontWeight={700} lineHeight={1.12} x={7} y={18} w={55} h={19} color="#111827">\u8B93\u6BCF\u4E00\u9801\u63A8\u9032\u4E00\u500B\u6C7A\u5B9A\u3002</Title>
+  <Text id="starter-2-body" fontSize={19} lineHeight={1.5} x={7} y={43} w={42} h={12} color="#475569">\u89C0\u9EDE \u2192 \u8B49\u64DA \u2192 \u4E0B\u4E00\u6B65\u3002</Text>
+</Slide>`
 };
 function getBundledTemplateLibrarySource(templateId, locale) {
-  if (templateId === welcomePresentationId) {
-    return normalizedWelcomePresentationSources[locale];
-  }
-  if (templateId === launchDeckPresentationId) {
-    return normalizedLaunchDeckPresentationSources[locale];
-  }
-  return motionTemplateSources.get(templateId)?.[locale];
+  return templateId === "open-slidex-starter" ? publicStarterSources[locale] : void 0;
 }
 function getBundledTemplateLibraryBlankSource(templateId, locale) {
   const source = getBundledTemplateLibrarySource(templateId, locale);
   const firstSlide = source ? motionDocSlideSourceRanges(source)[0] : void 0;
   const tagName = firstSlide?.source.match(/^<(Slide|Scene)\b/)?.[1];
-  if (!firstSlide || !tagName) {
-    return void 0;
-  }
-  return `# Untitled
+  return firstSlide && tagName ? `# Untitled
 
 ${firstSlide.openingTag}
-</${tagName}>`;
+</${tagName}>` : void 0;
 }
 
 // core/motion-doc/presets/officialTemplatePackages.ts
@@ -51562,35 +43335,27 @@ function getOfficialTemplatePackage(id, version2 = officialTemplatePackageVersio
   return version2 === officialTemplatePackageVersion ? officialTemplatePackages.find((template) => template.id === id) : void 0;
 }
 function createPackage(item) {
+  const sourceEn = getBundledTemplateLibrarySource(item.id, "en");
+  const sourceZhTw = getBundledTemplateLibrarySource(item.id, "zh-TW");
+  const starterEn = getBundledTemplateLibraryBlankSource(item.id, "en");
+  const starterZhTw = getBundledTemplateLibraryBlankSource(item.id, "zh-TW");
+  if (!sourceEn || !sourceZhTw || !starterEn || !starterZhTw) {
+    throw new Error(`Public template source is missing: ${item.id}`);
+  }
   return {
     assets: [],
     blueprint: item.blueprint,
     catalog: item.catalog,
     compatibility: officialTemplateCompatibility,
-    cover: {
-      alt: { en: `${item.locales.en.name} cover`, "zh-TW": `${item.locales["zh-TW"].name}\u5C01\u9762` },
-      source: item.cover
-    },
+    cover: { alt: { en: `${item.locales.en.name} cover`, "zh-TW": `${item.locales["zh-TW"].name}\u5C01\u9762` }, source: item.cover || "about:blank" },
     id: item.id,
     kind: "open-slidex-template",
     locales: item.locales,
     schemaVersion: 1,
-    sources: localizedSources(item.id),
-    starterSources: localizedStarterSources(item.id),
+    sources: { en: sourceEn, "zh-TW": sourceZhTw },
+    starterSources: { en: starterEn, "zh-TW": starterZhTw },
     version: officialTemplatePackageVersion
   };
-}
-function localizedSources(id) {
-  const en = getBundledTemplateLibrarySource(id, "en");
-  const zhTw = getBundledTemplateLibrarySource(id, "zh-TW");
-  if (!en || !zhTw) throw new Error(`Official template source is missing: ${id}`);
-  return { en, "zh-TW": zhTw };
-}
-function localizedStarterSources(id) {
-  const en = getBundledTemplateLibraryBlankSource(id, "en");
-  const zhTw = getBundledTemplateLibraryBlankSource(id, "zh-TW");
-  if (!en || !zhTw) throw new Error(`Official template starter is missing: ${id}`);
-  return { en, "zh-TW": zhTw };
 }
 
 // core/motion-doc/domain/templateQualityProfileV1.ts
@@ -51632,122 +43397,35 @@ function parseTemplateQualityProfileV1(value) {
 
 // core/motion-doc/presets/officialTemplateQualityProfiles.ts
 function getOfficialTemplateQualityProfile(id, locale) {
-  const definition3 = officialTemplateDefinitions.find((template) => template.id === id);
-  if (!definition3) return void 0;
+  if (id !== "open-slidex-starter") return void 0;
   return parseTemplateQualityProfileV1({
-    copy: copyProfile(locale, definition3.blueprint.design.typography),
+    schemaVersion: 1,
+    locale,
+    copy: {
+      bodyMaxLines: 5,
+      headlineMaxLines: 2,
+      orphanMinCharacters: 3,
+      rules: locale === "zh-TW" ? ["\u6BCF\u9801\u53EA\u8868\u9054\u4E00\u500B\u4E3B\u5F35\u3002", "\u5148\u5BEB\u7D50\u8AD6\uFF0C\u518D\u88DC\u8B49\u64DA\u8207\u4E0B\u4E00\u6B65\u3002"] : ["Express one claim per slide.", "Lead with the conclusion, then add evidence and a next step."],
+      voice: locale === "zh-TW" ? "\u7CBE\u6E96\u3001\u6E05\u695A\u3001\u53EF\u884C\u52D5\u3002" : "Precise, clear, and actionable."
+    },
     layout: {
       maxContentUnits: 5,
       minElementGapPercent: 2.5,
       outerMarginPercent: [6, 8],
-      roleRecipes: definition3.blueprint.layoutRoles.map((role) => ({
-        composition: roleComposition(id, role),
-        imagePolicy: roleImagePolicy(id, role),
-        messagePattern: roleMessagePattern(role, locale),
-        role
+      roleRecipes: ["cover", "next-steps"].map((role) => ({
+        role,
+        composition: "Use one dominant focal element and one concise supporting zone.",
+        imagePolicy: "optional",
+        messagePattern: locale === "zh-TW" ? "\u4E3B\u5F35 \u2192 \u8B49\u64DA \u2192 \u4E0B\u4E00\u6B65" : "Claim \u2192 evidence \u2192 next step"
       }))
     },
-    locale,
     rhythm: {
       maxRepeatedComposition: 2,
-      minCompositionVariants: Math.min(4, Math.max(2, new Set(definition3.blueprint.layoutRoles).size)),
-      rules: locale === "zh-TW" ? [
-        "\u9023\u7E8C\u5169\u9801\u4E0D\u5F97\u4F7F\u7528\u76F8\u540C\u7684\u7126\u9EDE\u4F4D\u7F6E\u3001\u6587\u5B57\u5BEC\u5EA6\u8207\u5167\u5BB9\u5BC6\u5EA6\u3002",
-        "\u5728\u6558\u4E8B\u8F49\u6298\u8655\u5207\u63DB\u80CC\u666F\u660E\u6697\u3001\u7559\u767D\u6BD4\u4F8B\u6216\u5716\u7247\u5C3A\u5EA6\uFF0C\u4F46\u4FDD\u7559\u540C\u4E00\u5957\u5B57\u9AD4\u8207\u8272\u5F69\u8A9E\u8A00\u3002",
-        "\u5168\u7C21\u5831 montage \u5FC5\u9808\u540C\u6642\u770B\u5F97\u51FA\u4E00\u81F4\u6027\u8207\u9801\u9762\u89D2\u8272\u5DEE\u7570\u3002"
-      ] : [
-        "Do not repeat the same focal position, text width, and density on consecutive slides.",
-        "Change tone, whitespace, or image scale at narrative turns while keeping one type and color system.",
-        "The montage must show both a coherent system and clearly different slide roles."
-      ]
+      minCompositionVariants: 2,
+      rules: [locale === "zh-TW" ? "\u9023\u7E8C\u9801\u9762\u4F7F\u7528\u4E0D\u540C\u7684\u7126\u9EDE\u4F4D\u7F6E\u3002" : "Vary the focal position across consecutive slides."]
     },
-    schemaVersion: 1,
-    typography: {
-      bodyPt: [14, 24],
-      headingPt: [24, 38],
-      titlePt: id === "moodboard" ? [48, 96] : [42, 72]
-    }
+    typography: { bodyPt: [14, 24], headingPt: [24, 38], titlePt: [42, 72] }
   });
-}
-function copyProfile(locale, typography) {
-  return locale === "zh-TW" ? {
-    bodyMaxLines: 5,
-    headlineMaxLines: 2,
-    orphanMinCharacters: 3,
-    rules: [
-      "\u6BCF\u9801\u5148\u5BEB\u4E00\u500B\u53EF\u88AB\u8907\u8FF0\u7684\u4E3B\u5F35\uFF0C\u518D\u88DC\u4E00\u500B\u652F\u6490\u7406\u7531\u8207\u4E00\u500B\u8B49\u64DA\u6216\u4E0B\u4E00\u6B65\u3002",
-      "\u522A\u9664\u7121\u6CD5\u589E\u52A0\u8CC7\u8A0A\u7684\u62BD\u8C61\u5F62\u5BB9\u8A5E\uFF1B\u7F3A\u5C11\u4E8B\u5BE6\u6642\u4FDD\u7559\u5F85\u88DC\u6A19\u8A18\uFF0C\u4E0D\u5F97\u634F\u9020\u6578\u64DA\u3002",
-      "\u907F\u514D\u6700\u5F8C\u4E00\u884C\u53EA\u5269\u4E00\u81F3\u5169\u500B\u4E2D\u6587\u5B57\uFF0C\u4E26\u907F\u514D\u6A19\u9EDE\u7B26\u865F\u55AE\u7368\u63DB\u884C\u3002",
-      "\u6A19\u984C\u4F7F\u7528\u77ED\u53E5\u8207\u5177\u9AD4\u52D5\u8A5E\uFF1B\u6B63\u6587\u5148\u8AAA\u7D50\u8AD6\uFF0C\u518D\u8AAA\u539F\u56E0\u3002"
-    ],
-    voice: `\u7CBE\u6E96\u3001\u5177\u9AD4\u3001\u53EF\u505A\u6C7A\u7B56\u3002\u8996\u89BA\u8A9E\u6C23\uFF1A${typography}`
-  } : {
-    bodyMaxLines: 5,
-    headlineMaxLines: 2,
-    orphanMinCharacters: 3,
-    rules: [
-      "Write one repeatable claim, one supporting reason, and one proof point or next action per slide.",
-      "Remove abstract filler that adds no information; never invent evidence when the brief is incomplete.",
-      "Avoid one- or two-word widow lines and rebalance the frame before shrinking type.",
-      "Use concrete verbs in headlines and lead body copy with the conclusion."
-    ],
-    voice: `Precise, concrete, and decision-ready. Visual voice: ${typography}`
-  };
-}
-function roleImagePolicy(id, role) {
-  if (id === "moodboard" && ["imagery", "texture", "applications"].includes(role)) return "required";
-  if (["metrics", "timeline", "decision", "principles", "system", "type", "palette"].includes(role)) return "none";
-  return "optional";
-}
-function roleComposition(id, role) {
-  const moodboard = {
-    applications: "Show one large application mockup plus one cropped detail; captions stay small and disciplined.",
-    closing: "Use one oversized closing statement or contact line with at least half the canvas left visually quiet.",
-    comparison: "Use a true split comparison with matched scale, short labels, and one explicit decision criterion.",
-    composition: "Demonstrate the grid with one dominant crop, one offset caption, and visible alignment tension.",
-    concept: "Pair one concise directional claim with a contrasting visual or typographic specimen; avoid three floating slogans.",
-    cover: "Use one oversized title in a deliberate edge or lower-third position with a single counterweight.",
-    imagery: "Use a hero crop plus one or two references that share subject, light, crop, and treatment.",
-    motion: "Describe one motion principle through a before/after sequence or directional path, not a paragraph.",
-    palette: "Render real swatches with proportion and usage labels; keep token names on one line without wrapping.",
-    principles: "Use three concise principles with visibly different scale or placement, not identical cards.",
-    recommendation: "Make the chosen direction dominant and place rationale and next action in a compact secondary zone.",
-    system: "Connect type, color, imagery, and motion as one visual system using lines, sequence, or hierarchy.",
-    texture: "Let texture occupy a major field and pair it with one short material note and controlled contrast.",
-    type: "Build a type specimen with an oversized display sample, hierarchy labels, and one practical usage example."
-  };
-  if (id === "moodboard" && moodboard[role]) return moodboard[role];
-  const shared = {
-    closing: "End with one decisive statement and one clear next action; remove all secondary decoration.",
-    cover: "Use one dominant promise, one short context line, and one visual counterweight.",
-    decision: "Make the decision visually dominant and keep rationale, owner, and timing in a secondary band.",
-    metrics: "Use one primary metric and at most three supporting measures with aligned baselines and explicit units.",
-    timeline: "Use a directional sequence with clear phase changes, owners, or decision gates.",
-    workflow: "Show the operating sequence as a diagram or path instead of a paragraph or generic cards."
-  };
-  return shared[role] ?? `Give the ${role} slide one dominant focal element, one supporting zone, and a composition distinct from the previous slide.`;
-}
-function roleMessagePattern(role, locale) {
-  if (locale === "zh-TW") {
-    const patterns2 = {
-      closing: "\u6700\u7D42\u4E3B\u5F35 \u2192 \u4E0B\u4E00\u6B65",
-      cover: "\u4E00\u53E5\u4E3B\u5F35 \u2192 \u5C0D\u8C61\u6216\u60C5\u5883",
-      decision: "\u6C7A\u7B56 \u2192 \u7406\u7531 \u2192 \u8CA0\u8CAC\u4EBA\u8207\u6642\u9593",
-      metrics: "\u95DC\u9375\u6578\u5B57 \u2192 \u610F\u7FA9 \u2192 \u6BD4\u8F03\u57FA\u6E96",
-      recommendation: "\u5EFA\u8B70\u65B9\u5411 \u2192 \u9078\u64C7\u7406\u7531 \u2192 \u4E0B\u4E00\u6B65",
-      timeline: "\u968E\u6BB5 \u2192 \u91CC\u7A0B\u7891 \u2192 \u6C7A\u7B56\u9EDE"
-    };
-    return patterns2[role] ?? `${role} \u4E3B\u5F35 \u2192 \u652F\u6490\u7406\u7531 \u2192 \u53EF\u884C\u52D5\u7D50\u8AD6`;
-  }
-  const patterns = {
-    closing: "Final claim \u2192 next action",
-    cover: "One promise \u2192 audience or context",
-    decision: "Decision \u2192 rationale \u2192 owner and timing",
-    metrics: "Primary number \u2192 meaning \u2192 comparison baseline",
-    recommendation: "Direction \u2192 reason to choose \u2192 next action",
-    timeline: "Phase \u2192 milestone \u2192 decision gate"
-  };
-  return patterns[role] ?? `${role} claim \u2192 supporting reason \u2192 actionable conclusion`;
 }
 
 // core/motion-doc/domain/textStyleRanges.ts
@@ -52837,13 +44515,13 @@ function getPaperImageFilterDefinition(id) {
     return void 0;
   }
   const normalized = paperImageFilterAliases[id] ?? id;
-  return paperImageFilterDefinitions.find((definition3) => definition3.id === normalized);
+  return paperImageFilterDefinitions.find((definition2) => definition2.id === normalized);
 }
 function paperImageFilterRuntimePresetTable() {
   return Object.fromEntries(
-    paperImageFilterDefinitions.map((definition3) => [
-      definition3.id,
-      Object.fromEntries(definition3.presets.map((preset) => [preset.name, preset.params]))
+    paperImageFilterDefinitions.map((definition2) => [
+      definition2.id,
+      Object.fromEntries(definition2.presets.map((preset) => [preset.name, preset.params]))
     ])
   );
 }
@@ -60042,6 +51720,7 @@ var SlideXImageAssetError = class extends Error {
     this.code = code2;
     this.name = "SlideXImageAssetError";
   }
+  code;
 };
 async function importSlideXImageAsset(input) {
   assertBinaryInput(input.bytes);
@@ -60310,17 +51989,8 @@ function detectImageMimeType(bytes) {
   return void 0;
 }
 
-// node_modules/playwright/index.mjs
-var playwright_exports = {};
-__export(playwright_exports, {
-  default: () => playwright_default
-});
-__reExport(playwright_exports, playwright_core_star);
-import * as playwright_core_star from "playwright-core";
-import playwright from "playwright-core";
-var playwright_default = playwright;
-
 // core/motion-doc/infrastructure/export/nodePptxExport.ts
+import { chromium } from "playwright-core";
 var MAX_MEDIA_BYTES = 80 * 1024 * 1024;
 
 // packages/slidex-sdk/src/nodeBrowser.ts
@@ -61545,6 +53215,10 @@ var editCommandSchema = external_exports.discriminatedUnion("type", [
   external_exports.object({ fromIndex: external_exports.number().int().min(0), slideIndex: external_exports.number().int().min(0), toIndex: external_exports.number().int().min(0), type: external_exports.literal("block.reorder") })
 ]);
 var SlideXVisualQualityGateError = class extends Error {
+  currentRevision;
+  preview;
+  report;
+  rejectedCandidateId;
   constructor(currentRevision, report, rejectedCandidateId) {
     const findings = report.issues.filter((issue2) => issue2.severity === "error").slice(0, 8).map((issue2) => `slide ${issue2.slideIndex + 1} ${issue2.code} (${issue2.nodeIds.join(" + ")})`).join("; ");
     super(

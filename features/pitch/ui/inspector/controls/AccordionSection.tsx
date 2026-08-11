@@ -1,0 +1,50 @@
+"use client";
+
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
+
+type AccordionSectionProps = {
+  children: ReactNode;
+  defaultOpen?: boolean;
+  icon?: ReactNode;
+  title: string;
+  rightElement?: ReactNode;
+};
+
+export function AccordionSection({ children, defaultOpen = true, title, rightElement = null }: AccordionSectionProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const { tx } = usePitchI18n();
+
+  return (
+    <div className="flex flex-col border-b border-white/[0.04] last:border-b-0">
+      <div className="flex w-full items-center justify-between py-3">
+        <button
+          type="button"
+          className="flex items-center gap-1.5 text-left transition-colors cursor-pointer select-none group"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <div className="flex items-center justify-center text-neutral-500 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:text-neutral-300">
+            {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </div>
+          <span className="text-[13px] font-medium text-neutral-300 group-hover:text-white transition-colors">
+            {tx(title)}
+          </span>
+        </button>
+        {rightElement && (
+          <div className="flex items-center">
+            {rightElement}
+          </div>
+        )}
+      </div>
+
+      <div className={`grid transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+        <div className="overflow-hidden">
+          <div className="flex flex-col gap-4 pb-4">
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

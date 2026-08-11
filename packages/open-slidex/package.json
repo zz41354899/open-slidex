@@ -17,7 +17,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --check dist/cli.mjs && node --check dist/create.mjs"
+    "build": "node ../../scripts/build-open-slidex-package.mjs",
+    "test": "node --import tsx --test src/*.test.ts && node --check dist/cli.mjs && node --check dist/create.mjs",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "slidex",
@@ -32,15 +35,29 @@
     "@codemirror/lang-html": "^6.4.11",
     "@codemirror/lang-javascript": "^6.2.5",
     "@codemirror/lang-markdown": "^6.5.0",
+    "@assistant-ui/react": "^0.15.11",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@uiw/react-codemirror": "^4.25.10",
+    "@paper-design/shaders": "^0.0.77",
+    "@paper-design/shaders-react": "^0.0.77",
+    "@radix-ui/react-popover": "^1.1.17",
+    "@radix-ui/react-toolbar": "^1.1.13",
+    "framer-motion": "11.18.2",
+    "html2canvas-pro": "^2.2.3",
     "lucide-react": "^1.16.0",
+    "mdast-util-from-markdown": "2.0.3",
+    "mdast-util-gfm": "^3.1.0",
+    "micromark-extension-gfm": "^3.0.0",
     "pdf-parse": "^1.1.1",
     "playwright-core": "1.61.1",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "sharp": "^0.35.3",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0",
+    "tsx": "^4.22.4"
   },
   "engines": {
     "node": ">=22.12.0"

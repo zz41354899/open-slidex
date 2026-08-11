@@ -1,0 +1,230 @@
+.header {
+  position: relative;
+  z-index: 50;
+  display: flex;
+  height: 52px;
+  flex: 0 0 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 24px;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  background: #111;
+  color: #f5f5f5;
+  font-family: Geist, "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
+  user-select: none;
+}
+
+.headerLeft,
+.headerCenter,
+.headerRight,
+.brandGroup,
+.actionGroup,
+.zoomButton,
+.actionButton,
+.exportButton,
+.mobileButton,
+.inspectorActions {
+  display: flex;
+  align-items: center;
+}
+
+.headerLeft,
+.headerRight { min-width: 0; }
+.headerLeft { flex: 1 1 auto; gap: 12px; }
+.headerCenter { position: absolute; top: 0; left: 50%; height: 100%; align-items: center; transform: translateX(-50%); }
+.headerRight { flex: 0 0 auto; justify-content: flex-end; gap: 14px; }
+.brandGroup { min-width: 0; gap: 12px; }
+.brand { display: inline-flex; align-items: center; color: #fff; text-decoration: none; white-space: nowrap; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 6px;
+  padding: 2px 6px;
+  color: #737373;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.badgeLocal { border-color: rgb(142 165 255 / 28%); background: rgb(142 165 255 / 7%); color: #aebdff; }
+.badgeGuest { border-color: rgb(196 238 135 / 28%); background: rgb(196 238 135 / 7%); color: #c4ee87; }
+.divider { width: 1px; height: 14px; margin: 0 2px; background: rgb(255 255 255 / 8%); }
+.projectName {
+  max-width: 240px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 4%);
+  border-radius: 12px;
+  padding: 5px 12px;
+  background: rgb(23 23 23 / 45%);
+  color: #d4d4d4;
+  font-size: 12px;
+  font-weight: 620;
+  letter-spacing: .01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.notice { max-width: 190px; overflow: hidden; color: #737373; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.noticeWarning { color: #e4c786; }
+.noticeDanger { color: #ef9b94; }
+.zoom { position: relative; }
+.exportControl { position: relative; display: flex; align-items: center; }
+.zoomButton,
+.actionButton,
+.exportButton,
+.mobileButton {
+  min-height: 34px;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 12px;
+  padding: 0 12px;
+  background: transparent;
+  color: #a3a3a3;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+.zoomButton { min-width: 84px; justify-content: space-between; background: rgb(255 255 255 / 4%); color: #d4d4d4; }
+.actionButton:hover,
+.mobileButton:hover,
+.zoomButton:hover { background: rgb(255 255 255 / 8%); color: #fff; }
+.actionButton:active,
+.mobileButton:active,
+.zoomButton:active,
+.exportButton:active { transform: scale(.96); }
+.actionButton:disabled { color: #484848; cursor: not-allowed; }
+.exportButton { min-width: 82px; background: #fff; color: #050505; font-weight: 740; box-shadow: 0 6px 20px rgb(0 0 0 / 18%); }
+.exportButtonMenu { min-width: 100px; justify-content: center; }
+.exportControl:has(.exportChevron) .exportButton { min-width: 66px; border-radius: 12px 0 0 12px; padding-right: 10px; }
+.exportChevron { display: grid; width: 34px; min-height: 34px; place-items: center; border: 0; border-left: 1px solid rgb(0 0 0 / 14%); border-radius: 0 12px 12px 0; background: #fff; color: #050505; cursor: pointer; }
+.exportButton:hover { background: #ededed; transform: translateY(-1px); }
+.exportChevron:hover { background: #ededed; }
+.exportMenu {
+  position: absolute;
+  z-index: 112;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  width: 186px;
+  gap: 2px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 11px;
+  padding: 5px;
+  background: #17191f;
+  box-shadow: 0 22px 60px rgb(0 0 0 / 55%);
+}
+.exportMenu button { display: grid; gap: 2px; border: 0; border-radius: 7px; padding: 8px 9px; background: transparent; color: #e3e5eb; cursor: pointer; text-align: left; }
+.exportMenu button:hover { background: rgb(255 255 255 / 7%); }
+.exportMenu span { font-size: 11px; font-weight: 650; }
+.exportMenu small { color: #797f8c; font-size: 9px; }
+.zoomMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 110;
+  display: grid;
+  width: 144px;
+  gap: 2px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 12px;
+  padding: 4px;
+  background: #18181b;
+  box-shadow: 0 22px 60px rgb(0 0 0 / 55%);
+}
+.zoomOption { display: flex; align-items: center; justify-content: space-between; border: 0; border-radius: 8px; padding: 7px 8px; background: transparent; color: #d4d4d4; cursor: pointer; font-size: 12px; text-align: left; }
+.zoomOption:hover,
+.zoomOptionSelected { background: rgb(255 255 255 / 8%); color: #fff; }
+.mobileButton { display: none; width: 34px; padding: 0; }
+
+.header[data-editor-header-variant="local"] {
+  display: grid;
+  height: 64px;
+  flex: 0 0 64px;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(330px, 1fr);
+  gap: 16px;
+  padding: 0 20px;
+  background: #0c0e12;
+}
+.header[data-editor-header-variant="local"] .headerLeft { min-width: 0; }
+.header[data-editor-header-variant="local"] .headerCenter { position: static; height: 64px; transform: none; }
+.header[data-editor-header-variant="local"] .headerRight { gap: 9px; }
+.header[data-editor-header-variant="local"] .brandGroup { gap: 14px; }
+.header[data-editor-header-variant="local"] .divider { height: 18px; }
+.header[data-editor-header-variant="local"] .projectName { max-width: 190px; border: 0; padding: 0; background: transparent; color: #c9ccd4; font-size: 11px; font-weight: 520; }
+.header[data-editor-header-variant="local"] .notice { display: none; }
+.header[data-editor-header-variant="local"] .actionGroup { gap: 2px; padding-right: 8px; border-right: 1px solid rgb(255 255 255 / 7%); }
+.header[data-editor-header-variant="local"] .actionButton { width: 32px; min-height: 32px; padding: 0; border-radius: 8px; color: #8b919d; }
+.header[data-editor-header-variant="local"] .actionButton span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.header[data-editor-header-variant="local"] .playButton { width: auto; min-height: 40px; gap: 7px; border: 1px solid rgb(255 255 255 / 7%); border-radius: 9px; padding: 0 14px; background: #191c22; color: #c8ccd5; }
+.header[data-editor-header-variant="local"] .playButton span { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+.header[data-editor-header-variant="local"] .zoom { padding-right: 8px; border-right: 1px solid rgb(255 255 255 / 7%); }
+.header[data-editor-header-variant="local"] .zoomButton { min-width: 76px; min-height: 32px; padding: 0 8px; background: transparent; color: #b0b4bd; font-weight: 520; }
+.header[data-editor-header-variant="local"] .exportButton,
+.header[data-editor-header-variant="local"] .exportChevron { min-height: 40px; background: #6670f2; color: #fff; }
+.header[data-editor-header-variant="local"] .exportButton { min-width: 75px; gap: 7px; border-radius: 9px 0 0 9px; box-shadow: 0 7px 20px rgb(61 78 188 / 24%); }
+.header[data-editor-header-variant="local"] .exportButtonMenu { min-width: 104px; border-radius: 9px; }
+.header[data-editor-header-variant="local"] .exportChevron { width: 34px; border-left-color: rgb(255 255 255 / 16%); border-radius: 0 9px 9px 0; }
+.header[data-editor-header-variant="local"] .exportButton:hover,
+.header[data-editor-header-variant="local"] .exportChevron:hover { background: #737cf6; }
+
+@media (max-width: 1280px) {
+  .header[data-editor-header-variant="local"] { grid-template-columns: minmax(150px, 1fr) auto minmax(290px, 1fr); padding-inline: 14px; }
+  .header[data-editor-header-variant="local"] .projectName { max-width: 130px; }
+  .header[data-editor-header-variant="local"] .playButton { padding-inline: 10px; }
+}
+
+@media (max-width: 1120px) {
+  .header[data-editor-header-variant="local"] { display: flex; height: 52px; flex: 0 0 52px; padding: 0 12px; }
+  .header[data-editor-header-variant="local"] .headerLeft { flex: 1 1 auto; }
+  .header[data-editor-header-variant="local"] .headerCenter { display: none; }
+  .header[data-editor-header-variant="local"] .headerRight { margin-left: auto; }
+  .header[data-editor-header-variant="local"] .projectName { max-width: 170px; }
+}
+
+.tabs {
+  display: flex;
+  min-height: 45px;
+  flex: 0 0 45px;
+  align-items: stretch;
+  gap: 3px;
+  padding: 6px;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 1%);
+}
+.tab { flex: 1; border: 0; border-radius: 12px; background: transparent; color: #737373; cursor: pointer; font-size: 11px; font-weight: 650; transition: background-color 180ms ease, color 180ms ease; }
+.tab:hover { background: rgb(255 255 255 / 4%); color: #d4d4d4; }
+.tabSelected { background: rgb(255 255 255 / 10%); color: #fff; box-shadow: inset 0 1px 1px rgb(255 255 255 / 10%); }
+
+.inspectorHeader { display: flex; height: 52px; flex: 0 0 52px; align-items: center; justify-content: space-between; gap: 10px; padding: 0 14px 0 20px; }
+.inspectorHeading { display: grid; min-width: 0; gap: 2px; }
+.inspectorHeading strong { overflow: hidden; color: #e5e5e5; font-size: 14px; font-weight: 540; text-overflow: ellipsis; white-space: nowrap; }
+.inspectorHeading span { overflow: hidden; color: #737373; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.inspectorActions { flex: 0 0 auto; gap: 3px; }
+
+@media (max-width: 980px) {
+  .header { height: 52px; padding: 0 10px; }
+  .header[data-editor-header-variant="local"] { display: flex; height: 52px; flex: 0 0 52px; padding: 0 10px; }
+  .headerLeft { gap: 7px; }
+  .headerRight { gap: 4px; }
+  .divider,
+  .projectName,
+  .notice,
+  .zoom,
+  .actionGroup,
+  .headerCenter { display: none; }
+  .mobileButton { display: inline-flex; }
+  .exportButton { min-width: 42px; padding: 0 11px; }
+  .exportLabel { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zoomButton,
+  .actionButton,
+  .exportButton,
+  .mobileButton { transition: none; }
+}

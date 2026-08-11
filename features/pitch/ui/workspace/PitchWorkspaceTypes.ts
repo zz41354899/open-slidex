@@ -1,0 +1,184 @@
+import type { Dispatch, MouseEvent as ReactMouseEvent, ReactNode, RefObject, SetStateAction } from "react";
+import type { MotionDocProps, MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
+import type { CanvasTool } from "@/features/pitch/application/canvasTools";
+import type { CanvasShapeTool } from "@/features/pitch/application/shapeDrawing";
+import type { AddBlockOptions, InsertSlidePlacement } from "@/features/pitch/application/motionDocCommands";
+import type { BlockUpdater } from "@/features/pitch/application/pitchCommandTypes";
+import type { BlockFramePatch } from "@/features/pitch/application/pitchGeometry";
+import type { SlideComment } from "@/features/pitch/application/slideComments";
+import type { SlideRow } from "@/features/pitch/application/slideRows";
+import type { AddBlockType } from "@/features/pitch/ui/pitchOptions";
+import type { RemoteMcpOperation } from "@/features/pitch/domain/remoteMcpOperation";
+import type { EditorHeaderBadge } from "@/common/ui/editor/EditorPrimitives";
+import type { AssistantCanvasActivity, AssistantCanvasTrace } from "@/core/motion-doc/domain/assistantCanvasActivity";
+import type { AssistantCanvasTone } from "@/features/pitch/ui/preview/assistantCanvasAppearance";
+import type { SelectionAlignment, SelectionDistribution } from "@/features/pitch/application/multiSelectionLayout";
+
+export type SelectionMdx = { label: string; source: string };
+
+export type PitchWorkspaceDocument = {
+  activeSlide: MotionDocScene | undefined;
+  activeSlideAccent: string;
+  activeSlideBackground: string;
+  activeSlideComments: SlideComment[];
+  activeSlideIndex: number;
+  activeSlideLayoutPreset: string;
+  activeSlideMutedColor: string;
+  activeSlideShader: string;
+  activeSlideShaderAngle: number;
+  activeSlideShaderColor1: string;
+  activeSlideShaderColor2: string;
+  activeSlideShaderColor3: string;
+  activeSlideShaderColor4: string;
+  activeSlideShaderColor5: string;
+  activeSlideShaderColor6: string;
+  activeSlideShaderDetail: number;
+  activeSlideShaderEngine: string;
+  activeSlideShaderIntensity: number;
+  activeSlideShaderPreset: string;
+  activeSlideShaderScale: number;
+  activeSlideShaderSoftness: number;
+  activeSlideShaderSpeed: number;
+  activeSlideTextColor: string;
+  activeSlideTheme: string;
+  canvasSource: string;
+  isProjectDirty: boolean;
+  projectName: string;
+  scenes: MotionDocScene[];
+  selectedTemplateId: string;
+  slideRows: SlideRow[];
+  source: string;
+  totalDuration: number;
+};
+
+export type PitchWorkspaceSelection = {
+  clearBlockSelection: () => void;
+  draggedBlockIndex: number | null;
+  dragOverBlockIndex: number | null;
+  hasCopiedBlock: boolean;
+  selectBlock: (index: number, options?: { additive?: boolean; bypassGroup?: boolean; range?: boolean }) => void;
+  selectBlockFromLayer: (index: number, event: ReactMouseEvent<HTMLDivElement>, target?: "group" | "layer") => void;
+  selectBlocks: (indices: number[], options?: { additive?: boolean }) => void;
+  selectedBlockIndex: number | null;
+  selectedBlockIndices: number[];
+  selectedBlocksLocked: boolean;
+  selectionMdx: SelectionMdx;
+  selectSingleBlock: (index: number | null) => void;
+  setDraggedBlockIndex: Dispatch<SetStateAction<number | null>>;
+  setDragOverBlockIndex: Dispatch<SetStateAction<number | null>>;
+};
+
+export type PitchWorkspaceCommands = {
+  addAllSlidesFromTemplate: (templateId: string, slideSources: string[]) => void;
+  addBlockToActiveSlide: (type: AddBlockType, options?: AddBlockOptions) => void;
+  addSlide: () => void;
+  addSlideFromTemplate: (templateId: string, slideSource: string) => void;
+  addSlideWithLayout: (layoutSource: string, layoutId: string) => void;
+  alignSelectedBlocks: (alignment: SelectionAlignment) => void;
+  applyTemplateDeck: (templateId: string, slideSources: string[]) => void;
+  beginBlockTransform: () => void;
+  commitMdxSource: (value: string) => void;
+  copySelectedBlock: () => void;
+  copySource: () => Promise<void>;
+  deleteBlock: (blockIndex: number) => void;
+  deleteSelectedBlocks: () => void;
+  deleteSlide: (slideIndex: number) => void;
+  duplicateSelectedBlock: () => void;
+  distributeSelectedBlocks: (distribution: SelectionDistribution) => void;
+  goToNextSlide: () => void;
+  goToPreviousSlide: () => void;
+  groupSelectedBlocks: () => void;
+  imageSourceRequiresAbsoluteUrl: boolean;
+  importImageUrlForBlock: (blockIndex: number, source: string) => boolean;
+  insertSlideNearActive: (placement: InsertSlidePlacement) => void;
+  moveBlock: (blockIndex: number, direction: -1 | 1) => void;
+  moveBlockToEdge: (blockIndex: number, edge: "back" | "front") => void;
+  moveSelectedBlocksToEdge: (edge: "back" | "front") => void;
+  newProject: () => void;
+  onAddActiveSlideComment: (comment: string) => void;
+  onPassActiveSlideComment: (commentId: string) => void;
+  openExport: () => void;
+  openExportWithFormat?: (format: "html" | "mdx" | "pptx") => void;
+  openPresentationPreview: () => void;
+  pasteCopiedBlock: () => void;
+  persistActiveSlideShaderFrame: (frame: number) => void;
+  pushUndoSnapshot: () => void;
+  redoLastChange?: () => void;
+  removeImageForBlock: (blockIndex: number) => void;
+  requestImageRemoval: () => boolean;
+  requestImageUpload: () => boolean;
+  renameBlock: (blockIndex: number, name: string) => void;
+  reorderBlock: (fromIndex: number, toIndex: number) => void;
+  reorderSlide: (fromIndex: number, toIndex: number) => void;
+  setActiveSlideIndex: Dispatch<SetStateAction<number>>;
+  toggleBlockPositionLock: (blockIndex: number) => void;
+  toggleSelectedBlocksPositionLock: () => void;
+  undoLastChange: () => void;
+  ungroupSelectedBlocks: () => void;
+  updateActiveSlideStyle: (updates: MotionDocProps) => void;
+  updateAllSlidesStyle: (updates: MotionDocProps) => void;
+  updateSelectedBlockColor: (blockIndex: number, color: string) => void;
+  updateBlock: BlockUpdater;
+  updatePositionedBlockFrames: (updates: BlockFramePatch[]) => void;
+  updateSelectionMdx: (value: string) => void;
+  uploadImageForBlock: (blockIndex: number, file: File | undefined) => void;
+  useSelectedImageAsBackground: () => void;
+};
+
+export type PitchWorkspaceView = {
+  accessMode: "authenticated" | "guest";
+  activeCanvasTool: CanvasTool;
+  canvasShapeTool: CanvasShapeTool | null;
+  commentsEnabled: boolean;
+  exportInteraction?: "format-menu" | "split";
+  headerBadge?: EditorHeaderBadge | null;
+  headerBrand?: ReactNode;
+  headerTools?: ReactNode;
+  headerVariant?: "default" | "local";
+  /** Local Workbench replaces the desktop inspector with its AI command panel while open. */
+  hideInspector?: boolean;
+  /** Prevents persistent canvas mutations while an assistant preview is active. */
+  interactionDisabled?: boolean;
+  exportMenuRef: RefObject<HTMLDivElement | null>;
+  homeHref: string;
+  isCanvasGridVisible: boolean;
+  isCanvasSnapEnabled: boolean;
+  isCodeEditorOpen: boolean;
+  isExportMenuOpen: boolean;
+  isMobileInspectorOpen: boolean;
+  isMobileSidebarOpen: boolean;
+  inspectorExtension?: ReactNode;
+  /** Local Workbench renders only root-confined assets/*.webp media. */
+  localAssetsOnly?: boolean;
+  /** Local Workbench enables chart animation only during an explicit replay. */
+  localChartAnimationsActive?: boolean;
+  notice: string;
+  onReplayAnimations?: () => void;
+  replayNonce: number;
+  templateLibraryEnabled?: boolean;
+  setActiveCanvasTool: Dispatch<SetStateAction<CanvasTool>>;
+  setCanvasShapeTool: Dispatch<SetStateAction<CanvasShapeTool | null>>;
+  setIsCanvasGridVisible: Dispatch<SetStateAction<boolean>>;
+  setIsCanvasSnapEnabled: Dispatch<SetStateAction<boolean>>;
+  setIsCodeEditorOpen: Dispatch<SetStateAction<boolean>>;
+  setIsExportMenuOpen: Dispatch<SetStateAction<boolean>>;
+  setIsMobileInspectorOpen: Dispatch<SetStateAction<boolean>>;
+  setIsMobileSidebarOpen: Dispatch<SetStateAction<boolean>>;
+};
+
+export type PitchWorkspaceProps = {
+  assistant?: {
+    activities: readonly AssistantCanvasActivity[];
+    tone?: AssistantCanvasTone;
+    trace?: AssistantCanvasTrace;
+  };
+  commands: PitchWorkspaceCommands;
+  document: PitchWorkspaceDocument;
+  remoteMcp?: {
+    activities: readonly RemoteMcpOperation[];
+    connectionWarning?: string | null;
+  };
+  selection: PitchWorkspaceSelection;
+  toolRail?: ReactNode;
+  view: PitchWorkspaceView;
+};

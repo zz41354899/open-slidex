@@ -21,7 +21,7 @@ npm run dev
 Start a new project with an immutable official template blueprint and locale:
 
 ```bash
-npx open-slidex@0.2.4 init launch-deck --template launch-deck --locale zh-TW
+npx open-slidex@0.2.4 init my-deck --template open-slidex-starter --locale zh-TW
 ```
 
 The selected `{ id, version, locale }` is recorded in

@@ -1,0 +1,6 @@
+.editor::selection,
+.editor *::selection {
+  background: #6558f5 !important;
+  color: #ffffff !important;
+  text-shadow: none;
+}

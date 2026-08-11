@@ -1,0 +1,367 @@
+import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
+import {
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile
+} from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
+
+import sharp from "sharp";
+
+import { blankPresentationMdx } from "./index";
+import {
+  analyzeSlideXDocumentQuality,
+  exportSlideXDocument,
+  importSlideXImageAsset,
+  SlideXFileDocumentAdapter,
+  SlideXImageAssetError,
+  SlideXRevisionConflictError
+} from "./node";
+
+test("quality analysis honors a pre-aborted run before Chromium work", async () => {
+  const controller = new AbortController();
+  controller.abort();
+  await assert.rejects(
+    () => analyzeSlideXDocumentQuality({ signal: controller.signal, source: blankPresentationMdx }),
+    { name: "AbortError" }
+  );
+});
+
+test("file adapter uses revision CAS and does not persist a stale save", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-"));
+  try {
+    const adapter = new SlideXFileDocumentAdapter({ projectRoot: root });
+    const created = await adapter.create(blankPresentationMdx);
+    const saved = await adapter.save({
+      expectedRevision: created.revision,
+      source: blankPresentationMdx.replace("Untitled Presentation", "Saved"),
+      title: "Saved"
+    });
+    await assert.rejects(
+      () =>
+        adapter.save({
+          expectedRevision: created.revision,
+          source: blankPresentationMdx.replace("Untitled Presentation", "Stale"),
+          title: "Stale"
+        }),
+      SlideXRevisionConflictError
+    );
+    assert.equal((await adapter.open()).revision, saved.revision);
+    assert.match(await readFile(path.join(root, "presentation.mdx"), "utf8"), /^# Saved/);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("file adapter preserves CommonMark while assigning stable editable identities", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-markdown-"));
+  const source = `# Authored source
+
+<Slide duration={5} theme="light">
+
+## Keep this Markdown
+
+A **bold** sentence and a [link](https://example.com).
+
+- First
+- Second
+
+</Slide>`;
+  try {
+    const adapter = new SlideXFileDocumentAdapter({ projectRoot: root });
+    const created = await adapter.create(source);
+    assert.match(created.source, /## Keep this Markdown <!-- slidex-block-id:block-/);
+    assert.match(created.source, /A \*\*bold\*\* sentence/);
+    assert.match(created.source, /- First <!-- slidex-block-id:block-/);
+    assert.equal(
+      await readFile(path.join(root, "presentation.mdx"), "utf8"),
+      created.source
+    );
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("file adapter validates the complete batch before atomic persistence", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-"));
+  try {
+    const adapter = new SlideXFileDocumentAdapter({ projectRoot: root });
+    const created = await adapter.create(blankPresentationMdx);
+    await assert.rejects(
+      () =>
+        adapter.edit(created.revision, [
+          { title: "Partial", type: "document.setTitle" },
+          { slideIndex: 9, type: "slide.delete" }
+        ]),
+      /commands\[1\]/
+    );
+    assert.equal((await adapter.open()).revision, created.revision);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("file adapter rejects an unknown command without changing the file", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-unknown-"));
+  try {
+    const adapter = new SlideXFileDocumentAdapter({ projectRoot: root });
+    const created = await adapter.create(blankPresentationMdx);
+    await assert.rejects(
+      () =>
+        adapter.edit(created.revision, [
+          { type: "slide.teleport" } as never
+        ]),
+      /Unknown command type: slide\.teleport/
+    );
+    assert.equal((await adapter.open()).revision, created.revision);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("exports reject invalid motion before writing an output", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-export-"));
+  const outputPath = path.join(root, "invalid.html");
+  try {
+    await assert.rejects(
+      () =>
+        exportSlideXDocument({
+          format: "html",
+          outputPath,
+          source: `# Invalid
+
+<Slide slideTransition="explode"><Text>Invalid</Text></Slide>`
+        }),
+      /slideTransition must be one of/
+    );
+    await assert.rejects(() => readFile(outputPath), { code: "ENOENT" });
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("export preparation embeds an absolute project image path", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-absolute-image-"));
+  const imagePath = path.join(root, "hero.png");
+  const outputPath = path.join(root, "deck.html");
+  try {
+    await sharp({
+      create: { background: "#3355aa", channels: 3, height: 8, width: 8 }
+    })
+      .png()
+      .toFile(imagePath);
+
+    await exportSlideXDocument({
+      format: "html",
+      outputPath,
+      projectRoot: root,
+      source: `# Absolute image
+
+<Slide><ImageBlock src="${imagePath}" alt="Hero" /></Slide>`
+    });
+
+    const html = await readFile(outputPath, "utf8");
+    assert.match(html, /data:image\/png;base64,/);
+    assert.doesNotMatch(html, new RegExp(imagePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("two concurrent writers cannot both commit the same revision", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-concurrent-"));
+  try {
+    const firstAdapter = new SlideXFileDocumentAdapter({ projectRoot: root });
+    const secondAdapter = new SlideXFileDocumentAdapter({ projectRoot: root });
+    const initial = await firstAdapter.create(blankPresentationMdx);
+    const results = await Promise.allSettled([
+      firstAdapter.save({
+        expectedRevision: initial.revision,
+        source: initial.source.replace("Untitled Presentation", "First writer"),
+        title: "First writer"
+      }),
+      secondAdapter.save({
+        expectedRevision: initial.revision,
+        source: initial.source.replace("Untitled Presentation", "Second writer"),
+        title: "Second writer"
+      })
+    ]);
+
+    assert.equal(
+      results.filter((result) => result.status === "fulfilled").length,
+      1
+    );
+    const rejected = results.find((result) => result.status === "rejected");
+    assert.ok(rejected && rejected.status === "rejected");
+    assert.match(String(rejected.reason), /presentation\.mdx changed/);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("file adapter recovers a lock left by a dead process", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-stale-lock-"));
+  try {
+    const adapter = new SlideXFileDocumentAdapter({ projectRoot: root });
+    const initial = await adapter.create(blankPresentationMdx);
+    await writeFile(`${adapter.documentPath}.lock`, `${JSON.stringify({
+      createdAt: new Date().toISOString(),
+      ownerId: "crashed-writer",
+      pid: 2_147_483_647
+    })}\n`, "utf8");
+    const saved = await adapter.save({
+      expectedRevision: initial.revision,
+      source: initial.source.replace("Untitled Presentation", "Recovered"),
+      title: "Recovered"
+    });
+    assert.equal(saved.title, "Recovered");
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("image imports use binary input, normalize to WebP, and deduplicate by content", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-image-"));
+  try {
+    const source = await sharp({
+      create: {
+        background: "#cc5533",
+        channels: 4,
+        height: 1600,
+        width: 3200
+      }
+    })
+      .jpeg()
+      .withMetadata({ exif: { IFD0: { Artist: "remove me" } } })
+      .toBuffer();
+
+    const imported = await importSlideXImageAsset({
+      bytes: source,
+      fileName: "Launch Hero.jpg",
+      mediaType: "image/jpeg",
+      projectRoot: root
+    });
+    assert.equal(imported.mimeType, "image/webp");
+    assert.equal(imported.inputMimeType, "image/jpeg");
+    assert.equal(imported.optimized, true);
+    assert.equal(imported.targetOutputBytes, 2 * 1024 * 1024);
+    assert.ok(imported.bytes <= imported.targetOutputBytes);
+    assert.equal(imported.deduplicated, false);
+    assert.match(imported.name, /^Launch-Hero-[a-f0-9]{16}\.webp$/);
+    assert.equal(imported.source, `assets/${imported.name}`);
+    assert.doesNotMatch(imported.source, /^(?:data:|https?:)/);
+
+    const stored = await readFile(imported.outputPath);
+    const metadata = await sharp(stored).metadata();
+    assert.equal(metadata.format, "webp");
+    assert.equal(metadata.width, 2304);
+    assert.equal(metadata.height, 1152);
+    assert.equal(metadata.exif, undefined);
+
+    const duplicate = await importSlideXImageAsset({
+      bytes: source,
+      fileName: "Launch Hero.jpg",
+      mediaType: "image/jpeg",
+      projectRoot: root
+    });
+    assert.equal(duplicate.outputPath, imported.outputPath);
+    assert.equal(duplicate.deduplicated, true);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("image imports use quality and dimension ladders to honor a custom output budget", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-image-budget-"));
+  try {
+    const width = 1600;
+    const height = 1000;
+    const source = await sharp(randomBytes(width * height * 3), {
+      raw: { channels: 3, height, width }
+    }).png().toBuffer();
+    const targetOutputBytes = 96 * 1024;
+    const imported = await importSlideXImageAsset({
+      bytes: source,
+      fileName: "noisy.png",
+      mediaType: "image/png",
+      projectRoot: root,
+      targetOutputBytes
+    });
+
+    assert.equal(imported.targetOutputBytes, targetOutputBytes);
+    assert.ok(imported.bytes <= targetOutputBytes);
+    assert.ok(imported.width < width || imported.height < height);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("image imports reject Base64, data URLs, corrupt bytes, and MIME mismatches", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-image-policy-"));
+  try {
+    const png = await sharp({
+      create: {
+        background: "#112233",
+        channels: 4,
+        height: 16,
+        width: 16
+      }
+    })
+      .png()
+      .toBuffer();
+
+    await assert.rejects(
+      () =>
+        importSlideXImageAsset({
+          bytes: "data:image/png;base64,AAAA" as never,
+          fileName: "inline.png",
+          mediaType: "image/png",
+          projectRoot: root
+        }),
+      (error) =>
+        error instanceof SlideXImageAssetError &&
+        error.code === "invalid_source" &&
+        /Base64/.test(error.message)
+    );
+    await assert.rejects(
+      () =>
+        importSlideXImageAsset({
+          bytes: png,
+          fileName: "data:image/png;base64,AAAA",
+          mediaType: "image/png",
+          projectRoot: root
+        }),
+      (error) =>
+        error instanceof SlideXImageAssetError &&
+        error.code === "invalid_source"
+    );
+    await assert.rejects(
+      () =>
+        importSlideXImageAsset({
+          bytes: png,
+          fileName: "wrong.jpg",
+          mediaType: "image/jpeg",
+          projectRoot: root
+        }),
+      (error) =>
+        error instanceof SlideXImageAssetError &&
+        error.code === "invalid_image"
+    );
+    await assert.rejects(
+      () =>
+        importSlideXImageAsset({
+          bytes: new Uint8Array([0x89, 0x50, 0x4e, 0x47]),
+          fileName: "broken.png",
+          mediaType: "image/png",
+          projectRoot: root
+        }),
+      (error) => error instanceof SlideXImageAssetError
+    );
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});

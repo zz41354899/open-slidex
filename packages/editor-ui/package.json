@@ -1,0 +1,7 @@
+{
+  "name": "@open-slidex/editor-ui",
+  "private": true,
+  "version": "0.2.4",
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./styles.css": "./src/editor.css" }
+}
