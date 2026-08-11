@@ -130,3 +130,18 @@ test("published README documents single-package install and real-path MCP setup"
   assert.match(readme, /--project "\$PWD"/);
   assert.doesNotMatch(readme, /\/absolute\/path\/to\/deck/);
 });
+
+test("repository root launches its bundled CLI without a workspace bin link", async () => {
+  const rootPackageJson = JSON.parse(
+    await readFile(new URL("../../../package.json", import.meta.url), "utf8")
+  ) as { scripts?: Record<string, string> };
+
+  assert.equal(
+    rootPackageJson.scripts?.dev,
+    "node packages/open-slidex/dist/cli.mjs dev"
+  );
+  assert.equal(
+    rootPackageJson.scripts?.mcp,
+    "node packages/open-slidex/dist/cli.mjs mcp --project ."
+  );
+});
