@@ -1,0 +1,50 @@
+{
+  "name": "open-slidex",
+  "version": "2.0.4",
+  "description": "Create a private MDX-first OpenSlideX local workbench.",
+  "type": "module",
+  "bin": {
+    "open-slidex": "dist/cli.mjs"
+  },
+  "exports": {
+    "./cli": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist",
+    "runtime",
+    "template",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node ../../scripts/build-create-slidex.mjs",
+    "test": "node --test --import tsx src/*.test.ts",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "slidex",
+    "open-slidex",
+    "presentation",
+    "starter",
+    "mdx"
+  ],
+  "license": "MIT",
+  "author": "zz41354899",
+  "dependencies": {
+    "@codemirror/lang-html": "^6.4.11",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/lang-markdown": "^6.5.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@uiw/react-codemirror": "^4.25.10",
+    "lucide-react": "^1.16.0",
+    "pdf-parse": "^1.1.1",
+    "playwright-core": "1.61.1",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "sharp": "^0.35.3",
+    "zod": "^4.4.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

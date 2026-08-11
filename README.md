@@ -2,9 +2,31 @@
 
 OpenSlideX is an open-source, local-first presentation workspace. A presentation lives in a folder you own, with `presentation.mdx` as its source of truth.
 
+## Start locally
+
+Prerequisite: Node.js 22.12 or newer.
+
+```bash
+git clone https://github.com/zz41354899/open-slidex.git
+cd open-slidex
+npm install
+cd examples/starter
+npm install
+npm run dev
+```
+
+The Workbench opens locally and edits `examples/starter/presentation.mdx`. No account or Cloud setup is required.
+
+To create another project from the bundled starter:
+
+```bash
+cd ../..
+npm run open-slidex -- init my-deck --no-install
+```
+
 ## Status
 
-This repository is being prepared as the public home for OpenSlideX. The first source migration is intentionally narrow: only code that runs locally, has no Cloud dependency, and passes the repository boundary check will be added here.
+This repository includes a cloneable local runtime and starter project. TypeScript source extraction is intentionally narrow: only code that runs locally, has no Cloud dependency, and passes the repository boundary check will be added here.
 
 The current SlideX Cloud application remains a separate private product. It is not a dependency of OpenSlideX.
 
@@ -19,9 +41,9 @@ The current SlideX Cloud application remains a separate private product. It is n
 ## What will live here
 
 - OpenSlideX CLI and project starter
-- Local Workbench
-- Local MCP server
-- Filesystem-safe MotionDoc SDK and export tools
+- Local Workbench runtime
+- Local MCP runtime
+- Filesystem-safe SDK and export runtime
 - Starter examples, documentation, and contributor tooling
 
 ## What will not live here

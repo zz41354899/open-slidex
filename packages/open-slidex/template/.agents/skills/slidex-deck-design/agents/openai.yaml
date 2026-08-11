@@ -1,0 +1,4 @@
+interface:
+  display_name: "SlideX Deck Design"
+  short_description: "Direct polished visual presentation systems"
+  default_prompt: "Use $slidex-deck-design to art-direct a polished SlideX deck."

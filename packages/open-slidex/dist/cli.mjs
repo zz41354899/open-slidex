@@ -1,0 +1,99 @@
+#!/usr/bin/env node
+
+// packages/create-slidex/src/openSlideXCli.ts
+import { spawn } from "node:child_process";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+var packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+void main().catch((error) => {
+  const message = error instanceof Error ? error.message : "Unknown OpenSlideX CLI failure.";
+  process.stderr.write(`open-slidex: ${message}
+`);
+  process.exitCode = 1;
+});
+async function main() {
+  const [command = "help", ...args] = process.argv.slice(2);
+  if (command === "--version" || command === "-v") {
+    const manifest = JSON.parse(
+      await readFile(path.join(packageRoot, "package.json"), "utf8")
+    );
+    if (typeof manifest.version !== "string") throw new Error("Package version is unavailable.");
+    process.stdout.write(`${manifest.version}
+`);
+    return;
+  }
+  if (command === "help" || command === "--help" || command === "-h") {
+    process.stdout.write(help());
+    return;
+  }
+  const target = runtimeFor(command);
+  const childArgs = target === "create" ? args : target === "mcp" ? args : [command, ...args];
+  await run(runtimeEntry(target), childArgs);
+}
+function runtimeFor(command) {
+  if (command === "init") return "create";
+  if (command === "mcp") return "mcp";
+  if (["dev", "build", "preview", "sync:skills"].includes(command)) return "workbench";
+  if (["validate", "render", "export"].includes(command)) return "sdk";
+  throw new Error(`Unknown command: ${command}. Run open-slidex --help.`);
+}
+function runtimeEntry(target) {
+  const entries = {
+    create: "dist/create.mjs",
+    mcp: "runtime/mcp/server.mjs",
+    sdk: "runtime/sdk/cli.js",
+    workbench: "runtime/workbench/cli.mjs"
+  };
+  return path.join(packageRoot, entries[target]);
+}
+function run(entry, args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [entry, ...args], {
+      cwd: process.cwd(),
+      env: process.env,
+      stdio: "inherit"
+    });
+    const forwardSignal = (signal) => {
+      if (child.exitCode === null && child.signalCode === null) child.kill(signal);
+    };
+    const forwardInterrupt = () => forwardSignal("SIGINT");
+    const forwardTermination = () => forwardSignal("SIGTERM");
+    const cleanup = () => {
+      process.off("SIGINT", forwardInterrupt);
+      process.off("SIGTERM", forwardTermination);
+    };
+    process.once("SIGINT", forwardInterrupt);
+    process.once("SIGTERM", forwardTermination);
+    child.once("error", (error) => {
+      cleanup();
+      reject(error);
+    });
+    child.once("exit", (code) => {
+      cleanup();
+      if (code === 0) resolve();
+      else reject(new Error(`open-slidex ${args[0] ?? ""} exited with code ${code ?? "unknown"}.`));
+    });
+  });
+}
+function help() {
+  return `OpenSlideX
+
+Usage:
+  open-slidex init [directory] [--template <id>] [--locale <en|zh-TW>] [--npm|--pnpm|--bun|--no-install]
+  open-slidex dev [--port 4173] [--no-open]
+  open-slidex build
+  open-slidex preview [--port 4174]
+  open-slidex mcp [--project <directory>] [--print-config <codex|claude-code|claude-desktop>]
+  open-slidex mcp [--project <directory>] [--print-setup-prompt <codex|claude-code|claude-desktop>]
+  open-slidex validate [presentation.mdx]
+  open-slidex render [presentation.mdx] --montage --out <file.png>
+  open-slidex export [presentation.mdx] --format <html|mdx|pptx> --out <file> [--overwrite]
+
+Examples:
+  npx open-slidex@latest init my-deck
+  open-slidex init launch-deck --template launch-deck --locale zh-TW
+  cd my-deck && npm run dev
+  open-slidex mcp --print-config codex
+`;
+}

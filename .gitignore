@@ -1,6 +1,5 @@
 node_modules/
-dist/
-runtime/
+.open-slidex/
 .env
 .env.local
 .env.*.local
