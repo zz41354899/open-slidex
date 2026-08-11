@@ -1,0 +1,8 @@
+{
+  "name": "open-slidex",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "check:open-source-boundary": "node scripts/check-open-source-boundary.mjs"
+  }
+}
