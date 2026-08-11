@@ -1,6 +1,6 @@
 # OpenSlideX public-source boundary
 
-This repository must remain independently runnable as a local-first product.
+This repository must remain independently runnable as a local-first product. It is currently a private staging repository.
 
 ## Allowed
 
@@ -10,7 +10,7 @@ This repository must remain independently runnable as a local-first product.
 - Storage-neutral MotionDoc parsing, serialization, layout, and export code
 - Openly licensed starter templates created for this repository
 
-## Prohibited
+## Prohibited before public release
 
 - `app/` routes and any Next.js Cloud application code
 - Supabase, Cloud authentication, Workspace state, Cloud API routes, and Cloud repositories
@@ -24,8 +24,8 @@ This repository must remain independently runnable as a local-first product.
 2. Move or recreate only the smallest storage-neutral dependency required by a local package.
 3. Replace Cloud adapters with local filesystem adapters at the boundary.
 4. Add a focused local test before introducing an extracted module.
-5. Run `npm run check:open-source-boundary` before every push.
+5. Run `npm run check:cloud-boundary` before every push.
 
-## Public template rule
+## Public template release gate
 
-The repository may include an openly licensed starter template. The official and Premium template catalog remains outside this repository until its source license is explicitly changed.
+The repository may include an openly licensed starter template. Before the repository changes to public visibility, the bundled runtime must no longer contain the official or Premium template catalog unless its source license is explicitly changed.

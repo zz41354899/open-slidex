@@ -26,7 +26,7 @@ npm run open-slidex -- init my-deck --no-install
 
 ## Status
 
-This repository includes a cloneable local runtime and starter project. TypeScript source extraction is intentionally narrow: only code that runs locally, has no Cloud dependency, and passes the repository boundary check will be added here.
+This private staging repository includes a cloneable local runtime and starter project. TypeScript source extraction is intentionally narrow: only code that runs locally, has no Cloud dependency, and passes the repository boundary check will be added here.
 
 The current SlideX Cloud application remains a separate private product. It is not a dependency of OpenSlideX.
 
@@ -51,9 +51,9 @@ The current SlideX Cloud application remains a separate private product. It is n
 - SlideX Cloud routes, accounts, authentication, Supabase clients, or Workspace state
 - Cloud API routes, billing, collaboration, comments, or remote presentation storage
 - Credentials, production configuration, or secret-bearing environment files
-- The private official or Premium template catalog
+- The private official or Premium template catalog before this repository becomes public
 
-See [OPEN_SOURCE_BOUNDARY.md](OPEN_SOURCE_BOUNDARY.md) for the enforceable extraction rules.
+See [OPEN_SOURCE_BOUNDARY.md](OPEN_SOURCE_BOUNDARY.md) for the extraction rules and public-release gate.
 
 ## License
 
