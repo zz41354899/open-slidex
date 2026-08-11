@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "open_slidex": {
+      "type": "stdio",
+      "command": "npm",
+      "args": ["--silent", "run", "mcp"]
+    }
+  }
+}

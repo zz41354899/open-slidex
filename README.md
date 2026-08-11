@@ -13,7 +13,9 @@ npm install
 npm run dev
 ```
 
-This opens the bundled neutral starter at `examples/starter/presentation.mdx`. No account, Cloud setup, or second `npm install` is required.
+This opens the neutral `presentation.mdx` at the repository root. No account, Cloud setup, nested example folder, or second `npm install` is required.
+
+The same root is also the project-scoped MCP deck. Open it in Codex or Claude Code; `.codex/config.toml` and `.mcp.json` run `npm run mcp` locally.
 
 ## Install from npm
 

@@ -1,6 +1,7 @@
-# OpenSlideX MDX-first Local Workbench
+# OpenSlideX repository and Local Workbench
 
-This project contains one presentation source: `presentation.mdx`.
+This repository contains the OpenSlideX local runtime and one runnable
+presentation source: `presentation.mdx` at the repository root.
 
 - Read the complete source before changing it.
 - Keep every visible object as a native MotionDoc MDX layer.
