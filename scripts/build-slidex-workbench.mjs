@@ -1,5 +1,5 @@
 import { existsSync, statSync } from "node:fs";
-import { chmod, mkdir, readFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
@@ -53,6 +53,7 @@ await viteBuild({
   },
   root: path.join(packageDir, "src/client")
 });
+await normalizeGeneratedText(path.join(distDir, "client"));
 
 await esbuild({
   absWorkingDir: rootDir,
@@ -72,6 +73,20 @@ await esbuild({
 });
 
 await chmod(path.join(distDir, "cli.mjs"), 0o755);
+
+async function normalizeGeneratedText(directory) {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const target = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      await normalizeGeneratedText(target);
+      continue;
+    }
+    if (!/\.(?:css|html|js)$/.test(entry.name)) continue;
+    const source = await readFile(target, "utf8");
+    const normalized = source.replace(/[ \t]+$/gm, "");
+    if (normalized !== source) await writeFile(target, normalized, "utf8");
+  }
+}
 
 function sourceAliases() {
   return {
