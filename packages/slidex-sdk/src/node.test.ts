@@ -17,10 +17,39 @@ import {
   analyzeSlideXDocumentQuality,
   exportSlideXDocument,
   importSlideXImageAsset,
+  importSlideXVideoAsset,
+  renderSlideXDocument,
   SlideXFileDocumentAdapter,
   SlideXImageAssetError,
   SlideXRevisionConflictError
 } from "./node";
+
+test("Paper shader rendering freezes a real frame instead of a flat fallback", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-shader-render-"));
+  const outputPath = path.join(root, "shader.png");
+  try {
+    await renderSlideXDocument({
+      mode: "slide",
+      outputPath,
+      slideIndex: 0,
+      source: `# Shader render
+
+<Slide theme="light" background="#38BDF8" shader="mesh-gradient" shaderEngine="three" shaderPreset="Beach" shaderFrame={1200} shaderSpeed={0.1} shaderScale={1} shaderIntensity={0.8} shaderSoftness={0.35} shaderDetail={0} shaderColor1="#BCECF6" shaderColor2="#00AAFF" shaderColor3="#00F7FF" shaderColor4="#FFD447">
+</Slide>`
+    });
+    const stats = await sharp(outputPath).stats();
+    assert.ok(
+      stats.channels.slice(0, 3).some((channel) => channel.stdev > 8),
+      "expected the frozen shader frame to contain visible color variation"
+    );
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
 
 test("quality analysis honors a pre-aborted run before Chromium work", async () => {
   const controller = new AbortController();
@@ -161,7 +190,10 @@ test("export preparation embeds an absolute project image path", async () => {
       projectRoot: root,
       source: `# Absolute image
 
-<Slide><ImageBlock src="${imagePath}" alt="Hero" /></Slide>`
+<Slide>
+  <ImageBlock src="${imagePath}" alt="Hero" />
+  <Shape shape="rectangle" shapeImageSrc="${imagePath}" />
+</Slide>`
     });
 
     const html = await readFile(outputPath, "utf8");
@@ -274,6 +306,41 @@ test("image imports use binary input, normalize to WebP, and deduplicate by cont
     await rm(root, { force: true, recursive: true });
   }
 });
+
+test("MP4 imports stay local, preserve bytes, and deduplicate by content", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-video-"));
+  try {
+    const bytes = minimalMp4();
+    const imported = await importSlideXVideoAsset({
+      bytes,
+      fileName: "Launch clip.mp4",
+      mediaType: "video/mp4",
+      projectRoot: root
+    });
+    assert.equal(imported.mimeType, "video/mp4");
+    assert.match(imported.name, /^Launch-clip-[a-f0-9]{16}\.mp4$/);
+    assert.equal(imported.source, `assets/${imported.name}`);
+    assert.deepEqual(await readFile(imported.outputPath), Buffer.from(bytes));
+
+    const duplicate = await importSlideXVideoAsset({
+      bytes,
+      fileName: "Launch clip.mp4",
+      mediaType: "video/mp4",
+      projectRoot: root
+    });
+    assert.equal(duplicate.deduplicated, true);
+    await assert.rejects(
+      () => importSlideXVideoAsset({ bytes: new Uint8Array([0, 1, 2]), fileName: "broken.mp4", mediaType: "video/mp4", projectRoot: root }),
+      /valid MP4 container/
+    );
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+function minimalMp4() {
+  return new Uint8Array([0, 0, 0, 20, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0, 0x69, 0x73, 0x6f, 0x6d]);
+}
 
 test("image imports use quality and dimension ladders to honor a custom output budget", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-image-budget-"));

@@ -1,10 +1,11 @@
 import { existsSync, statSync } from "node:fs";
-import { chmod, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { chmod, cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import tailwindcss from "@tailwindcss/postcss";
+
+import { createSlideXWorkbenchViteConfig } from "../vite.config.mjs";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageDir = path.join(rootDir, "packages/slidex-workbench");
@@ -16,44 +17,19 @@ const distDir = path.join(packageDir, "dist");
 await mkdir(distDir, { recursive: true });
 
 await viteBuild({
-  base: "/",
+  ...createSlideXWorkbenchViteConfig(),
   build: {
     assetsDir: "_workbench",
     emptyOutDir: true,
     outDir: path.join(distDir, "client"),
     sourcemap: false
   },
-  configFile: false,
-  esbuild: { jsx: "automatic" },
-  logLevel: "info",
-  css: {
-    postcss: {
-      plugins: [tailwindcss()]
-    }
-  },
-  resolve: {
-    alias: [
-      {
-        find: "@open-slidex/editor-ui/styles.css",
-        replacement: path.join(rootDir, "packages/editor-ui/src/editor.css")
-      },
-      {
-        find: "@open-slidex/editor-ui",
-        replacement: path.join(rootDir, "packages/editor-ui/src/index.ts")
-      },
-      {
-        find: "@open-slidex/sdk",
-        replacement: path.join(rootDir, "packages/slidex-sdk/src/index.ts")
-      },
-      {
-        find: /^@\//,
-        replacement: `${rootDir}/`
-      }
-    ]
-  },
-  root: path.join(packageDir, "src/client")
+  logLevel: "info"
 });
 await normalizeGeneratedText(path.join(distDir, "client"));
+await cp(path.join(rootDir, "vite.config.mjs"), path.join(distDir, "vite.config.mjs"));
+await cp(path.join(rootDir, "postcss.config.mjs"), path.join(distDir, "postcss.config.mjs"));
+await copyWorkbenchSources(path.join(distDir, "source"));
 
 await esbuild({
   absWorkingDir: rootDir,
@@ -73,6 +49,30 @@ await esbuild({
 });
 
 await chmod(path.join(distDir, "cli.mjs"), 0o755);
+
+async function copyWorkbenchSources(sourceRoot) {
+  await rm(sourceRoot, { force: true, recursive: true });
+  await mkdir(sourceRoot, { recursive: true });
+  const sourceDirectories = [
+    "common",
+    "core",
+    "features",
+    "packages/editor-ui/src",
+    "packages/slidex-sdk/src",
+    "packages/slidex-workbench/src/client",
+    "packages/slidex-workbench/src/shared"
+  ];
+  for (const sourceDirectory of sourceDirectories) {
+    await cp(
+      path.join(rootDir, sourceDirectory),
+      path.join(sourceRoot, sourceDirectory),
+      {
+        filter: (candidate) => !/\.test\.[cm]?[jt]sx?$/.test(candidate),
+        recursive: true
+      }
+    );
+  }
+}
 
 async function normalizeGeneratedText(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {

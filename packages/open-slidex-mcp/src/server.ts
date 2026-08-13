@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { basename, extname, join, resolve, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
-import { access, mkdir, readFile, realpath } from "node:fs/promises";
+import { access, mkdir, readFile, readdir, realpath, stat } from "node:fs/promises";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -48,6 +48,7 @@ import {
 
 const projectRoot = projectRootFromArgs(process.argv.slice(2));
 const adapter = new SlideXFileDocumentAdapter({ projectRoot });
+const workspaceRoot = workspaceRootFromArgs(process.argv.slice(2));
 const propValueSchema = z.union([z.string(), z.number(), z.boolean()]);
 const propsSchema = z.record(z.string(), propValueSchema);
 const editCommandSchema = z.discriminatedUnion("type", [
@@ -91,11 +92,17 @@ class SlideXVisualQualityGateError extends Error {
   }
 }
 
-export function createOpenSlideXMcpServer(root = projectRoot) {
-  const documentAdapter = root === projectRoot
-    ? adapter
-    : new SlideXFileDocumentAdapter({ projectRoot: root });
-  const server = new McpServer({ name: "open-slidex-local", version: "0.2.4" });
+export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string } = projectRoot) {
+  const workspace = typeof root === "string" ? undefined : new OpenSlideXWorkspaceMcpScope(root.workspaceRoot);
+  const fixedRoot = typeof root === "string" ? root : undefined;
+  const projectContext = async () => {
+    const resolvedRoot = fixedRoot ?? await workspace!.selectedRoot();
+    return {
+      documentAdapter: resolvedRoot === projectRoot ? adapter : new SlideXFileDocumentAdapter({ projectRoot: resolvedRoot }),
+      root: resolvedRoot
+    };
+  };
+  const server = new McpServer({ name: "open-slidex-local", version: "0.3.0" });
   const rejectedCandidates = new Map<string, {
     attempts: number;
     expectedRevision: string;
@@ -103,11 +110,25 @@ export function createOpenSlideXMcpServer(root = projectRoot) {
     source: string;
   }>();
 
+  if (workspace) {
+    server.registerTool("open_slidex_workspace_list", {
+      title: "List OpenSlideX workspace presentations",
+      description: "List presentation folders available to this workspace-scoped MCP server and show the active selection.",
+      inputSchema: {}
+    }, () => runTool(() => workspace.list()));
+    server.registerTool("open_slidex_workspace_select", {
+      title: "Select OpenSlideX workspace presentation",
+      description: "Select one workspace presentation. All other open_slidex tools use this presentation until another is selected.",
+      inputSchema: { presentationId: z.string().regex(/^[A-Za-z0-9._-]+$/) }
+    }, ({ presentationId }) => runTool(() => workspace.select(presentationId)));
+  }
+
   server.registerTool("open_slidex_open", {
     title: "Open OpenSlideX presentation",
     description: "Read the canonical local presentation.mdx and its SHA-256 revision.",
     inputSchema: { includeSource: z.boolean().default(true) }
   }, ({ includeSource }) => runTool(async () => {
+    const { documentAdapter } = await projectContext();
     const document = await documentAdapter.open();
     const summary = summarizeMotionDoc(document.source);
     return {
@@ -127,6 +148,7 @@ export function createOpenSlideXMcpServer(root = projectRoot) {
       slideIndex: z.number().int().min(0).optional()
     }
   }, (input) => runTool(async () => {
+    const { documentAdapter } = await projectContext();
     const document = await documentAdapter.open();
     return { revision: document.revision, result: inspectSlideXDocument(document.source, input) };
   }));
@@ -151,7 +173,10 @@ export function createOpenSlideXMcpServer(root = projectRoot) {
       limit: z.number().int().min(1).max(20).default(8),
       query: z.string().max(500)
     }
-  }, ({ limit, query }) => runTool(() => searchOpenSlideXKnowledge(root, query, limit)));
+  }, ({ limit, query }) => runTool(async () => {
+    const { root } = await projectContext();
+    return searchOpenSlideXKnowledge(root, query, limit);
+  }));
 
   server.registerTool("open_slidex_skill_read", {
     title: "Read approved OpenSlideX project guidance",
@@ -161,7 +186,8 @@ export function createOpenSlideXMcpServer(root = projectRoot) {
       mode: z.enum(["bundle", "manifest", "skill"]).default("skill"),
       skill: z.enum(openSlideXProjectSkillNames).optional()
     }
-  }, ({ intent, mode, skill }) => runTool(() => {
+  }, ({ intent, mode, skill }) => runTool(async () => {
+    const { root } = await projectContext();
     if (mode === "manifest") return readOpenSlideXProjectSkillManifest(root);
     if (mode === "bundle") return readOpenSlideXProjectSkillBundle(root, intent);
     if (!skill) throw new Error("mode='skill' requires one approved skill name.");
@@ -181,6 +207,7 @@ export function createOpenSlideXMcpServer(root = projectRoot) {
       version: z.string().regex(/^\d+\.\d+\.\d+$/).optional()
     }
   }, ({ id, includeReferenceSource, includeStarterSource, locale, referenceMode, roles, version }) => runTool(async () => {
+    const { root } = await projectContext();
     const explicitTemplateFields = [id, locale, version].filter((value) => value !== undefined).length;
     if (explicitTemplateFields > 0 && explicitTemplateFields < 3) {
       throw new Error("An explicit template requires id, locale, and version together.");
@@ -241,6 +268,7 @@ export function createOpenSlideXMcpServer(root = projectRoot) {
       providerAssetId: z.string().regex(/^[A-Za-z0-9_-]{1,80}$/)
     }
   }, ({ expectedRevision, providerAssetId }) => runTool(async () => {
+    const { documentAdapter, root } = await projectContext();
     const current = await documentAdapter.open();
     if (current.revision !== expectedRevision) throw new SlideXRevisionConflictError(current.revision);
     const downloaded = await downloadTrustedImage(providerAssetId, { accessKey: process.env.UNSPLASH_ACCESS_KEY });
@@ -263,6 +291,7 @@ export function createOpenSlideXMcpServer(root = projectRoot) {
     description: "Validate the current canonical presentation without writing it.",
     inputSchema: {}
   }, () => runTool(async () => {
+    const { documentAdapter } = await projectContext();
     const document = await documentAdapter.open();
     return { revision: document.revision, validation: summarizeMotionDoc(document.source).validation };
   }));
@@ -275,6 +304,7 @@ export function createOpenSlideXMcpServer(root = projectRoot) {
       slideIndex: z.number().int().min(0).optional()
     }
   }, ({ mode, slideIndex }, extra) => runTool(async () => {
+    const { documentAdapter, root } = await projectContext();
     const document = await documentAdapter.open();
     const revisionDirectory = document.revision.replace(/^sha256:/, "");
     const dist = resolveInsideRoot(root, join("dist", "renders", revisionDirectory));
@@ -299,6 +329,7 @@ export function createOpenSlideXMcpServer(root = projectRoot) {
       slideIndex: z.number().int().min(0).optional()
     }
   }, ({ mode, slideIndex }, extra) => runTool(async () => {
+    const { documentAdapter, root } = await projectContext();
     const document = await documentAdapter.open();
     const report = await analyzeSlideXDocumentQuality({
       mode,
@@ -319,6 +350,7 @@ export function createOpenSlideXMcpServer(root = projectRoot) {
       filePath: z.string().min(1)
     }
   }, ({ expectedRevision, filePath }) => runTool(async () => {
+    const { documentAdapter, root } = await projectContext();
     const current = await documentAdapter.open();
     if (current.revision !== expectedRevision) throw new SlideXRevisionConflictError(current.revision);
     if (/^(?:data|blob|https?):/i.test(filePath)) throw new Error("filePath must be a local file path, not Base64 or a URL.");
@@ -344,6 +376,7 @@ export function createOpenSlideXMcpServer(root = projectRoot) {
       rejectedCandidateId: z.string().uuid().optional()
     }
   }, ({ commands, expectedRevision, rejectedCandidateId }, extra) => runTool(async () => {
+    const { documentAdapter, root } = await projectContext();
     extra.signal.throwIfAborted();
     const current = await documentAdapter.open();
     if (current.revision !== expectedRevision) throw new SlideXRevisionConflictError(current.revision);
@@ -440,23 +473,86 @@ function qualityScopeForCommands(commands: readonly SlideXEditCommand[]): {
     : { mode: "deck" };
 }
 
+class OpenSlideXWorkspaceMcpScope {
+  private selectedPresentationId?: string;
+  readonly workspaceRoot: string;
+
+  constructor(workspaceRoot: string) {
+    this.workspaceRoot = resolve(workspaceRoot);
+  }
+
+  async list() {
+    const entries = await readdir(this.workspaceRoot, { withFileTypes: true });
+    const described = await Promise.all(entries.flatMap((entry) => {
+      if (!entry.isDirectory() || entry.name.startsWith(".") || !/^[A-Za-z0-9._-]+$/.test(entry.name)) return [];
+      return [this.describe(entry.name)];
+    }));
+    const presentations = described.filter((value) => value !== undefined);
+    presentations.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+    if (!this.selectedPresentationId && presentations[0]) this.selectedPresentationId = presentations[0].id;
+    if (this.selectedPresentationId && !presentations.some((item) => item.id === this.selectedPresentationId)) {
+      this.selectedPresentationId = presentations[0]?.id;
+    }
+    return {
+      presentations,
+      selectedPresentationId: this.selectedPresentationId,
+      workspaceRoot: this.workspaceRoot
+    };
+  }
+
+  async select(presentationId: string) {
+    const snapshot = await this.list();
+    const presentation = snapshot.presentations.find((item) => item.id === presentationId);
+    if (!presentation) throw new Error(`Workspace presentation was not found: ${presentationId}`);
+    this.selectedPresentationId = presentation.id;
+    return { presentation, selectedPresentationId: presentation.id };
+  }
+
+  async selectedRoot() {
+    const snapshot = await this.list();
+    if (!snapshot.selectedPresentationId) {
+      throw new Error("This OpenSlideX workspace has no presentations. Create or import one in Workspace first.");
+    }
+    return resolve(this.workspaceRoot, snapshot.selectedPresentationId);
+  }
+
+  private async describe(id: string) {
+    const root = resolve(this.workspaceRoot, id);
+    const sourceStats = await stat(resolve(root, "presentation.mdx")).catch(() => undefined);
+    if (!sourceStats?.isFile()) return undefined;
+    try {
+      const document = await new SlideXFileDocumentAdapter({ projectRoot: root }).open();
+      return { id, root, title: document.title, updatedAt: sourceStats.mtime.toISOString() };
+    } catch {
+      return undefined;
+    }
+  }
+}
+
 async function main() {
+  const configurationRoot = workspaceRoot ?? projectRoot;
   const printPromptIndex = process.argv.indexOf("--print-setup-prompt");
   if (printPromptIndex >= 0) {
     const client = parseMcpClient(process.argv[printPromptIndex + 1]);
-    process.stdout.write(`${openSlideXMcpSetupPrompt(client, projectRoot, platformFromArgs(process.argv))}\n`);
+    process.stdout.write(`${workspaceRoot
+      ? openSlideXWorkspaceMcpSetupPrompt(client, configurationRoot, platformFromArgs(process.argv))
+      : openSlideXMcpSetupPrompt(client, configurationRoot, platformFromArgs(process.argv))}\n`);
     return;
   }
   const printConfigIndex = process.argv.indexOf("--print-config");
   if (printConfigIndex >= 0) {
     const client = parseMcpClient(process.argv[printConfigIndex + 1]);
-    process.stdout.write(`${openSlideXMcpConfig(client, projectRoot, platformFromArgs(process.argv))}\n`);
+    process.stdout.write(`${workspaceRoot
+      ? openSlideXWorkspaceMcpConfig(client, configurationRoot, platformFromArgs(process.argv))
+      : openSlideXMcpConfig(client, configurationRoot, platformFromArgs(process.argv))}\n`);
     return;
   }
-  await adapter.open();
-  const server = createOpenSlideXMcpServer();
+  if (!workspaceRoot) await adapter.open();
+  const server = workspaceRoot
+    ? createOpenSlideXMcpServer({ workspaceRoot })
+    : createOpenSlideXMcpServer();
   await server.connect(new StdioServerTransport());
-  process.stderr.write(`OpenSlideX MCP connected to ${projectRoot}\n`);
+  process.stderr.write(`OpenSlideX MCP connected to ${workspaceRoot ? `workspace ${workspaceRoot}` : projectRoot}\n`);
 }
 
 export type OpenSlideXMcpClient = "claude" | "claude-code" | "claude-desktop" | "codex";
@@ -490,6 +586,34 @@ export function openSlideXMcpConfig(
   return `claude mcp add open-slidex -- ${launch}`;
 }
 
+export function openSlideXWorkspaceMcpConfig(
+  client: OpenSlideXMcpClient,
+  root: string,
+  platform: OpenSlideXPlatform = process.platform === "win32" ? "windows" : "macos"
+) {
+  const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root)
+    ? win32.resolve(root)
+    : resolve(root);
+  const command = platform === "windows" ? "cmd" : "npx";
+  const args = platform === "windows"
+    ? ["/c", "npx", "-y", "open-slidex", "mcp", "--workspace", absoluteRoot]
+    : ["-y", "open-slidex", "mcp", "--workspace", absoluteRoot];
+  if (client === "codex") {
+    return `[mcp_servers.open_slidex_workspace]\ncommand = ${JSON.stringify(command)}\nargs = ${JSON.stringify(args)}`;
+  }
+  if (client === "claude-desktop") {
+    return JSON.stringify({
+      mcpServers: {
+        open_slidex_workspace: { args, command, type: "stdio" }
+      }
+    }, null, 2);
+  }
+  const launch = platform === "windows"
+    ? `cmd /c npx -y open-slidex mcp --workspace ${windowsQuote(absoluteRoot)}`
+    : `npx -y open-slidex mcp --workspace ${shellQuote(absoluteRoot)}`;
+  return `claude mcp add --scope user open-slidex-workspace -- ${launch}`;
+}
+
 export function openSlideXMcpSetupPrompt(
   client: OpenSlideXMcpClient,
   root: string,
@@ -516,6 +640,27 @@ export function openSlideXMcpSetupPrompt(
   ].join("\n");
 }
 
+export function openSlideXWorkspaceMcpSetupPrompt(
+  client: OpenSlideXMcpClient,
+  root: string,
+  platform: OpenSlideXPlatform = process.platform === "win32" ? "windows" : "macos"
+) {
+  const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root)
+    ? win32.resolve(root)
+    : resolve(root);
+  const target = client === "codex" ? "Codex" : client === "claude-desktop" ? "Claude Desktop" : "Claude Code";
+  return [
+    `Configure one user-level OpenSlideX Workspace MCP server for ${target} on ${platform}.`,
+    `Restrict it to this exact workspace root: ${absoluteRoot}`,
+    "Preserve every unrelated MCP entry and show the exact proposed change before writing any global configuration file.",
+    "Use this generated configuration:",
+    "",
+    openSlideXWorkspaceMcpConfig(client, absoluteRoot, platform),
+    "",
+    "After restarting the client, call open_slidex_workspace_list, select a presentation, then verify open_slidex_open and open_slidex_validate."
+  ].join("\n");
+}
+
 function parseMcpClient(value: string | undefined): OpenSlideXMcpClient {
   if (value === "codex" || value === "claude" || value === "claude-code" || value === "claude-desktop") return value;
   throw new Error("MCP client must be codex, claude-code, or claude-desktop.");
@@ -533,6 +678,13 @@ function projectRootFromArgs(args: string[]) {
   const index = args.indexOf("--project");
   const value = index >= 0 ? args[index + 1] : undefined;
   return resolve(value || process.cwd());
+}
+
+function workspaceRootFromArgs(args: string[]) {
+  const index = args.indexOf("--workspace");
+  const value = index >= 0 ? args[index + 1] : undefined;
+  if (index >= 0 && !value) throw new Error("--workspace must be followed by a directory.");
+  return value ? resolve(value) : undefined;
 }
 
 function imageMediaType(extension: string) {

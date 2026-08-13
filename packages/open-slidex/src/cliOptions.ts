@@ -173,7 +173,7 @@ Examples:
   pnpm dlx open-slidex@latest init my-deck
   bunx open-slidex@latest init my-deck
   open-slidex init my-deck --package-manager pnpm --no-install
-  open-slidex init my-deck --template open-slidex-starter --locale zh-TW
+  open-slidex init my-deck --template summer-time-report --locale zh-TW
 `;
 }
 

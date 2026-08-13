@@ -1,11 +1,16 @@
 import { spawn } from "node:child_process";
-import { cp, mkdir, readFile, readdir, stat } from "node:fs/promises";
+import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { SlideXProject } from "./server/project";
 import { startWorkbenchServer } from "./server/http";
+import { OpenSlideXWorkspace } from "./server/workspace";
+import { startWorkspaceServer } from "./server/workspaceHttp";
+
+const runtimeRequire = createRequire(import.meta.url);
 
 void main().catch((error: unknown) => {
   process.stderr.write(`open-slidex-workbench: ${error instanceof Error ? error.message : "Unknown error."}\n`);
@@ -24,20 +29,100 @@ async function main() {
     return;
   }
 
+  if (command === "workspace") {
+    const port = numberOption(args, "--port") ?? 4172;
+    if (!(await canListen(port))) {
+      throw new Error(`Workspace port ${port} is already in use. Stop the existing server or choose --port <number>.`);
+    }
+    const workspaceRoot = path.resolve(process.cwd(), positionalOption(args) ?? "open-slidex-workspace");
+    const packagedSourceRoot = fileURLToPath(new URL("./source/", import.meta.url));
+    const checkoutRoot = path.resolve(fileURLToPath(new URL("../../../", import.meta.url)));
+    const configPath = new URL("./vite.config.mjs", import.meta.url);
+    const workspaceUrl = `http://127.0.0.1:${port}/workspace`;
+    const workspace = new OpenSlideXWorkspace({
+      root: workspaceRoot,
+      templateRoot: await resolveTemplateRoot(),
+      workspaceUrl
+    });
+    await workspace.prepare();
+    const sourceRoot = await prepareWorkspaceSource(workspace, packagedSourceRoot, checkoutRoot);
+    const running = await startWorkspaceServer({ port: 0, uiPort: port, workspace });
+    const { createServer: createViteServer } = await import("vite");
+    const { createSlideXWorkbenchViteConfig } = await import(configPath.href) as {
+      createSlideXWorkbenchViteConfig(options: {
+        apiPort: number;
+        cacheDir: string;
+        port: number;
+        sourceRoot: string;
+        workspaceUrl?: string;
+      }): Record<string, unknown>;
+    };
+    const vite = await createViteServer(createSlideXWorkbenchViteConfig({
+      apiPort: running.port,
+      cacheDir: path.join(workspace.stateRoot, "vite-cache"),
+      port,
+      sourceRoot,
+      workspaceUrl
+    }));
+    try {
+      await vite.listen();
+      const url = `http://127.0.0.1:${port}/workspace`;
+      process.stdout.write(`OpenSlideX Workspace: ${url}\n`);
+      process.stdout.write(`Local decks: ${workspace.root}\n`);
+      process.stdout.write("Press Ctrl-C to stop.\n");
+      if (!args.includes("--no-open")) openBrowser(url);
+      await waitForSignal();
+    } finally {
+      await vite.close();
+      await running.close();
+    }
+    return;
+  }
+
   const project = new SlideXProject(process.cwd());
   await project.prepare();
 
   if (command === "dev") {
-    const requestedPort = numberOption(args, "--port") ?? 4173;
-    const port = await availablePort(requestedPort);
+    const port = numberOption(args, "--port") ?? 4173;
+    if (!(await canListen(port))) {
+      throw new Error(`Workbench port ${port} is already in use. Stop the existing dev server or choose --port <number>.`);
+    }
     const clientRoot = fileURLToPath(new URL("./client/", import.meta.url));
-    const running = await startWorkbenchServer({ clientRoot, port, project });
-    const url = `http://127.0.0.1:${running.port}`;
-    process.stdout.write(`OpenSlideX Workbench: ${url}\n`);
-    process.stdout.write("Press Ctrl-C to stop.\n");
-    if (!args.includes("--no-open")) openBrowser(url);
-    await waitForSignal();
-    await running.close();
+    const packagedSourceRoot = fileURLToPath(new URL("./source/", import.meta.url));
+    const configPath = new URL("./vite.config.mjs", import.meta.url);
+    if (!(await isDirectory(packagedSourceRoot))) {
+      throw new Error("The Workbench HMR sources are missing. Reinstall or rebuild open-slidex.");
+    }
+    const sourceRoot = await prepareWorkbenchSource(project, packagedSourceRoot);
+    const running = await startWorkbenchServer({ clientRoot, port: 0, project });
+    const { createServer: createViteServer } = await import("vite");
+    const { createSlideXWorkbenchViteConfig } = await import(configPath.href) as {
+      createSlideXWorkbenchViteConfig(options: {
+        apiPort: number;
+        cacheDir: string;
+        port: number;
+        sourceRoot: string;
+        workspaceUrl?: string;
+      }): Record<string, unknown>;
+    };
+    const vite = await createViteServer(createSlideXWorkbenchViteConfig({
+      apiPort: running.port,
+      cacheDir: path.join(project.stateRoot, "vite-cache"),
+      port,
+      sourceRoot,
+      workspaceUrl: process.env.OPEN_SLIDEX_WORKSPACE_URL
+    }));
+    try {
+      await vite.listen();
+      const url = `http://127.0.0.1:${port}`;
+      process.stdout.write(`OpenSlideX Workbench HMR: ${url}\n`);
+      process.stdout.write("Press Ctrl-C to stop.\n");
+      if (!args.includes("--no-open")) openBrowser(url);
+      await waitForSignal();
+    } finally {
+      await vite.close();
+      await running.close();
+    }
     return;
   }
 
@@ -100,6 +185,7 @@ function help() {
   return `OpenSlideX Local Workbench
 
 Usage:
+  open-slidex-workbench workspace [directory] [--port 4172] [--no-open]
   open-slidex-workbench dev [--port 4173] [--no-open]
   open-slidex-workbench build
   open-slidex-workbench preview [--port 4174]
@@ -118,11 +204,15 @@ function numberOption(args: readonly string[], name: string) {
   return value;
 }
 
-async function availablePort(start: number) {
-  for (let port = start; port < start + 20; port += 1) {
-    if (await canListen(port)) return port;
+function positionalOption(args: readonly string[]) {
+  return args.find((value, index) => !value.startsWith("-") && args[index - 1] !== "--port");
+}
+
+async function availablePort(start: number, excluded = new Set<number>()) {
+  for (let port = start; port < start + 20 && port <= 65535; port += 1) {
+    if (!excluded.has(port) && await canListen(port)) return port;
   }
-  throw new Error(`No available port between ${start} and ${start + 19}.`);
+  throw new Error(`No available port between ${start} and ${Math.min(start + 19, 65535)}.`);
 }
 
 function canListen(port: number) {
@@ -157,4 +247,54 @@ function openBrowser(url: string) {
 
 async function isDirectory(filePath: string) {
   return stat(filePath).then((value) => value.isDirectory(), () => false);
+}
+
+async function prepareWorkbenchSource(project: SlideXProject, packagedSourceRoot: string) {
+  const checkoutClient = path.join(project.root, "packages/slidex-workbench/src/client");
+  if (await isDirectory(checkoutClient)) return project.root;
+
+  const target = path.join(project.stateRoot, "workbench-source");
+  await rm(target, { force: true, recursive: true });
+  await cp(packagedSourceRoot, target, { recursive: true });
+  await rewritePackagedTailwindImport(target);
+  return target;
+}
+
+async function rewritePackagedTailwindImport(sourceRoot: string) {
+  const cssPath = path.join(sourceRoot, "packages/editor-ui/src/editor.css");
+  const source = await readFile(cssPath, "utf8");
+  const tailwindCssPath = runtimeRequire.resolve("tailwindcss/index.css").replaceAll(path.sep, "/");
+  const rewritten = source.replace(
+    '@import "tailwindcss" source(none);',
+    `@import "${tailwindCssPath}" source(none);`
+  );
+  if (rewritten === source) throw new Error("The packaged Workbench Tailwind import could not be prepared.");
+  await writeFile(cssPath, rewritten, "utf8");
+}
+
+async function prepareWorkspaceSource(
+  _workspace: OpenSlideXWorkspace,
+  packagedSourceRoot: string,
+  checkoutRoot: string
+) {
+  const checkoutCandidates = [process.cwd(), checkoutRoot];
+  for (const candidate of checkoutCandidates) {
+    if (await isDirectory(path.join(candidate, "packages/slidex-workbench/src/client"))) return candidate;
+  }
+  if (!(await isDirectory(packagedSourceRoot))) {
+    throw new Error("The Workspace UI sources are missing. Reinstall or rebuild open-slidex.");
+  }
+  return packagedSourceRoot;
+}
+
+async function resolveTemplateRoot() {
+  const candidates = [
+    process.env.OPEN_SLIDEX_TEMPLATE_ROOT,
+    fileURLToPath(new URL("../../open-slidex/template/", import.meta.url)),
+    path.join(process.cwd(), "packages/open-slidex/template")
+  ].filter((value): value is string => Boolean(value));
+  for (const candidate of candidates) {
+    if (await isDirectory(candidate)) return candidate;
+  }
+  throw new Error("The OpenSlideX starter template could not be located.");
 }

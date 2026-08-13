@@ -34,7 +34,7 @@ async function main() {
 function runtimeFor(command) {
   if (command === "init") return "create";
   if (command === "mcp") return "mcp";
-  if (["dev", "build", "preview", "sync:skills"].includes(command)) return "workbench";
+  if (["workspace", "dev", "build", "preview", "sync:skills"].includes(command)) return "workbench";
   if (["validate", "render", "export"].includes(command)) return "sdk";
   throw new Error(`Unknown command: ${command}. Run open-slidex --help.`);
 }
@@ -51,7 +51,12 @@ function run(entry, args) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [entry, ...args], {
       cwd: process.cwd(),
-      env: process.env,
+      env: {
+        ...process.env,
+        ...entry === runtimeEntry("workbench") ? {
+          OPEN_SLIDEX_TEMPLATE_ROOT: path.join(packageRoot, "template")
+        } : {}
+      },
       stdio: "inherit"
     });
     const forwardSignal = (signal) => {
@@ -69,9 +74,9 @@ function run(entry, args) {
       cleanup();
       reject(error);
     });
-    child.once("exit", (code) => {
+    child.once("exit", (code, signal) => {
       cleanup();
-      if (code === 0) resolve();
+      if (code === 0 || signal === "SIGINT" || signal === "SIGTERM") resolve();
       else reject(new Error(`open-slidex ${args[0] ?? ""} exited with code ${code ?? "unknown"}.`));
     });
   });
@@ -80,20 +85,22 @@ function help() {
   return `OpenSlideX
 
 Usage:
+  open-slidex workspace [directory] [--port 4172] [--no-open]
   open-slidex init [directory] [--template <id>] [--locale <en|zh-TW>] [--npm|--pnpm|--bun|--no-install]
   open-slidex dev [--port 4173] [--no-open]
   open-slidex build
   open-slidex preview [--port 4174]
-  open-slidex mcp [--project <directory>] [--print-config <codex|claude-code|claude-desktop>]
-  open-slidex mcp [--project <directory>] [--print-setup-prompt <codex|claude-code|claude-desktop>]
+  open-slidex mcp --workspace <directory> [--print-config <codex|claude-code|claude-desktop>]
+  open-slidex mcp --workspace <directory> [--print-setup-prompt <codex|claude-code|claude-desktop>]
   open-slidex validate [presentation.mdx]
   open-slidex render [presentation.mdx] --montage --out <file.png>
   open-slidex export [presentation.mdx] --format <html|mdx|pptx> --out <file> [--overwrite]
 
 Examples:
+  open-slidex workspace ~/Presentations
   npx open-slidex@latest init my-deck
-  open-slidex init my-deck --template open-slidex-starter --locale zh-TW
+  open-slidex init my-deck --template summer-time-report --locale zh-TW
   cd my-deck && npm run dev
-  open-slidex mcp --print-config codex
+  open-slidex mcp --workspace ~/Presentations --print-config codex
 `;
 }

@@ -11,7 +11,13 @@ import { closeSlideXChromiumPool, getSlideXQualityCacheStats } from "@open-slide
 import sharp from "sharp";
 
 import { openSlideXProjectSkillNames } from "./projectGuidance";
-import { createOpenSlideXMcpServer, openSlideXMcpConfig, openSlideXMcpSetupPrompt } from "./server";
+import {
+  createOpenSlideXMcpServer,
+  openSlideXMcpConfig,
+  openSlideXMcpSetupPrompt,
+  openSlideXWorkspaceMcpConfig,
+  openSlideXWorkspaceMcpSetupPrompt
+} from "./server";
 
 test("MCP prints copyable Codex and Claude Code configuration", () => {
   const root = "/tmp/OpenSlideX demo";
@@ -30,6 +36,41 @@ test("MCP prints copyable Codex and Claude Code configuration", () => {
   assert.match(openSlideXMcpSetupPrompt("codex", root), /Show me the exact proposed change/);
 });
 
+test("Workspace MCP prints user-level configuration and selects a presentation", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-workspace-mcp-"));
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const server = createOpenSlideXMcpServer({ workspaceRoot: root });
+  const client = new Client({ name: "open-slidex-workspace-test", version: "1.0.0" });
+
+  try {
+    await Promise.all(["alpha", "beta"].map(async (id) => {
+      await mkdir(path.join(root, id), { recursive: true });
+      await writeFile(path.join(root, id, "presentation.mdx"), blankPresentationMdx.replace("Untitled Presentation", id), "utf8");
+    }));
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+    const listed = structured(await client.callTool({ arguments: {}, name: "open_slidex_workspace_list" }));
+    assert.deepEqual((listed.presentations as Array<{ id: string }>).map((item) => item.id).sort(), ["alpha", "beta"]);
+
+    const selected = structured(await client.callTool({
+      arguments: { presentationId: "beta" },
+      name: "open_slidex_workspace_select"
+    }));
+    assert.equal(selected.selectedPresentationId, "beta");
+    const opened = structured(await client.callTool({ arguments: { includeSource: false }, name: "open_slidex_open" }));
+    assert.equal(opened.title, "beta");
+
+    assert.match(openSlideXWorkspaceMcpConfig("codex", root), /\[mcp_servers\.open_slidex_workspace\]/);
+    assert.match(openSlideXWorkspaceMcpConfig("codex", root), /--workspace/);
+    assert.match(openSlideXWorkspaceMcpConfig("claude-code", root), /--scope user/);
+    assert.match(openSlideXWorkspaceMcpSetupPrompt("codex", root), /open_slidex_workspace_list/);
+  } finally {
+    await client.close().catch(() => undefined);
+    await server.close().catch(() => undefined);
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
 test("MCP performs a real open, CAS edit, render, asset import, and knowledge query", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-mcp-"));
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -46,7 +87,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     await mkdir(path.join(root, ".open-slidex"), { recursive: true });
     await writeFile(path.join(root, "presentation.mdx"), `${blankPresentationMdx}\n\n<Slide duration={5} background="#f5f5f5"><Text id="second-slide" x={10} y={20} w={80} h={20} fontSize={42}>Second slide</Text></Slide>`, "utf8");
     await writeFile(path.join(root, "knowledge", "brief.md"), "# Brief\n\nThe launch metric is activation rate.\n", "utf8");
-    await writeFile(path.join(root, ".open-slidex", "template-lock.json"), `${JSON.stringify({ id: "open-slidex-starter", locale: "en", version: "1.0.0" })}\n`, "utf8");
+    await writeFile(path.join(root, ".open-slidex", "template-lock.json"), `${JSON.stringify({ id: "summer-time-report", locale: "en", version: "1.0.0" })}\n`, "utf8");
     await writeFile(
       path.join(root, "import.png"),
       await sharp({ create: { background: "#3457d5", channels: 4, height: 64, width: 64 } }).png().toBuffer()
@@ -121,7 +162,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
       arguments: { includeStarterSource: true, referenceMode: "role-samples", roles: ["cover", "next-steps"] },
       name: "open_slidex_template_read"
     }));
-    assert.equal(template.id, "open-slidex-starter");
+    assert.equal(template.id, "summer-time-report");
     assert.equal(template.version, "1.0.0");
     assert.match(String(template.starterSource), /<Slide/);
     assert.equal(template.referenceMode, "role-samples");
@@ -135,7 +176,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     assert.equal((template.qualityProfile as Record<string, unknown>).schemaVersion, 1);
 
     const partialTemplate = await client.callTool({
-      arguments: { id: "open-slidex-starter" },
+      arguments: { id: "summer-time-report" },
       name: "open_slidex_template_read"
     });
     assert.equal(partialTemplate.isError, true);

@@ -1,10 +1,12 @@
 node_modules/
 .open-slidex/
+open-slidex-workspace/
 .env
 .env.local
 .env.*.local
 .DS_Store
 *.tsbuildinfo
 dist/
+output/
 *.tgz
 .open-slidex/

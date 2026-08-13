@@ -1,4 +1,4 @@
-# OpenSlideX 0.2.4
+# OpenSlideX 0.3.0
 
 OpenSlideX is a local-first, MDX presentation workspace with a visual Workbench,
 deterministic HTML/PPTX export, local image optimization, and a project-scoped
@@ -8,12 +8,27 @@ One npm package contains everything: the SDK, Workbench, local MCP runtime, and
 project initializer. It does not use Cloud login, Supabase, background sync,
 Base64 image storage, or a second canvas document.
 
+## Local Workspace
+
+Open the original SlideX-style Workspace shell for a directory of local decks:
+
+```bash
+npx open-slidex@0.3.0 workspace ~/Presentations
+```
+
+The Workspace can create a blank deck or start a new deck from a bundled public
+template. Each card maps to its own child folder with one `presentation.mdx` as
+the source of truth. The Workspace never requires an account or Supabase.
+
+Bundled templates: Summer Time Report and Moodboard. Notion and Obsidian
+source-specific templates are not part of the local catalog.
+
 ## Create a deck
 
 Node.js **22.12.0 or later** is required.
 
 ```bash
-npx open-slidex@0.2.4 init my-deck
+npx open-slidex@0.3.0 init my-deck
 cd my-deck
 npm run dev
 ```
@@ -21,7 +36,7 @@ npm run dev
 Start a new project with an immutable official template blueprint and locale:
 
 ```bash
-npx open-slidex@0.2.4 init my-deck --template open-slidex-starter --locale zh-TW
+npx open-slidex@0.3.0 init my-deck --template summer-time-report --locale zh-TW
 ```
 
 The selected `{ id, version, locale }` is recorded in
@@ -36,15 +51,15 @@ local rendering and exports; an offline download never blocks installation.
 Alternative launchers:
 
 ```bash
-pnpm dlx open-slidex@0.2.4 init my-deck
-bunx open-slidex@0.2.4 init my-deck
+pnpm dlx open-slidex@0.3.0 init my-deck
+bunx open-slidex@0.3.0 init my-deck
 ```
 
 Use `--no-install` when you want to inspect the generated files before
 installing dependencies:
 
 ```bash
-npx open-slidex@0.2.4 init my-deck --no-install
+npx open-slidex@0.3.0 init my-deck --no-install
 cd my-deck
 npm install
 ```
@@ -57,9 +72,6 @@ my-deck/
 ├── assets/                # optimized, content-addressed WebP images
 ├── knowledge/             # private Markdown, text, PDF, and CSV references
 ├── .agents/skills/        # deck authoring and QA skills
-├── .codex/config.toml     # Codex project MCP configuration
-├── .mcp.json              # Claude Code project MCP configuration
-├── MCP.md                 # MCP setup and verification instructions
 └── package.json
 ```
 
@@ -72,7 +84,7 @@ Supabase or embedded as Base64/data URLs.
 Run these from the generated deck folder:
 
 ```bash
-npm run dev          # visual Workbench at a local URL
+npm run dev          # visual Workbench with Vite HMR at a local URL
 npm run build        # build a static HTML presentation in dist/site/
 npm run preview      # preview dist/site/
 npm run validate     # validate presentation.mdx
@@ -86,12 +98,17 @@ The Workbench includes slide and layer navigation, a left-side tool rail,
 canvas selection, Inspector editing, local asset management, Presenter mode,
 and animated bar, line, area, pie, donut, and scatter charts. HTML and the
 Workbench animate charts; PPTX exports their editable static final state.
+The installed CLI keeps its generated HMR source and Vite dependency cache in
+the ignored `.open-slidex/` directory. Production build and preview commands
+continue to use the optimized client bundle.
 
-## Local AI: Codex, Claude Code, and Desktop MCP
+## Workspace MCP for Codex and Claude
 
-`open-slidex init` automatically creates project-scoped MCP configuration. Open
-the deck folder in Codex or Claude Code, then confirm that the `open_slidex`
-server is enabled. No path placeholder is required.
+OpenSlideX has no built-in AI Chat and does not detect or launch local CLI
+programs. Open Workspace Settings to generate one user-level MCP configuration
+for Codex, Claude Code, or Claude Desktop. The configuration pins one workspace
+root; agents call `open_slidex_workspace_list`, select a presentation, and then
+work directly with its `presentation.mdx`.
 
 The server is restricted to that deck's `presentation.mdx`, `assets/`,
 `knowledge/`, approved `.agents/skills/`, `.open-slidex/`, and `dist/`
@@ -106,44 +123,35 @@ requires a separate explicit user confirmation naming the candidate ID, then
 stores a content-addressed `assets/*.webp` file and provenance under
 `.open-slidex/`. Remote URLs never enter `presentation.mdx`.
 
-To print configuration containing the real absolute path for the current deck:
+To print the same workspace-global configuration from a terminal:
 
 ```bash
-open-slidex mcp --print-config codex
-open-slidex mcp --print-config claude-code
-open-slidex mcp --print-config claude-desktop
+open-slidex mcp --workspace "$HOME/Presentations" --print-config codex
+open-slidex mcp --workspace "$HOME/Presentations" --print-config claude-code
+open-slidex mcp --workspace "$HOME/Presentations" --print-config claude-desktop
 ```
 
 Generate a guarded prompt that asks the desktop agent to preserve unrelated MCP entries and show the proposed change before writing global configuration:
 
 ```bash
-open-slidex mcp --print-setup-prompt codex
-open-slidex mcp --print-setup-prompt claude-desktop
+open-slidex mcp --workspace "$HOME/Presentations" --print-setup-prompt codex
+open-slidex mcp --workspace "$HOME/Presentations" --print-setup-prompt claude-desktop
 ```
 
-To pin exactly one deck in Codex's global configuration, run this from that
-deck folder:
-
-```bash
-codex mcp add open-slidex -- npx -y open-slidex mcp --project "$PWD"
-```
-
-Do not use a global entry to manage multiple decks: it is intentionally pinned
-to one real path. For multiple decks, use the project configuration created by
-`init`.
-
-Claude Desktop configuration lives at `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS and `%APPDATA%\\Claude\\claude_desktop_config.json` on Windows. Completely quit and restart Claude Desktop after saving. OpenSlideX generates `cmd /c npx` on native Windows and never edits either global configuration automatically.
-
-The Workbench includes an assistant-ui chat drawer backed by the locally installed Codex or Claude Code CLI. Codex runs through its local App Server, automatically connects only the current project's OpenSlideX MCP, and streams real tool progress while revision-safe edits refresh the Canvas. Claude Code keeps the review-first flow: its AI changes remain drafts until validation passes and you explicitly apply them. Provider authentication stays in the provider's own CLI.
+Codex reads its global MCP configuration from `~/.codex/config.toml`. Claude
+Desktop uses `~/Library/Application Support/Claude/claude_desktop_config.json`
+on macOS and `%APPDATA%\\Claude\\claude_desktop_config.json` on Windows. The
+Workspace Settings screen generates `cmd /c npx` on native Windows and never
+reads, merges, or writes those files automatically.
 
 ## MCP smoke test
 
-After opening the deck in your MCP client:
+After restarting your MCP client:
 
-1. Call `open_slidex_open` and keep the returned `revision`.
-2. Call `open_slidex_edit` with that revision as `expectedRevision`.
-3. Call `open_slidex_render` and inspect the generated PNG in `dist/`.
-4. Call `open_slidex_quality_check` and resolve its slide/node findings.
+1. Call `open_slidex_workspace_list`.
+2. Call `open_slidex_workspace_select` with one returned presentation ID.
+3. Call `open_slidex_open` and keep the returned `revision`.
+4. Call `open_slidex_edit`, render, and quality-check as usual.
 
 ## Troubleshooting
 
@@ -161,6 +169,6 @@ Alternatively, install a Playwright-managed Chromium only when you need it:
 npx -y playwright@1.61.1 install chromium
 ```
 
-If an MCP server is not shown after project configuration changes, restart the
-client from the deck folder and inspect the client MCP list or logs. The CLI
-itself never writes a global MCP configuration during `npm install`.
+If the MCP server is not shown after changing global configuration, completely
+restart the client and inspect its MCP list or logs. OpenSlideX never writes a
+global MCP configuration during installation or Workspace use.

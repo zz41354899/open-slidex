@@ -27509,7 +27509,7 @@ ${String(ex)}`);
   }
 
   // core/motion-doc/domain/motionDocParser.ts
-  var mediaSourcePropNames = /* @__PURE__ */ new Set(["backgroundImage", "poster", "src"]);
+  var mediaSourcePropNames = /* @__PURE__ */ new Set(["backgroundImage", "poster", "shapeImageSrc", "src"]);
   function parseMotionDoc(source) {
     const firstSlideOffset = source.search(/<(?:Slide|Scene)\b/);
     const documentHeader = firstSlideOffset >= 0 ? source.slice(0, firstSlideOffset) : source;
@@ -27673,7 +27673,15 @@ ${String(ex)}`);
     return value.replaceAll("&#10;", "\n").replaceAll("&#xA;", "\n").replaceAll("&#xa;", "\n").replaceAll("&quot;", '"').replaceAll("&apos;", "'").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
   }
   function normalizeText(value) {
-    return decodeMdxText(value).split("\n").map((line) => line.trim()).filter(Boolean).join("\n");
+    const decoded = decodeMdxText(value).replace(/\r\n?/g, "\n");
+    if (!value.includes("\n")) return decoded;
+    const lines = decoded.split("\n");
+    while (lines[0]?.trim() === "") lines.shift();
+    while (lines.at(-1)?.trim() === "") lines.pop();
+    const indent2 = Math.min(
+      ...lines.filter((line) => line.trim()).map((line) => line.match(/^[ \t]*/)?.[0].length ?? 0)
+    );
+    return lines.map((line) => line.slice(Number.isFinite(indent2) ? indent2 : 0)).join("\n");
   }
   function decodeMdxText(value) {
     return value.replaceAll("&amp;#10;", "\n").replaceAll("&amp;#xA;", "\n").replaceAll("&amp;#xa;", "\n").replaceAll("&#10;", "\n").replaceAll("&#xA;", "\n").replaceAll("&#xa;", "\n").replaceAll("&#123;", "{").replaceAll("&#x7B;", "{").replaceAll("&#x7b;", "{").replaceAll("&#125;", "}").replaceAll("&#x7D;", "}").replaceAll("&#x7d;", "}").replaceAll("&quot;", '"').replaceAll("&apos;", "'").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
@@ -27730,20 +27738,24 @@ ${String(ex)}`);
         const end = clampTextOffset(value.end, textLength);
         const color3 = typeof value.color === "string" && value.color.trim() ? value.color.trim() : void 0;
         const fontFamily2 = typeof value.fontFamily === "string" && value.fontFamily.trim() ? value.fontFamily.trim() : void 0;
+        const fontSize2 = finiteTextMetric(value.fontSize, 1, 512);
         const fontWeight2 = finiteFontWeight(value.fontWeight);
         const href = typeof value.href === "string" && value.href.trim() ? value.href.trim() : void 0;
-        const italic = value.italic === true;
-        const underline = value.underline === true;
-        if (end <= start || !color3 && !fontFamily2 && fontWeight2 === void 0 && !href && !italic && !underline) {
+        const italic = typeof value.italic === "boolean" ? value.italic : void 0;
+        const letterSpacing2 = finiteTextMetric(value.letterSpacing, -20, 100);
+        const underline = typeof value.underline === "boolean" ? value.underline : void 0;
+        if (end <= start || !color3 && !fontFamily2 && fontSize2 === void 0 && fontWeight2 === void 0 && !href && italic === void 0 && letterSpacing2 === void 0 && underline === void 0) {
           return [];
         }
         return [{
           ...color3 ? { color: color3 } : {},
           ...fontFamily2 ? { fontFamily: fontFamily2 } : {},
+          ...fontSize2 === void 0 ? {} : { fontSize: fontSize2 },
           ...fontWeight2 === void 0 ? {} : { fontWeight: fontWeight2 },
           ...href ? { href } : {},
-          ...italic ? { italic } : {},
-          ...underline ? { underline } : {},
+          ...italic === void 0 ? {} : { italic },
+          ...letterSpacing2 === void 0 ? {} : { letterSpacing: letterSpacing2 },
+          ...underline === void 0 ? {} : { underline },
           end,
           start
         }];
@@ -27786,10 +27798,12 @@ ${String(ex)}`);
     const sorted = ranges.map((range) => ({
       ...range.color ? { color: range.color } : {},
       ...range.fontFamily ? { fontFamily: range.fontFamily } : {},
+      ...range.fontSize === void 0 ? {} : { fontSize: range.fontSize },
       ...range.fontWeight === void 0 ? {} : { fontWeight: range.fontWeight },
       ...range.href ? { href: range.href } : {},
-      ...range.italic ? { italic: true } : {},
-      ...range.underline ? { underline: true } : {},
+      ...range.italic === void 0 ? {} : { italic: range.italic },
+      ...range.letterSpacing === void 0 ? {} : { letterSpacing: range.letterSpacing },
+      ...range.underline === void 0 ? {} : { underline: range.underline },
       end: clampTextOffset(range.end, textLength),
       start: clampTextOffset(range.start, textLength)
     })).filter((range) => range.end > range.start && hasTextStyle(range)).sort((left, right) => left.start - right.start || left.end - right.end);
@@ -27811,22 +27825,29 @@ ${String(ex)}`);
     return {
       ...range.color ? { color: range.color } : {},
       ...range.fontFamily ? { fontFamily: range.fontFamily } : {},
+      ...range.fontSize === void 0 ? {} : { fontSize: range.fontSize },
       ...range.fontWeight === void 0 ? {} : { fontWeight: range.fontWeight },
       ...range.href ? { href: range.href } : {},
-      ...range.italic ? { italic: true } : {},
-      ...range.underline ? { underline: true } : {}
+      ...range.italic === void 0 ? {} : { italic: range.italic },
+      ...range.letterSpacing === void 0 ? {} : { letterSpacing: range.letterSpacing },
+      ...range.underline === void 0 ? {} : { underline: range.underline }
     };
   }
   function hasTextStyle(style) {
-    return Boolean(style.color) || Boolean(style.fontFamily) || style.fontWeight !== void 0 || Boolean(style.href) || Boolean(style.italic) || Boolean(style.underline);
+    return Boolean(style.color) || Boolean(style.fontFamily) || style.fontSize !== void 0 || style.fontWeight !== void 0 || Boolean(style.href) || style.italic !== void 0 || style.letterSpacing !== void 0 || style.underline !== void 0;
   }
   function sameTextStyle(left, right) {
-    return left.color === right.color && left.fontFamily === right.fontFamily && left.fontWeight === right.fontWeight && left.href === right.href && left.italic === right.italic && left.underline === right.underline;
+    return left.color === right.color && left.fontFamily === right.fontFamily && left.fontSize === right.fontSize && left.fontWeight === right.fontWeight && left.href === right.href && left.italic === right.italic && left.letterSpacing === right.letterSpacing && left.underline === right.underline;
   }
   function finiteFontWeight(value) {
     const parsed = typeof value === "number" ? value : Number(value);
     if (!Number.isFinite(parsed)) return void 0;
     return Math.min(Math.max(Math.round(parsed), 100), 900);
+  }
+  function finiteTextMetric(value, min, max) {
+    const parsed = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(parsed)) return void 0;
+    return Math.min(Math.max(parsed, min), max);
   }
   function clampTextOffset(value, textLength) {
     const parsed = typeof value === "number" ? value : Number(value);
@@ -27875,11 +27896,52 @@ ${String(ex)}`);
       radiusY: frameHeight > 0 ? safeRadius / frameHeight * 100 : 0
     };
   }
+  function normalizedRelativeCornerRadii(corner, frameWidth, frameHeight) {
+    const shortEdge = Math.max(Math.min(frameWidth, frameHeight), 0);
+    const radius = shortEdge / 2 * clamp(corner, 0, 50) / 50;
+    return normalizedContinuousCornerRadii(radius, frameWidth, frameHeight);
+  }
   function format(value) {
     return Number(value.toFixed(3));
   }
   function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
+  }
+
+  // core/motion-doc/application/objectShadow.ts
+  function objectShadowFromProps(props) {
+    if (props.shadow === "none" || props.shadowEnabled === "false" || props.shadowEnabled === 0) return null;
+    const opacity2 = finite(props.shadowOpacity, 0);
+    if (opacity2 <= 0) return null;
+    return {
+      blur: Math.max(finite(props.shadowBlur, 12), 0),
+      color: colorValue(props.shadowColor, "#000000"),
+      offsetX: finite(props.shadowOffsetX, 0),
+      offsetY: finite(props.shadowOffsetY, 6),
+      opacity: Math.min(opacity2, 1)
+    };
+  }
+  function objectShadowCss(props) {
+    const shadow = objectShadowFromProps(props);
+    if (!shadow) return {};
+    return {
+      filter: `drop-shadow(${shadow.offsetX}px ${shadow.offsetY}px ${shadow.blur}px ${colorWithAlpha(shadow.color, shadow.opacity)})`
+    };
+  }
+  function finite(value, fallback) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  function colorValue(value, fallback) {
+    return typeof value === "string" && value.trim() ? value.trim() : fallback;
+  }
+  function colorWithAlpha(color3, opacity2) {
+    const hex = color3.replace(/^#/, "");
+    if (!/^[0-9a-f]{6}$/i.test(hex)) return color3;
+    const red = Number.parseInt(hex.slice(0, 2), 16);
+    const green = Number.parseInt(hex.slice(2, 4), 16);
+    const blue = Number.parseInt(hex.slice(4, 6), 16);
+    return `rgba(${red}, ${green}, ${blue}, ${opacity2})`;
   }
 
   // core/motion-doc/domain/lucideIconRegistry.ts
@@ -28066,6 +28128,22 @@ ${String(ex)}`);
     "pop",
     "none"
   ];
+  var motionDocChartColorModes = [
+    "palette",
+    "single",
+    "emphasis",
+    "gradient"
+  ];
+  var motionDocChartLabelModes = [
+    "all",
+    "value",
+    "category",
+    "none"
+  ];
+  var motionDocChartBarGaps = ["compact", "balanced", "airy"];
+  var motionDocChartPresetNames = ["executive", "minimal", "vivid"];
+  var motionDocChartNumberFormats = ["auto", "integer", "decimal", "percent", "currency", "compact"];
+  var motionDocChartSortModes = ["input", "ascending", "descending"];
   var chartPalettes = {
     aurora: ["#7c3aed", "#2563eb", "#06b6d4", "#10b981", "#f59e0b", "#f43f5e"],
     editorial: ["#111827", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0"],
@@ -28087,6 +28165,24 @@ ${String(ex)}`);
   }
   function isMotionDocChartMotion(value) {
     return motionDocChartMotions.includes(value);
+  }
+  function isMotionDocChartColorMode(value) {
+    return motionDocChartColorModes.includes(value);
+  }
+  function isMotionDocChartLabelMode(value) {
+    return motionDocChartLabelModes.includes(value);
+  }
+  function isMotionDocChartBarGap(value) {
+    return motionDocChartBarGaps.includes(value);
+  }
+  function isMotionDocChartPreset(value) {
+    return motionDocChartPresetNames.includes(value);
+  }
+  function isMotionDocChartNumberFormat(value) {
+    return motionDocChartNumberFormats.includes(value);
+  }
+  function isMotionDocChartSortMode(value) {
+    return motionDocChartSortModes.includes(value);
   }
   function parseMotionDocChartData(value) {
     if (typeof value !== "string" || !value.trim()) return defaultMotionDocChartData;
@@ -28117,20 +28213,160 @@ ${String(ex)}`);
   }
   function motionDocChartModel(props) {
     const type = normalizeMotionDocChartType(props.type);
+    const chartPreset = isMotionDocChartPreset(props.chartPreset) ? props.chartPreset : smartChartPreset(type);
+    const presetProps = motionDocChartPresetProps(chartPreset, type);
     const requestedMotion = isMotionDocChartMotion(props.chartMotion) ? props.chartMotion : "auto";
     const defaultMotion = type === "bar" ? "grow" : type === "line" || type === "area" ? "draw" : type === "scatter" ? "pop" : "sweep";
-    const paletteName = typeof props.palette === "string" && props.palette in chartPalettes ? props.palette : "aurora";
+    const paletteName = typeof (props.palette ?? presetProps.palette) === "string" && (props.palette ?? presetProps.palette) in chartPalettes ? props.palette ?? presetProps.palette : "aurora";
+    const labelMode = isMotionDocChartLabelMode(props.labelMode) ? props.labelMode : props.showLabels === "false" || props.showLabels === 0 ? "none" : isMotionDocChartLabelMode(presetProps.labelMode) ? presetProps.labelMode : "all";
+    const sourceData = parseMotionDocChartData(props.data);
+    const sort = isMotionDocChartSortMode(props.sort) ? props.sort : "input";
+    const data = sortMotionDocChartData(sourceData, sort);
+    const colorMode = isMotionDocChartColorMode(props.colorMode ?? presetProps.colorMode) ? props.colorMode ?? presetProps.colorMode : "palette";
+    const emphasisIndex = finiteNumber(props.emphasisIndex);
+    const areaOpacity = finiteNumber(props.areaOpacity ?? presetProps.areaOpacity);
+    const barRadius = finiteNumber(props.barRadius ?? presetProps.barRadius);
+    const donutHole = finiteNumber(props.donutHole ?? presetProps.donutHole);
+    const referenceValue = finiteNumber(props.referenceValue);
+    const annotationIndex = finiteNumber(props.annotationIndex);
+    const numberFormat = isMotionDocChartNumberFormat(props.numberFormat) ? props.numberFormat : "auto";
+    const decimals = clampNumber(finiteNumber(props.decimals), 0, 3, numberFormat === "decimal" ? 1 : 0);
+    const defaultEmphasisIndex = highestValueIndex(data);
     return {
-      data: parseMotionDocChartData(props.data),
+      annotationColor: validHexColor(props.annotationColor, "#dc2626"),
+      annotationIndex: annotationIndex === void 0 ? null : Math.min(Math.max(Math.floor(annotationIndex), 0), Math.max(data.length - 1, 0)),
+      annotationText: stringProp(props.annotationText, 120),
+      areaOpacity: clampNumber(areaOpacity, 20, 70, 32) / 100,
+      areaOpacityCustom: areaOpacity !== void 0,
+      barGap: isMotionDocChartBarGap(props.barGap ?? presetProps.barGap) ? props.barGap ?? presetProps.barGap : "balanced",
+      barRadius: clampNumber(barRadius, 0, 999, 10),
+      barRadiusCustom: barRadius !== void 0,
+      chartPreset,
+      colorMode,
+      currency: currencyCode(props.currency),
+      data,
+      decimals,
+      donutHole: clampNumber(donutHole, 42, 78, 64) / 100,
+      donutHoleCustom: donutHole !== void 0,
+      emphasisIndex: emphasisIndex === void 0 ? colorMode === "emphasis" ? defaultEmphasisIndex : null : Math.min(Math.max(Math.floor(emphasisIndex), 0), Math.max(data.length - 1, 0)),
+      labelMode,
+      labelColor: validOptionalHexColor(props.labelColor),
+      lineSmooth: (props.lineSmooth ?? presetProps.lineSmooth) !== "false" && (props.lineSmooth ?? presetProps.lineSmooth) !== 0,
       motion: requestedMotion === "auto" ? defaultMotion : requestedMotion,
+      numberFormat,
       palette: chartPalettes[paletteName],
-      showAxes: props.showAxes !== "false" && props.showAxes !== 0,
-      showLabels: props.showLabels !== "false" && props.showLabels !== 0,
+      referenceColor: validHexColor(props.referenceColor, "#dc2626"),
+      referenceLabel: stringProp(props.referenceLabel, 80),
+      referenceValue: referenceValue ?? null,
+      showAxes: (props.showAxes ?? presetProps.showAxes) !== "false" && (props.showAxes ?? presetProps.showAxes) !== 0,
+      showGrid: (props.showGrid ?? presetProps.showGrid) !== "false" && (props.showGrid ?? presetProps.showGrid) !== 0,
+      showLabels: labelMode !== "none",
+      sort,
       type
     };
   }
   function chartDatumColor(model, index2) {
     return model.data[index2]?.color ?? model.palette[index2 % model.palette.length];
+  }
+  function motionDocChartPresetProps(preset, type) {
+    const circular = type === "pie" || type === "donut";
+    if (preset === "minimal") {
+      return {
+        areaOpacity: "20",
+        barGap: "balanced",
+        barRadius: "0",
+        chartPreset: preset,
+        colorMode: circular ? "palette" : "single",
+        donutHole: "68",
+        labelMode: "all",
+        lineSmooth: "false",
+        palette: "editorial",
+        showAxes: String(!circular),
+        showGrid: String(!circular)
+      };
+    }
+    if (preset === "vivid") {
+      return {
+        areaOpacity: "42",
+        barGap: "compact",
+        barRadius: "999",
+        chartPreset: preset,
+        colorMode: circular ? "palette" : type === "bar" ? "gradient" : "single",
+        donutHole: "60",
+        labelMode: "all",
+        lineSmooth: "true",
+        palette: "aurora",
+        showAxes: String(!circular),
+        showGrid: "false"
+      };
+    }
+    return {
+      areaOpacity: "26",
+      barGap: "balanced",
+      barRadius: "10",
+      chartPreset: "executive",
+      colorMode: circular ? "palette" : type === "bar" ? "emphasis" : "single",
+      donutHole: "64",
+      labelMode: "all",
+      lineSmooth: "true",
+      palette: circular ? "editorial" : "ocean",
+      showAxes: String(!circular),
+      showGrid: "false"
+    };
+  }
+  function sortMotionDocChartData(data, sort) {
+    if (sort === "input") return data;
+    return [...data].sort((a, b) => sort === "ascending" ? a.value - b.value : b.value - a.value);
+  }
+  function formatMotionDocChartValue(model, value) {
+    if (model.numberFormat === "percent") {
+      return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: model.decimals, minimumFractionDigits: model.decimals }).format(value)}%`;
+    }
+    if (model.numberFormat === "currency") {
+      return new Intl.NumberFormat("en-US", {
+        currency: model.currency,
+        maximumFractionDigits: model.decimals,
+        minimumFractionDigits: model.decimals,
+        style: "currency"
+      }).format(value);
+    }
+    if (model.numberFormat === "compact") {
+      return new Intl.NumberFormat("en-US", { maximumFractionDigits: Math.max(model.decimals, 1), notation: "compact" }).format(value);
+    }
+    if (model.numberFormat === "integer") {
+      return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
+    }
+    if (model.numberFormat === "decimal") {
+      return new Intl.NumberFormat("en-US", { maximumFractionDigits: model.decimals, minimumFractionDigits: model.decimals }).format(value);
+    }
+    return new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(value);
+  }
+  function smartChartPreset(type) {
+    return type === "line" || type === "area" ? "minimal" : "executive";
+  }
+  function highestValueIndex(data) {
+    return data.reduce((best, item, index2) => item.value > (data[best]?.value ?? Number.NEGATIVE_INFINITY) ? index2 : best, 0);
+  }
+  function validOptionalHexColor(value) {
+    return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : null;
+  }
+  function validHexColor(value, fallback) {
+    return validOptionalHexColor(value) ?? fallback;
+  }
+  function currencyCode(value) {
+    const normalized = typeof value === "string" ? value.trim().toUpperCase() : "USD";
+    return /^[A-Z]{3}$/.test(normalized) ? normalized : "USD";
+  }
+  function stringProp(value, maximumLength) {
+    return typeof value === "string" ? value.trim().slice(0, maximumLength) : "";
+  }
+  function finiteNumber(value) {
+    const number = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(number) ? number : void 0;
+  }
+  function clampNumber(value, minimum, maximum, fallback) {
+    const number = finiteNumber(value);
+    return Math.min(Math.max(number ?? fallback, minimum), maximum);
   }
 
   // core/motion-doc/domain/viewport.ts
@@ -28141,7 +28377,6 @@ ${String(ex)}`);
   // core/motion-doc/application/chartSvg.ts
   var WIDTH = 800;
   var HEIGHT = 420;
-  var modernChartPalette = ["#6670f2", "#747df3", "#828af4", "#9097f5", "#9ea5f6", "#acb3f7"];
   function renderMotionDocChartSvg(props, options = {}) {
     const model = motionDocChartModel(props);
     const appearance = options.appearance ?? "default";
@@ -28150,43 +28385,73 @@ ${String(ex)}`);
     const content4 = model.type === "bar" ? renderBars(model, layout, appearance) : model.type === "line" || model.type === "area" ? renderTrend(model, model.type === "area", layout, appearance) : model.type === "scatter" ? renderScatter(model, layout, appearance) : renderRadial(model, model.type === "donut", layout, appearance);
     const staticClass = options.motionMode === "editor-static" ? " motion-chart--editor-static" : "";
     const appearanceClass = appearance === "editor-modern" ? " motion-chart--modern" : "";
-    const appearanceStyle = appearance === "editor-modern" ? ` style="--chart-label-size:${round(clamp2(Math.min(layout.width, layout.height) * 0.052, 19, 32))}px;--chart-value-size:${round(clamp2(Math.min(layout.width, layout.height) * 0.06, 22, 36))}px;--chart-center-size:${round(clamp2(Math.min(layout.width, layout.height) * 0.075, 28, 46))}px"` : "";
+    const styleVariables = [
+      ...appearance === "editor-modern" ? [
+        `--chart-label-size:${round(clamp2(Math.min(layout.width, layout.height) * 0.052, 19, 32))}px`,
+        `--chart-value-size:${round(clamp2(Math.min(layout.width, layout.height) * 0.06, 22, 36))}px`,
+        `--chart-center-size:${round(clamp2(Math.min(layout.width, layout.height) * 0.075, 28, 46))}px`
+      ] : [],
+      ...model.labelColor ? [`--chart-label-color:${model.labelColor}`] : []
+    ];
+    const appearanceStyle = styleVariables.length > 0 ? ` style="${styleVariables.join(";")}"` : "";
     return `<svg class="motion-chart motion-chart--${model.type} motion-chart--${model.motion}${appearanceClass}${staticClass}"${appearanceStyle} role="img" aria-label="${title}" viewBox="0 0 ${layout.width} ${layout.height}"><title>${title}</title><g class="chart-content">${content4}</g></svg>`;
   }
   function renderBars(model, layout, appearance) {
     const { plot } = layout;
     const values = model.data.map((item) => Math.max(item.value, 0));
-    const maximum = niceMaximum(Math.max(...values, 1));
+    const maximum = niceMaximum(Math.max(...values, model.referenceValue ?? 0, 1));
     const plotWidth = plot.right - plot.left;
     const slot = plotWidth / Math.max(model.data.length, 1);
-    const barWidth = Math.min(slot * (appearance === "editor-modern" ? 0.5 : 0.64), appearance === "editor-modern" ? 72 : 86);
-    const grid = model.showAxes ? renderGrid(maximum, 4, layout) : "";
+    const density = model.barGap === "compact" ? 0.76 : model.barGap === "airy" ? 0.48 : 0.64;
+    const responsiveWidthCap = appearance === "editor-modern" ? clamp2(plotWidth * 0.28, 132, 260) : clamp2(plotWidth * 0.14, 86, 154);
+    const barWidth = Math.min(slot * density, responsiveWidthCap);
+    const grid = model.showAxes ? renderGrid(model, maximum, 4, layout, 0, model.showGrid) : "";
+    const reference = renderReferenceLine(model, maximum, layout);
+    const gradientBaseId = `chart-bar-gradient-${stableId(`${model.data.map((item) => `${item.label}:${item.value}`).join("|")}:${model.palette.join("|")}`)}`;
+    const gradients = model.colorMode === "gradient" ? `<defs>${model.data.map((_, index2) => {
+      const color3 = chartColor(model, index2, appearance);
+      return `<linearGradient id="${gradientBaseId}-${index2}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${color3}"/><stop offset="1" stop-color="${color3}" stop-opacity=".48"/></linearGradient>`;
+    }).join("")}</defs>` : "";
     const bars = model.data.map((item, index2) => {
       const height = Math.max(item.value, 0) / maximum * (plot.bottom - plot.top);
       const x = plot.left + slot * index2 + (slot - barWidth) / 2;
       const y = plot.bottom - height;
       const delay = `${index2 * 70}ms`;
-      return `<g class="chart-series" style="--chart-delay:${delay}"><rect class="chart-bar" fill="${chartColor(model, index2, appearance)}" height="${round(height)}" rx="${appearance === "editor-modern" ? Math.min(barWidth / 7, 10) : Math.min(barWidth / 4, 18)}" width="${round(barWidth)}" x="${round(x)}" y="${round(y)}" />${model.showLabels ? `<text class="chart-value" text-anchor="middle" x="${round(x + barWidth / 2)}" y="${round(Math.max(y - 12, 18))}">${formatValue(item.value)}</text><text class="chart-label" text-anchor="middle" x="${round(x + barWidth / 2)}" y="${layout.labelY}">${escapeXml(item.label)}</text>` : ""}</g>`;
+      const fill = model.colorMode === "gradient" ? `url(#${gradientBaseId}-${index2})` : chartColor(model, index2, appearance);
+      const defaultRadius = appearance === "editor-modern" ? Math.min(barWidth / 7, 10) : Math.min(barWidth / 4, 18);
+      const radius = model.barRadiusCustom ? model.barRadius >= 999 ? barWidth / 2 : Math.min(model.barRadius, barWidth / 2) : defaultRadius;
+      return `<g class="chart-series" style="--chart-delay:${delay}"><rect class="chart-bar" fill="${fill}" fill-opacity="${chartOpacity(model, index2)}" height="${round(height)}" rx="${round(radius)}" width="${round(barWidth)}" x="${round(x)}" y="${round(y)}" />${valueLabel(model, item.value, round(x + barWidth / 2), round(Math.max(y - 12, 18)))}${categoryLabel(model, item.label, round(x + barWidth / 2), layout.labelY)}</g>`;
     }).join("");
-    return `${grid}${bars}`;
+    const annotationIndex = model.annotationIndex ?? model.emphasisIndex;
+    const annotationItem = typeof annotationIndex === "number" ? model.data[annotationIndex] : void 0;
+    const annotation = annotationItem && model.annotationText && typeof annotationIndex === "number" ? renderPointAnnotation(
+      model,
+      plot.left + slot * annotationIndex + slot / 2,
+      plot.bottom - Math.max(annotationItem.value, 0) / maximum * (plot.bottom - plot.top),
+      layout
+    ) : "";
+    return `${grid}${reference}${gradients}${bars}${annotation}`;
   }
   function renderTrend(model, area, layout, appearance) {
     const { plot } = layout;
     const values = model.data.map((item) => item.value);
-    const minimum = Math.min(0, ...values);
-    const maximum = niceMaximum(Math.max(...values, 1));
+    const minimum = Math.min(0, ...values, model.referenceValue ?? 0);
+    const maximum = niceMaximum(Math.max(...values, model.referenceValue ?? 0, 1));
     const range = Math.max(maximum - minimum, 1);
     const points = model.data.map((item, index2) => ({
       item,
       x: plot.left + index2 / Math.max(model.data.length - 1, 1) * (plot.right - plot.left),
       y: plot.bottom - (item.value - minimum) / range * (plot.bottom - plot.top)
     }));
-    const linePath = smoothPath(points);
+    const linePath = model.lineSmooth ? smoothPath(points) : straightPath(points);
     const areaPath = `${linePath} L ${round(points.at(-1)?.x ?? plot.right)} ${plot.bottom} L ${round(points[0]?.x ?? plot.left)} ${plot.bottom} Z`;
     const gradientId = `chart-area-gradient-${stableId(`${model.type}:${model.data.map((item) => `${item.label}:${item.value}`).join("|")}`)}`;
-    const labels = model.showLabels ? points.map(({ item, x, y }, index2) => `<g class="chart-series" style="--chart-delay:${index2 * 70}ms">${appearance === "editor-modern" ? `<circle class="chart-point-halo" cx="${round(x)}" cy="${round(y)}" fill="${chartColor(model, index2, appearance)}" r="10" />` : ""}<circle class="chart-point" cx="${round(x)}" cy="${round(y)}" fill="${chartColor(model, index2, appearance)}" r="${appearance === "editor-modern" ? 4.5 : 6}" /><text class="chart-value" text-anchor="middle" x="${round(x)}" y="${round(y - 15)}">${formatValue(item.value)}</text><text class="chart-label" text-anchor="middle" x="${round(x)}" y="${layout.labelY}">${escapeXml(item.label)}</text></g>`).join("") : "";
+    const labels = model.showLabels ? points.map(({ item, x, y }, index2) => `<g class="chart-series" style="--chart-delay:${index2 * 70}ms">${appearance === "editor-modern" ? `<circle class="chart-point-halo" cx="${round(x)}" cy="${round(y)}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${chartOpacity(model, index2)}" r="10" />` : ""}<circle class="chart-point" cx="${round(x)}" cy="${round(y)}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${chartOpacity(model, index2)}" r="${appearance === "editor-modern" ? 4.5 : 6}" />${valueLabel(model, item.value, round(x), round(y - 15))}${categoryLabel(model, item.label, round(x), layout.labelY)}</g>`).join("") : "";
     const primaryColor = chartColor(model, 0, appearance);
-    return `${model.showAxes ? renderGrid(maximum, 4, layout, minimum) : ""}<defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${primaryColor}" stop-opacity="${appearance === "editor-modern" ? ".2" : ".38"}"/><stop offset="1" stop-color="${primaryColor}" stop-opacity=".02"/></linearGradient></defs>${area ? `<path class="chart-area" d="${areaPath}" fill="url(#${gradientId})" />` : ""}<path class="chart-line" d="${linePath}" fill="none" stroke="${primaryColor}" stroke-linecap="round" stroke-linejoin="round" stroke-width="${appearance === "editor-modern" ? 5 : 7}" pathLength="1" />${labels}`;
+    const areaOpacity = model.areaOpacityCustom ? model.areaOpacity : appearance === "editor-modern" ? 0.2 : 0.38;
+    const annotationIndex = model.annotationIndex ?? model.emphasisIndex;
+    const annotationPoint = annotationIndex === null ? void 0 : points[annotationIndex];
+    return `${model.showAxes ? renderGrid(model, maximum, 4, layout, minimum, model.showGrid) : ""}${renderReferenceLine(model, maximum, layout, minimum)}<defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${primaryColor}" stop-opacity="${round(areaOpacity)}"/><stop offset="1" stop-color="${primaryColor}" stop-opacity=".02"/></linearGradient></defs>${area ? `<path class="chart-area" d="${areaPath}" fill="url(#${gradientId})" />` : ""}<path class="chart-line" d="${linePath}" fill="none" stroke="${primaryColor}" stroke-linecap="round" stroke-linejoin="round" stroke-width="${appearance === "editor-modern" ? 5 : 7}" pathLength="1" />${labels}${annotationPoint && model.annotationText ? renderPointAnnotation(model, annotationPoint.x, annotationPoint.y, layout) : ""}`;
   }
   function renderRadial(model, donut, layout, appearance) {
     const wide = layout.width / layout.height >= 1.45 && layout.width >= 520;
@@ -28195,7 +28460,7 @@ ${String(ex)}`);
     const cy = wide ? layout.height * 0.5 : layout.height * 0.37;
     const availableRadius = wide ? Math.min(chartWidth * 0.34, layout.height * 0.38) : Math.min(layout.width * 0.34, layout.height * 0.27);
     const outerRadius = Math.max(42, availableRadius);
-    const innerRadius = donut ? outerRadius * (appearance === "editor-modern" ? 0.64 : 0.53) : 0;
+    const innerRadius = donut ? outerRadius * (model.donutHoleCustom ? model.donutHole : appearance === "editor-modern" ? 0.64 : 0.53) : 0;
     const total = model.data.reduce((sum, item) => sum + Math.max(item.value, 0), 0) || 1;
     let startAngle = -90;
     const slices = model.data.map((item, index2) => {
@@ -28204,7 +28469,7 @@ ${String(ex)}`);
       const path2 = radialSlicePath(cx, cy, outerRadius, innerRadius, startAngle, endAngle);
       const labelRadius = donut ? (outerRadius + innerRadius) / 2 : outerRadius * 0.66;
       const middle = polar(cx, cy, labelRadius, startAngle + angle2 / 2);
-      const slice = `<path class="chart-slice" d="${path2}" fill="${chartColor(model, index2, appearance)}" style="--chart-delay:${index2 * 75}ms" />${model.showLabels && angle2 > 12 ? `<text class="chart-value chart-value--radial" text-anchor="middle" x="${round(middle.x)}" y="${round(middle.y)}">${Math.round(angle2 / 3.6)}%</text>` : ""}`;
+      const slice = `<path class="chart-slice" d="${path2}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${chartOpacity(model, index2)}" style="--chart-delay:${index2 * 75}ms" />${showValueLabel(model) && angle2 > 12 ? `<text class="chart-value chart-value--radial" text-anchor="middle" x="${round(middle.x)}" y="${round(middle.y)}">${Math.round(angle2 / 3.6)}%</text>` : ""}`;
       startAngle = endAngle;
       return slice;
     }).join("");
@@ -28214,10 +28479,11 @@ ${String(ex)}`);
       const legendX = wide ? layout.width * 0.66 : layout.width * 0.12;
       const legendY = wide ? layout.height * 0.18 + index2 * itemHeight : layout.height * 0.7 + index2 * itemHeight;
       const valueX = wide ? layout.width * 0.28 : layout.width * 0.72;
-      return `<g class="chart-legend-item" transform="translate(${round(legendX)} ${round(legendY)})"><rect fill="${chartColor(model, index2, appearance)}" height="${round(markerSize)}" rx="${round(appearance === "editor-modern" ? markerSize / 2 : markerSize / 3)}" width="${round(markerSize)}"/><text class="chart-legend" x="${round(markerSize + 14)}" y="${round(markerSize * 0.78)}">${escapeXml(item.label)}</text><text class="chart-legend-value" text-anchor="end" x="${round(valueX)}" y="${round(markerSize * 0.78)}">${formatValue(item.value)}</text></g>`;
+      return `<g class="chart-legend-item" transform="translate(${round(legendX)} ${round(legendY)})"><rect fill="${chartColor(model, index2, appearance)}" fill-opacity="${chartOpacity(model, index2)}" height="${round(markerSize)}" rx="${round(appearance === "editor-modern" ? markerSize / 2 : markerSize / 3)}" width="${round(markerSize)}"/>${showCategoryLabel(model) ? `<text class="chart-legend" x="${round(markerSize + 14)}" y="${round(markerSize * 0.78)}">${escapeXml(item.label)}</text>` : ""}${showValueLabel(model) ? `<text class="chart-legend-value" text-anchor="end" x="${round(valueX)}" y="${round(markerSize * 0.78)}">${formatMotionDocChartValue(model, item.value)}</text>` : ""}</g>`;
     }).join("") : "";
-    const centerMetric = donut && appearance === "editor-modern" ? `<g class="chart-center-metric"><text text-anchor="middle" x="${round(cx)}" y="${round(cy - 2)}">${formatValue(total)}</text><text class="chart-center-label" text-anchor="middle" x="${round(cx)}" y="${round(cy + 22)}">Total</text></g>` : "";
-    return `<g class="chart-radial">${slices}</g>${centerMetric}${legend}`;
+    const centerMetric = donut && appearance === "editor-modern" ? `<g class="chart-center-metric"><text text-anchor="middle" x="${round(cx)}" y="${round(cy - 2)}">${formatMotionDocChartValue(model, total)}</text><text class="chart-center-label" text-anchor="middle" x="${round(cx)}" y="${round(cy + 22)}">Total</text></g>` : "";
+    const annotation = model.annotationText ? `<text class="chart-annotation-text" fill="${model.annotationColor}" text-anchor="end" x="${round(layout.width - 20)}" y="${round(layout.height * 0.08)}">${escapeXml(model.annotationText)}</text>` : "";
+    return `<g class="chart-radial">${slices}</g>${centerMetric}${legend}${annotation}`;
   }
   function renderScatter(model, layout, appearance) {
     const { plot } = layout;
@@ -28225,23 +28491,44 @@ ${String(ex)}`);
     const yValues = model.data.map((item) => item.value);
     const xMin = Math.min(...xValues);
     const xMax = Math.max(...xValues);
-    const yMin = Math.min(0, ...yValues);
-    const yMax = niceMaximum(Math.max(...yValues, 1));
+    const yMin = Math.min(0, ...yValues, model.referenceValue ?? 0);
+    const yMax = niceMaximum(Math.max(...yValues, model.referenceValue ?? 0, 1));
     const circles = model.data.map((item, index2) => {
       const x = plot.left + ((item.x ?? index2 + 1) - xMin) / Math.max(xMax - xMin, 1) * (plot.right - plot.left);
       const y = plot.bottom - (item.value - yMin) / Math.max(yMax - yMin, 1) * (plot.bottom - plot.top);
       const radius = Math.min(item.size ?? 10, Math.max((plot.bottom - plot.top) * 0.08, 6));
-      return `<g class="chart-series" style="--chart-delay:${index2 * 70}ms"><circle class="chart-bubble" cx="${round(x)}" cy="${round(y)}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${appearance === "editor-modern" ? ".9" : ".78"}" r="${radius}"/>${model.showLabels ? `<text class="chart-value" text-anchor="middle" x="${round(x)}" y="${round(y - radius - 10)}">${escapeXml(item.label)}</text>` : ""}</g>`;
+      return `<g class="chart-series" style="--chart-delay:${index2 * 70}ms"><circle class="chart-bubble" cx="${round(x)}" cy="${round(y)}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${round(chartOpacity(model, index2) * (appearance === "editor-modern" ? 0.9 : 0.78))}" r="${radius}"/>${showCategoryLabel(model) ? `<text class="chart-value" text-anchor="middle" x="${round(x)}" y="${round(y - radius - 10)}">${escapeXml(item.label)}</text>` : ""}${showValueLabel(model) ? `<text class="chart-label" text-anchor="middle" x="${round(x)}" y="${round(y + radius + 18)}">${formatMotionDocChartValue(model, item.value)}</text>` : ""}</g>`;
     }).join("");
-    return `${model.showAxes ? renderGrid(yMax, 4, layout, yMin) : ""}${circles}`;
+    const annotationIndex = model.annotationIndex ?? model.emphasisIndex;
+    const annotationItem = annotationIndex === null ? void 0 : model.data[annotationIndex];
+    const annotation = annotationItem && model.annotationText ? renderPointAnnotation(
+      model,
+      plot.left + ((annotationItem.x ?? annotationIndex + 1) - xMin) / Math.max(xMax - xMin, 1) * (plot.right - plot.left),
+      plot.bottom - (annotationItem.value - yMin) / Math.max(yMax - yMin, 1) * (plot.bottom - plot.top),
+      layout
+    ) : "";
+    return `${model.showAxes ? renderGrid(model, yMax, 4, layout, yMin, model.showGrid) : ""}${renderReferenceLine(model, yMax, layout, yMin)}${circles}${annotation}`;
   }
-  function renderGrid(maximum, count, layout, minimum = 0) {
+  function renderGrid(model, maximum, count, layout, minimum = 0, showGrid = true) {
     const { plot } = layout;
     return Array.from({ length: count + 1 }, (_, index2) => {
       const value = minimum + (maximum - minimum) * index2 / count;
       const y = plot.bottom - index2 / count * (plot.bottom - plot.top);
-      return `<line class="chart-grid${index2 === 0 ? " chart-grid--baseline" : ""}" x1="${plot.left}" x2="${plot.right}" y1="${round(y)}" y2="${round(y)}"/><text class="chart-axis-label" text-anchor="end" x="${round(plot.left - 16)}" y="${round(y + 5)}">${formatValue(value)}</text>`;
+      return `${showGrid ? `<line class="chart-grid${index2 === 0 ? " chart-grid--baseline" : ""}" x1="${plot.left}" x2="${plot.right}" y1="${round(y)}" y2="${round(y)}"/>` : ""}<text class="chart-axis-label" text-anchor="end" x="${round(plot.left - 16)}" y="${round(y + 5)}">${formatMotionDocChartValue(model, value)}</text>`;
     }).join("");
+  }
+  function renderReferenceLine(model, maximum, layout, minimum = 0) {
+    if (model.referenceValue === null) return "";
+    const { plot } = layout;
+    const y = plot.bottom - (model.referenceValue - minimum) / Math.max(maximum - minimum, 1) * (plot.bottom - plot.top);
+    const label = model.referenceLabel || formatMotionDocChartValue(model, model.referenceValue);
+    return `<g class="chart-reference" style="--chart-reference-color:${model.referenceColor}"><line x1="${plot.left}" x2="${plot.right}" y1="${round(y)}" y2="${round(y)}"/><text text-anchor="end" x="${plot.right}" y="${round(y - 8)}">${escapeXml(label)}</text></g>`;
+  }
+  function renderPointAnnotation(model, x, y, layout) {
+    const anchorRight = x > layout.width * 0.64;
+    const targetX = clamp2(x + (anchorRight ? -32 : 32), 18, layout.width - 18);
+    const targetY = clamp2(y - 38, 18, layout.height - 18);
+    return `<g class="chart-annotation" style="--chart-annotation-color:${model.annotationColor}"><line x1="${round(x)}" x2="${round(targetX)}" y1="${round(y)}" y2="${round(targetY)}"/><circle cx="${round(x)}" cy="${round(y)}" r="4"/><text text-anchor="${anchorRight ? "end" : "start"}" x="${round(targetX + (anchorRight ? -6 : 6))}" y="${round(targetY - 4)}">${escapeXml(model.annotationText)}</text></g>`;
   }
   function chartLayout(frame, appearance = "default") {
     const width = frame ? Math.max(240, round(frame.w / 100 * MOTION_DOC_CANVAS_WIDTH)) : WIDTH;
@@ -28262,9 +28549,30 @@ ${String(ex)}`);
       width
     };
   }
-  function chartColor(model, index2, appearance) {
+  function chartColor(model, index2, _appearance) {
     if (model.data[index2]?.color) return chartDatumColor(model, index2);
-    return appearance === "editor-modern" ? modernChartPalette[index2 % modernChartPalette.length] : chartDatumColor(model, index2);
+    if (model.colorMode === "single" || model.colorMode === "emphasis") {
+      return model.palette[0];
+    }
+    return chartDatumColor(model, index2);
+  }
+  function chartOpacity(model, index2) {
+    if (model.colorMode !== "emphasis" || model.emphasisIndex === null) {
+      return 1;
+    }
+    return index2 === model.emphasisIndex ? 1 : 0.24;
+  }
+  function showValueLabel(model) {
+    return model.showLabels && (model.labelMode === "all" || model.labelMode === "value");
+  }
+  function showCategoryLabel(model) {
+    return model.showLabels && (model.labelMode === "all" || model.labelMode === "category");
+  }
+  function valueLabel(model, value, x, y) {
+    return showValueLabel(model) ? `<text class="chart-value" text-anchor="middle" x="${x}" y="${y}">${formatMotionDocChartValue(model, value)}</text>` : "";
+  }
+  function categoryLabel(model, label, x, y) {
+    return showCategoryLabel(model) ? `<text class="chart-label" text-anchor="middle" x="${x}" y="${y}">${escapeXml(label)}</text>` : "";
   }
   function clamp2(value, minimum, maximum) {
     return Math.min(Math.max(value, minimum), maximum);
@@ -28278,6 +28586,9 @@ ${String(ex)}`);
       const controlX = (previous3.x + point3.x) / 2;
       return `${path2} C ${round(controlX)} ${round(previous3.y)}, ${round(controlX)} ${round(point3.y)}, ${round(point3.x)} ${round(point3.y)}`;
     }, "");
+  }
+  function straightPath(points) {
+    return points.map((point3, index2) => `${index2 === 0 ? "M" : "L"} ${round(point3.x)} ${round(point3.y)}`).join(" ");
   }
   function radialSlicePath(cx, cy, outer, inner, start, end) {
     const safeEnd = end - start >= 360 ? end - 1e-3 : end;
@@ -28297,9 +28608,6 @@ ${String(ex)}`);
     const magnitude = 10 ** Math.floor(Math.log10(Math.max(value, 1)));
     return Math.ceil(value / magnitude) * magnitude;
   }
-  function formatValue(value) {
-    return new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(value);
-  }
   function round(value) {
     return Math.round(value * 100) / 100;
   }
@@ -28315,44 +28623,128 @@ ${String(ex)}`);
     return (hash >>> 0).toString(36);
   }
 
+  // core/motion-doc/domain/frame.ts
+  function motionDocBlockFrame(block) {
+    if (!block || !("props" in block)) {
+      return { h: 18, w: 42, x: 8, y: 12 };
+    }
+    return {
+      h: percentFrameValue(block.props.h, defaultBlockHeight(block.type)),
+      w: percentFrameValue(block.props.w, defaultBlockWidth(block.type)),
+      x: framePositionValue(block.props.x, 9),
+      y: framePositionValue(block.props.y, defaultBlockY(block.type))
+    };
+  }
+  function defaultBlockWidth(type) {
+    if (type === "Title") return 52;
+    if (type === "Text") return 42;
+    if (type === "Icon") return 16;
+    if (type === "Metric") return 32;
+    if (type === "Shape") return widthPercentForPhysicalAspectRatio(28);
+    if (type === "Stack") return 80;
+    if (type === "Table") return 56;
+    if (type === "Chart") return 78;
+    if (type === "ImageBlock" || type === "VideoBlock") return 80;
+    return 40;
+  }
+  function widthPercentForPhysicalAspectRatio(heightPercent, aspectRatio = 1) {
+    return heightPercent * MOTION_DOC_CANVAS_HEIGHT / MOTION_DOC_CANVAS_WIDTH * aspectRatio;
+  }
+  function defaultBlockHeight(type) {
+    if (type === "Title") return 18;
+    if (type === "Text") return 9;
+    if (type === "Icon") return 28;
+    if (type === "Metric") return 36;
+    if (type === "Shape") return 28;
+    if (type === "Stack") return 20;
+    if (type === "Table") return 30;
+    if (type === "Chart") return 52;
+    if (type === "ImageBlock" || type === "VideoBlock") return 54;
+    return 32;
+  }
+  function defaultBlockY(type) {
+    if (type === "Title") return 18;
+    if (type === "Icon" || type === "Shape") return 30;
+    if (type === "Table") return 34;
+    if (type === "Chart") return 25;
+    if (type === "Stack") return 64;
+    if (type === "ImageBlock" || type === "VideoBlock") return 20;
+    return 38;
+  }
+  function percentFrameValue(value, fallback) {
+    const parsed = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(parsed)) {
+      return fallback;
+    }
+    return Math.min(Math.max(parsed, 0), 200);
+  }
+  function framePositionValue(value, fallback) {
+    const parsed = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(parsed)) {
+      return fallback;
+    }
+    return Math.min(Math.max(parsed, -100), 100);
+  }
+
+  // core/motion-doc/application/imageCrop.ts
+  function normalizedImageScales(fit, scaleX, scaleY) {
+    const x = clampImageCropScale(numberProp(scaleX, 1));
+    const y = clampImageCropScale(numberProp(scaleY, 1));
+    if (fit === "fill") return { scaleX: x, scaleY: y };
+    const scale = Math.max(x, y);
+    return { scaleX: scale, scaleY: scale };
+  }
+  function numberProp(value, fallback) {
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  function clampImageCropScale(value) {
+    return Math.round(Math.min(Math.max(value, 0.1), 8) * 1e3) / 1e3;
+  }
+
   // core/motion-doc/application/shapeVectorSvg.ts
   function shapeVectorSvgDataUri(props, id = "shape") {
     return svgDataUri(renderShapeVectorSvg(props, id));
   }
   function shapeNeedsExactSvgExport(props) {
-    const shape = stringProp(props.shape) ?? "rectangle";
-    const sides = clamp3(Math.round(numberProp(props.sides, 3)), 3, 12);
-    const points = clamp3(Math.round(numberProp(props.points, 5)), 3, 12);
+    const shape = stringProp2(props.shape) ?? "rectangle";
+    const sides = clamp3(Math.round(numberProp2(props.sides, 3)), 3, 12);
+    const points = clamp3(Math.round(numberProp2(props.points, 5)), 3, 12);
     return Boolean(
-      (stringProp(props.mask) ?? "none") !== "none" || (stringProp(props.operation) ?? "none") !== "none" || Boolean(stringProp(props.shapeImageSrc)) || shape === "polygon" && (sides === 9 || sides === 11) || shape === "star" && (points === 3 || points === 9 || points === 11) || shape === "line" && (props.arrowStart === "bar" || props.arrowEnd === "bar" || numberProp(props.arrowStartSize, 100) !== 100 || numberProp(props.arrowEndSize, 100) !== 100)
+      (stringProp2(props.mask) ?? "none") !== "none" || (stringProp2(props.operation) ?? "none") !== "none" || Boolean(stringProp2(props.shapeImageSrc)) || shape === "polygon" && (sides === 9 || sides === 11) || shape === "star" && (points === 3 || points === 9 || points === 11) || shape === "line" && (props.arrowStart === "bar" || props.arrowEnd === "bar" || numberProp2(props.arrowStartSize, 100) !== 100 || numberProp2(props.arrowEndSize, 100) !== 100)
     );
   }
   function renderShapeVectorSvg(props, id = "shape") {
-    const fill = stringProp(props.fill) ?? "rgba(142,165,255,0.72)";
-    const mask = stringProp(props.mask) ?? "none";
-    const operation = stringProp(props.operation) ?? "none";
-    const shape = stringProp(props.shape) ?? "rectangle";
-    const stroke = stringProp(props.stroke) ?? "#ffffff";
-    const strokeWidth = Math.max(numberProp(props.strokeWidth, 2), 0);
-    const opacity2 = clamp3(numberProp(props.opacity, 1), 0, 1);
-    const sides = clamp3(Math.round(numberProp(props.sides, 3)), 3, 12);
-    const points = clamp3(Math.round(numberProp(props.points, 5)), 3, 12);
-    const radius = Math.max(numberProp(props.radius ?? props.borderRadius, 0), 0);
-    const frameWidth = clamp3(numberProp(props.w, 28), 0, 100) / 100 * MOTION_DOC_CANVAS_WIDTH;
-    const frameHeight = clamp3(numberProp(props.h, 28), 0, 100) / 100 * MOTION_DOC_CANVAS_HEIGHT;
+    const fill = stringProp2(props.fill) ?? "rgba(142,165,255,0.72)";
+    const mask = stringProp2(props.mask) ?? "none";
+    const operation = stringProp2(props.operation) ?? "none";
+    const shape = stringProp2(props.shape) ?? "rectangle";
+    const stroke = stringProp2(props.stroke) ?? "#ffffff";
+    const strokeWidth = Math.max(numberProp2(props.strokeWidth, 2), 0);
+    const opacity2 = clamp3(numberProp2(props.opacity, 1), 0, 1);
+    const sides = clamp3(Math.round(numberProp2(props.sides, 3)), 3, 12);
+    const points = clamp3(Math.round(numberProp2(props.points, 5)), 3, 12);
+    const radius = Math.max(numberProp2(props.radius ?? props.borderRadius, 0), 0);
+    const corner = Math.max(numberProp2(props.corner, 0), 0);
+    const frameWidth = clamp3(numberProp2(props.w, 28), 0, 100) / 100 * MOTION_DOC_CANVAS_WIDTH;
+    const frameHeight = clamp3(numberProp2(props.h, 28), 0, 100) / 100 * MOTION_DOC_CANVAS_HEIGHT;
     const safeId = `${id}-${shape}-${mask}`.replace(/[^a-z0-9_-]+/gi, "-");
-    const viewBox = shape === "line" ? "0 0 100 20" : "0 0 100 100";
-    const defs = renderMaskDefs(mask, safeId);
+    const viewportWidth = shape === "line" ? 100 : Math.max(frameWidth, 1);
+    const viewportHeight = shape === "line" ? 20 : Math.max(frameHeight, 1);
+    const viewBox = `0 0 ${viewportWidth} ${viewportHeight}`;
+    const geometryTransform = shape === "line" ? "" : ` transform="scale(${viewportWidth / 100} ${viewportHeight / 100})"`;
+    const defs = renderMaskDefs(mask, safeId, viewportWidth, viewportHeight);
     const maskAttr = mask === "none" ? "" : ` mask="url(#${safeId})"`;
     const geometry = renderShapeGeometry({
-      arrowEnd: stringProp(props.arrowEnd) ?? "none",
-      arrowEndSize: numberProp(props.arrowEndSize, 100),
-      arrowStart: stringProp(props.arrowStart) ?? "none",
-      arrowStartSize: numberProp(props.arrowStartSize, 100),
-      fill: stringProp(props.shapeImageSrc) ? "transparent" : fill,
+      arrowEnd: stringProp2(props.arrowEnd) ?? "none",
+      arrowEndSize: numberProp2(props.arrowEndSize, 100),
+      arrowStart: stringProp2(props.arrowStart) ?? "none",
+      arrowStartSize: numberProp2(props.arrowStartSize, 100),
+      corner,
+      fill: stringProp2(props.shapeImageSrc) ? "transparent" : fill,
       frameHeight,
       frameWidth,
-      lineStyle: stringProp(props.lineStyle) ?? "solid",
+      lineStyle: stringProp2(props.lineStyle) ?? "solid",
       points,
       radius,
       shape,
@@ -28361,13 +28753,14 @@ ${String(ex)}`);
       strokeWidth
     });
     const booleanLayer = renderBooleanLayer(operation, fill, stroke, strokeWidth);
-    const shapeImageSrc = stringProp(props.shapeImageSrc);
-    const imageClipId = `${safeId}-image-clip`;
-    const imageClip = shapeImageSrc && shape !== "line" ? `<clipPath id="${imageClipId}">${renderShapeGeometry({
+    const shapeImageSrc = stringProp2(props.shapeImageSrc);
+    const imageMaskId = `${safeId}-image-mask`;
+    const imageMask = shapeImageSrc && shape !== "line" ? `<mask id="${imageMaskId}" maskUnits="userSpaceOnUse" x="0" y="0" width="${viewportWidth}" height="${viewportHeight}"><g${geometryTransform}>${renderShapeGeometry({
       arrowEnd: "none",
       arrowEndSize: 100,
       arrowStart: "none",
       arrowStartSize: 100,
+      corner,
       fill: "white",
       frameHeight,
       frameWidth,
@@ -28378,29 +28771,36 @@ ${String(ex)}`);
       sides,
       stroke: "none",
       strokeWidth: 0
-    })}</clipPath>` : "";
-    const scaleX = clamp3(numberProp(props.shapeImageScaleX, 1), 0.1, 8);
-    const scaleY = clamp3(numberProp(props.shapeImageScaleY, 1), 0.1, 8);
-    const cropX = numberProp(props.shapeImageCropX, 0);
-    const cropY = numberProp(props.shapeImageCropY, 0);
-    const fit = stringProp(props.shapeImageFit) ?? "cover";
-    const imageLayer = shapeImageSrc && shape !== "line" ? `<image clip-path="url(#${imageClipId})" href="${escapeSvgAttribute(shapeImageSrc)}" preserveAspectRatio="${fit === "fill" ? "none" : fit === "contain" ? "xMidYMid meet" : "xMidYMid slice"}" x="${50 - 50 * scaleX + cropX}" y="${50 - 50 * scaleY + cropY}" width="${100 * scaleX}" height="${100 * scaleY}"/>` : "";
-    return `<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" overflow="visible" preserveAspectRatio="none" shape-rendering="geometricPrecision" viewBox="${viewBox}" opacity="${opacity2}"><defs>${defs}${imageClip}</defs><g${maskAttr}>${imageLayer}${geometry}${booleanLayer}</g></svg>`;
+    })}</g></mask>` : "";
+    const scales = normalizedImageScales("cover", props.shapeImageScaleX, props.shapeImageScaleY);
+    const scale = Math.max(scales.scaleX, scales.scaleY);
+    const cropX = numberProp2(props.shapeImageCropX, 0);
+    const cropY = numberProp2(props.shapeImageCropY, 0);
+    const fit = stringProp2(props.shapeImageFit) ?? "cover";
+    const imageWidth = viewportWidth * scale;
+    const imageHeight = viewportHeight * scale;
+    const imageX = (viewportWidth - imageWidth) / 2 + cropX / 100 * viewportWidth;
+    const imageY = (viewportHeight - imageHeight) / 2 + cropY / 100 * viewportHeight;
+    const imageLayer = shapeImageSrc && shape !== "line" ? `<image mask="url(#${imageMaskId})" href="${escapeSvgAttribute(shapeImageSrc)}" preserveAspectRatio="${fit === "contain" || fit === "scale-down" ? "xMidYMid meet" : "xMidYMid slice"}" x="${imageX}" y="${imageY}" width="${imageWidth}" height="${imageHeight}"/>` : "";
+    const transformedGeometry = shape === "line" ? geometry : `<g${geometryTransform}>${geometry}${booleanLayer}</g>`;
+    const resolvedBooleanLayer = shape === "line" ? booleanLayer : "";
+    return `<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" overflow="visible" preserveAspectRatio="none" shape-rendering="geometricPrecision" viewBox="${viewBox}" opacity="${opacity2}"><defs>${defs}${imageMask}</defs><g${maskAttr}>${imageLayer}${transformedGeometry}${resolvedBooleanLayer}</g></svg>`;
   }
-  function renderMaskDefs(mask, id) {
+  function renderMaskDefs(mask, id, width, height) {
     if (mask === "alpha") {
-      return `<linearGradient id="${id}-fade" x1="0" x2="1" y1="0" y2="0"><stop offset="0%" stop-color="white" stop-opacity="0.15"/><stop offset="45%" stop-color="white"/><stop offset="100%" stop-color="white" stop-opacity="0.2"/></linearGradient><mask id="${id}"><rect width="100" height="100" fill="url(#${id}-fade)"/></mask>`;
+      return `<linearGradient id="${id}-fade" x1="0" x2="1" y1="0" y2="0"><stop offset="0%" stop-color="white" stop-opacity="0.15"/><stop offset="45%" stop-color="white"/><stop offset="100%" stop-color="white" stop-opacity="0.2"/></linearGradient><mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="${width}" height="${height}"><rect width="${width}" height="${height}" fill="url(#${id}-fade)"/></mask>`;
     }
     if (mask === "luma") {
-      return `<radialGradient id="${id}-radial" cx="50%" cy="45%" r="58%"><stop offset="0%" stop-color="white"/><stop offset="100%" stop-color="white" stop-opacity="0.08"/></radialGradient><mask id="${id}"><rect width="100" height="100" fill="url(#${id}-radial)"/></mask>`;
+      return `<radialGradient id="${id}-radial" cx="50%" cy="45%" r="58%"><stop offset="0%" stop-color="white"/><stop offset="100%" stop-color="white" stop-opacity="0.08"/></radialGradient><mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="${width}" height="${height}"><rect width="${width}" height="${height}" fill="url(#${id}-radial)"/></mask>`;
     }
     if (mask === "clip") {
-      return `<mask id="${id}"><rect width="72" height="72" x="14" y="14" rx="14" fill="white"/></mask>`;
+      const radius = Math.min(width, height) * 0.14;
+      return `<mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="${width}" height="${height}"><rect width="${width * 0.72}" height="${height * 0.72}" x="${width * 0.14}" y="${height * 0.14}" rx="${radius}" fill="white"/></mask>`;
     }
     return "";
   }
   function renderShapeGeometry(options) {
-    const { fill, frameHeight, frameWidth, points, radius, shape, sides, stroke, strokeWidth } = options;
+    const { corner, fill, frameHeight, frameWidth, points, radius, shape, sides, stroke, strokeWidth } = options;
     const common = `fill="${escapeSvgAttribute(fill)}" stroke="${escapeSvgAttribute(stroke)}" stroke-linejoin="round" stroke-width="${strokeWidth}" vector-effect="non-scaling-stroke"`;
     if (shape === "circle") return `<circle cx="50" cy="50" r="48" ${common}/>`;
     if (shape === "triangle" || shape === "polygon") return `<path d="${shapePolygonPath(shape === "triangle" ? 3 : sides)}" ${common}/>`;
@@ -28415,8 +28815,8 @@ ${String(ex)}`);
       parallelogram: "M24 1H99L76 99H1Z"
     };
     if (paths[shape]) return `<path d="${paths[shape]}" ${common}/>`;
-    if (radius <= 0) return `<rect width="100" height="100" x="0" y="0" ${common}/>`;
-    const { radiusX, radiusY } = normalizedContinuousCornerRadii(radius, frameWidth, frameHeight);
+    if (radius <= 0 && corner <= 0) return `<rect width="100" height="100" x="0" y="0" ${common}/>`;
+    const { radiusX, radiusY } = corner > 0 ? normalizedRelativeCornerRadii(corner, frameWidth, frameHeight) : normalizedContinuousCornerRadii(radius, frameWidth, frameHeight);
     const path2 = continuousRoundedRectPath({ height: 100, radiusX, radiusY, width: 100 });
     return `<path d="${path2}" ${common}/>`;
   }
@@ -28479,10 +28879,10 @@ ${String(ex)}`);
     });
     return `M${vertices.join(" L")} Z`;
   }
-  function stringProp(value) {
+  function stringProp2(value) {
     return typeof value === "string" && value.trim() ? value.trim() : void 0;
   }
-  function numberProp(value, fallback) {
+  function numberProp2(value, fallback) {
     const parsed = typeof value === "number" ? value : Number(value);
     return Number.isFinite(parsed) ? parsed : fallback;
   }
@@ -29145,20 +29545,20 @@ ${String(ex)}`);
   var LIGHT_MUTED = "#475569";
   var SHADER_COLOR_LIGHTNESS_WEIGHTS = [0.5, 0.35, 0.15];
   function resolveSlideThemeColors(props, options = {}) {
-    const theme = stringProp2(props.theme) ?? options.themeFallback ?? "dark";
+    const theme = stringProp3(props.theme) ?? options.themeFallback ?? "dark";
     const declaredLight = isDeclaredLightTheme(theme);
-    const background = stringProp2(props.background) ?? options.backgroundFallback ?? defaultSlideBackground(theme);
+    const background = stringProp3(props.background) ?? options.backgroundFallback ?? defaultSlideBackground(theme);
     const backgroundLightness = colorLightness(background) ?? (declaredLight ? 0.94 : 0.08);
-    const accent = stringProp2(props.accent) ?? options.accentFallback ?? (backgroundLightness > 0.62 ? LIGHT_TEXT : DARK_TEXT);
-    const shader = stringProp2(props.shader);
-    const shaderColor1 = stringProp2(props.shaderColor1) ?? accent;
-    const shaderColor2 = stringProp2(props.shaderColor2) ?? background;
-    const shaderColor3 = stringProp2(props.shaderColor3) ?? (backgroundLightness > 0.62 ? "#64748b" : "#06b6d4");
+    const accent = stringProp3(props.accent) ?? options.accentFallback ?? (backgroundLightness > 0.62 ? LIGHT_TEXT : DARK_TEXT);
+    const shader = stringProp3(props.shader);
+    const shaderColor1 = stringProp3(props.shaderColor1) ?? accent;
+    const shaderColor2 = stringProp3(props.shaderColor2) ?? background;
+    const shaderColor3 = stringProp3(props.shaderColor3) ?? (backgroundLightness > 0.62 ? "#64748b" : "#06b6d4");
     const defaultPalette = defaultShaderPaletteForBackground(backgroundLightness, background);
-    const shaderColor4 = stringProp2(props.shaderColor4) ?? defaultPalette.color4;
-    const shaderColor5 = stringProp2(props.shaderColor5) ?? defaultPalette.color5;
-    const shaderColor6 = stringProp2(props.shaderColor6) ?? defaultPalette.color6;
-    const visualLightness = shader ? estimateShaderLightness(backgroundLightness, [shaderColor1, shaderColor2, shaderColor3], numberProp2(props.shaderIntensity, 0.5)) : backgroundLightness;
+    const shaderColor4 = stringProp3(props.shaderColor4) ?? defaultPalette.color4;
+    const shaderColor5 = stringProp3(props.shaderColor5) ?? defaultPalette.color5;
+    const shaderColor6 = stringProp3(props.shaderColor6) ?? defaultPalette.color6;
+    const visualLightness = shader ? estimateShaderLightness(backgroundLightness, [shaderColor1, shaderColor2, shaderColor3], numberProp3(props.shaderIntensity, 0.5)) : backgroundLightness;
     const isLight = visualLightness > 0.24;
     const explicitForeground = autoStringProp(props.textColor ?? props.foreground ?? props.color);
     const explicitMuted = autoStringProp(props.mutedColor);
@@ -29184,7 +29584,7 @@ ${String(ex)}`);
     };
   }
   function defaultSlideBackground(theme) {
-    if (theme === "light") return "#f8fafc";
+    if (theme === "light") return "#FFFFFF";
     if (theme === "paper") return "#f3eadf";
     if (theme === "blue") return "#0b1f3a";
     return "#0f172a";
@@ -29249,15 +29649,15 @@ ${String(ex)}`);
   function isDeclaredLightTheme(theme) {
     return theme === "light" || theme === "paper";
   }
-  function numberProp2(value, fallback) {
+  function numberProp3(value, fallback) {
     return typeof value === "number" && Number.isFinite(value) ? value : fallback;
   }
-  function stringProp2(value) {
+  function stringProp3(value) {
     const stringValue = typeof value === "string" ? value.trim() : "";
     return stringValue || void 0;
   }
   function autoStringProp(value) {
-    const stringValue = stringProp2(value);
+    const stringValue = stringProp3(value);
     return stringValue === "auto" ? void 0 : stringValue;
   }
 
@@ -29270,62 +29670,6 @@ ${String(ex)}`);
   }
   function blockRotation(props) {
     return normalizeBlockRotation(props.rotation);
-  }
-
-  // core/motion-doc/domain/frame.ts
-  function motionDocBlockFrame(block) {
-    if (!block || !("props" in block)) {
-      return { h: 18, w: 42, x: 8, y: 12 };
-    }
-    return {
-      h: percentFrameValue(block.props.h, defaultBlockHeight(block.type)),
-      w: percentFrameValue(block.props.w, defaultBlockWidth(block.type)),
-      x: percentFrameValue(block.props.x, 9),
-      y: percentFrameValue(block.props.y, defaultBlockY(block.type))
-    };
-  }
-  function defaultBlockWidth(type) {
-    if (type === "Title") return 52;
-    if (type === "Text") return 42;
-    if (type === "Icon") return 16;
-    if (type === "Metric") return 32;
-    if (type === "Shape") return widthPercentForPhysicalAspectRatio(28);
-    if (type === "Stack") return 80;
-    if (type === "Table") return 56;
-    if (type === "Chart") return 78;
-    if (type === "ImageBlock" || type === "VideoBlock") return 80;
-    return 40;
-  }
-  function widthPercentForPhysicalAspectRatio(heightPercent, aspectRatio = 1) {
-    return heightPercent * MOTION_DOC_CANVAS_HEIGHT / MOTION_DOC_CANVAS_WIDTH * aspectRatio;
-  }
-  function defaultBlockHeight(type) {
-    if (type === "Title") return 18;
-    if (type === "Text") return 9;
-    if (type === "Icon") return 28;
-    if (type === "Metric") return 36;
-    if (type === "Shape") return 28;
-    if (type === "Stack") return 20;
-    if (type === "Table") return 30;
-    if (type === "Chart") return 52;
-    if (type === "ImageBlock" || type === "VideoBlock") return 54;
-    return 32;
-  }
-  function defaultBlockY(type) {
-    if (type === "Title") return 18;
-    if (type === "Icon" || type === "Shape") return 30;
-    if (type === "Table") return 34;
-    if (type === "Chart") return 25;
-    if (type === "Stack") return 64;
-    if (type === "ImageBlock" || type === "VideoBlock") return 20;
-    return 38;
-  }
-  function percentFrameValue(value, fallback) {
-    const parsed = typeof value === "number" ? value : Number(value);
-    if (!Number.isFinite(parsed)) {
-      return fallback;
-    }
-    return Math.min(Math.max(parsed, 0), 100);
   }
 
   // core/motion-doc/application/tableBlock.ts
@@ -29401,6 +29745,16 @@ ${String(ex)}`);
   function parseColOverrides(props) {
     return parseOverridesJson(props.colOverrides);
   }
+  function parseCellOverrides(props) {
+    return parseCellOverridesJson(props.cellOverrides);
+  }
+  function tableCellStyleOverride(props, rowIndex, columnIndex) {
+    return {
+      ...parseColOverrides(props)[columnIndex],
+      ...parseRowOverrides(props)[rowIndex],
+      ...parseCellOverrides(props)[cellOverrideKey(rowIndex, columnIndex)]
+    };
+  }
   function parseOverridesJson(value) {
     if (typeof value !== "string" || !value.trim()) return {};
     try {
@@ -29411,6 +29765,28 @@ ${String(ex)}`);
     } catch {
     }
     return {};
+  }
+  function parseCellOverridesJson(value) {
+    if (typeof value !== "string" || !value.trim()) return {};
+    try {
+      const parsed = JSON.parse(value);
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
+      return Object.fromEntries(
+        Object.entries(parsed).filter(
+          ([key, override]) => Boolean(parseCellOverrideKey(key)) && typeof override === "object" && override !== null && !Array.isArray(override)
+        )
+      );
+    } catch {
+      return {};
+    }
+  }
+  function cellOverrideKey(rowIndex, columnIndex) {
+    return `${rowIndex}:${columnIndex}`;
+  }
+  function parseCellOverrideKey(key) {
+    const match = /^(\d+):(\d+)$/.exec(key);
+    if (!match) return null;
+    return { columnIndex: Number(match[2]), rowIndex: Number(match[1]) };
   }
 
   // core/motion-doc/domain/typography.ts
@@ -29435,8 +29811,19 @@ ${String(ex)}`);
   function motionDocFontPointsToCanvasPixels(value) {
     return Math.round(value / CSS_PIXELS_TO_POINTS * MOTION_DOC_TYPOGRAPHY_SCALE);
   }
+  function motionDocLineHeightCanvasValue(lineHeight2, lineHeightPt, defaultLineHeight) {
+    const exactPoints = positiveNumber(lineHeightPt);
+    if (exactPoints !== void 0) {
+      return `${motionDocFontPointsToCanvasPixels(exactPoints)}px`;
+    }
+    return positiveNumber(lineHeight2) ?? defaultLineHeight;
+  }
   function motionDocDefaultFontSize(type) {
     return type === "Title" ? MOTION_DOC_FONT_SIZES.display : MOTION_DOC_FONT_SIZES.body;
+  }
+  function positiveNumber(value) {
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
   }
 
   // core/motion-doc/application/shaders/paperShaderProgram.ts
@@ -33950,8 +34337,13 @@ void main() {
           if (rect.width <= 0 || rect.height <= 0) return false;
 
           const fit = media.dataset.imageFit || "cover";
-          const scaleX = croppedImageNumber(media.dataset.imageScaleX, 1, 0.1, 8);
-          const scaleY = croppedImageNumber(media.dataset.imageScaleY, 1, 0.1, 8);
+          let scaleX = croppedImageNumber(media.dataset.imageScaleX, 1, 0.1, 8);
+          let scaleY = croppedImageNumber(media.dataset.imageScaleY, 1, 0.1, 8);
+          if (fit !== "fill") {
+            const uniformScale = Math.max(scaleX, scaleY);
+            scaleX = uniformScale;
+            scaleY = uniformScale;
+          }
           const dimensions = croppedImageDimensions(
             fit,
             rect.width / rect.height,
@@ -35463,7 +35855,7 @@ void main() {
         border-radius: var(--motion-radius, 0);
         font-size: calc(var(--motion-font-size, ${motionDocFontPointsToCanvasPixels(MOTION_DOC_FONT_SIZES.display)}px) * var(--frame-scale, 1));
         font-weight: var(--motion-font-weight, 650);
-        letter-spacing: 0;
+        letter-spacing: var(--motion-letter-spacing, 0px);
         line-height: var(--motion-line-height, 1.02);
         padding: var(--motion-text-padding, 0);
         background: var(--motion-bg, transparent);
@@ -35476,6 +35868,7 @@ void main() {
         border-radius: var(--motion-radius, 0);
         font-size: calc(var(--motion-font-size, ${motionDocFontPointsToCanvasPixels(MOTION_DOC_FONT_SIZES.body)}px) * var(--frame-scale, 1));
         font-weight: var(--motion-font-weight, 400);
+        letter-spacing: var(--motion-letter-spacing, 0px);
         line-height: var(--motion-line-height, 1.45);
         padding: var(--motion-text-padding, 0);
         background: var(--motion-bg, transparent);
@@ -35818,7 +36211,6 @@ void main() {
         overflow: hidden;
         border: var(--table-border-width, 1px) var(--table-border-style, solid) var(--table-border, var(--slide-border));
         border-radius: var(--motion-radius, 8px);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.18);
       }
       .block-table__cell {
         display: flex;
@@ -36001,7 +36393,7 @@ void main() {
       .chart-legend,
       .chart-legend-value,
       .chart-value {
-        fill: var(--slide-muted);
+        fill: var(--chart-label-color, var(--slide-muted));
         font-family: Inter, ui-sans-serif, system-ui, sans-serif;
         font-size: 17px;
       }
@@ -36018,6 +36410,86 @@ void main() {
         paint-order: stroke;
         stroke: rgba(0,0,0,.3);
         stroke-width: 3px;
+      }
+      .motion-chart--modern .chart-grid {
+        stroke-opacity: .075;
+      }
+      .motion-chart--modern .chart-grid--baseline {
+        stroke-opacity: .18;
+      }
+      .motion-chart--modern .chart-axis-label,
+      .motion-chart--modern .chart-label,
+      .motion-chart--modern .chart-legend {
+        font-family: Geist, "SF Pro Display", "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
+        font-size: var(--chart-label-size, 20px);
+        font-weight: 500;
+        letter-spacing: .01em;
+      }
+      .motion-chart--modern .chart-axis-label {
+        opacity: .7;
+      }
+      .motion-chart--modern .chart-value,
+      .motion-chart--modern .chart-legend-value {
+        font-family: Geist, "SF Pro Display", "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
+        font-size: var(--chart-value-size, 23px);
+        font-weight: 620;
+        letter-spacing: -.02em;
+      }
+      .motion-chart--modern .chart-point-halo {
+        opacity: .13;
+      }
+      .motion-chart--modern .chart-point {
+        stroke: var(--slide-bg, #ffffff);
+        stroke-width: 2.5;
+      }
+      .motion-chart--modern .chart-bubble {
+        stroke: var(--slide-bg, #ffffff);
+        stroke-width: 3;
+      }
+      .motion-chart--modern .chart-slice {
+        stroke: var(--slide-bg, #ffffff);
+        stroke-width: 2;
+      }
+      .motion-chart--modern .chart-center-metric {
+        fill: var(--slide-fg, currentColor);
+        font-family: Geist, "SF Pro Display", "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
+        font-size: var(--chart-center-size, 32px);
+        font-variant-numeric: tabular-nums;
+        font-weight: 650;
+        letter-spacing: -.04em;
+      }
+      .motion-chart--modern .chart-center-label {
+        fill: var(--slide-muted, #94a3b8);
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: .02em;
+      }
+      .chart-reference line {
+        stroke: var(--chart-reference-color, #dc2626);
+        stroke-dasharray: 8 6;
+        stroke-width: 2;
+      }
+      .chart-reference text {
+        fill: var(--chart-reference-color, #dc2626);
+        font-family: Geist, ui-sans-serif, system-ui, sans-serif;
+        font-size: var(--chart-label-size, 18px);
+        font-weight: 650;
+      }
+      .chart-annotation line {
+        stroke: var(--chart-annotation-color, #dc2626);
+        stroke-width: 1.5;
+      }
+      .chart-annotation circle {
+        fill: var(--slide-bg, #ffffff);
+        stroke: var(--chart-annotation-color, #dc2626);
+        stroke-width: 2.5;
+      }
+      .chart-annotation text,
+      .chart-annotation-text {
+        fill: var(--chart-annotation-color, #dc2626);
+        font-family: Geist, ui-sans-serif, system-ui, sans-serif;
+        font-size: var(--chart-label-size, 18px);
+        font-weight: 650;
       }
       .chart-bar,
       .chart-bubble,
@@ -36195,8 +36667,8 @@ void main() {
   // core/motion-doc/infrastructure/export/motionDocExport.ts
   var MOTION_DOC_PNG_HEIGHT = MOTION_DOC_CANVAS_HEIGHT;
   var MOTION_DOC_PNG_WIDTH = MOTION_DOC_CANVAS_WIDTH;
-  function exportRuntimeSecurity() {
-    const nonce = `slidex-${globalThis.crypto.randomUUID()}`;
+  function exportRuntimeSecurity(source) {
+    const nonce = `slidex-${stableNonce(source)}`;
     const policy = [
       "default-src 'none'",
       "connect-src https:",
@@ -36210,8 +36682,16 @@ void main() {
     ].join("; ");
     return { nonce, policy };
   }
+  function stableNonce(value) {
+    let hash = 2166136261;
+    for (let index2 = 0; index2 < value.length; index2 += 1) {
+      hash ^= value.charCodeAt(index2);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).padStart(8, "0");
+  }
   function buildMotionDocRasterHtml(source, customTitle, slideIndices) {
-    const security = exportRuntimeSecurity();
+    const security = exportRuntimeSecurity(source);
     const document4 = parseMotionDoc(source);
     const displayTitle = customTitle || document4.title;
     const scenes = slideIndices ? slideIndices.map((slideIndex) => document4.scenes[slideIndex]).filter((scene) => Boolean(scene)) : document4.scenes;
@@ -36301,16 +36781,16 @@ void main() {
       backgroundFallback: declaredLight ? "#ffffff" : "#000000",
       themeFallback: theme
     });
-    const shader = stringProp3(props.shader);
-    const shaderPreset = stringProp3(props.shaderPreset) ?? "Default";
-    const shaderHtml = shader ? `<canvas class="shader-bg" data-shader="${escapeAttribute(shader)}" data-shader-engine="${escapeAttribute(themeColors.shaderEngine)}" data-shader-preset="${escapeAttribute(shaderPreset)}" data-shader-variant="0" data-shader-color1="${escapeAttribute(themeColors.shaderColor1)}" data-shader-color2="${escapeAttribute(themeColors.shaderColor2)}" data-shader-color3="${escapeAttribute(themeColors.shaderColor3)}" data-shader-color4="${escapeAttribute(themeColors.shaderColor4)}" data-shader-color5="${escapeAttribute(themeColors.shaderColor5)}" data-shader-color6="${escapeAttribute(themeColors.shaderColor6)}" data-shader-angle="${numberProp3(props.shaderAngle, 0)}" data-shader-frame="${numberProp3(props.shaderFrame, 0)}" data-shader-intensity="${numberProp3(props.shaderIntensity, 0.5)}" data-shader-speed="${numberProp3(props.shaderSpeed, 1)}" data-shader-softness="${numberProp3(props.shaderSoftness, 0.5)}" data-shader-scale="${numberProp3(props.shaderScale, 0.5)}" data-shader-detail="${numberProp3(props.shaderDetail, 0.5)}"></canvas>` : "";
-    const backgroundImage2 = stringProp3(props.backgroundImage);
+    const shader = stringProp4(props.shader);
+    const shaderPreset = stringProp4(props.shaderPreset) ?? "Default";
+    const shaderHtml = shader ? `<canvas class="shader-bg" data-shader="${escapeAttribute(shader)}" data-shader-engine="${escapeAttribute(themeColors.shaderEngine)}" data-shader-preset="${escapeAttribute(shaderPreset)}" data-shader-variant="0" data-shader-color1="${escapeAttribute(themeColors.shaderColor1)}" data-shader-color2="${escapeAttribute(themeColors.shaderColor2)}" data-shader-color3="${escapeAttribute(themeColors.shaderColor3)}" data-shader-color4="${escapeAttribute(themeColors.shaderColor4)}" data-shader-color5="${escapeAttribute(themeColors.shaderColor5)}" data-shader-color6="${escapeAttribute(themeColors.shaderColor6)}" data-shader-angle="${numberProp4(props.shaderAngle, 0)}" data-shader-frame="${numberProp4(props.shaderFrame, 0)}" data-shader-intensity="${numberProp4(props.shaderIntensity, 0.5)}" data-shader-speed="${numberProp4(props.shaderSpeed, 1)}" data-shader-softness="${numberProp4(props.shaderSoftness, 0.5)}" data-shader-scale="${numberProp4(props.shaderScale, 0.5)}" data-shader-detail="${numberProp4(props.shaderDetail, 0.5)}"></canvas>` : "";
+    const backgroundImage2 = stringProp4(props.backgroundImage);
     const backgroundImageHtml = backgroundImage2 ? `<div class="slide-bg-image" style="${escapeAttribute(inlineCss({
       "background-image": cssImageUrl(backgroundImage2),
-      "background-size": backgroundSizeFromFit(stringProp3(props.backgroundFit))
+      "background-size": backgroundSizeFromFit(stringProp4(props.backgroundFit))
     }))}"></div>` : "";
     const slideTransition = slideTransitionClass(props.slideTransition);
-    const transitionDuration = numberProp3(props.transitionDuration, 0.72);
+    const transitionDuration = numberProp4(props.transitionDuration, 0.72);
     const hasPositionedBlocks = blocks.some((block) => "props" in block && isPositionedProps(block.props));
     const layout = slideLayoutProp(props.layout);
     const imageBlocks = blocks.filter((block) => block.type === "ImageBlock");
@@ -36352,7 +36832,7 @@ void main() {
   }
   function renderBlock(block, blockIndex, options = {}) {
     if (block.type === "Title") {
-      const depth = numberProp3(block.props.markdownDepth, 1);
+      const depth = numberProp4(block.props.markdownDepth, 1);
       const tag = depth > 1 ? `h${Math.min(Math.max(Math.round(depth), 2), 6)}` : "h1";
       return renderMotionBlock(
         block,
@@ -36362,10 +36842,10 @@ void main() {
     if (block.type === "Text" || block.type === "heading") {
       const listType = "props" in block ? block.props?.listType : void 0;
       const props = "props" in block ? block.props : {};
-      const markdownKind = stringProp3(props.markdownKind);
+      const markdownKind = stringProp4(props.markdownKind);
       const contents = renderTextLines(String(block.text ?? ""), listType, props);
       if (markdownKind === "heading") {
-        const depth = Math.min(Math.max(Math.round(numberProp3(props.markdownDepth, 2)), 2), 6);
+        const depth = Math.min(Math.max(Math.round(numberProp4(props.markdownDepth, 2)), 2), 6);
         return renderMotionBlock(block, `<h${depth} class="block-text block-markdown-heading">${contents}</h${depth}>`);
       }
       if (markdownKind === "blockquote") {
@@ -36388,15 +36868,23 @@ void main() {
     if (block.type === "Chart") {
       return renderMotionBlock(
         block,
-        `<div class="block-chart">${renderMotionDocChartSvg(block.props)}</div>`
+        `<div class="block-chart">${renderMotionDocChartSvg(block.props, {
+          appearance: "editor-modern",
+          frame: motionDocBlockFrame(block)
+        })}</div>`
       );
     }
     if (block.type === "ImageBlock") {
       const fit = fitProp(block.props.fit);
       const imageCropX = clampExportImageCropPosition(optionalNumberProp(block.props.cropX));
       const imageCropY = clampExportImageCropPosition(optionalNumberProp(block.props.cropY));
-      const imageScaleX = clampExportImageScale(optionalNumberProp(block.props.scaleX));
-      const imageScaleY = clampExportImageScale(optionalNumberProp(block.props.scaleY));
+      const normalizedScales = normalizedImageScales(
+        fit,
+        optionalNumberProp(block.props.scaleX),
+        optionalNumberProp(block.props.scaleY)
+      );
+      const imageScaleX = clampExportImageScale(normalizedScales.scaleX);
+      const imageScaleY = clampExportImageScale(normalizedScales.scaleY);
       const imageTransform = `translate(${imageCropX}%, ${imageCropY}%) scale(${imageScaleX}, ${imageScaleY})`;
       const hasImageCropTransform = imageCropX !== 0 || imageCropY !== 0 || imageScaleX !== 1 || imageScaleY !== 1;
       const imageScaleStyle = {
@@ -36404,11 +36892,11 @@ void main() {
         "transform": imageTransform,
         "transform-origin": "center"
       };
-      const filterDefinition = getPaperImageFilterDefinition(stringProp3(block.props.filter));
+      const filterDefinition = getPaperImageFilterDefinition(stringProp4(block.props.filter));
       const needsExactImageRaster = Boolean(filterDefinition) || hasImageCropTransform;
       const exactRasterAttr = needsExactImageRaster ? ` data-exact-image-raster="true"` : "";
       if (filterDefinition && !options.rasterMode) {
-        const fPreset = stringProp3(block.props.filterPreset) || filterDefinition.defaultPreset;
+        const fPreset = stringProp4(block.props.filterPreset) || filterDefinition.defaultPreset;
         const fDistortion = optionalNumberProp(block.props.filterDistortion);
         const fSize = optionalNumberProp(block.props.filterSize);
         const fAngle = optionalNumberProp(block.props.filterAngle);
@@ -36472,8 +36960,8 @@ void main() {
     }
     if (block.type === "VideoBlock") {
       const fit = fitProp(block.props.fit);
-      const poster = stringProp3(block.props.poster);
-      const src = stringProp3(block.props.src);
+      const poster = stringProp4(block.props.poster);
+      const src = stringProp4(block.props.src);
       if (options.rasterMode) {
         return renderMotionBlock(
           block,
@@ -36521,7 +37009,7 @@ void main() {
       );
     }
     if (block.type === "Icon") {
-      const strokeWidth = numberProp3(block.props.strokeWidth, 2);
+      const strokeWidth = numberProp4(block.props.strokeWidth, 2);
       return renderMotionBlock(
         block,
         `<div class="block-icon">${renderLucideIconSvg(String(block.props.icon ?? "Sparkles"), { strokeWidth })}</div>`
@@ -36543,9 +37031,9 @@ void main() {
         `<div class="block-stack" style="${escapeAttribute(inlineCss({
           "--stack-align": align,
           "--stack-direction": direction2,
-          "--stack-gap": `${numberProp3(block.props.gap, 16)}px`,
-          "--stack-padding": `${numberProp3(block.props.padding, 20)}px`,
-          "--stack-stroke": stringProp3(block.props.stroke) ?? "var(--slide-border)"
+          "--stack-gap": `${numberProp4(block.props.gap, 16)}px`,
+          "--stack-padding": `${numberProp4(block.props.padding, 20)}px`,
+          "--stack-stroke": stringProp4(block.props.stroke) ?? "var(--slide-border)"
         }))}">${stackItems}</div>`
       );
     }
@@ -36565,36 +37053,33 @@ void main() {
     const cells = tableCellsFromProps(props, rows, columns);
     const columnTracks = tableColumnTrackValuesFromProps(props, columns);
     const rowTracks = tableRowTrackValuesFromProps(props, rows);
-    const rowOverrides = parseRowOverrides(props);
-    const colOverrides = parseColOverrides(props);
-    const borderColor = stringProp3(props.borderColor) ?? "#d1d5db";
-    const borderWidth = numberProp3(props.borderWidth, 1);
+    const borderColor = stringProp4(props.borderColor) ?? "#d1d5db";
+    const borderWidth = numberProp4(props.borderWidth, 1);
     const tableStyle = inlineCss({
       "--table-border": borderColor,
       "--table-border-style": tableBorderStyle(props.borderStyle),
       "--table-border-width": `${borderWidth}px`,
       "--table-cell-justify": tableCellJustify(props.textAlign),
-      "--table-font-size": `${motionDocFontPointsToCanvasPixels(numberProp3(props.fontSize, MOTION_DOC_FONT_SIZES.table))}px`,
-      "--table-padding-x": `${numberProp3(props.cellPaddingX, 10)}px`,
-      "--table-padding-y": `${numberProp3(props.cellPaddingY, 8)}px`,
+      "--table-font-size": `${motionDocFontPointsToCanvasPixels(numberProp4(props.fontSize, MOTION_DOC_FONT_SIZES.table))}px`,
+      "--table-padding-x": `${numberProp4(props.cellPaddingX, 10)}px`,
+      "--table-padding-y": `${numberProp4(props.cellPaddingY, 8)}px`,
       "--table-text-align": tableTextAlign(props.textAlign),
       "--table-vertical-align": tableVerticalAlign(props.textVerticalAlign),
-      background: stringProp3(props.background ?? props.backgroundColor ?? props.bg) ?? "#ffffff",
-      color: stringProp3(props.color ?? props.textColor) ?? "#000000",
+      background: stringProp4(props.background ?? props.backgroundColor ?? props.bg) ?? "#ffffff",
+      color: stringProp4(props.color ?? props.textColor) ?? "#000000",
       "grid-template-columns": tableTrackTemplate(columnTracks),
       "grid-template-rows": tableTrackTemplate(rowTracks)
     });
     const cellHtml = cells.flatMap(
       (row, rowIndex) => row.map((cell, columnIndex) => {
-        const rowOverride = rowOverrides[rowIndex];
-        const colOverride = colOverrides[columnIndex];
-        const cellBackground = rowOverride?.background ?? colOverride?.background ?? tableCellBackground(props, rowIndex);
-        const cellBorderColor = rowOverride?.borderColor ?? colOverride?.borderColor;
-        const cellTextAlign = rowOverride?.textAlign ?? colOverride?.textAlign ?? tableTextAlign(props.textAlign);
-        const cellColor = rowOverride?.textColor ?? colOverride?.textColor ?? stringProp3(props.color ?? props.textColor);
-        const cellFontFamily = rowOverride?.fontFamily ?? colOverride?.fontFamily;
-        const cellFontSize = rowOverride?.fontSize ?? colOverride?.fontSize;
-        const cellFontWeight = rowOverride?.fontWeight ?? colOverride?.fontWeight;
+        const override = tableCellStyleOverride(props, rowIndex, columnIndex);
+        const cellBackground = override.background ?? tableCellBackground(props, rowIndex);
+        const cellBorderColor = override.borderColor;
+        const cellTextAlign = override.textAlign ?? tableTextAlign(props.textAlign);
+        const cellColor = override.textColor ?? stringProp4(props.color ?? props.textColor);
+        const cellFontFamily = override.fontFamily;
+        const cellFontSize = override.fontSize;
+        const cellFontWeight = override.fontWeight;
         const cellStyle = inlineCss({
           ...cellBackground ? { background: cellBackground } : {},
           ...cellBorderColor ? {
@@ -36614,11 +37099,11 @@ void main() {
     return `<div class="block-table" style="${escapeAttribute(tableStyle)}">${cellHtml}</div>`;
   }
   function tableCellBackground(props, rowIndex) {
-    const stripeBackground = stringProp3(props.stripeBackground);
+    const stripeBackground = stringProp4(props.stripeBackground);
     if (stripeBackground && rowIndex % 2 === 1) {
       return stripeBackground;
     }
-    return stringProp3(props.cellBackground) ?? "transparent";
+    return stringProp4(props.cellBackground) ?? "transparent";
   }
   function tableBorderStyle(value) {
     return value === "dashed" || value === "dotted" ? value : "solid";
@@ -36643,17 +37128,18 @@ void main() {
     const props = "props" in block ? block.props : {};
     const nodeId = motionDocBlockId(block);
     const enter = animationClass(props.enter);
-    const delay = numberProp3(props.delay, 0);
-    const duration2 = numberProp3(props.duration, 0.6);
+    const delay = numberProp4(props.delay, 0);
+    const duration2 = numberProp4(props.duration, 0.6);
     const fullClass = props.full === "true" || props.full === 1 ? " motion-block--full" : "";
     const positionClass = isPositionedProps(props) ? " motion-block--positioned" : "";
-    const frameAttributes = isPositionedProps(props) ? ` data-slidex-x="${framePercent(props.x, 8)}" data-slidex-y="${framePercent(props.y, 12)}" data-slidex-w="${framePercent(props.w, 42)}" data-slidex-h="${framePercent(props.h, 18)}"` : "";
+    const frameAttributes = isPositionedProps(props) ? ` data-slidex-x="${framePositionPercent(props.x, 8)}" data-slidex-y="${framePositionPercent(props.y, 12)}" data-slidex-w="${framePercent(props.w, 42)}" data-slidex-h="${framePercent(props.h, 18)}"` : "";
     return `<div class="motion-block ${enter}${fullClass}${positionClass}"${nodeId ? ` data-slidex-node-id="${escapeAttribute(nodeId)}"` : ""}${frameAttributes} data-slidex-block-type="${escapeAttribute(block.type)}" style="${escapeAttribute(inlineCss({
       "--motion-delay": `${delay}s`,
       "--motion-duration": `${duration2}s`,
       ...fontSizeVars(props),
       ...textStyleVars(props),
       ...positionVars(props),
+      ...objectShadowCss(props),
       rotate: `${blockRotation(props)}deg`,
       ...radiusVars(props),
       ...colorVars(props),
@@ -36663,7 +37149,7 @@ void main() {
   }
   function renderTextLines(text4, listType, props = {}) {
     if (!text4) return "";
-    const listStart = Math.max(1, Math.round(numberProp3(props.listStart, 1)));
+    const listStart = Math.max(1, Math.round(numberProp4(props.listStart, 1)));
     return textStyleLines(text4, props).map((line, lineIndex) => {
       const isBullet = listType === "bullet";
       const isOrdered = listType === "ordered";
@@ -36672,9 +37158,11 @@ void main() {
         const styles = {
           ...segment.color ? { color: segment.color } : {},
           ...segment.fontFamily ? { "font-family": `"${segment.fontFamily}", sans-serif` } : {},
+          ...segment.fontSize === void 0 ? {} : { "font-size": `${motionDocFontPointsToCanvasPixels(segment.fontSize)}px` },
           ...segment.fontWeight === void 0 ? {} : { "font-weight": String(segment.fontWeight) },
-          ...segment.italic ? { "font-style": "italic" } : {},
-          ...segment.underline ? { "text-decoration": "underline" } : {}
+          ...segment.italic === void 0 ? {} : { "font-style": segment.italic ? "italic" : "normal" },
+          ...segment.letterSpacing === void 0 ? {} : { "letter-spacing": `${motionDocFontPointsToCanvasPixels(segment.letterSpacing)}px` },
+          ...segment.underline === void 0 ? {} : { "text-decoration": segment.underline ? "underline" : "none" }
         };
         const escapedText = escapeHtml(segment.text);
         const styledText = Object.keys(styles).length > 0 ? `<span style="${escapeAttribute(inlineCss(styles))}">${escapedText}</span>` : escapedText;
@@ -36755,7 +37243,7 @@ void main() {
     }
     return "left";
   }
-  function numberProp3(value, fallback) {
+  function numberProp4(value, fallback) {
     const parsed = typeof value === "number" ? value : Number(value);
     return Number.isFinite(parsed) ? parsed : fallback;
   }
@@ -36763,7 +37251,7 @@ void main() {
     if (value === "" || value === void 0) {
       return void 0;
     }
-    return numberProp3(value);
+    return numberProp4(value);
   }
   function boolProp(value, fallback) {
     if (value === "false" || value === 0) return false;
@@ -36779,13 +37267,13 @@ void main() {
     }
     return {
       "--motion-h": `${framePercent(props.h, 18)}%`,
-      "--motion-x": `${framePercent(props.x, 8)}%`,
-      "--motion-y": `${framePercent(props.y, 12)}%`,
+      "--motion-x": `${framePositionPercent(props.x, 8)}%`,
+      "--motion-y": `${framePositionPercent(props.y, 12)}%`,
       "--motion-w": `${framePercent(props.w, 42)}%`
     };
   }
   function fontSizeVars(props) {
-    const fontSize2 = numberProp3(props.fontSize, 0);
+    const fontSize2 = numberProp4(props.fontSize, 0);
     if (fontSize2 <= 0) {
       return {};
     }
@@ -36794,11 +37282,16 @@ void main() {
     };
   }
   function textStyleVars(props) {
+    const fontFamily2 = stringProp4(props.fontFamily);
     const fontWeight2 = props.fontWeight;
-    const lineHeight2 = props.lineHeight;
+    const letterSpacing2 = numberProp4(props.letterSpacing);
+    const lineHeight2 = motionDocLineHeightCanvasValue(props.lineHeight, props.lineHeightPt, 0);
     return {
+      ...fontFamily2 ? { "font-family": `"${fontFamily2}", sans-serif` } : {},
+      ...props.fontStyle === "italic" ? { "font-style": "italic" } : {},
       ...fontWeight2 === void 0 || fontWeight2 === "" ? {} : { "--motion-font-weight": String(fontWeight2) },
-      ...lineHeight2 === void 0 || lineHeight2 === "" ? {} : { "--motion-line-height": String(lineHeight2) }
+      ...letterSpacing2 === void 0 ? {} : { "--motion-letter-spacing": `${motionDocFontPointsToCanvasPixels(letterSpacing2)}px` },
+      ...lineHeight2 === 0 ? {} : { "--motion-line-height": String(lineHeight2) }
     };
   }
   function radiusVars(props) {
@@ -36813,9 +37306,9 @@ void main() {
     return { "--motion-radius": String(value) };
   }
   function colorVars(props) {
-    const background = stringProp3(props.background ?? props.backgroundColor ?? props.bg);
-    const color3 = stringProp3(props.color ?? props.textColor);
-    const mutedColor = stringProp3(props.mutedColor);
+    const background = stringProp4(props.background ?? props.backgroundColor ?? props.bg);
+    const color3 = stringProp4(props.color ?? props.textColor);
+    const mutedColor = stringProp4(props.mutedColor);
     return {
       ...background ? { "--motion-bg": background } : {},
       ...background ? { "--motion-text-padding": "0.12em 0.18em" } : {},
@@ -36832,7 +37325,7 @@ void main() {
     }
     return {};
   }
-  function stringProp3(value) {
+  function stringProp4(value) {
     const stringValue = typeof value === "string" ? value.trim() : "";
     return stringValue || void 0;
   }
@@ -36841,7 +37334,14 @@ void main() {
     if (!Number.isFinite(parsed)) {
       return roundValue(fallbackPercent);
     }
-    return roundValue(Math.min(Math.max(parsed, 0), 100));
+    return roundValue(Math.min(Math.max(parsed, 0), 200));
+  }
+  function framePositionPercent(value, fallbackPercent) {
+    const parsed = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(parsed)) {
+      return roundValue(fallbackPercent);
+    }
+    return roundValue(Math.min(Math.max(parsed, -100), 100));
   }
   function roundValue(value) {
     return Math.round(value * 100) / 100;
@@ -36891,59 +37391,68 @@ void main() {
     return `url("${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}")`;
   }
   function renderShapeSvg(props, blockIndex) {
-    const fill = stringProp3(props.fill) ?? "rgba(142,165,255,0.72)";
-    const mask = stringProp3(props.mask) ?? "none";
-    const operation = stringProp3(props.operation) ?? "none";
-    const shape = stringProp3(props.shape) ?? "rectangle";
-    const stroke = stringProp3(props.stroke) ?? "#ffffff";
-    const strokeWidth = numberProp3(props.strokeWidth, 2);
-    const opacity2 = Math.min(Math.max(numberProp3(props.opacity, 1), 0), 1);
-    const sides = Math.min(Math.max(Math.round(numberProp3(props.sides, 3)), 3), 12);
-    const points = Math.min(Math.max(Math.round(numberProp3(props.points, 5)), 3), 12);
+    const fill = stringProp4(props.fill) ?? "rgba(142,165,255,0.72)";
+    const mask = stringProp4(props.mask) ?? "none";
+    const operation = stringProp4(props.operation) ?? "none";
+    const shape = stringProp4(props.shape) ?? "rectangle";
+    const stroke = stringProp4(props.stroke) ?? "#ffffff";
+    const strokeWidth = numberProp4(props.strokeWidth, 2);
+    const opacity2 = Math.min(Math.max(numberProp4(props.opacity, 1), 0), 1);
+    const sides = Math.min(Math.max(Math.round(numberProp4(props.sides, 3)), 3), 12);
+    const points = Math.min(Math.max(Math.round(numberProp4(props.points, 5)), 3), 12);
     const frameWidth = percentFrameValue(props.w, 28) / 100 * MOTION_DOC_CANVAS_WIDTH;
     const frameHeight = percentFrameValue(props.h, 28) / 100 * MOTION_DOC_CANVAS_HEIGHT;
-    const radius = Math.max(numberProp3(props.radius ?? props.borderRadius, 0), 0);
-    const { radiusX, radiusY } = normalizedContinuousCornerRadii(radius, frameWidth, frameHeight);
+    const radius = Math.max(numberProp4(props.radius ?? props.borderRadius, 0), 0);
+    const corner = Math.max(numberProp4(props.corner, 0), 0);
+    const { radiusX, radiusY } = corner > 0 ? normalizedRelativeCornerRadii(corner, frameWidth, frameHeight) : normalizedContinuousCornerRadii(radius, frameWidth, frameHeight);
     const maskId = `shape-mask-${blockIndex}-${String(shape).replace(/[^a-z0-9]+/gi, "-")}-${String(mask).replace(/[^a-z0-9]+/gi, "-")}`;
     const imageClipId = `${maskId}-image-clip`;
-    const shapeImageSrc = stringProp3(props.shapeImageSrc);
-    const shapeImageFit = stringProp3(props.shapeImageFit) ?? "cover";
-    const shapeImageScaleX = Math.min(Math.max(numberProp3(props.shapeImageScaleX, 1), 0.1), 8);
-    const shapeImageScaleY = Math.min(Math.max(numberProp3(props.shapeImageScaleY, 1), 0.1), 8);
-    const shapeImageCropX = numberProp3(props.shapeImageCropX, 0);
-    const shapeImageCropY = numberProp3(props.shapeImageCropY, 0);
+    const shapeImageSrc = stringProp4(props.shapeImageSrc);
+    if (shapeImageSrc && shape !== "line") {
+      const { shapeImageSrc: _shapeImageSrc, ...shapeVectorProps } = props;
+      return renderShapeVectorSvg(
+        { ...shapeVectorProps, fill: "transparent" },
+        `html-shape-${blockIndex}`
+      );
+    }
+    const shapeImageFit = stringProp4(props.shapeImageFit) ?? "cover";
+    const shapeImageScaleX = Math.min(Math.max(numberProp4(props.shapeImageScaleX, 1), 0.1), 8);
+    const shapeImageScaleY = Math.min(Math.max(numberProp4(props.shapeImageScaleY, 1), 0.1), 8);
+    const shapeImageCropX = numberProp4(props.shapeImageCropX, 0);
+    const shapeImageCropY = numberProp4(props.shapeImageCropY, 0);
     const maskDefs = mask === "alpha" ? `<linearGradient id="${maskId}-fade" x1="0" x2="1" y1="0" y2="0"><stop offset="0%" stop-color="white" stop-opacity="0.15" /><stop offset="45%" stop-color="white" stop-opacity="1" /><stop offset="100%" stop-color="white" stop-opacity="0.2" /></linearGradient><mask id="${maskId}"><rect width="100" height="100" fill="url(#${maskId}-fade)" /></mask>` : mask === "luma" ? `<radialGradient id="${maskId}-radial" cx="50%" cy="45%" r="58%"><stop offset="0%" stop-color="white" stop-opacity="1" /><stop offset="100%" stop-color="white" stop-opacity="0.08" /></radialGradient><mask id="${maskId}"><rect width="100" height="100" fill="url(#${maskId}-radial)" /></mask>` : mask === "clip" ? `<mask id="${maskId}"><rect fill="white" height="72" rx="14" width="72" x="14" y="14" /></mask>` : "";
     const imageClipDef = shapeImageSrc && shape !== "line" ? `<clipPath id="${imageClipId}">${shapeSvg(shape, "white", "none", 0, sides, points, "solid", "none", "none", radiusX, radiusY)}</clipPath>` : "";
     const maskAttr = mask === "none" ? "" : ` mask="url(#${maskId})"`;
-    const imageLayer = shapeImageSrc && shape !== "line" ? `<image clip-path="url(#${imageClipId})" href="${escapeAttribute(shapeImageSrc)}" preserveAspectRatio="${shapeImageFit === "fill" ? "none" : shapeImageFit === "contain" ? "xMidYMid meet" : "xMidYMid slice"}" x="${50 - 50 * shapeImageScaleX + shapeImageCropX}" y="${50 - 50 * shapeImageScaleY + shapeImageCropY}" width="${100 * shapeImageScaleX}" height="${100 * shapeImageScaleY}" />` : "";
+    const imageLayer = shapeImageSrc && shape !== "line" ? `<image clip-path="url(#${imageClipId})" href="${escapeAttribute(shapeImageSrc)}" preserveAspectRatio="${shapeImageFit === "contain" ? "xMidYMid meet" : "xMidYMid slice"}" x="${50 - 50 * shapeImageScaleX + shapeImageCropX}" y="${50 - 50 * shapeImageScaleY + shapeImageCropY}" width="${100 * shapeImageScaleX}" height="${100 * shapeImageScaleY}" />` : "";
     const booleanLayer = operation === "subtract" ? `<circle cx="68" cy="34" fill="var(--slide-bg, #030303)" r="22" />` : operation === "intersect" ? `<circle cx="62" cy="44" fill="${escapeAttribute(fill)}" opacity="0.45" r="30" stroke="${escapeAttribute(stroke)}" stroke-width="${strokeWidth}" />` : operation === "exclude" ? `<circle cx="62" cy="44" fill="transparent" opacity="0.9" r="30" stroke="${escapeAttribute(stroke)}" stroke-dasharray="7 7" stroke-width="${strokeWidth}" />` : "";
-    const lineEndpoints = shape === "line" ? `${renderLineEndpoint(stringProp3(props.arrowStart) ?? "none", "start", stroke, numberProp3(props.arrowStartSize, 100))}${renderLineEndpoint(stringProp3(props.arrowEnd) ?? "none", "end", stroke, numberProp3(props.arrowEndSize, 100))}` : "";
-    return `<svg aria-hidden="true" preserveAspectRatio="none" viewBox="${shape === "line" ? "0 0 100 20" : "0 0 100 100"}" style="${escapeAttribute(inlineCss({ opacity: String(opacity2) }))}"><defs>${maskDefs}${imageClipDef}</defs><g${maskAttr}>${imageLayer}${shapeSvg(shape, imageLayer ? "transparent" : fill, stroke, strokeWidth, sides, points, stringProp3(props.lineStyle) ?? "solid", stringProp3(props.arrowStart) ?? "none", stringProp3(props.arrowEnd) ?? "none", radiusX, radiusY)}${booleanLayer}</g></svg>${lineEndpoints}`;
+    const lineEndpoints = shape === "line" ? `${renderLineEndpoint(stringProp4(props.arrowStart) ?? "none", "start", stroke, numberProp4(props.arrowStartSize, 100))}${renderLineEndpoint(stringProp4(props.arrowEnd) ?? "none", "end", stroke, numberProp4(props.arrowEndSize, 100))}` : "";
+    return `<svg aria-hidden="true" preserveAspectRatio="none" viewBox="${shape === "line" ? "0 0 100 20" : "0 0 100 100"}" style="${escapeAttribute(inlineCss({ opacity: String(opacity2) }))}"><defs>${maskDefs}${imageClipDef}</defs><g${maskAttr}>${imageLayer}${shapeSvg(shape, imageLayer ? "transparent" : fill, stroke, strokeWidth, sides, points, stringProp4(props.lineStyle) ?? "solid", stringProp4(props.arrowStart) ?? "none", stringProp4(props.arrowEnd) ?? "none", radiusX, radiusY)}${booleanLayer}</g></svg>${lineEndpoints}`;
   }
   function renderShapeHtmlFallback(props) {
-    const fill = stringProp3(props.fill) ?? "rgba(142,165,255,0.72)";
-    const shape = stringProp3(props.shape) ?? "rectangle";
-    const stroke = stringProp3(props.stroke) ?? "#ffffff";
-    const strokeWidth = Math.max(numberProp3(props.strokeWidth, 2), 0);
-    const opacity2 = Math.min(Math.max(numberProp3(props.opacity, 1), 0), 1);
+    const fill = stringProp4(props.fill) ?? "rgba(142,165,255,0.72)";
+    const shape = stringProp4(props.shape) ?? "rectangle";
+    const stroke = stringProp4(props.stroke) ?? "#ffffff";
+    const strokeWidth = Math.max(numberProp4(props.strokeWidth, 2), 0);
+    const opacity2 = Math.min(Math.max(numberProp4(props.opacity, 1), 0), 1);
     const radius = Math.max(
-      numberProp3(props.radius ?? props.borderRadius, 0),
+      numberProp4(props.radius ?? props.borderRadius, 0),
       0
     );
     const resolvedStroke = stroke === "transparent" ? fill : stroke;
+    const shapeImageSrc = stringProp4(props.shapeImageSrc);
+    const shapeImageFit = stringProp4(props.shapeImageFit) ?? "cover";
+    const shapeImageScales = normalizedImageScales(
+      shapeImageFit,
+      props.shapeImageScaleX,
+      props.shapeImageScaleY
+    );
     const baseStyle = {
-      ...typeof props.shapeImageSrc === "string" && props.shapeImageSrc.trim() ? {
-        "background-image": cssImageUrl(props.shapeImageSrc),
-        "background-position": "center",
-        "background-repeat": "no-repeat",
-        "background-size": props.shapeImageFit === "contain" ? "contain" : props.shapeImageFit === "fill" ? "100% 100%" : "cover"
-      } : {},
       inset: "0",
       opacity: String(opacity2),
       position: "absolute"
     };
     if (shape === "line") {
-      const lineStyle = stringProp3(props.lineStyle) ?? "solid";
+      const lineStyle = stringProp4(props.lineStyle) ?? "solid";
       return `<span aria-hidden="true" class="shape-html-fallback" style="${escapeAttribute(
         inlineCss({
           ...baseStyle,
@@ -36955,15 +37464,25 @@ void main() {
     }
     const clipPath2 = shape === "triangle" || shape === "polygon" ? "polygon(50% 0, 100% 100%, 0 100%)" : shape === "diamond" ? "polygon(50% 0, 100% 50%, 50% 100%, 0 50%)" : shape === "chevron" ? "polygon(0 0, 68% 0, 100% 50%, 68% 100%, 0 100%, 32% 50%)" : shape === "parallelogram" ? "polygon(18% 0, 100% 0, 82% 100%, 0 100%)" : shape === "arrow" ? "polygon(0 20%, 60% 20%, 60% 0, 100% 50%, 60% 100%, 60% 80%, 0 80%)" : shape === "star" ? "polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 94%, 50% 72%, 21% 94%, 32% 57%, 2% 35%, 39% 35%)" : void 0;
     const border = strokeWidth > 0 && stroke !== "transparent" ? `${strokeWidth}px solid ${stroke}` : "none";
+    const imageContent = shapeImageSrc ? `<img alt="" src="${escapeAttribute(shapeImageSrc)}" style="${escapeAttribute(inlineCss({
+      height: "100%",
+      inset: "0",
+      "object-fit": shapeImageFit === "contain" || shapeImageFit === "scale-down" ? "contain" : "cover",
+      position: "absolute",
+      transform: `translate(${numberProp4(props.shapeImageCropX, 0)}%, ${numberProp4(props.shapeImageCropY, 0)}%) scale(${shapeImageScales.scaleX}, ${shapeImageScales.scaleY})`,
+      "transform-origin": "center",
+      width: "100%"
+    }))}" />` : "";
     return `<span aria-hidden="true" class="shape-html-fallback" style="${escapeAttribute(
       inlineCss({
         ...baseStyle,
-        ...typeof props.shapeImageSrc === "string" && props.shapeImageSrc.trim() ? {} : { background: fill },
+        ...!shapeImageSrc ? { background: fill } : {},
         border,
         "border-radius": shape === "circle" ? "50%" : `${radius}px`,
+        overflow: "hidden",
         ...clipPath2 ? { "clip-path": clipPath2 } : {}
       })
-    )}"></span>`;
+    )}">${imageContent}</span>`;
   }
   function renderLineEndpoint(endpoint, side, stroke, size) {
     if (endpoint === "none" || !endpoint) return "";
@@ -37211,9 +37730,9 @@ void main() {
 
   // features/pitch/infrastructure/pptxVideoExport.ts
   async function addPptxVideo(slide, props, frame) {
-    const src = stringProp4(props.src);
-    const poster = stringProp4(props.poster);
-    const link = sourceLink(stringProp4(props.sourceUrl) ?? src);
+    const src = stringProp5(props.src);
+    const poster = stringProp5(props.poster);
+    const link = sourceLink(stringProp5(props.sourceUrl) ?? src);
     const hyperlink = link ? { tooltip: "Open video", url: link } : void 0;
     const posterData = poster?.startsWith("data:image/") ? await portablePptxImageData(poster, frame) : void 0;
     const coverData = await portablePptxImageData(videoFallbackSvgDataUri(src, posterData), frame);
@@ -37270,7 +37789,7 @@ void main() {
     if (mime === "video/ogg") return "ogv";
     return mime.split("/")[1] || "mp4";
   }
-  function stringProp4(value) {
+  function stringProp5(value) {
     return typeof value === "string" && value.trim() ? value.trim() : void 0;
   }
 
@@ -37358,11 +37877,11 @@ void main() {
       const theme = resolveSlideThemeColors(scene.props);
       return scene.blocks.flatMap((block) => {
         if (block.type === "ImageBlock" && !imageNeedsPptxRasterization(block)) {
-          const source = stringProp5(block.props.src);
+          const source = stringProp6(block.props.src);
           return source ? [{ block, fit: imageFit(block.props.fit), frame: pptxFrame(blockFrame(block)), source }] : [];
         }
         if (block.type === "Icon") {
-          const iconName = stringProp5(block.props.icon) ?? "Sparkles";
+          const iconName = stringProp6(block.props.icon) ?? "Sparkles";
           const source = lucideIconSvgDataUri(iconName, {
             color: theme.isLight ? "#000000" : "#ffffff",
             strokeWidth: numericProp(block.props.strokeWidth, 2)
@@ -37370,7 +37889,7 @@ void main() {
           return source ? [{ block, fit: "contain", frame: pptxFrame(blockFrame(block)), source }] : [];
         }
         if (block.type === "Shape" && shapeNeedsExactSvgExport(block.props)) {
-          const sourceShape = stringProp5(block.props.shape) ?? "rectangle";
+          const sourceShape = stringProp6(block.props.shape) ?? "rectangle";
           return [{
             block,
             fit: "contain",
@@ -37434,22 +37953,28 @@ void main() {
       props.fontSize,
       block.type === "heading" ? MOTION_DOC_FONT_SIZES.heading : motionDocDefaultFontSize(isTitle ? "Title" : "Text")
     );
-    const background = stringProp5(props.background ?? props.backgroundColor ?? props.bg);
+    const background = stringProp6(props.background ?? props.backgroundColor ?? props.bg);
     const baseFontWeight = numericProp(props.fontWeight, isTitle ? 600 : 400);
-    const baseFontFamily = stringProp5(props.fontFamily) ?? "Aptos";
-    const baseTextColor = stringProp5(props.color ?? props.textColor) ?? (isTitle ? foreground : muted);
+    const baseItalic = props.fontStyle === "italic";
+    const baseLetterSpacing = numericProp(props.letterSpacing, 0);
+    const exactLineHeight = positiveNumericProp(props.lineHeightPt);
+    const lineHeightMultiple = positiveNumericProp(props.lineHeight) ?? (isTitle ? 1.02 : 1.45);
+    const baseFontFamily = stringProp6(props.fontFamily) ?? "Aptos";
+    const baseTextColor = stringProp6(props.color ?? props.textColor) ?? (isTitle ? foreground : muted);
     const textSegments = textStyleSegments(block.text, props);
     const hasInlineStyles = textSegments.some(
-      (segment) => segment.color !== void 0 || segment.fontFamily !== void 0 || segment.fontWeight !== void 0 || segment.href !== void 0 || segment.italic !== void 0 || segment.underline !== void 0
+      (segment) => segment.color !== void 0 || segment.fontFamily !== void 0 || segment.fontSize !== void 0 || segment.fontWeight !== void 0 || segment.href !== void 0 || segment.italic !== void 0 || segment.letterSpacing !== void 0 || segment.underline !== void 0
     );
     const presentationSegments = readableListSegments(textSegments, props);
     const text4 = hasInlineStyles ? presentationSegments.map((segment) => ({
       options: {
         bold: (segment.fontWeight ?? baseFontWeight) >= 600,
         color: pptxColor(segment.color ?? baseTextColor, "FFFFFF"),
+        charSpacing: segment.letterSpacing ?? baseLetterSpacing,
         fontFace: segment.fontFamily ?? baseFontFamily,
+        fontSize: Math.max(motionDocFontPointsToPptPoints(segment.fontSize ?? fontSize2), 8),
         hyperlink: safePptxHref(segment.href) ? { url: safePptxHref(segment.href) } : void 0,
-        italic: segment.italic,
+        italic: segment.italic ?? baseItalic,
         underline: segment.underline ? { color: pptxColor(segment.color ?? baseTextColor, "FFFFFF") } : void 0
       },
       text: segment.text
@@ -37460,22 +37985,26 @@ void main() {
       bold: baseFontWeight >= 600,
       breakLine: false,
       color: pptxColor(baseTextColor, "FFFFFF"),
+      charSpacing: baseLetterSpacing,
       fill: background ? { color: pptxColor(background, "FFFFFF"), transparency: colorTransparency(background) } : void 0,
       fontFace: baseFontFamily,
       fontSize: Math.max(motionDocFontPointsToPptPoints(fontSize2), 8),
+      italic: baseItalic,
+      ...exactLineHeight === void 0 ? { lineSpacingMultiple: lineHeightMultiple } : { lineSpacing: motionDocFontPointsToPptPoints(exactLineHeight) },
       margin: background ? 0.1 : 0,
       rotate: blockRotation(props),
+      shadow: pptxShadow(props),
       valign: verticalAlign(props.textVerticalAlign)
     });
   }
   function readableListText(text4, props) {
-    const listType = stringProp5(props.listType);
+    const listType = stringProp6(props.listType);
     if (listType !== "bullet" && listType !== "ordered") return text4;
     const start = Math.max(1, Math.round(numericProp(props.listStart, 1)));
     return text4.split("\n").map((line, index2) => `${listType === "bullet" ? "\u2022" : `${start + index2}.`} ${line}`).join("\n");
   }
   function readableListSegments(segments, props) {
-    const listType = stringProp5(props.listType);
+    const listType = stringProp6(props.listType);
     if (listType !== "bullet" && listType !== "ordered") return segments;
     const start = Math.max(1, Math.round(numericProp(props.listStart, 1)));
     let lineIndex = 0;
@@ -37497,7 +38026,7 @@ void main() {
     return /^(?:https?:|mailto:)/i.test(trimmed) ? trimmed : "";
   }
   async function addEditableImage(slide, block, renderedData) {
-    const src = stringProp5(block.props.src);
+    const src = stringProp6(block.props.src);
     if (!src) return;
     const frame = pptxBlockFrame(block);
     const fit = imageFit(block.props.fit);
@@ -37505,11 +38034,12 @@ void main() {
     slide.addImage({
       data,
       ...frame,
+      shadow: pptxShadow(block.props),
       transparency: 0
     });
   }
   async function addEditableIcon(slide, block, isLightBackground, preparedData) {
-    const iconName = stringProp5(block.props.icon) ?? "Sparkles";
+    const iconName = stringProp6(block.props.icon) ?? "Sparkles";
     const svgData = lucideIconSvgDataUri(
       iconName,
       {
@@ -37524,12 +38054,13 @@ void main() {
       altText: `${iconName} icon`,
       data,
       ...frame,
+      shadow: pptxShadow(block.props),
       transparency: 0
     });
   }
   async function addEditableShape(slide, block, preparedData) {
     const props = block.props;
-    const sourceShape = stringProp5(props.shape) ?? "rectangle";
+    const sourceShape = stringProp6(props.shape) ?? "rectangle";
     const opacity2 = clamp4(numericProp(props.opacity, 1), 0, 1);
     const frame = pptxBlockFrame(block);
     if (shapeNeedsExactSvgExport(props)) {
@@ -37541,6 +38072,7 @@ void main() {
         altText: `${sourceShape} vector shape`,
         data,
         ...frame,
+        shadow: pptxShadow(props),
         transparency: 0
       });
       return;
@@ -37550,14 +38082,16 @@ void main() {
         ...frame,
         h: 0,
         y: frame.y + frame.h / 2,
-        line: shapeLineOptions(props, opacity2)
+        line: shapeLineOptions(props, opacity2),
+        shadow: pptxShadow(props)
       });
       return;
     }
-    const fillSource = stringProp5(props.fill) ?? "rgba(142,165,255,0.72)";
-    const sourceStroke = stringProp5(props.stroke) ?? "#FFFFFF";
+    const fillSource = stringProp6(props.fill) ?? "rgba(142,165,255,0.72)";
+    const sourceStroke = stringProp6(props.stroke) ?? "#FFFFFF";
     const shapeName = shapeNameForPptx(sourceShape, props);
     const radius = Math.max(numericProp(props.radius ?? props.borderRadius, 0), 0);
+    const corner = clamp4(numericProp(props.corner, 0), 0, 50);
     const sourceFrame = blockFrame(block);
     const maxRadius = Math.min(
       sourceFrame.w / 100 * MOTION_DOC_CANVAS_WIDTH,
@@ -37567,7 +38101,8 @@ void main() {
       ...frame,
       fill: shapeFillOptions(fillSource, opacity2, "8EA5FF"),
       line: shapeLineOptions(props, opacity2, sourceStroke),
-      ...shapeName === "roundRect" ? { rectRadius: maxRadius > 0 ? clamp4(radius / maxRadius, 0, 1) : 0 } : {}
+      shadow: pptxShadow(props),
+      ...shapeName === "roundRect" ? { rectRadius: corner > 0 ? corner / 50 : maxRadius > 0 ? clamp4(radius / maxRadius, 0, 1) : 0 } : {}
     });
   }
   function addEditableTable(slide, block, foreground) {
@@ -37580,19 +38115,35 @@ void main() {
       motionDocFontPointsToPptPoints(numericProp(block.props.fontSize, MOTION_DOC_FONT_SIZES.table)),
       8
     );
-    const textColor = pptxColor(stringProp5(block.props.color ?? block.props.textColor) ?? foreground, "111827");
-    const fillColor = pptxColor(stringProp5(block.props.cellBackground ?? block.props.background) ?? "FFFFFF", "FFFFFF");
-    const borderColor = pptxColor(stringProp5(block.props.borderColor) ?? "D1D5DB", "D1D5DB");
+    const textColor = pptxColor(stringProp6(block.props.color ?? block.props.textColor) ?? foreground, "111827");
+    const fillColor = pptxColor(stringProp6(block.props.cellBackground ?? block.props.background) ?? "FFFFFF", "FFFFFF");
+    const borderColor = pptxColor(stringProp6(block.props.borderColor) ?? "D1D5DB", "D1D5DB");
+    const shadow = pptxShadow(block.props);
+    if (shadow) {
+      slide.addShape("rect", {
+        ...pptxFrame(frame),
+        fill: { color: fillColor, transparency: 100 },
+        line: { color: fillColor, transparency: 100 },
+        shadow
+      });
+    }
     slide.addTable(
-      cells.map((row) => row.map((text4) => ({
-        text: text4,
-        options: {
-          color: textColor,
-          fill: { color: fillColor },
-          fontFace: stringProp5(block.props.fontFamily) ?? "Aptos",
-          fontSize: fontSize2
-        }
-      }))),
+      cells.map((row, rowIndex) => row.map((text4, columnIndex) => {
+        const override = tableCellStyleOverride(block.props, rowIndex, columnIndex);
+        const resolvedTextColor = pptxColor(override.textColor ?? textColor, textColor);
+        const resolvedFillColor = pptxColor(override.background ?? fillColor, fillColor);
+        const resolvedBorderColor = pptxColor(override.borderColor ?? borderColor, borderColor);
+        return {
+          text: text4,
+          options: {
+            border: { color: resolvedBorderColor, pt: Math.max(numericProp(block.props.borderWidth, 1) * 0.75, 0.5) },
+            color: resolvedTextColor,
+            fill: { color: resolvedFillColor },
+            fontFace: override.fontFamily ?? stringProp6(block.props.fontFamily) ?? "Aptos",
+            fontSize: override.fontSize === void 0 ? fontSize2 : Math.max(motionDocFontPointsToPptPoints(override.fontSize), 8)
+          }
+        };
+      })),
       {
         ...pptxFrame(frame),
         border: { color: borderColor, pt: Math.max(numericProp(block.props.borderWidth, 1) * 0.75, 0.5) },
@@ -37603,14 +38154,14 @@ void main() {
     );
   }
   function needsVisualFallback(blocks, props, additionalNativeBlockTypes = []) {
-    const background = stringProp5(props.background);
+    const background = stringProp6(props.background);
     return Boolean(
       props.shader || props.backgroundImage || background && !isSimpleColor(background) || blocks.some((block) => !isNativePptxBlock(block, additionalNativeBlockTypes))
     );
   }
   function imageNeedsPptxRasterization(block) {
     if (block.type !== "ImageBlock") return false;
-    return Boolean(getPaperImageFilterDefinition(stringProp5(block.props.filter))) || Math.abs(numericProp(block.props.cropX, 0)) > 1e-3 || Math.abs(numericProp(block.props.cropY, 0)) > 1e-3 || Math.abs(numericProp(block.props.scaleX, 1) - 1) > 1e-3 || Math.abs(numericProp(block.props.scaleY, 1) - 1) > 1e-3;
+    return Boolean(getPaperImageFilterDefinition(stringProp6(block.props.filter))) || Math.abs(numericProp(block.props.cropX, 0)) > 1e-3 || Math.abs(numericProp(block.props.cropY, 0)) > 1e-3 || Math.abs(numericProp(block.props.scaleX, 1) - 1) > 1e-3 || Math.abs(numericProp(block.props.scaleY, 1) - 1) > 1e-3;
   }
   function isNativePptxBlock(block, additionalNativeBlockTypes = []) {
     if (block.type === "Table" && Math.abs(blockRotation(block.props)) > 1e-3) {
@@ -37630,7 +38181,8 @@ void main() {
     if (shape === "polygon") return POLYGON_SHAPES[clamp4(Math.round(numericProp(props.sides, 3)), 3, 12)];
     if (shape === "star") return STAR_SHAPES[clamp4(Math.round(numericProp(props.points, 5)), 3, 12)];
     const radius = numericProp(props.radius ?? props.borderRadius, 0);
-    return radius > 0 ? "roundRect" : "rect";
+    const corner = numericProp(props.corner, 0);
+    return radius > 0 || corner > 0 ? "roundRect" : "rect";
   }
   function shapeFillOptions(value, opacity2, fallback) {
     if (isTransparentColor(value)) return { type: "none" };
@@ -37640,7 +38192,7 @@ void main() {
     };
   }
   function shapeLineOptions(props, opacity2, colorOverride) {
-    const stroke = colorOverride ?? stringProp5(props.stroke) ?? "#FFFFFF";
+    const stroke = colorOverride ?? stringProp6(props.stroke) ?? "#FFFFFF";
     const width = numericProp(props.strokeWidth, 2);
     if (width <= 0 || isTransparentColor(stroke)) return { type: "none" };
     return {
@@ -37676,12 +38228,31 @@ void main() {
       rotate: blockRotation(block.props)
     };
   }
-  function stringProp5(value) {
+  function pptxShadow(props) {
+    const shadow = objectShadowFromProps(props);
+    if (!shadow) return void 0;
+    const distance2 = Math.hypot(shadow.offsetX, shadow.offsetY);
+    const angle2 = distance2 <= 0 ? 0 : (Math.atan2(shadow.offsetY, shadow.offsetX) * 180 / Math.PI + 360) % 360;
+    return {
+      angle: angle2,
+      blur: clamp4(shadow.blur * 0.5, 0, 100),
+      color: pptxColor(shadow.color, "000000"),
+      offset: clamp4(distance2 * 0.5, 0, 200),
+      opacity: shadow.opacity,
+      rotateWithShape: false,
+      type: "outer"
+    };
+  }
+  function stringProp6(value) {
     return typeof value === "string" && value.trim() ? value.trim() : void 0;
   }
   function numericProp(value, fallback) {
     const parsed = typeof value === "number" ? value : Number(value);
     return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  function positiveNumericProp(value) {
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
   }
   function imageFit(value) {
     if (value === "contain" || value === "scale-down") return "contain";
@@ -37904,39 +38475,87 @@ void main() {
     }];
     const textColor = pptxColor2(foreground, "111827");
     const mutedColor = pptxColor2(muted, "64748B");
+    const chartColors = model.data.map((_, index2) => {
+      const color3 = model.colorMode === "single" || model.colorMode === "emphasis" ? model.data[index2]?.color ?? model.palette[0] : chartDatumColor(model, index2);
+      return model.colorMode === "emphasis" && model.emphasisIndex !== null && index2 !== model.emphasisIndex ? mixWithWhite(pptxColor2(color3, "7C3AED"), 0.76) : pptxColor2(color3, "7C3AED");
+    });
+    const frame = pptxFrame2(block);
+    const formatCode = pptxNumberFormatCode(model.numberFormat, model.decimals, model.currency);
     slide.addChart(type, data, {
-      ...pptxFrame2(block),
-      altText: stringProp6(block.props.ariaLabel) ?? `${model.type} chart`,
+      ...frame,
+      altText: stringProp7(block.props.ariaLabel) ?? `${model.type} chart`,
       barDir: model.type === "bar" ? "col" : void 0,
       chartArea: { border: { color: "FFFFFF", pt: 0 }, fill: { color: "FFFFFF", transparency: 100 } },
-      chartColors: model.palette.map((color3) => pptxColor2(color3, "7C3AED")),
+      chartColors,
       catAxisHidden: isCircular || !model.showAxes,
       catAxisLabelColor: mutedColor,
       catAxisLineColor: mutedColor,
       catAxisLineShow: model.showAxes,
       catGridLine: { style: "none" },
       dataLabelColor: textColor,
+      dataLabelFormatCode: formatCode,
       dataLabelPosition: isCircular ? "bestFit" : "outEnd",
-      holeSize: model.type === "donut" ? 62 : void 0,
+      holeSize: model.type === "donut" ? Math.round(model.donutHole * 100) : void 0,
       legendColor: mutedColor,
       legendFontSize: 10,
       legendPos: "b",
       lineDataSymbol: model.type === "line" || model.type === "area" ? "circle" : void 0,
       lineDataSymbolSize: 5,
       lineSize: 2.25,
-      lineSmooth: model.type === "line" || model.type === "area",
+      lineSmooth: (model.type === "line" || model.type === "area") && model.lineSmooth,
       plotArea: { border: { color: "FFFFFF", pt: 0 }, fill: { color: "FFFFFF", transparency: 100 } },
-      showLabel: isCircular && model.showLabels,
+      showLabel: isCircular && model.showLabels && model.labelMode !== "category",
       showLegend: isCircular,
-      showPercent: isCircular && model.showLabels,
-      showValue: !isCircular && model.showLabels,
+      showPercent: isCircular && model.showLabels && model.labelMode !== "category",
+      showValue: !isCircular && model.showLabels && model.labelMode !== "category",
       showTitle: false,
       valAxisHidden: isCircular || !model.showAxes,
+      valAxisLabelFormatCode: formatCode,
       valAxisLabelColor: mutedColor,
       valAxisLineColor: mutedColor,
       valAxisLineShow: model.showAxes,
-      valGridLine: { color: "E2E8F0", size: 0.75, style: model.showAxes ? "solid" : "none" }
+      valGridLine: { color: "E2E8F0", size: 0.75, style: model.showAxes && model.showGrid ? "solid" : "none" }
     });
+    if (!isCircular && model.referenceValue !== null) {
+      const values = model.data.map((datum) => datum.value);
+      const minimum = Math.min(0, ...values, model.referenceValue);
+      const maximum = niceMaximum2(Math.max(...values, model.referenceValue, 1));
+      const ratio = (model.referenceValue - minimum) / Math.max(maximum - minimum, 1);
+      const y = frame.y + frame.h * (0.88 - ratio * 0.74);
+      const color3 = pptxColor2(model.referenceColor, "DC2626");
+      slide.addShape(pptx.ShapeType.line, {
+        x: frame.x + frame.w * 0.08,
+        y,
+        w: frame.w * 0.86,
+        h: 0,
+        line: { color: color3, dashType: "dash", width: 1.5 }
+      });
+      slide.addText(model.referenceLabel || String(model.referenceValue), {
+        x: frame.x + frame.w * 0.68,
+        y: Math.max(frame.y, y - 0.24),
+        w: frame.w * 0.26,
+        h: 0.22,
+        align: "right",
+        color: color3,
+        fontFace: "Aptos",
+        fontSize: 8,
+        margin: 0
+      });
+    }
+    if (model.annotationText) {
+      slide.addText(model.annotationText, {
+        x: frame.x + frame.w * 0.62,
+        y: frame.y + 0.02,
+        w: frame.w * 0.34,
+        h: 0.32,
+        align: "right",
+        bold: true,
+        color: pptxColor2(model.annotationColor, "DC2626"),
+        fontFace: "Aptos",
+        fontSize: 10,
+        margin: 0
+      });
+    }
     return true;
   }
   function pptxFrame2(block) {
@@ -37952,7 +38571,24 @@ void main() {
     const normalized = value.trim().replace(/^#/, "").toUpperCase();
     return /^[0-9A-F]{6}$/.test(normalized) ? normalized : fallback;
   }
-  function stringProp6(value) {
+  function mixWithWhite(color3, amount) {
+    const components = [0, 2, 4].map((offset) => Number.parseInt(color3.slice(offset, offset + 2), 16));
+    return components.map((component) => Math.round(component + (255 - component) * amount).toString(16).padStart(2, "0")).join("").toUpperCase();
+  }
+  function niceMaximum2(value) {
+    const magnitude = 10 ** Math.floor(Math.log10(Math.max(value, 1)));
+    return Math.ceil(value / magnitude) * magnitude;
+  }
+  function pptxNumberFormatCode(format2, decimals, currency) {
+    const decimalPart = decimals > 0 ? `.${"0".repeat(decimals)}` : "";
+    if (format2 === "percent") return `0${decimalPart}%`;
+    if (format2 === "currency") return `[$${currency}]#,##0${decimalPart}`;
+    if (format2 === "compact") return `0${decimalPart},,"M"`;
+    if (format2 === "integer") return "0";
+    if (format2 === "decimal") return `0${decimalPart}`;
+    return "0.0";
+  }
+  function stringProp7(value) {
     return typeof value === "string" && value.trim() ? value.trim() : void 0;
   }
 

@@ -40,7 +40,7 @@ test("starter ships only the four focused MDX-first skills", async () => {
   }
 });
 
-test("starter contains the local Workbench, SDK, and project-scoped MCP", async () => {
+test("starter contains the local Workbench and SDK without project-scoped MCP", async () => {
   const templateUrl = new URL("../template/", import.meta.url);
   const packageJson = JSON.parse(
     await readFile(new URL("package.json", templateUrl), "utf8")
@@ -50,12 +50,12 @@ test("starter contains the local Workbench, SDK, and project-scoped MCP", async 
   };
 
   assert.deepEqual(packageJson.devDependencies, {
-    "open-slidex": "0.2.4"
+    "open-slidex": "0.3.0"
   });
   assert.equal(packageJson.scripts?.dev, "open-slidex dev");
   assert.equal(packageJson.scripts?.build, "open-slidex build");
   assert.equal(packageJson.scripts?.preview, "open-slidex preview");
-  assert.equal(packageJson.scripts?.mcp, "open-slidex mcp --project .");
+  assert.equal(packageJson.scripts?.mcp, undefined);
   assert.equal(packageJson.scripts?.["sync:skills"], "open-slidex sync:skills");
   assert.deepEqual({
     validate: packageJson.scripts?.validate,
@@ -80,11 +80,10 @@ test("starter contains the local Workbench, SDK, and project-scoped MCP", async 
   await access(new URL("assets", templateUrl));
   await access(new URL("knowledge", templateUrl));
   await access(new URL("themes", templateUrl));
-  await access(new URL(".codex/config.toml", templateUrl));
-  await access(new URL(".mcp.json", templateUrl));
-  await access(new URL("MCP.md", templateUrl));
-
   for (const removedPath of [
+    ".codex/config.toml",
+    ".mcp.json",
+    "MCP.md",
     "app",
     "components",
     "features",
@@ -102,32 +101,13 @@ test("starter contains the local Workbench, SDK, and project-scoped MCP", async 
   );
 });
 
-test("starter MCP files launch the project-local OpenSlideX server", async () => {
-  const templateUrl = new URL("../template/", import.meta.url);
-  const codex = await readFile(new URL(".codex/config.toml", templateUrl), "utf8");
-  const claude = JSON.parse(await readFile(new URL(".mcp.json", templateUrl), "utf8")) as {
-    mcpServers?: Record<string, { args?: string[]; command?: string; type?: string }>;
-  };
-  const guide = await readFile(new URL("MCP.md", templateUrl), "utf8");
-
-  assert.match(codex, /\[mcp_servers\.open_slidex\]/);
-  assert.match(codex, /command = "npm"/);
-  assert.match(codex, /args = \["--silent", "run", "mcp"\]/);
-  assert.equal(claude.mcpServers?.open_slidex?.type, "stdio");
-  assert.equal(claude.mcpServers?.open_slidex?.command, "npm");
-  assert.deepEqual(claude.mcpServers?.open_slidex?.args, ["--silent", "run", "mcp"]);
-  assert.match(guide, /open_slidex_open/);
-  assert.match(guide, /open_slidex_edit/);
-  assert.match(guide, /open_slidex_render/);
-});
-
-test("published README documents single-package install and real-path MCP setup", async () => {
+test("published README documents single-package install and workspace-global MCP setup", async () => {
   const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 
-  assert.match(readme, /npx open-slidex@0\.2\.4 init my-deck/);
+  assert.match(readme, /npx open-slidex@0\.3\.0 init my-deck/);
   assert.match(readme, /only development\s+dependency/);
-  assert.match(readme, /open-slidex mcp --print-config codex/);
-  assert.match(readme, /--project "\$PWD"/);
+  assert.match(readme, /open-slidex mcp --workspace/);
+  assert.match(readme, /Workspace Settings/);
   assert.doesNotMatch(readme, /\/absolute\/path\/to\/deck/);
 });
 
@@ -138,6 +118,14 @@ test("repository root launches its bundled CLI without a workspace bin link", as
 
   assert.equal(
     rootPackageJson.scripts?.dev,
+    "node packages/open-slidex/dist/cli.mjs workspace"
+  );
+  assert.equal(
+    rootPackageJson.scripts?.workspace,
+    "node packages/open-slidex/dist/cli.mjs workspace"
+  );
+  assert.equal(
+    rootPackageJson.scripts?.["dev:workbench"],
     "node packages/open-slidex/dist/cli.mjs dev"
   );
   assert.equal(

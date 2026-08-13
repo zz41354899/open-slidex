@@ -108,10 +108,7 @@ function completionMessage({
     "  slidex-motion-direction",
     "  slidex-deck-qa",
     "",
-    "Project-local MCP configuration is ready:",
-    "  Codex: .codex/config.toml",
-    "  Claude Code: .mcp.json",
-    "  Setup and verification: MCP.md",
+    "Workspace MCP is configured once from OpenSlideX Workspace Settings.",
     ""
   ].join("\n");
 }

@@ -1,9 +1,8 @@
 # OpenSlideX MDX-first Local Workbench
 
 This private workspace contains one presentation source: `presentation.mdx`.
-The editor, SDK, and local MCP runtime come from the one `open-slidex` package;
-this project does not contain Next, cloud Workspace code, or a second canvas
-state. The local MCP connects coding agents to this same file.
+The editor and SDK come from the one `open-slidex` package; this project does
+not contain Next, cloud Workspace code, AI Chat, or a second canvas state.
 
 Use the same package manager that created the workspace:
 
@@ -11,7 +10,9 @@ Use the same package manager that created the workspace:
 npm run dev
 ```
 
-The command prints the localhost URL. Preview is canvas-first, Source provides
+The command starts the local Node API and a Vite HMR client, then prints the
+localhost URL. Generated HMR files stay under the ignored `.open-slidex/`
+directory. Preview is canvas-first, Source provides
 CodeMirror and live rendering, Assets manages local media, and Inspector writes
 validated SDK source commands. Only valid source is autosaved with revision
 protection; invalid work remains a recoverable browser draft.
@@ -35,4 +36,6 @@ ordered or unordered lists may appear inside `<Slide>`. `<Group>` organizes
 native layers. `<Notes>` stores presenter-only CommonMark speaker notes.
 Built-in JSX blocks such as `<Chart>` are React-rendered while remaining strict,
 serializable MotionDoc source. Put private reference material in `knowledge/`;
-the local MCP index stays under ignored `.open-slidex/` and is never synced.
+agent context stays under ignored `.open-slidex/` and is never synced. Configure
+the user-level Workspace MCP once from OpenSlideX Workspace Settings; it lets a
+desktop agent select this folder and work directly with `presentation.mdx`.

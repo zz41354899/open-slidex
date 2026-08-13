@@ -22,12 +22,10 @@ test("Local Workbench exposes the approved shortcut registry in toolbar order", 
       ["media", "M"],
       ["shape", "S"],
       ["table", "B"],
-      ["icon", "I"],
       ["chart", "C"],
       ["undo", "⌘/Ctrl Z"],
       ["redo", "⇧⌘Z / Ctrl Y"],
       ["command-menu", "⌘K"],
-      ["assistant", "/"],
       ["shortcut-help", "⇧?"]
     ]
   );

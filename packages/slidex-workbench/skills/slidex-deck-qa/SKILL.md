@@ -32,5 +32,4 @@ Source validity is necessary but not visual proof.
 - HTML, MDX, and PPTX export without losing the intended hierarchy.
 
 If the edit QA or a review-only quality check cannot start, report visual QA as
-blocked. Never substitute source validation or a PNG path for visual proof and
-never use shell commands from AI Chat.
+blocked. Never substitute source validation or a PNG path for visual proof.

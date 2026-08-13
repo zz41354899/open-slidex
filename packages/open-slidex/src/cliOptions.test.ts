@@ -21,13 +21,13 @@ test("CLI exposes help and version actions without creating a project", () => {
 
 test("CLI parses an official template and locale", () => {
   assert.deepEqual(
-    parseCreateSlideXArguments(["team-deck", "--template", "open-slidex-starter", "--locale", "zh-TW", "--no-install"]),
+    parseCreateSlideXArguments(["team-deck", "--template", "summer-time-report", "--locale", "zh-TW", "--no-install"]),
     {
       action: "create",
       installDependencies: false,
       packageManager: "npm",
       target: "team-deck",
-      template: { id: "open-slidex-starter", locale: "zh-TW" }
+      template: { id: "summer-time-report", locale: "zh-TW" }
     }
   );
   assert.throws(() => parseCreateSlideXArguments(["deck", "--template", "../escape"]), /official template ID/);

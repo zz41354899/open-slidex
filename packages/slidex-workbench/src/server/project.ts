@@ -17,6 +17,7 @@ import os from "node:os";
 import path from "node:path";
 
 import {
+  applySlideXBatch,
   buildMotionDocPngSvg,
   getOfficialTemplatePackage,
   listSlideXAssetReferences,
@@ -33,17 +34,20 @@ import {
 import {
   exportSlideXDocument,
   importOpenSlideXImageAsset,
+  importOpenSlideXVideoAsset,
   renderSlideXDocument,
   resolveInsideRoot,
   SlideXFileDocumentAdapter,
   SlideXRevisionConflictError
 } from "@open-slidex/sdk/node";
 
+import { extractEmbeddedImageAssets } from "./workspaceImport";
+
 export type ProjectSnapshot = ReturnType<SlideXProject["snapshot"]>;
 
 export class OpenSlideXLocalMediaError extends Error {
   constructor(readonly issues: ReturnType<typeof validateOpenSlideXLocalMedia>["issues"]) {
-    super("OpenSlideX local decks only allow imported assets/*.webp media. Import the media through Local Assets first.");
+    super("OpenSlideX local decks allow imported assets/*.webp or complete HTTPS media URLs.");
     this.name = "OpenSlideXLocalMediaError";
   }
 }
@@ -138,8 +142,10 @@ export class SlideXProject {
   }
 
   async save(input: { expectedRevision: string; source: string; title: string }) {
-    assertOpenSlideXLocalMedia(input.source);
-    return this.snapshot(await this.adapter.save(input));
+    await this.assertRevision(input.expectedRevision);
+    const source = await this.importEmbeddedImageAssets(input.source);
+    assertOpenSlideXLocalMedia(source);
+    return this.snapshot(await this.adapter.save({ ...input, source }));
   }
 
   async listAssets() {
@@ -148,11 +154,12 @@ export class SlideXProject {
     const entries = await readdir(this.assetsRoot, { withFileTypes: true });
     const assets = await Promise.all(
       entries
-        .filter((entry) => entry.isFile() && /^[A-Za-z0-9._-]+\.webp$/i.test(entry.name))
+        .filter((entry) => entry.isFile() && isAssetFileName(entry.name))
         .map(async (entry) => {
           const source = `assets/${entry.name}`;
           return {
             bytes: (await stat(path.join(this.assetsRoot, entry.name))).size,
+            mimeType: assetMimeType(entry.name),
             name: entry.name,
             source,
             usedBy: references
@@ -170,14 +177,25 @@ export class SlideXProject {
 
   async importAsset(file: File, expectedRevision: string) {
     await this.assertRevision(expectedRevision);
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (isMp4Upload(file)) {
+      const asset = await importOpenSlideXVideoAsset({
+        bytes,
+        fileName: file.name,
+        mediaType: file.type,
+        projectRoot: this.root
+      });
+      return { bytes: asset.bytes, mimeType: asset.mimeType, name: asset.name, source: asset.source, usedBy: [] };
+    }
     const asset = await importOpenSlideXImageAsset({
-      bytes: new Uint8Array(await file.arrayBuffer()),
+      bytes,
       fileName: file.name,
       mediaType: file.type,
       projectRoot: this.root
     });
     return {
       bytes: asset.bytes,
+      mimeType: asset.mimeType,
       name: asset.name,
       source: asset.source,
       usedBy: []
@@ -231,6 +249,10 @@ export class SlideXProject {
     return readFile(resolveInsideRoot(this.assetsRoot, safeName));
   }
 
+  assetMimeType(name: string) {
+    return assetMimeType(assetName(`assets/${name}`));
+  }
+
   async writeCurrent(input: {
     blockIndex?: number;
     nodeId?: string;
@@ -279,7 +301,12 @@ export class SlideXProject {
     source: string;
     target: "download" | "dist";
   }) {
-    assertOpenSlideXLocalMedia(input.source);
+    // Exports use the live canvas source, which can briefly contain an image
+    // pasted just before the autosave normalizes it to an assets/*.webp path.
+    // Keep export behavior aligned with save so this valid user flow cannot
+    // fail with local_media_not_allowed during that short interval.
+    const source = await this.importEmbeddedImageAssets(input.source);
+    assertOpenSlideXLocalMedia(source);
     const fileName = safeExportName(input.fileName);
     const root =
       input.target === "download"
@@ -292,7 +319,7 @@ export class SlideXProject {
         outputPath,
         overwrite: input.target === "download" || input.overwrite,
         projectRoot: this.root,
-        source: input.source
+        source
       });
       return input.target === "download"
         ? { bytes: await readFile(outputPath), output: `${fileName}.${input.format}` }
@@ -300,6 +327,25 @@ export class SlideXProject {
     } finally {
       if (input.target === "download") await rm(root, { force: true, recursive: true });
     }
+  }
+
+  private async importEmbeddedImageAssets(source: string) {
+    const embedded = extractEmbeddedImageAssets(source);
+    const commands = [];
+    for (const asset of embedded.assets) {
+      const stored = await importOpenSlideXImageAsset({
+        bytes: asset.bytes,
+        fileName: asset.fileName,
+        mediaType: asset.mediaType,
+        projectRoot: this.root
+      });
+      if (stored.source !== asset.source) {
+        commands.push({ from: asset.source, to: stored.source, type: "asset.repath" } as const);
+      }
+    }
+    return commands.length > 0
+      ? applySlideXBatch(embedded.source, commands).source
+      : embedded.source;
   }
 
   async renderMontage(overwrite: boolean) {
@@ -351,22 +397,35 @@ export function safeExportName(value: unknown) {
 }
 
 function assetName(source: string) {
-  if (!/^assets\/[A-Za-z0-9._-]+\.webp$/i.test(source)) {
-    throw new Error("Asset paths must use assets/<name>.webp.");
+  if (!/^assets\/[A-Za-z0-9._-]+\.(?:webp|mp4)$/i.test(source)) {
+    throw new Error("Asset paths must use assets/<name>.webp or assets/<name>.mp4.");
   }
   return source.slice("assets/".length);
 }
 
 function normalizedAssetName(value: string) {
   const name = value.startsWith("assets/") ? value.slice(7) : value;
+  const extension = path.extname(name).toLowerCase() === ".mp4" ? ".mp4" : ".webp";
   const base = name
-    .replace(/\.webp$/i, "")
+    .replace(/\.(?:webp|mp4)$/i, "")
     .normalize("NFKD")
     .replace(/[^A-Za-z0-9._-]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 72);
   if (!base) throw new Error("Choose a valid asset name.");
-  return `${base}.webp`;
+  return `${base}${extension}`;
+}
+
+function isAssetFileName(value: string) {
+  return /^[A-Za-z0-9._-]+\.(?:webp|mp4)$/i.test(value);
+}
+
+function assetMimeType(value: string) {
+  return value.toLowerCase().endsWith(".mp4") ? "video/mp4" : "image/webp";
+}
+
+function isMp4Upload(file: File) {
+  return file.type.toLowerCase().split(";", 1)[0] === "video/mp4" || file.name.toLowerCase().endsWith(".mp4");
 }
 
 function exists(filePath: string) {

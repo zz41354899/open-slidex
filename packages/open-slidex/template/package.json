@@ -1,6 +1,6 @@
 {
   "name": "__PROJECT_NAME__",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "private": true,
   "engines": {
     "node": ">=22.12.0"
@@ -9,7 +9,6 @@
     "dev": "open-slidex dev",
     "build": "open-slidex build",
     "preview": "open-slidex preview",
-    "mcp": "open-slidex mcp --project .",
     "sync:skills": "open-slidex sync:skills",
     "validate": "open-slidex validate presentation.mdx",
     "render": "open-slidex render presentation.mdx --montage --out dist/montage.png",
@@ -18,6 +17,6 @@
     "export:pptx": "open-slidex export presentation.mdx --format pptx --out dist/presentation.pptx --overwrite"
   },
   "devDependencies": {
-    "open-slidex": "0.2.4"
+    "open-slidex": "0.3.0"
   }
 }
