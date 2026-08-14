@@ -395,7 +395,7 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   assert.equal(mcpPayload.configPath, "~/.codex/config.toml");
   assert.equal(mcpPayload.workspaceRoot, workspaceRoot);
   assert.match(mcpPayload.config, /\[mcp_servers\.open_slidex_workspace\]/);
-  assert.match(mcpPayload.config, /open-slidex@0\.3\.3/);
+  assert.match(mcpPayload.config, /open-slidex@0\.3\.4/);
   assert.match(mcpPayload.config, /--workspace/);
 
   const windowsMcpSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=codex&platform=windows`);

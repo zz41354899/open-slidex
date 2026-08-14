@@ -37,7 +37,7 @@ npm run dev -- ~/Presentations --port 4174
 The npm package creates a separate presentation project:
 
 ```bash
-npx open-slidex@0.3.3 init my-deck
+npx open-slidex@0.3.4 init my-deck
 cd my-deck
 npm run dev
 ```
@@ -45,15 +45,16 @@ npm run dev
 Or install the CLI globally:
 
 ```bash
-npm install --global open-slidex@0.3.3
+npm install --global open-slidex@0.3.4
 open-slidex init my-deck
 ```
 
 `npm run dev` in an installed project always opens `/workspace`, rooted at the
-project's parent folder, where the new deck is already listed. Selecting that
-deck opens its editor. Generated Workbench source and dependency cache stay in
-the ignored `.open-slidex/` directory. Production commands continue to use the
-bundled runtime:
+project's own ignored `open-slidex-workspace/` directory. A fresh install has
+an empty library; creating or importing a deck adds its own child folder there.
+Generated Workbench source and dependency cache stay in the ignored
+`.open-slidex/` directory. Production commands continue to use the bundled
+runtime:
 
 ```bash
 open-slidex build

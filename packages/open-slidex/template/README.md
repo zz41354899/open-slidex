@@ -10,9 +10,10 @@ Use the same package manager that created the project:
 npm run dev
 ```
 
-The command opens the local Workspace rooted at this project's parent folder,
-so this deck appears in the library alongside its sibling decks. Choose this
-deck to enter the editor. The initial browser route is always `/workspace`.
+The command opens the local Workspace rooted at
+`open-slidex-workspace/` inside this project. A fresh install starts with an
+empty library; creating or importing a presentation adds an isolated child
+folder there. The initial browser route is always `/workspace`.
 
 The command starts the local Node API and a Vite HMR client, then prints the
 Workspace URL. Generated HMR files stay under the ignored `.open-slidex/`

@@ -50,9 +50,9 @@ test("starter contains the local Workbench and SDK without project-scoped MCP", 
   };
 
   assert.deepEqual(packageJson.devDependencies, {
-    "open-slidex": "0.3.3"
+    "open-slidex": "0.3.4"
   });
-  assert.equal(packageJson.scripts?.dev, "open-slidex workspace ..");
+  assert.equal(packageJson.scripts?.dev, "open-slidex workspace");
   assert.equal(packageJson.scripts?.["dev:workbench"], undefined);
   assert.equal(packageJson.scripts?.build, "open-slidex build");
   assert.equal(packageJson.scripts?.preview, "open-slidex preview");
@@ -81,6 +81,9 @@ test("starter contains the local Workbench and SDK without project-scoped MCP", 
   await access(new URL("assets", templateUrl));
   await access(new URL("knowledge", templateUrl));
   await access(new URL("themes", templateUrl));
+  const starterGitignore = await readFile(new URL("gitignore", templateUrl), "utf8");
+  assert.match(starterGitignore, /^\.open-slidex\/$/m);
+  assert.match(starterGitignore, /^open-slidex-workspace\/$/m);
   for (const removedPath of [
     ".codex/config.toml",
     ".mcp.json",
@@ -105,7 +108,7 @@ test("starter contains the local Workbench and SDK without project-scoped MCP", 
 test("published README documents single-package install and workspace-global MCP setup", async () => {
   const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 
-  assert.match(readme, /npx open-slidex@0\.3\.3 init my-deck/);
+  assert.match(readme, /npx open-slidex@0\.3\.4 init my-deck/);
   assert.match(readme, /only development\s+dependency/);
   assert.match(readme, /open-slidex mcp --workspace/);
   assert.match(readme, /Workspace Settings/);
@@ -120,11 +123,11 @@ test("published package and generated starter both include the Workspace path", 
     await readFile(new URL("../template/package.json", import.meta.url), "utf8")
   ) as { devDependencies?: Record<string, string>; scripts?: Record<string, string> };
 
-  assert.equal(packageJson.version, "0.3.3");
+  assert.equal(packageJson.version, "0.3.4");
   assert.ok(packageJson.files?.includes("runtime"));
   assert.ok(packageJson.files?.includes("template"));
   assert.equal(starterPackageJson.devDependencies?.["open-slidex"], packageJson.version);
-  assert.equal(starterPackageJson.scripts?.dev, "open-slidex workspace ..");
+  assert.equal(starterPackageJson.scripts?.dev, "open-slidex workspace");
   await access(new URL("../runtime/workbench/cli.mjs", import.meta.url));
   await access(new URL("../runtime/workbench/client/index.html", import.meta.url));
   await access(

@@ -205,7 +205,7 @@ test("Workbench project extracts pasted Base64 images into local WebP assets bef
   }
 });
 
-test("Workbench project exports a just-pasted Base64 image before autosave normalizes it", async () => {
+test("Workbench project exports a just-pasted image as portable MDX while materializing its project asset", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-base64-export-"));
   try {
     await writeFile(path.join(root, "presentation.mdx"), source, "utf8");
@@ -239,7 +239,8 @@ test("Workbench project exports a just-pasted Base64 image before autosave norma
     assert.equal(result.output, "dist/pasted-image.mdx");
     assert.equal(assets.length, 1);
     assert.doesNotMatch(exported, /data:image\/png;base64/i);
-    assert.match(exported, new RegExp(`src="assets/${assets[0]}"`));
+    assert.match(exported, /src="data:image\/webp;base64,/i);
+    assert.doesNotMatch(exported, new RegExp(`src="assets/${assets[0]}"`));
   } finally {
     await rm(root, { force: true, recursive: true });
   }

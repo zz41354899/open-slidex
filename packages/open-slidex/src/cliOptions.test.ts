@@ -13,9 +13,9 @@ test("CLI exposes help and version actions without creating a project", () => {
   assert.deepEqual(parseCreateSlideXArguments(["--help"]), { action: "help" });
   assert.deepEqual(parseCreateSlideXArguments(["-v"]), { action: "version" });
   assert.match(createSlideXHelp(), /--package-manager <npm\|pnpm\|bun>/);
-  assert.match(createSlideXHelp(), /npx open-slidex@0\.3\.3 init my-deck/);
-  assert.match(createSlideXHelp(), /pnpm dlx open-slidex@0\.3\.3 init my-deck/);
-  assert.match(createSlideXHelp(), /bunx open-slidex@0\.3\.3 init my-deck/);
+  assert.match(createSlideXHelp(), /npx open-slidex@0\.3\.4 init my-deck/);
+  assert.match(createSlideXHelp(), /pnpm dlx open-slidex@0\.3\.4 init my-deck/);
+  assert.match(createSlideXHelp(), /bunx open-slidex@0\.3\.4 init my-deck/);
   assert.match(createSlideXHelp(), /--template <official-template-id>/);
 });
 

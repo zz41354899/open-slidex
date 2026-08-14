@@ -5,6 +5,7 @@ import {
   mkdir,
   readFile,
   readdir,
+  rename,
   writeFile
 } from "node:fs/promises";
 import path from "node:path";
@@ -54,6 +55,10 @@ async function main() {
 
   await mkdir(targetDir, { recursive: true });
   await cp(templateDir, targetDir, { recursive: true });
+  await rename(
+    path.join(targetDir, "gitignore"),
+    path.join(targetDir, ".gitignore")
+  );
   await replaceProjectName(targetDir, path.basename(targetDir));
   if (options.template) {
     await applyOfficialTemplate(targetDir, options.template);

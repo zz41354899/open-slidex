@@ -102,7 +102,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       root: resolvedRoot
     };
   };
-  const server = new McpServer({ name: "open-slidex-local", version: "0.3.3" });
+  const server = new McpServer({ name: "open-slidex-local", version: "0.3.4" });
   const rejectedCandidates = new Map<string, {
     attempts: number;
     expectedRevision: string;
@@ -482,7 +482,13 @@ class OpenSlideXWorkspaceMcpScope {
   }
 
   async list() {
-    const entries = await readdir(this.workspaceRoot, { withFileTypes: true });
+    // A freshly initialized starter may configure MCP before its first
+    // Workspace launch has created the local deck directory. Treat that as an
+    // empty Workspace instead of leaking ENOENT through the MCP tool call.
+    const entries = await readdir(this.workspaceRoot, { withFileTypes: true }).catch((error: unknown) => {
+      if (isNodeError(error) && error.code === "ENOENT") return [];
+      throw error;
+    });
     const described = await Promise.all(entries.flatMap((entry) => {
       if (!entry.isDirectory() || entry.name.startsWith(".") || !/^[A-Za-z0-9._-]+$/.test(entry.name)) return [];
       return [this.describe(entry.name)];
@@ -529,6 +535,10 @@ class OpenSlideXWorkspaceMcpScope {
   }
 }
 
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && "code" in error;
+}
+
 async function main() {
   const configurationRoot = workspaceRoot ?? projectRoot;
   const printPromptIndex = process.argv.indexOf("--print-setup-prompt");
@@ -557,7 +567,7 @@ async function main() {
 
 export type OpenSlideXMcpClient = "claude" | "claude-code" | "claude-desktop" | "codex";
 export type OpenSlideXPlatform = "macos" | "windows";
-export const openSlideXMcpNpxPackage = "open-slidex@0.3.3";
+export const openSlideXMcpNpxPackage = "open-slidex@0.3.4";
 
 export function openSlideXMcpConfig(
   client: OpenSlideXMcpClient,

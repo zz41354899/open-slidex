@@ -1,12 +1,12 @@
 {
   "name": "__PROJECT_NAME__",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "private": true,
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "open-slidex workspace ..",
+    "dev": "open-slidex workspace",
     "build": "open-slidex build",
     "preview": "open-slidex preview",
     "sync:skills": "open-slidex sync:skills",
@@ -17,6 +17,6 @@
     "export:pptx": "open-slidex export presentation.mdx --format pptx --out dist/presentation.pptx --overwrite"
   },
   "devDependencies": {
-    "open-slidex": "0.3.3"
+    "open-slidex": "0.3.4"
   }
 }

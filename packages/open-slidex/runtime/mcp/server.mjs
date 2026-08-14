@@ -43507,7 +43507,7 @@ function parseTemplateRef(value) {
 
 // core/motion-doc/domain/officialTemplateDefinitions.ts
 var officialTemplatePackageVersion = "1.0.0";
-var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.3" };
+var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.4" };
 var officialTemplateDefinitions = [
   {
     id: "summer-time-report",
@@ -54213,7 +54213,7 @@ function createOpenSlideXMcpServer(root = projectRoot) {
       root: resolvedRoot
     };
   };
-  const server = new McpServer({ name: "open-slidex-local", version: "0.3.3" });
+  const server = new McpServer({ name: "open-slidex-local", version: "0.3.4" });
   const rejectedCandidates = /* @__PURE__ */ new Map();
   if (workspace) {
     server.registerTool("open_slidex_workspace_list", {
@@ -54547,7 +54547,10 @@ var OpenSlideXWorkspaceMcpScope = class {
     this.workspaceRoot = resolve(workspaceRoot2);
   }
   async list() {
-    const entries = await readdir2(this.workspaceRoot, { withFileTypes: true });
+    const entries = await readdir2(this.workspaceRoot, { withFileTypes: true }).catch((error51) => {
+      if (isNodeError(error51) && error51.code === "ENOENT") return [];
+      throw error51;
+    });
     const described = await Promise.all(entries.flatMap((entry) => {
       if (!entry.isDirectory() || entry.name.startsWith(".") || !/^[A-Za-z0-9._-]+$/.test(entry.name)) return [];
       return [this.describe(entry.name)];
@@ -54590,6 +54593,9 @@ var OpenSlideXWorkspaceMcpScope = class {
     }
   }
 };
+function isNodeError(error51) {
+  return error51 instanceof Error && "code" in error51;
+}
 async function main() {
   const configurationRoot = workspaceRoot ?? projectRoot;
   const printPromptIndex = process.argv.indexOf("--print-setup-prompt");
@@ -54612,7 +54618,7 @@ async function main() {
   process.stderr.write(`OpenSlideX MCP connected to ${workspaceRoot ? `workspace ${workspaceRoot}` : projectRoot}
 `);
 }
-var openSlideXMcpNpxPackage = "open-slidex@0.3.3";
+var openSlideXMcpNpxPackage = "open-slidex@0.3.4";
 function openSlideXMcpConfig(client, root, platform = process.platform === "win32" ? "windows" : "macos") {
   const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? win32.resolve(root) : resolve(root);
   const command = platform === "windows" ? "cmd" : "npx";

@@ -11045,7 +11045,7 @@ import { Readable as Readable2 } from "node:stream";
 
 // packages/slidex-workbench/src/server/mcpConfig.ts
 import path6 from "node:path";
-var openSlideXMcpNpxPackage = "open-slidex@0.3.3";
+var openSlideXMcpNpxPackage = "open-slidex@0.3.4";
 var openSlideXMcpClients = ["codex", "claude-code", "claude-desktop"];
 function resolveMcpRoot(root, platform) {
   return platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? path6.win32.resolve(root) : path6.resolve(root);

@@ -38,7 +38,7 @@ test("MCP prints copyable Codex and Claude Code configuration", () => {
   assert.match(openSlideXMcpConfig("codex", root), /OpenSlideX demo/);
   assert.equal(
     openSlideXMcpConfig("claude", root),
-    "claude mcp add open-slidex -- npx -y open-slidex@0.3.3 mcp --project '/tmp/OpenSlideX demo'"
+    "claude mcp add open-slidex -- npx -y open-slidex@0.3.4 mcp --project '/tmp/OpenSlideX demo'"
   );
   const desktop = JSON.parse(openSlideXMcpConfig("claude-desktop", root));
   assert.equal(desktop.mcpServers.open_slidex.command, "npx");
@@ -75,10 +75,35 @@ test("Workspace MCP prints user-level configuration and selects a presentation",
     assert.equal(opened.title, "beta");
 
     assert.match(openSlideXWorkspaceMcpConfig("codex", root), /\[mcp_servers\.open_slidex_workspace\]/);
-    assert.match(openSlideXWorkspaceMcpConfig("codex", root), /open-slidex@0\.3\.3/);
+    assert.match(openSlideXWorkspaceMcpConfig("codex", root), /open-slidex@0\.3\.4/);
     assert.match(openSlideXWorkspaceMcpConfig("codex", root), /--workspace/);
     assert.match(openSlideXWorkspaceMcpConfig("claude-code", root), /--scope user/);
     assert.match(openSlideXWorkspaceMcpSetupPrompt("codex", root), /open_slidex_workspace_list/);
+  } finally {
+    await client.close().catch(() => undefined);
+    await server.close().catch(() => undefined);
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("Workspace MCP lists a not-yet-created starter workspace without failing", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-empty-workspace-mcp-"));
+  const workspaceRoot = path.join(root, "open-slidex-workspace");
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const server = createOpenSlideXMcpServer({ workspaceRoot });
+  const client = new Client({ name: "open-slidex-empty-workspace-test", version: "1.0.0" });
+
+  try {
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    const listed = structured(await client.callTool({ arguments: {}, name: "open_slidex_workspace_list" }));
+
+    assert.deepEqual(listed.presentations, []);
+    assert.equal(listed.selectedPresentationId, undefined);
+    assert.equal(listed.workspaceRoot, workspaceRoot);
+
+    const opened = await client.callTool({ arguments: { includeSource: false }, name: "open_slidex_open" });
+    assert.equal(opened.isError, true);
+    assert.match(String(structured(opened).message), /has no presentations/i);
   } finally {
     await client.close().catch(() => undefined);
     await server.close().catch(() => undefined);

@@ -2,3 +2,4 @@ node_modules/
 dist/
 *.tgz
 .open-slidex/
+open-slidex-workspace/

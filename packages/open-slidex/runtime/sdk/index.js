@@ -27159,7 +27159,7 @@ function parseTemplatePackageV1(value) {
 
 // core/motion-doc/domain/officialTemplateDefinitions.ts
 var officialTemplatePackageVersion = "1.0.0";
-var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.3" };
+var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.4" };
 var officialTemplateDefinitions = [
   {
     id: "summer-time-report",

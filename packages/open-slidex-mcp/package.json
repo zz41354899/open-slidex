@@ -1,7 +1,7 @@
 {
   "name": "@open-slidex/mcp",
   "private": true,
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Local-only MCP server for an OpenSlideX presentation workspace.",
   "type": "module",
   "bin": { "open-slidex-mcp": "dist/server.mjs" },
@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@open-slidex/sdk": "0.3.3",
+    "@open-slidex/sdk": "0.3.4",
     "pdf-parse": "^1.1.1",
     "playwright-core": "1.61.1",
     "sharp": "^0.35.3",
