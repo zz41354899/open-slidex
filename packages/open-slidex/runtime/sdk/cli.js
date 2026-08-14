@@ -26198,7 +26198,7 @@ var templatePackageV1Schema = external_exports.strictObject({
 
 // core/motion-doc/domain/officialTemplateDefinitions.ts
 var officialTemplatePackageVersion = "1.0.0";
-var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.0" };
+var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.1" };
 var officialTemplateDefinitions = [
   {
     id: "summer-time-report",

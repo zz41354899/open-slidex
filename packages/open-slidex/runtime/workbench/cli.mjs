@@ -10975,11 +10975,12 @@ import { Readable as Readable2 } from "node:stream";
 
 // packages/slidex-workbench/src/server/mcpConfig.ts
 import path6 from "node:path";
+var openSlideXMcpNpxPackage = "open-slidex@0.3.1";
 var openSlideXMcpClients = ["codex", "claude-code", "claude-desktop"];
 function workspaceMcpConfig(client, root, platform) {
   const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? path6.win32.resolve(root) : path6.resolve(root);
   const command = platform === "windows" ? "cmd" : "npx";
-  const args = platform === "windows" ? ["/c", "npx", "-y", "open-slidex", "mcp", "--workspace", absoluteRoot] : ["-y", "open-slidex", "mcp", "--workspace", absoluteRoot];
+  const args = platform === "windows" ? ["/c", "npx", "-y", openSlideXMcpNpxPackage, "mcp", "--workspace", absoluteRoot] : ["-y", openSlideXMcpNpxPackage, "mcp", "--workspace", absoluteRoot];
   if (client === "codex") {
     return `[mcp_servers.open_slidex_workspace]
 command = ${JSON.stringify(command)}
@@ -10988,7 +10989,7 @@ args = ${JSON.stringify(args)}`;
   if (client === "claude-desktop") {
     return JSON.stringify({ mcpServers: { open_slidex_workspace: { args, command, type: "stdio" } } }, null, 2);
   }
-  const launch = platform === "windows" ? `cmd /c npx -y open-slidex mcp --workspace "${absoluteRoot.replaceAll('"', '\\"')}"` : `npx -y open-slidex mcp --workspace '${absoluteRoot.replaceAll("'", `'"'"'`)}'`;
+  const launch = platform === "windows" ? `cmd /c npx -y ${openSlideXMcpNpxPackage} mcp --workspace "${absoluteRoot.replaceAll('"', '\\"')}"` : `npx -y ${openSlideXMcpNpxPackage} mcp --workspace '${absoluteRoot.replaceAll("'", `'"'"'`)}'`;
   return `claude mcp add --scope user open-slidex-workspace -- ${launch}`;
 }
 function workspaceMcpPrompt(client, root, platform) {

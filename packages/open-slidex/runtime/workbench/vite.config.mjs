@@ -8,6 +8,7 @@ import react from "@vitejs/plugin-react";
 const configRoot = path.dirname(fileURLToPath(import.meta.url));
 const packagedSourceRoot = path.join(configRoot, "source");
 const workbenchRequire = createRequire(import.meta.url);
+const robotoPackageRoot = resolvePackageRoot("@fontsource/roboto");
 
 export const slideXWorkbenchSourceRoot = existsSync(
   path.join(packagedSourceRoot, "packages/slidex-workbench/src/client/index.html")
@@ -81,6 +82,10 @@ export function createSlideXWorkbenchViteConfig(options = {}) {
     plugins: [...react()],
     resolve: {
       alias: [
+        ...["400.css", "500.css", "700.css"].map((fileName) => ({
+          find: `@fontsource/roboto/${fileName}`,
+          replacement: path.join(robotoPackageRoot, fileName)
+        })),
         {
           find: "@open-slidex/editor-ui/styles.css",
           replacement: path.join(sourceRoot, "packages/editor-ui/src/editor.css")
@@ -104,7 +109,7 @@ export function createSlideXWorkbenchViteConfig(options = {}) {
     ...(apiTarget
       ? {
           server: {
-            fs: { allow: [sourceRoot] },
+            fs: { allow: [sourceRoot, robotoPackageRoot] },
             host: "127.0.0.1",
             port: options.port ?? 4173,
             proxy: {

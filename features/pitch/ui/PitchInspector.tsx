@@ -157,7 +157,7 @@ export function PitchInspector({
   const { tx } = usePitchI18n();
 
   return (
-    <div id="inspector-v4" className="flex w-full sm:w-[300px] md:w-[320px] shrink-0 flex-col overflow-hidden border-l border-white/[0.12] bg-[#111111] select-none h-full relative z-10 transition-all duration-700 font-sans antialiased">
+    <div id="inspector-v4" className="flex w-full sm:w-[300px] md:w-[320px] shrink-0 flex-col overflow-hidden border-l border-white/[0.08] bg-[#171717] select-none h-full relative z-10 transition-all duration-300 font-sans antialiased">
 
       <EditorInspectorHeader
         actions={(
@@ -266,7 +266,7 @@ export function PitchInspector({
 function InspectorActionButton({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
     <Button
-      className="flex h-9 items-center gap-2.5 rounded-xl border border-white/[0.055] bg-[#18181b] px-3 text-left text-[11px] font-medium text-neutral-400 transition hover:border-white/[0.1] hover:bg-white/[0.055] hover:text-white"
+      className="flex h-9 items-center gap-2.5 rounded-xl border border-white/[0.07] bg-[#2f2f2f] px-3 text-left text-[11px] font-medium text-neutral-300 transition hover:border-white/[0.13] hover:bg-[#383838] hover:text-white"
       onClick={onClick}
       type="button"
       variant="ghost"

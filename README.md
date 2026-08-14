@@ -26,17 +26,6 @@ own `presentation.mdx` file. No account or Supabase project is required.
 The bundled catalog includes **Summer Time Report** and **Moodboard**. Notion-
 and Obsidian-specific templates are intentionally excluded.
 
-### Open the root example deck
-
-To edit the neutral `presentation.mdx` included at the repository root:
-
-```bash
-npm run dev:workbench
-```
-
-The Workbench uses Vite HMR. Its local Node server keeps filesystem and export
-APIs behind the same browser origin.
-
 ### Use a different Workspace folder or port
 
 ```bash
@@ -48,7 +37,7 @@ npm run dev -- ~/Presentations --port 4174
 The npm package creates a separate presentation project:
 
 ```bash
-npx open-slidex@0.3.0 init my-deck
+npx open-slidex@0.3.1 init my-deck
 cd my-deck
 npm run dev
 ```
@@ -56,13 +45,15 @@ npm run dev
 Or install the CLI globally:
 
 ```bash
-npm install --global open-slidex@0.3.0
+npm install --global open-slidex@0.3.1
 open-slidex init my-deck
 ```
 
-Installed projects use the same Vite HMR development path. Their generated
-Workbench source and dependency cache stay in the ignored `.open-slidex/`
-directory; production commands continue to use the bundled runtime:
+`npm run dev` in an installed project always opens `/workspace`, rooted at the
+project's parent folder, where the new deck is already listed. Selecting that
+deck opens its editor. Generated Workbench source and dependency cache stay in
+the ignored `.open-slidex/` directory. Production commands continue to use the
+bundled runtime:
 
 ```bash
 open-slidex build
@@ -86,7 +77,6 @@ The Workbench has no built-in AI Chat or CLI bridge.
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Open the local Workspace. |
-| `npm run dev:workbench` | Open the root `presentation.mdx` directly. |
 | `npm run validate` | Validate the root presentation source. |
 | `npm run render` | Render the root presentation montage to `dist/montage.png`. |
 | `npm run export:html` | Export the root deck as HTML. |

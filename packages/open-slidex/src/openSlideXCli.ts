@@ -92,5 +92,25 @@ function run(entry: string, args: readonly string[]) {
 }
 
 function help() {
-  return `OpenSlideX\n\nUsage:\n  open-slidex workspace [directory] [--port 4172] [--no-open]\n  open-slidex init [directory] [--template <id>] [--locale <en|zh-TW>] [--npm|--pnpm|--bun|--no-install]\n  open-slidex dev [--port 4173] [--no-open]\n  open-slidex build\n  open-slidex preview [--port 4174]\n  open-slidex mcp --workspace <directory> [--print-config <codex|claude-code|claude-desktop>]\n  open-slidex mcp --workspace <directory> [--print-setup-prompt <codex|claude-code|claude-desktop>]\n  open-slidex validate [presentation.mdx]\n  open-slidex render [presentation.mdx] --montage --out <file.png>\n  open-slidex export [presentation.mdx] --format <html|mdx|pptx> --out <file> [--overwrite]\n\nExamples:\n  open-slidex workspace ~/Presentations\n  npx open-slidex@latest init my-deck\n  open-slidex init my-deck --template summer-time-report --locale zh-TW\n  cd my-deck && npm run dev\n  open-slidex mcp --workspace ~/Presentations --print-config codex\n`;
+  return `OpenSlideX
+
+Usage:
+  open-slidex workspace [directory] [--port 4172] [--no-open]
+  open-slidex init [directory] [--template <id>] [--locale <en|zh-TW>] [--npm|--pnpm|--bun|--no-install]
+  open-slidex dev [--port 4173] [--no-open]
+  open-slidex build
+  open-slidex preview [--port 4174]
+  open-slidex mcp --workspace <directory> [--print-config <codex|claude-code|claude-desktop>]
+  open-slidex mcp --workspace <directory> [--print-setup-prompt <codex|claude-code|claude-desktop>]
+  open-slidex validate [presentation.mdx]
+  open-slidex render [presentation.mdx] --montage --out <file.png>
+  open-slidex export [presentation.mdx] --format <html|mdx|pptx> --out <file> [--overwrite]
+
+Examples:
+  open-slidex workspace ~/Presentations
+  npx open-slidex@0.3.1 init my-deck
+  open-slidex init my-deck --template summer-time-report --locale zh-TW
+  cd my-deck && npm run dev
+  open-slidex mcp --workspace ~/Presentations --print-config codex
+`;
 }

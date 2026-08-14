@@ -916,6 +916,7 @@ const zhTw = {
   ,"New local presentation": "新的本機簡報"
   ,"MDX copied": "已複製 MDX"
   ,"Back to OpenSlideX Workspace": "返回 OpenSlideX 工作區"
+  ,"Back to workspace": "返回工作區"
   ,"AI model profile": "AI 模型設定檔"
   ,"Official template": "官方範本"
 } as const satisfies Record<string, string>;

@@ -50,9 +50,10 @@ test("starter contains the local Workbench and SDK without project-scoped MCP", 
   };
 
   assert.deepEqual(packageJson.devDependencies, {
-    "open-slidex": "0.3.0"
+    "open-slidex": "0.3.1"
   });
-  assert.equal(packageJson.scripts?.dev, "open-slidex dev");
+  assert.equal(packageJson.scripts?.dev, "open-slidex workspace ..");
+  assert.equal(packageJson.scripts?.["dev:workbench"], undefined);
   assert.equal(packageJson.scripts?.build, "open-slidex build");
   assert.equal(packageJson.scripts?.preview, "open-slidex preview");
   assert.equal(packageJson.scripts?.mcp, undefined);
@@ -104,11 +105,34 @@ test("starter contains the local Workbench and SDK without project-scoped MCP", 
 test("published README documents single-package install and workspace-global MCP setup", async () => {
   const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 
-  assert.match(readme, /npx open-slidex@0\.3\.0 init my-deck/);
+  assert.match(readme, /npx open-slidex@0\.3\.1 init my-deck/);
   assert.match(readme, /only development\s+dependency/);
   assert.match(readme, /open-slidex mcp --workspace/);
   assert.match(readme, /Workspace Settings/);
   assert.doesNotMatch(readme, /\/absolute\/path\/to\/deck/);
+});
+
+test("published package and generated starter both include the Workspace path", async () => {
+  const packageJson = JSON.parse(
+    await readFile(new URL("../package.json", import.meta.url), "utf8")
+  ) as { files?: string[]; version?: string };
+  const starterPackageJson = JSON.parse(
+    await readFile(new URL("../template/package.json", import.meta.url), "utf8")
+  ) as { devDependencies?: Record<string, string>; scripts?: Record<string, string> };
+
+  assert.equal(packageJson.version, "0.3.1");
+  assert.ok(packageJson.files?.includes("runtime"));
+  assert.ok(packageJson.files?.includes("template"));
+  assert.equal(starterPackageJson.devDependencies?.["open-slidex"], packageJson.version);
+  assert.equal(starterPackageJson.scripts?.dev, "open-slidex workspace ..");
+  await access(new URL("../runtime/workbench/cli.mjs", import.meta.url));
+  await access(new URL("../runtime/workbench/client/index.html", import.meta.url));
+  await access(
+    new URL(
+      "../runtime/workbench/source/packages/slidex-workbench/src/client/WorkspaceHome.tsx",
+      import.meta.url
+    )
+  );
 });
 
 test("repository root launches its bundled CLI without a workspace bin link", async () => {
@@ -124,10 +148,7 @@ test("repository root launches its bundled CLI without a workspace bin link", as
     rootPackageJson.scripts?.workspace,
     "node packages/open-slidex/dist/cli.mjs workspace"
   );
-  assert.equal(
-    rootPackageJson.scripts?.["dev:workbench"],
-    "node packages/open-slidex/dist/cli.mjs dev"
-  );
+  assert.equal(rootPackageJson.scripts?.["dev:workbench"], undefined);
   assert.equal(
     rootPackageJson.scripts?.mcp,
     "node packages/open-slidex/dist/cli.mjs mcp --project ."

@@ -43503,7 +43503,7 @@ function parseTemplateRef(value) {
 
 // core/motion-doc/domain/officialTemplateDefinitions.ts
 var officialTemplatePackageVersion = "1.0.0";
-var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.0" };
+var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.1" };
 var officialTemplateDefinitions = [
   {
     id: "summer-time-report",
@@ -54208,7 +54208,7 @@ function createOpenSlideXMcpServer(root = projectRoot) {
       root: resolvedRoot
     };
   };
-  const server = new McpServer({ name: "open-slidex-local", version: "0.3.0" });
+  const server = new McpServer({ name: "open-slidex-local", version: "0.3.1" });
   const rejectedCandidates = /* @__PURE__ */ new Map();
   if (workspace) {
     server.registerTool("open_slidex_workspace_list", {
@@ -54607,10 +54607,11 @@ async function main() {
   process.stderr.write(`OpenSlideX MCP connected to ${workspaceRoot ? `workspace ${workspaceRoot}` : projectRoot}
 `);
 }
+var openSlideXMcpNpxPackage = "open-slidex@0.3.1";
 function openSlideXMcpConfig(client, root, platform = process.platform === "win32" ? "windows" : "macos") {
   const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? win32.resolve(root) : resolve(root);
   const command = platform === "windows" ? "cmd" : "npx";
-  const args = platform === "windows" ? ["/c", "npx", "-y", "open-slidex", "mcp", "--project", absoluteRoot] : ["-y", "open-slidex", "mcp", "--project", absoluteRoot];
+  const args = platform === "windows" ? ["/c", "npx", "-y", openSlideXMcpNpxPackage, "mcp", "--project", absoluteRoot] : ["-y", openSlideXMcpNpxPackage, "mcp", "--project", absoluteRoot];
   if (client === "codex") {
     return `[mcp_servers.open_slidex]
 command = ${JSON.stringify(command)}
@@ -54623,13 +54624,13 @@ args = ${JSON.stringify(args)}`;
       }
     }, null, 2);
   }
-  const launch = platform === "windows" ? `cmd /c npx -y open-slidex mcp --project ${windowsQuote(absoluteRoot)}` : `npx -y open-slidex mcp --project ${shellQuote(absoluteRoot)}`;
+  const launch = platform === "windows" ? `cmd /c npx -y ${openSlideXMcpNpxPackage} mcp --project ${windowsQuote(absoluteRoot)}` : `npx -y ${openSlideXMcpNpxPackage} mcp --project ${shellQuote(absoluteRoot)}`;
   return `claude mcp add open-slidex -- ${launch}`;
 }
 function openSlideXWorkspaceMcpConfig(client, root, platform = process.platform === "win32" ? "windows" : "macos") {
   const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? win32.resolve(root) : resolve(root);
   const command = platform === "windows" ? "cmd" : "npx";
-  const args = platform === "windows" ? ["/c", "npx", "-y", "open-slidex", "mcp", "--workspace", absoluteRoot] : ["-y", "open-slidex", "mcp", "--workspace", absoluteRoot];
+  const args = platform === "windows" ? ["/c", "npx", "-y", openSlideXMcpNpxPackage, "mcp", "--workspace", absoluteRoot] : ["-y", openSlideXMcpNpxPackage, "mcp", "--workspace", absoluteRoot];
   if (client === "codex") {
     return `[mcp_servers.open_slidex_workspace]
 command = ${JSON.stringify(command)}
@@ -54642,7 +54643,7 @@ args = ${JSON.stringify(args)}`;
       }
     }, null, 2);
   }
-  const launch = platform === "windows" ? `cmd /c npx -y open-slidex mcp --workspace ${windowsQuote(absoluteRoot)}` : `npx -y open-slidex mcp --workspace ${shellQuote(absoluteRoot)}`;
+  const launch = platform === "windows" ? `cmd /c npx -y ${openSlideXMcpNpxPackage} mcp --workspace ${windowsQuote(absoluteRoot)}` : `npx -y ${openSlideXMcpNpxPackage} mcp --workspace ${shellQuote(absoluteRoot)}`;
   return `claude mcp add --scope user open-slidex-workspace -- ${launch}`;
 }
 function openSlideXMcpSetupPrompt(client, root, platform = process.platform === "win32" ? "windows" : "macos") {
@@ -54785,6 +54786,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
 export {
   createOpenSlideXMcpServer,
   openSlideXMcpConfig,
+  openSlideXMcpNpxPackage,
   openSlideXMcpSetupPrompt,
   openSlideXWorkspaceMcpConfig,
   openSlideXWorkspaceMcpSetupPrompt

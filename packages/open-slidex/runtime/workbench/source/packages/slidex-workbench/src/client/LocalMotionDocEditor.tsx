@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { MotionDocEditor } from "@open-slidex/editor-ui";
 
 import { defaultMdx } from "@/core/motion-doc/presets/defaultMdx";
@@ -446,7 +446,6 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
                 title={tx("Back to OpenSlideX Workspace")}
                 type="button"
               >
-                <ArrowLeft aria-hidden="true" size={14} strokeWidth={1.8} />
                 <img alt="SlideX" src={slidexWordmarkSource} />
               </button>
             : <span className="slidex-header-brand"><img alt="SlideX" src={slidexWordmarkSource} /></span>,

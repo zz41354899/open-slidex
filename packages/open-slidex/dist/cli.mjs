@@ -98,7 +98,7 @@ Usage:
 
 Examples:
   open-slidex workspace ~/Presentations
-  npx open-slidex@latest init my-deck
+  npx open-slidex@0.3.1 init my-deck
   open-slidex init my-deck --template summer-time-report --locale zh-TW
   cd my-deck && npm run dev
   open-slidex mcp --workspace ~/Presentations --print-config codex

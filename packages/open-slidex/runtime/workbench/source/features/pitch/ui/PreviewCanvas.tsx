@@ -813,7 +813,7 @@ export function PreviewCanvas({
 
   return (
     <div
-      className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-[#1b1c1f]"
+      className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-[#212121]"
       data-canvas-mode={canvasViewMode}
       id="canvas-v4"
       onContextMenuCapture={handleCanvasContextMenu}

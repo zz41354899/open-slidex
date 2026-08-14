@@ -12,8 +12,11 @@ import { ColorControl, Field } from "@/features/pitch/ui/inspector/InspectorCont
 import { ShaderRangeControl } from "@/features/pitch/ui/inspector/shader/ShaderRangeControl";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import {
-  NativeSelect,
-  NativeSelectOption,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Separator
 } from "@/common/ui/shadcnPrimitives";
 
@@ -65,21 +68,24 @@ export function ShaderBackgroundSectionContent({
   return (
     <div className="flex flex-col gap-4">
       <Field label="Paper Shader">
-        <NativeSelect
-          className="h-9 w-full rounded-lg border border-white/[0.08] bg-[#08080a] px-3 text-[13px] font-medium text-neutral-200 outline-none transition focus:border-[#8ea5ff]/60"
-          onChange={(event) => {
-            const nextShader = event.target.value;
-            updateActiveSlideStyle(nextShader ? paperShaderPresetUpdates(nextShader) : emptyShaderUpdates());
+        <Select
+          onValueChange={(nextShader) => {
+            updateActiveSlideStyle(nextShader === "none" ? emptyShaderUpdates() : paperShaderPresetUpdates(nextShader));
           }}
-          value={activeShaderId}
+          value={activeShaderId || "none"}
         >
-          <NativeSelectOption value="">{tx("None")}</NativeSelectOption>
-          {paperShaderDefinitions.map((option) => (
-            <NativeSelectOption key={option.id} value={option.id}>
-              {tx(option.name)}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+          <SelectTrigger aria-label={tx("Paper Shader")}>
+            <SelectValue placeholder={tx("None")} />
+          </SelectTrigger>
+          <SelectContent align="start">
+            <SelectItem value="none">{tx("None")}</SelectItem>
+            {paperShaderDefinitions.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {tx(option.name)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Field>
 
       {definition ? (
@@ -95,17 +101,21 @@ export function ShaderBackgroundSectionContent({
           </div>
 
           <Field label="Paper Preset">
-            <NativeSelect
-              className="h-9 w-full rounded-lg border border-white/[0.08] bg-[#08080a] px-3 text-[13px] font-medium text-neutral-200 outline-none transition focus:border-[#8ea5ff]/60"
-              onChange={(event) => updateActiveSlideStyle(paperShaderPresetUpdates(definition.id, event.target.value))}
+            <Select
+              onValueChange={(value) => updateActiveSlideStyle(paperShaderPresetUpdates(definition.id, value))}
               value={activePreset?.name ?? definition.defaultPreset}
             >
-              {definition.presets.map((preset) => (
-                <NativeSelectOption key={preset.name} value={preset.name}>
-                  {tx(preset.name === "Opening" ? "Paper preset Opening" : preset.name)}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+              <SelectTrigger aria-label={tx("Paper Preset")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="start">
+                {definition.presets.map((preset) => (
+                  <SelectItem key={preset.name} value={preset.name}>
+                    {tx(preset.name === "Opening" ? "Paper preset Opening" : preset.name)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
 
           <PaperShaderControls

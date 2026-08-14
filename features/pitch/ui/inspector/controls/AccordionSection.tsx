@@ -17,7 +17,7 @@ export function AccordionSection({ children, defaultOpen = true, icon = null, ti
 
   return (
     <div className="flex flex-col border-b border-white/[0.04] last:border-b-0">
-      <div className="flex w-full items-center justify-between py-3">
+      <div className="flex min-h-12 w-full items-center justify-between py-3">
         <button
           aria-controls={contentId}
           aria-expanded={isOpen}
@@ -29,7 +29,7 @@ export function AccordionSection({ children, defaultOpen = true, icon = null, ti
             {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </div>
           {icon ? <span className="flex items-center justify-center text-neutral-500">{icon}</span> : null}
-          <span className="text-[13px] font-medium text-neutral-300 group-hover:text-white transition-colors">
+          <span className="text-[14px] font-medium text-neutral-300 group-hover:text-white transition-colors">
             {tx(title)}
           </span>
         </button>

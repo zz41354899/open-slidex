@@ -169,9 +169,9 @@ Options:
   -v, --version                     Show the installed CLI version
 
 Examples:
-  npx open-slidex@latest init my-deck
-  pnpm dlx open-slidex@latest init my-deck
-  bunx open-slidex@latest init my-deck
+  npx open-slidex@0.3.1 init my-deck
+  pnpm dlx open-slidex@0.3.1 init my-deck
+  bunx open-slidex@0.3.1 init my-deck
   open-slidex init my-deck --package-manager pnpm --no-install
   open-slidex init my-deck --template summer-time-report --locale zh-TW
 `;

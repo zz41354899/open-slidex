@@ -40,20 +40,20 @@ export function MotionThumbnailGrid<TValue extends string>({
 
           return (
             <ToggleGroupItem
-              className={`group relative min-h-[74px] overflow-hidden rounded-xl border p-2.5 text-left transition-all duration-300 active:scale-[0.98] ${
+              className={`group relative min-h-[126px] overflow-hidden rounded-xl border p-2 text-left transition-all duration-200 active:scale-[0.98] ${
                 isSelected
-                  ? "border-white/[0.3] bg-white/[0.04] text-white shadow-[0_4px_16px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.3]"
-                  : "border-white/[0.06] bg-transparent text-neutral-400 hover:border-white/[0.15] hover:bg-white/[0.02] hover:text-neutral-200"
+                  ? "border-white/[0.24] bg-white/[0.07] text-white shadow-[0_6px_18px_rgba(0,0,0,0.22)] ring-1 ring-white/[0.16]"
+                  : "border-white/[0.07] bg-white/[0.018] text-neutral-400 hover:border-white/[0.15] hover:bg-white/[0.045] hover:text-neutral-200"
               }`}
               key={option.value}
               title={`${optionLabel}: ${optionDescription}`}
               value={option.value}
             >
-              <span className="relative z-10 flex h-full flex-col justify-between gap-3">
+              <span className="relative z-10 flex h-full flex-col justify-between gap-2.5">
                 <MotionPreview active={isSelected} value={option.value} variant={variant} />
-                <span className="flex min-w-0 flex-col gap-0.5 px-0.5">
-                  <span className="truncate text-[14px] font-semibold leading-none">{optionLabel}</span>
-                  <span className="truncate text-[14px] font-medium leading-none text-neutral-500 group-hover:text-neutral-400">
+                <span className="flex min-w-0 flex-col gap-1 px-1 pb-0.5">
+                  <span className="truncate text-[13px] font-semibold leading-none">{optionLabel}</span>
+                  <span className="truncate text-[11px] font-medium leading-none text-neutral-500 group-hover:text-neutral-400">
                     {optionDescription}
                   </span>
                 </span>
@@ -76,8 +76,11 @@ function MotionPreview({
   variant: "element" | "slide";
 }) {
   return (
-    <span className="relative flex h-10 w-full items-center justify-center overflow-hidden rounded-[6px] border border-white/[0.04] bg-[#050505] shadow-inner">
-      <span className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:6px_6px]" />
+    <span
+      className="relative flex min-h-[62px] w-full items-center justify-center overflow-hidden rounded-lg border border-white/[0.07] bg-[#202020] shadow-inner"
+      style={{ aspectRatio: "16 / 9" }}
+    >
+      <span className="absolute inset-0 bg-white/[0.015]" />
 
       {variant === "slide" ? (
         <SlideMotionSvg active={active} type={value} />
@@ -156,14 +159,14 @@ function SlideMotionSvg({ active, type }: { active: boolean; type: string }) {
   switch (type) {
     case "none":
       return (
-        <svg className="h-full w-full overflow-visible" viewBox="0 0 60 30">
+        <svg className="size-full overflow-visible" viewBox="0 0 60 30">
           {defs}
           <SlideB />
         </svg>
       );
     case "fade":
       return (
-        <svg className="h-full w-full overflow-visible" viewBox="0 0 60 30">
+        <svg className="size-full overflow-visible" viewBox="0 0 60 30">
           {defs}{styles}
           <SlideA style={{ animation: getAnim("svg-fade-out") }} />
           <SlideB style={{ animation: getAnim("svg-fade-in") }} />
@@ -171,7 +174,7 @@ function SlideMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "pushLeft":
       return (
-        <svg className="h-full w-full overflow-hidden rounded-[6px]" viewBox="0 0 60 30">
+        <svg className="size-full overflow-hidden rounded-[6px]" viewBox="0 0 60 30">
           {defs}{styles}
           <SlideA style={{ animation: getAnim("svg-push-a") }} />
           <SlideB style={{ animation: getAnim("svg-push-b") }} />
@@ -179,7 +182,7 @@ function SlideMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "rise":
       return (
-        <svg className="h-full w-full overflow-hidden rounded-[6px]" style={{ transformOrigin: "center" }} viewBox="0 0 60 30">
+        <svg className="size-full overflow-hidden rounded-[6px]" style={{ transformOrigin: "center" }} viewBox="0 0 60 30">
           {defs}{styles}
           <SlideA style={{ animation: getAnim("svg-rise-a"), transformOrigin: "center" }} />
           <SlideB style={{ animation: getAnim("svg-rise-b") }} />
@@ -187,7 +190,7 @@ function SlideMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "scale":
       return (
-        <svg className="h-full w-full overflow-hidden rounded-[6px]" style={{ transformOrigin: "center" }} viewBox="0 0 60 30">
+        <svg className="size-full overflow-hidden rounded-[6px]" style={{ transformOrigin: "center" }} viewBox="0 0 60 30">
           {defs}{styles}
           <SlideA style={{ animation: getAnim("svg-scale-a"), transformOrigin: "center" }} />
           <SlideB style={{ animation: getAnim("svg-scale-b"), transformOrigin: "center" }} />
@@ -195,7 +198,7 @@ function SlideMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "wipe":
       return (
-        <svg className="h-full w-full overflow-visible" viewBox="0 0 60 30">
+        <svg className="size-full overflow-visible" viewBox="0 0 60 30">
           {defs}{styles}
           <SlideA />
           <g style={{ clipPath: "url(#wipeClip)" }}>
@@ -205,13 +208,13 @@ function SlideMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "curtain":
       return (
-        <svg className="h-full w-full overflow-hidden rounded-[6px]" viewBox="0 0 60 30">
+        <svg className="size-full overflow-hidden rounded-[6px]" viewBox="0 0 60 30">
           {defs}{styles}
           <SlideB />
-          <svg height="30" style={{ animation: getAnim("svg-curtain-l"), overflow: "hidden" }} width="30" x="0" y="0">
+          <svg className="size-native" height="30" style={{ animation: getAnim("svg-curtain-l"), overflow: "hidden" }} width="30" x="0" y="0">
              <SlideA />
           </svg>
-          <svg height="30" style={{ animation: getAnim("svg-curtain-r"), overflow: "hidden" }} width="30" x="30" y="0">
+          <svg className="size-native" height="30" style={{ animation: getAnim("svg-curtain-r"), overflow: "hidden" }} width="30" x="30" y="0">
              <SlideA transform="translate(-30, 0)" />
           </svg>
         </svg>
@@ -253,7 +256,7 @@ function ElementMotionSvg({ active, type }: { active: boolean; type: string }) {
   switch (type) {
     case "none":
       return (
-        <svg className="h-full w-full overflow-visible" viewBox="0 0 60 30">
+        <svg className="size-full overflow-visible" viewBox="0 0 60 30">
           {defs}
           <BackgroundUI />
           <AnimElement />
@@ -261,7 +264,7 @@ function ElementMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "fadeIn":
       return (
-        <svg className="h-full w-full overflow-visible" viewBox="0 0 60 30">
+        <svg className="size-full overflow-visible" viewBox="0 0 60 30">
           {defs}{styles}
           <BackgroundUI />
           <AnimElement style={{ animation: getAnim("svg-el-fade") }} />
@@ -269,7 +272,7 @@ function ElementMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "fadeUp":
       return (
-        <svg className="h-full w-full overflow-visible" viewBox="0 0 60 30">
+        <svg className="size-full overflow-visible" viewBox="0 0 60 30">
           {defs}{styles}
           <BackgroundUI />
           <AnimElement style={{ animation: getAnim("svg-el-fadeup") }} />
@@ -277,7 +280,7 @@ function ElementMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "zoomIn":
       return (
-        <svg className="h-full w-full overflow-visible" viewBox="0 0 60 30">
+        <svg className="size-full overflow-visible" viewBox="0 0 60 30">
           {defs}{styles}
           <BackgroundUI />
           <AnimElement style={{ animation: getAnim("svg-el-zoomin"), transformOrigin: "30px 15px" }} />
@@ -285,7 +288,7 @@ function ElementMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "slideLeft":
       return (
-        <svg className="h-full w-full overflow-visible" viewBox="0 0 60 30">
+        <svg className="size-full overflow-visible" viewBox="0 0 60 30">
           {defs}{styles}
           <BackgroundUI />
           <AnimElement style={{ animation: getAnim("svg-el-slideleft") }} />
@@ -293,7 +296,7 @@ function ElementMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "rise":
       return (
-        <svg className="h-full w-full overflow-visible" viewBox="0 0 60 30">
+        <svg className="size-full overflow-visible" viewBox="0 0 60 30">
           {defs}{styles}
           <BackgroundUI />
           <AnimElement style={{ animation: getAnim("svg-el-rise"), transformOrigin: "30px 15px" }} />
@@ -301,7 +304,7 @@ function ElementMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "pop":
       return (
-        <svg className="h-full w-full overflow-visible" viewBox="0 0 60 30">
+        <svg className="size-full overflow-visible" viewBox="0 0 60 30">
           {defs}{styles}
           <BackgroundUI />
           <AnimElement style={{ animation: getAnim("svg-el-pop"), transformOrigin: "30px 15px" }} />
@@ -309,7 +312,7 @@ function ElementMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "reveal":
       return (
-        <svg className="h-full w-full overflow-visible" viewBox="0 0 60 30">
+        <svg className="size-full overflow-visible" viewBox="0 0 60 30">
           {defs}{styles}
           <BackgroundUI />
           <g style={{ clipPath: "url(#elWipeClip)" }}>
@@ -319,7 +322,7 @@ function ElementMotionSvg({ active, type }: { active: boolean; type: string }) {
       );
     case "blurIn":
       return (
-        <svg className="h-full w-full overflow-visible" viewBox="0 0 60 30">
+        <svg className="size-full overflow-visible" viewBox="0 0 60 30">
           {defs}{styles}
           <BackgroundUI />
           <AnimElement style={{ animation: getAnim("svg-el-blur"), transformOrigin: "30px 15px" }} />

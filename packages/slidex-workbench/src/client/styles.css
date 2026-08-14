@@ -1,18 +1,18 @@
 :root {
   color-scheme: dark;
-  --bg: #08090b;
-  --panel: #111317;
-  --raised: #18181b;
+  --bg: #0d0d0d;
+  --panel: #171717;
+  --raised: #242424;
   --line: rgb(255 255 255 / .08);
   --line-strong: rgb(255 255 255 / .12);
   --text: #f5f5f5;
   --muted: #a3a3a3;
   --quiet: #737373;
-  --accent: #8ea5ff;
-  --accent-ink: #06070b;
+  --accent: #f5f5f5;
+  --accent-ink: #0d0d0d;
   --warning: #f0c674;
   --danger: #f38b82;
-  font-family: Geist, "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
+  font-family: Roboto, "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -442,7 +442,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .presenter-notes > div { display: grid; gap: 6px; }
 .presenter-notes span { color: var(--quiet); font-size: 9px; }
 .presenter-notes strong { font-size: 12px; }
-.presenter-notes pre { margin: 0; white-space: pre-wrap; color: var(--muted); font: 11px/1.65 Geist, system-ui, sans-serif; }
+.presenter-notes pre { margin: 0; white-space: pre-wrap; color: var(--muted); font: 13px/1.65 Roboto, ui-sans-serif, system-ui, sans-serif; }
 .presenter-controls { grid-template-columns: 1fr auto 1fr; align-items: center; }
 
 @media (max-width: 980px) {
@@ -464,23 +464,23 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 @keyframes chart-glyph-build { 0%, 20% { transform: scaleY(.15); opacity: .35; } 55%, 100% { transform: scaleY(1); opacity: 1; } }
 
 /* Local Workbench shell. The shared Pitch Canvas remains unchanged. */
-.local-workbench-shell { position: relative; width: 100%; height: 100%; overflow: hidden; background: #090a0d; }
+.local-workbench-shell { position: relative; width: 100%; height: 100%; overflow: hidden; background: #212121; }
 .local-workbench-shell > main { width: 100%; transition: width 180ms ease-out; }
 .local-workbench-shell > main > header { border-color: rgb(255 255 255 / .08); }
-.slidex-header-brand { display: inline-flex; width: 88px; height: 28px; align-items: center; justify-content: flex-start; }
+.slidex-header-brand { display: inline-flex; width: 96px; height: 40px; align-items: center; justify-content: center; }
 .slidex-header-brand img { display: block; width: 84px; height: auto; max-height: 26px; object-fit: contain; }
-.slidex-header-brand-button { width: auto; gap: 5px; border: 0; border-radius: 7px; padding: 0 5px 0 2px; background: transparent; color: #a6abb4; cursor: pointer; }
-.slidex-header-brand-button img { width: 72px; }
-.slidex-header-brand-button:hover { background: rgb(255 255 255 / .055); }
-.slidex-header-brand-button:focus-visible { outline: 2px solid #8ea5ff; outline-offset: 3px; }
+.slidex-header-brand-button { border: 1px solid transparent; border-radius: 10px; padding: 0 8px; background: transparent; color: #b4b4b4; cursor: pointer; font-family: Roboto, "Noto Sans TC", ui-sans-serif, system-ui, sans-serif; }
+.slidex-header-brand-button img { width: 84px; }
+.slidex-header-brand-button:hover { border-color: rgb(255 255 255 / .08); background: #2f2f2f; color: #f1f1f1; }
+.slidex-header-brand-button:focus-visible { outline: 2px solid rgb(255 255 255 / .45); outline-offset: 2px; }
 .local-top-toolbar { position: relative; z-index: 64; display: flex; height: 64px; align-items: center; gap: 3px; }
 .local-top-toolbar > button { display: inline-flex; min-width: 58px; height: 52px; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border: 0; border-radius: 9px; padding: 0 7px; background: transparent; color: #8f95a1; cursor: pointer; font-size: 14px; font-weight: 540; }
-.local-top-toolbar > button:hover { background: rgb(255 255 255 / .055); color: #f4f4f5; }
+.local-top-toolbar > button:hover { background: #2f2f2f; color: #f4f4f5; }
 .local-top-toolbar > button:disabled { opacity: .34; cursor: not-allowed; }
 .local-top-toolbar > button:disabled:hover { background: transparent; color: #8f95a1; }
-.local-top-toolbar > button.is-active { background: rgb(142 165 255 / .1); color: #c9d1ff; box-shadow: inset 0 0 0 1px rgb(142 165 255 / .16); }
+.local-top-toolbar > button.is-active { background: #343434; color: #f3f3f3; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .08); }
 .local-top-toolbar > button > span { line-height: 1; }
-.local-toolbar-popover { z-index: 70; width: 240px; border: 1px solid rgb(255 255 255 / .09); border-radius: 11px; padding: 6px; background: #15171c; box-shadow: 0 18px 48px rgb(0 0 0 / .48); color: #e9eaf0; }
+.local-toolbar-popover { z-index: 70; width: 240px; border: 1px solid rgb(255 255 255 / .1); border-radius: 12px; padding: 6px; background: #2f2f2f; box-shadow: 0 18px 48px rgb(0 0 0 / .48); color: #ececec; }
 .local-media-popover { display: grid; gap: 2px; width: 190px; }
 .local-popover-action { display: grid; min-height: 38px; grid-template-columns: 24px 1fr; align-items: center; gap: 8px; border: 0; border-radius: 8px; padding: 0 9px; background: transparent; color: #b7bbc4; cursor: pointer; font-size: 12px; text-align: left; }
 .local-popover-action:hover { background: rgb(255 255 255 / .055); color: #fff; }
@@ -521,4 +521,113 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 @media (prefers-reduced-motion: reduce) {
   .local-workbench-shell > main,
   .local-top-toolbar > button { transition: none; }
+}
+
+/* Workspace UI baseline: one neutral surface system, no decorative purple, readable support copy. */
+.osx-workspace {
+  background: #0d0d0d;
+  color: #f5f5f5;
+  font-family: Roboto, "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;
+  scrollbar-color: #4a4a4a #0d0d0d;
+}
+.osx-workspace::-webkit-scrollbar-track { background: #0d0d0d; }
+.osx-workspace::-webkit-scrollbar-thumb { border-color: #0d0d0d; background: #4a4a4a; }
+.osx-workspace::-webkit-scrollbar-thumb:hover { background: #5f5f5f; }
+.osx-workspace-sidebar { background: #111; }
+.osx-workspace-sidebar nav button { color: #9b9b9b; }
+.osx-workspace-sidebar nav button:hover { background: #1f1f1f; color: #ececec; }
+.osx-workspace-sidebar nav button.is-active { background: #2a2a2a; color: #fff; }
+.osx-workspace-sidebar nav button.is-active::before { background: #f5f5f5; }
+.osx-workspace-local-card { background: #171717; }
+.osx-workspace-local-card > span { background: #242424; color: #d4d4d4; }
+.osx-workspace-local-card small::before,
+.osx-local-status i,
+.osx-settings-status i { background: #f5f5f5; box-shadow: none; }
+.osx-workspace-page-header h1 { color: #f5f5f5; font-weight: 600; }
+.osx-workspace-title-group p { color: #a3a3a3; }
+.osx-local-status { background: #171717; color: #ececec; }
+.osx-local-status:hover,
+.osx-workspace-header-action.is-secondary:hover { border-color: rgb(255 255 255 / .28); background: #242424; color: #fff; }
+.osx-home-quick-card,
+.osx-settings-card,
+.osx-empty-decks.is-home { background: #171717; }
+.osx-home-quick-card:hover,
+.osx-empty-decks.is-home:hover { border-color: rgb(255 255 255 / .28); background: #1f1f1f; }
+.osx-home-quick-icon,
+.osx-settings-icon,
+.osx-import-dialog-icon { background: #242424; color: #f5f5f5; }
+.osx-home-quick-arrow { background: #f5f5f5; color: #111; }
+.osx-home-template-track { scrollbar-color: #5a5a5a rgb(255 255 255 / .08); }
+.osx-home-template-card:hover .osx-home-template-cover { border-color: rgb(255 255 255 / .28); }
+.osx-template-card,
+.osx-presentation-card { background: #171717; }
+.osx-template-card:hover,
+.osx-presentation-card:hover { border-color: rgb(255 255 255 / .22); background: #1d1d1d; }
+.osx-settings-status { border-color: rgb(255 255 255 / .16); background: #242424; color: #ececec; }
+.osx-settings-card li svg,
+.osx-import-policy svg { color: #e5e5e5; }
+.osx-mcp-config { background: #0d0d0d; color: #d4d4d4; }
+.osx-mcp-actions button { background: #242424; color: #ececec; }
+.osx-mcp-actions button:hover { border-color: rgb(255 255 255 / .28); background: #2a2a2a; }
+.osx-template-preview-thumbnails { scrollbar-color: #5a5a5a transparent; }
+.osx-mdx-dropzone:hover,
+.osx-mdx-dropzone.has-file { border-color: rgb(255 255 255 / .32); background: #1f1f1f; color: #f5f5f5; }
+.osx-workspace-local-card strong,
+.osx-local-status,
+.osx-workspace-header-action,
+.osx-home-template-meta strong,
+.osx-blank-card-action,
+.osx-featured-section h2,
+.osx-recent-section h2,
+.osx-recent-groups h2,
+.osx-presentation-copy strong,
+.osx-template-categories button,
+.osx-settings-segmented button,
+.osx-settings-card ul,
+.osx-settings-card.is-import > button,
+.osx-mcp-actions button,
+.osx-create-dialog footer button,
+.osx-manage-dialog footer button,
+.osx-import-dialog footer button,
+.osx-template-preview-copy > button { font-size: 14px; }
+.osx-workspace-local-card small,
+.osx-workspace-title-group p,
+.osx-home-quick-copy small,
+.osx-home-template-meta em,
+.osx-template-card-copy p,
+.osx-presentation-copy small,
+.osx-workspace-search input,
+.osx-empty-decks small,
+.osx-settings-card p,
+.osx-settings-card code,
+.osx-mcp-meta span,
+.osx-create-dialog > p,
+.osx-manage-dialog > p,
+.osx-template-preview-copy p,
+.osx-create-dialog input,
+.osx-manage-dialog input,
+.osx-mdx-dropzone small,
+.osx-import-policy { font-size: 13px; }
+.osx-home-template-shelf > header button,
+.osx-recent-section > header button,
+.osx-featured-section > header button,
+.osx-template-card-copy small,
+.osx-template-use,
+.osx-presentation-menu button,
+.osx-template-categories > small,
+.osx-empty-decks strong,
+.osx-no-results,
+.osx-settings-card small,
+.osx-settings-status,
+.osx-create-dialog > small,
+.osx-manage-dialog > small,
+.osx-template-preview-copy > span,
+.osx-create-dialog > label > span,
+.osx-manage-dialog > label > span,
+.osx-import-dialog > small { font-size: 12px; }
+.osx-mcp-config { font: 13px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+@media (max-width: 1440px) and (min-width: 1121px) {
+  .osx-home-quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .osx-home-quick-card:last-child { grid-column: 1 / -1; }
 }

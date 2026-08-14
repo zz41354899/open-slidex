@@ -18,6 +18,13 @@ export {
   NativeSelectOption
 } from "@/packages/editor-ui/src/components/ui/native-select";
 export {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/packages/editor-ui/src/components/ui/select";
+export {
   Popover,
   PopoverContent,
   PopoverTrigger

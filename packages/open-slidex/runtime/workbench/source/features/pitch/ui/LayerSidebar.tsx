@@ -85,7 +85,7 @@ export function LayerSidebar({
   }
 
   return (
-    <div id="sidebar-v4" className="relative z-10 flex h-full w-full shrink-0 select-none flex-col overflow-hidden bg-[#111111] transition-all duration-700 md:w-[265px] md:border-r md:border-white/[0.12]">
+    <div id="sidebar-v4" className="relative z-10 flex h-full w-full shrink-0 select-none flex-col overflow-hidden bg-[#171717] transition-all duration-300 md:w-[265px] md:border-r md:border-white/[0.08]">
       {/* Sidebar Header / Tabs */}
       <EditorPanelTabs
         ariaLabel={tx("Slides & Layers")}

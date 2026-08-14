@@ -55,7 +55,7 @@ export function OptionButtons<T extends string>({
     <Field label={label}>
       <ToggleGroup
         aria-label={tx(label)}
-        className="flex min-h-9 w-full gap-1 overflow-x-auto rounded-xl border border-white/[0.055] bg-[#18181b] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] custom-scrollbar"
+        className="flex min-h-10 w-full gap-1 overflow-x-auto rounded-xl border border-white/[0.08] bg-[#242424] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] custom-scrollbar"
         onValueChange={(nextValue) => {
           if (nextValue) onChange(nextValue as T);
         }}
@@ -65,7 +65,7 @@ export function OptionButtons<T extends string>({
       >
         {options.map((option) => (
           <ToggleGroupItem
-            className="h-auto min-h-7 w-auto min-w-0 flex-1 shrink rounded-lg px-2 py-1.5 text-[14px] font-medium text-neutral-500 outline-none transition-[background-color,color,box-shadow,transform] duration-150 hover:bg-white/[0.055] hover:text-neutral-200 focus-visible:border-transparent focus-visible:ring-1 focus-visible:ring-violet-300/60 active:scale-[0.98] data-[state=on]:bg-white data-[state=on]:text-[#17171a] data-[state=on]:shadow-[0_1px_5px_rgba(0,0,0,0.22)]"
+            className="h-auto min-h-8 w-auto min-w-0 flex-1 shrink rounded-lg px-2 py-1.5 text-[14px] font-medium text-neutral-400 outline-none transition-[background-color,color,box-shadow,transform] duration-150 hover:bg-white/[0.06] hover:text-neutral-100 focus-visible:border-transparent focus-visible:ring-1 focus-visible:ring-white/50 active:scale-[0.98] data-[state=on]:bg-white data-[state=on]:text-[#171717] data-[state=on]:shadow-[0_1px_5px_rgba(0,0,0,0.22)]"
             key={option.value}
             value={option.value}
           >
@@ -93,7 +93,7 @@ export function IconSegmentedControl<T extends string>({
     <Field label={label}>
       <ToggleGroup
         aria-label={tx(label)}
-        className="flex min-h-9 w-full gap-1 rounded-xl border border-white/[0.055] bg-[#18181b] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)]"
+        className="flex min-h-10 w-full gap-1 rounded-xl border border-white/[0.08] bg-[#242424] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
         onValueChange={(nextValue) => {
           if (nextValue) onChange(nextValue as T);
         }}
@@ -106,7 +106,7 @@ export function IconSegmentedControl<T extends string>({
             <TooltipTrigger asChild>
               <ToggleGroupItem
                 aria-label={tx(option.label)}
-                className="group relative h-7 w-auto min-w-0 flex-1 shrink rounded-lg px-1 text-neutral-600 outline-none transition-[background-color,color,box-shadow,transform] duration-150 hover:bg-white/[0.055] hover:text-neutral-200 focus-visible:border-transparent focus-visible:ring-1 focus-visible:ring-violet-300/60 active:scale-[0.96] data-[state=on]:bg-white data-[state=on]:text-[#17171a] data-[state=on]:shadow-[0_1px_5px_rgba(0,0,0,0.22)]"
+                className="group relative h-8 w-auto min-w-0 flex-1 shrink rounded-lg px-1 text-neutral-500 outline-none transition-[background-color,color,box-shadow,transform] duration-150 hover:bg-white/[0.06] hover:text-neutral-100 focus-visible:border-transparent focus-visible:ring-1 focus-visible:ring-white/50 active:scale-[0.96] data-[state=on]:bg-white data-[state=on]:text-[#171717] data-[state=on]:shadow-[0_1px_5px_rgba(0,0,0,0.22)]"
                 value={option.value}
               >
                 <span className="scale-95 transition-transform duration-150 group-hover:scale-100">{option.icon}</span>
@@ -134,7 +134,7 @@ export function NativeSelect<T extends string>({
   return (
     <div className="w-full [&>[data-slot=native-select-wrapper]]:w-full">
       <ShadcnNativeSelect
-        className="h-9 w-full cursor-pointer rounded-xl border-white/[0.055] bg-[#18181b] pl-3 pr-8 text-[14px] font-medium text-neutral-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] transition-[border-color,background-color,box-shadow] hover:border-white/[0.09] hover:bg-[#1b1b1e] focus-visible:border-violet-300/35 focus-visible:bg-[#1d1d20] focus-visible:ring-2 focus-visible:ring-violet-400/10 dark:bg-[#18181b] dark:hover:bg-[#1b1b1e] dark:focus-visible:bg-[#1d1d20]"
+        className="h-10 w-full cursor-pointer rounded-xl border-white/[0.1] bg-[#242424] pl-3 pr-8 text-[14px] font-medium text-[#ececec] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-[border-color,background-color,box-shadow] hover:border-white/[0.16] hover:bg-[#2a2a2a] focus-visible:border-white/[0.28] focus-visible:bg-[#2a2a2a] focus-visible:ring-2 focus-visible:ring-white/[0.1] dark:bg-[#242424] dark:hover:bg-[#2a2a2a] dark:focus-visible:bg-[#2a2a2a]"
         onChange={(event) => {
           const selectedOption = options.find((option) => option.value === event.target.value);
 
@@ -169,7 +169,7 @@ export function TextInput({
   return (
     <Field label={label}>
       <Input
-        className="h-9 rounded-xl border-white/[0.055] bg-[#18181b] px-3 text-[14px] text-neutral-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] transition-[border-color,background-color,box-shadow] placeholder:text-neutral-600 hover:border-white/[0.09] hover:bg-[#1b1b1e] focus-visible:border-violet-300/35 focus-visible:bg-[#1d1d20] focus-visible:ring-2 focus-visible:ring-violet-400/10 dark:bg-[#18181b] dark:hover:bg-[#1b1b1e] dark:focus-visible:bg-[#1d1d20]"
+        className="h-10 rounded-xl border-white/[0.1] bg-[#242424] px-3 text-[14px] text-[#ececec] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-[border-color,background-color,box-shadow] placeholder:text-[#8e8e8e] hover:border-white/[0.16] hover:bg-[#2a2a2a] focus-visible:border-white/[0.28] focus-visible:bg-[#2a2a2a] focus-visible:ring-2 focus-visible:ring-white/[0.1] dark:bg-[#242424] dark:hover:bg-[#2a2a2a] dark:focus-visible:bg-[#2a2a2a]"
         onChange={(event) => onChange(event.target.value)}
         placeholder={tx(placeholder)}
         type="text"
@@ -196,7 +196,7 @@ export function TextAreaField({
   return (
     <Field label={label}>
       <textarea
-        className="w-full resize-none rounded-xl border border-white/[0.055] bg-[#18181b] px-3 py-2.5 text-[14px] leading-relaxed text-neutral-200 outline-none shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] transition-[border-color,background-color,box-shadow] placeholder:text-neutral-600 hover:border-white/[0.09] hover:bg-[#1b1b1e] focus:border-violet-300/35 focus:bg-[#1d1d20] focus:ring-2 focus:ring-violet-400/10"
+        className="w-full resize-none rounded-xl border border-white/[0.1] bg-[#242424] px-3 py-2.5 text-[14px] leading-relaxed text-neutral-200 outline-none shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-[border-color,background-color,box-shadow] placeholder:text-neutral-500 hover:border-white/[0.16] hover:bg-[#2a2a2a] focus:border-white/25 focus:bg-[#2a2a2a] focus:ring-2 focus:ring-white/10"
         onChange={(event) => onChange(event.target.value)}
         placeholder={tx(placeholder)}
         rows={rows}
@@ -258,7 +258,7 @@ export function NumberInput({
   }, [isFocused, value]);
 
   return (
-    <div className="flex min-h-9 items-center overflow-hidden rounded-xl border border-white/[0.055] bg-[#18181b] shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] transition-[border-color,background-color,box-shadow] hover:border-white/[0.09] hover:bg-[#1b1b1e] focus-within:border-violet-300/35 focus-within:bg-[#1d1d20] focus-within:ring-2 focus-within:ring-violet-400/10">
+    <div className="flex min-h-10 items-center overflow-hidden rounded-xl border border-white/[0.1] bg-[#242424] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-[border-color,background-color,box-shadow] hover:border-white/[0.16] hover:bg-[#2a2a2a] focus-within:border-white/25 focus-within:bg-[#2a2a2a] focus-within:ring-2 focus-within:ring-white/10">
       {prefix ? <span className="flex items-center pl-2.5 text-neutral-600">{prefix}</span> : null}
       {showSteppers ? (
         <button aria-label={tx("Decrease")} className="flex h-9 w-7 shrink-0 items-center justify-center text-neutral-500 hover:bg-white/[0.06] hover:text-white" onClick={() => adjustedValue(-1)} type="button"><Minus size={11} /></button>

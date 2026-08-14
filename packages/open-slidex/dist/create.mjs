@@ -20,7 +20,7 @@ import { fileURLToPath } from "node:url";
 
 // core/motion-doc/domain/officialTemplateDefinitions.ts
 var officialTemplatePackageVersion = "1.0.0";
-var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.0" };
+var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.1" };
 var officialTemplateDefinitions = [
   {
     id: "summer-time-report",
@@ -10332,9 +10332,9 @@ Options:
   -v, --version                     Show the installed CLI version
 
 Examples:
-  npx open-slidex@latest init my-deck
-  pnpm dlx open-slidex@latest init my-deck
-  bunx open-slidex@latest init my-deck
+  npx open-slidex@0.3.1 init my-deck
+  pnpm dlx open-slidex@0.3.1 init my-deck
+  bunx open-slidex@0.3.1 init my-deck
   open-slidex init my-deck --package-manager pnpm --no-install
   open-slidex init my-deck --template summer-time-report --locale zh-TW
 `;

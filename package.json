@@ -1,7 +1,7 @@
 {
   "name": "open-slidex",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "workspaces": [
     "packages/editor-ui",
     "packages/open-slidex",
@@ -12,7 +12,6 @@
   "scripts": {
     "dev": "node packages/open-slidex/dist/cli.mjs workspace",
     "workspace": "node packages/open-slidex/dist/cli.mjs workspace",
-    "dev:workbench": "node packages/open-slidex/dist/cli.mjs dev",
     "build": "node packages/open-slidex/dist/cli.mjs build",
     "preview": "node packages/open-slidex/dist/cli.mjs preview",
     "mcp": "node packages/open-slidex/dist/cli.mjs mcp --project .",

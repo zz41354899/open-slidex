@@ -1,6 +1,6 @@
 
 import { useState, type CSSProperties, type ReactNode } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, LayoutGrid, X } from "lucide-react";
 import { slideLayouts } from "@/core/motion-doc/presets/templates/slideLayouts";
 import { stripNonLocalMotionDocMedia } from "@/core/motion-doc/application/localMediaPolicy";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
@@ -27,19 +27,19 @@ export function SlideLayoutSelector({ localAssetsOnly = false, onAddLayout }: Sl
       <DialogTrigger asChild>
         <Button
           type="button"
-          className="flex w-full items-center justify-between rounded-xl border border-white/[0.05] bg-[#020202] px-3.5 py-2.5 shadow-[inset_0_1px_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.1] focus-visible:border-white/[0.2] focus-visible:ring-1 focus-visible:ring-white/[0.1]"
+          className="flex min-h-12 w-full min-w-0 items-center justify-between overflow-hidden rounded-xl border border-white/[0.1] bg-[#242424] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors duration-200 hover:border-white/[0.18] hover:bg-[#2a2a2a] focus-visible:border-white/[0.28] focus-visible:ring-2 focus-visible:ring-white/[0.12]"
           variant="ghost"
         >
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-12 items-center justify-center overflow-hidden rounded-[4px] border border-white/10 bg-white shadow-sm">
-              <LayoutThumbnail layoutId="blank" />
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.09] bg-white/[0.05] text-neutral-200">
+              <LayoutGrid aria-hidden="true" size={16} strokeWidth={1.8} />
             </div>
-            <div className="flex flex-col items-start">
-              <span className="mb-0.5 text-[10px] font-bold text-neutral-500">{tx("Add new slide")}</span>
-              <span className="text-sm font-semibold text-neutral-200">{tx("Choose Layout")}</span>
+            <div className="flex min-w-0 flex-col items-start text-left">
+              <span className="max-w-full truncate text-[12px] font-medium leading-4 text-neutral-500">{tx("Add new slide")}</span>
+              <span className="max-w-full truncate text-[14px] font-semibold leading-5 text-neutral-100">{tx("Choose Layout")}</span>
             </div>
           </div>
-          <ChevronDown className="text-neutral-400" size={14} />
+          <ChevronDown className="ml-2 shrink-0 text-neutral-400" size={14} />
         </Button>
       </DialogTrigger>
       <SlideLayoutsDialog
@@ -66,13 +66,13 @@ function SlideLayoutsDialog({
   return (
     <DialogContent
       aria-describedby={undefined}
-      className="flex max-h-[80vh] w-[min(800px,calc(100vw-2rem))] max-w-none flex-col gap-0 overflow-hidden rounded-3xl border-white/[0.1] bg-[#1a1a1a]/95 p-0 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8),inset_0_1px_1px_0_rgba(255,255,255,0.15)] backdrop-blur-3xl"
+      className="flex max-h-[min(760px,calc(100vh-2rem))] w-[calc(100vw-2rem)] max-w-none flex-col gap-0 overflow-hidden rounded-2xl border-white/[0.1] bg-[#1a1a1a]/95 p-0 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8),inset_0_1px_1px_0_rgba(255,255,255,0.12)] backdrop-blur-3xl sm:max-w-[800px]"
       closeLabel={closeLabel}
       onEscapeKeyDown={(event) => event.stopPropagation()}
       showCloseButton={false}
     >
       <div className="relative flex items-center justify-center border-b border-white/[0.05] px-6 py-4">
-        <DialogTitle className="text-[13px] font-semibold text-neutral-200">{tx("Choose Layout")}</DialogTitle>
+        <DialogTitle className="text-[14px] font-semibold text-neutral-100">{tx("Choose Layout")}</DialogTitle>
         <DialogClose asChild>
           <Button
             aria-label={closeLabel}
@@ -85,13 +85,13 @@ function SlideLayoutsDialog({
           </Button>
         </DialogClose>
       </div>
-      <div className="custom-scrollbar overflow-y-auto p-6">
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
+      <div className="custom-scrollbar overflow-y-auto p-4 sm:p-6">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3 sm:gap-x-5">
           {slideLayouts.map((layout) => (
             <Button
               key={layout.id}
               type="button"
-              className="group flex h-auto cursor-pointer flex-col items-center gap-2 p-0 text-center outline-none transition-transform duration-200 hover:scale-[1.02] hover:bg-transparent active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#8ea5ff]/70"
+              className="group flex h-auto min-w-0 cursor-pointer flex-col items-center gap-2 whitespace-normal rounded-xl p-1 text-center outline-none transition-colors duration-200 hover:bg-white/[0.04] active:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-white/35"
               onClick={() => {
                 const source = localAssetsOnly ? stripNonLocalMotionDocMedia(layout.source) : layout.source;
                 onAddLayout(source, layout.id);
@@ -99,10 +99,12 @@ function SlideLayoutsDialog({
               }}
               variant="ghost"
             >
-              <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-white/[0.1] bg-white shadow-md transition-colors group-hover:border-[#8ea5ff]/60">
+              <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-white/[0.12] bg-white shadow-md transition-colors group-hover:border-white/35">
                 <LayoutThumbnail layoutId={layout.id} />
               </div>
-              <span className="text-xs font-semibold text-neutral-300 transition-colors group-hover:text-white">{tx(layout.name)}</span>
+              <span className="flex min-h-9 w-full items-start justify-center px-1 text-[14px] font-semibold leading-[18px] text-neutral-300 transition-colors group-hover:text-white">
+                {tx(layout.name)}
+              </span>
             </Button>
           ))}
         </div>

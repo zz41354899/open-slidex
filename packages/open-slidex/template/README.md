@@ -4,15 +4,19 @@ This private workspace contains one presentation source: `presentation.mdx`.
 The editor and SDK come from the one `open-slidex` package; this project does
 not contain Next, cloud Workspace code, AI Chat, or a second canvas state.
 
-Use the same package manager that created the workspace:
+Use the same package manager that created the project:
 
 ```bash
 npm run dev
 ```
 
+The command opens the local Workspace rooted at this project's parent folder,
+so this deck appears in the library alongside its sibling decks. Choose this
+deck to enter the editor. The initial browser route is always `/workspace`.
+
 The command starts the local Node API and a Vite HMR client, then prints the
-localhost URL. Generated HMR files stay under the ignored `.open-slidex/`
-directory. Preview is canvas-first, Source provides
+Workspace URL. Generated HMR files stay under the ignored `.open-slidex/`
+directory. The editor preview is canvas-first, Source provides
 CodeMirror and live rendering, Assets manages local media, and Inspector writes
 validated SDK source commands. Only valid source is autosaved with revision
 protection; invalid work remains a recoverable browser draft.

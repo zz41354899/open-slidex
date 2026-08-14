@@ -1,4 +1,4 @@
-# OpenSlideX 0.3.0
+# OpenSlideX 0.3.1
 
 OpenSlideX is a local-first, MDX presentation workspace with a visual Workbench,
 deterministic HTML/PPTX export, local image optimization, and a project-scoped
@@ -13,7 +13,7 @@ Base64 image storage, or a second canvas document.
 Open the original SlideX-style Workspace shell for a directory of local decks:
 
 ```bash
-npx open-slidex@0.3.0 workspace ~/Presentations
+npx open-slidex@0.3.1 workspace ~/Presentations
 ```
 
 The Workspace can create a blank deck or start a new deck from a bundled public
@@ -28,7 +28,7 @@ source-specific templates are not part of the local catalog.
 Node.js **22.12.0 or later** is required.
 
 ```bash
-npx open-slidex@0.3.0 init my-deck
+npx open-slidex@0.3.1 init my-deck
 cd my-deck
 npm run dev
 ```
@@ -36,7 +36,7 @@ npm run dev
 Start a new project with an immutable official template blueprint and locale:
 
 ```bash
-npx open-slidex@0.3.0 init my-deck --template summer-time-report --locale zh-TW
+npx open-slidex@0.3.1 init my-deck --template summer-time-report --locale zh-TW
 ```
 
 The selected `{ id, version, locale }` is recorded in
@@ -51,15 +51,15 @@ local rendering and exports; an offline download never blocks installation.
 Alternative launchers:
 
 ```bash
-pnpm dlx open-slidex@0.3.0 init my-deck
-bunx open-slidex@0.3.0 init my-deck
+pnpm dlx open-slidex@0.3.1 init my-deck
+bunx open-slidex@0.3.1 init my-deck
 ```
 
 Use `--no-install` when you want to inspect the generated files before
 installing dependencies:
 
 ```bash
-npx open-slidex@0.3.0 init my-deck --no-install
+npx open-slidex@0.3.1 init my-deck --no-install
 cd my-deck
 npm install
 ```
@@ -84,7 +84,7 @@ Supabase or embedded as Base64/data URLs.
 Run these from the generated deck folder:
 
 ```bash
-npm run dev          # visual Workbench with Vite HMR at a local URL
+npm run dev          # open the parent-folder Workspace and choose this deck
 npm run build        # build a static HTML presentation in dist/site/
 npm run preview      # preview dist/site/
 npm run validate     # validate presentation.mdx
@@ -94,7 +94,8 @@ npm run export:mdx   # write dist/presentation.mdx
 npm run export:pptx  # write dist/presentation.pptx
 ```
 
-The Workbench includes slide and layer navigation, a left-side tool rail,
+`npm run dev` always opens `/workspace`; selecting the generated deck enters
+the Workbench. The Workbench includes slide and layer navigation, a left-side tool rail,
 canvas selection, Inspector editing, local asset management, Presenter mode,
 and animated bar, line, area, pie, donut, and scatter charts. HTML and the
 Workbench animate charts; PPTX exports their editable static final state.

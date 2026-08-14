@@ -48,7 +48,7 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
 
   return (
     <PreviewMediaPolicyProvider assetUrl={view.assetUrl} animateCharts={view.localChartAnimationsActive} localAssetsOnly={view.localAssetsOnly === true}>
-      <main className="flex h-[100dvh] flex-col overflow-hidden bg-[#000000] font-sans text-neutral-300">
+      <main className="flex h-[100dvh] flex-col overflow-hidden bg-[#212121] font-sans text-neutral-300">
       <PitchHeader
         accessMode={view.accessMode}
         actualScale={zoomLevel === "fit" ? fitScale : zoomLevel}
@@ -88,7 +88,7 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
         zoomLevel={zoomLevel}
       />
 
-      <div className="relative flex flex-1 animate-[bubble-appear_0.3s_ease-out] overflow-hidden bg-[#000000]" id="workspace-v4">
+      <div className="relative flex flex-1 animate-[bubble-appear_0.3s_ease-out] overflow-hidden bg-[#212121]" id="workspace-v4">
         {toolRail}
         <WorkspaceLayerSidebar
           commands={commands}

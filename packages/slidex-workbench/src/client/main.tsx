@@ -4,6 +4,9 @@ import { ShadcnTooltipProvider } from "@open-slidex/editor-ui";
 
 import { I18nProvider } from "@/common/lib/I18nProvider";
 import { Workbench } from "./Workbench";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
 import "@open-slidex/editor-ui/styles.css";
 import "./styles.css";
 
