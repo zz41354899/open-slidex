@@ -91,7 +91,7 @@ export function pasteMotionDocTextClipboard(
 
 function blockTextStyle(block: MotionDocTextBlock): Omit<MotionDocTextStyleRange, "end" | "start"> {
   const fontSize = numberValue(block.props.fontSize) ?? motionDocDefaultFontSize(block.type);
-  const fontWeight = numberValue(block.props.fontWeight) ?? (block.type === "Title" ? 600 : 400);
+  const fontWeight = numberValue(block.props.fontWeight) ?? (block.type === "heading" ? 600 : 400);
   const letterSpacing = numberValue(block.props.letterSpacing);
   const color = stringProp(block.props.color ?? block.props.textColor);
   const fontFamily = stringProp(block.props.fontFamily);

@@ -1,5 +1,5 @@
 
-import { ChevronUp, ChevronDown, Gauge, GripVertical, Image as ImageIcon, Link2, Lock, MousePointer2, PlaySquare, Rows3, Shapes, Sparkles, Table2, Trash2 } from "lucide-react";
+import { ChevronUp, ChevronDown, GripVertical, Image as ImageIcon, Link2, Lock, MousePointer2, PlaySquare, Shapes, Table2, Trash2 } from "lucide-react";
 import { useState, type MouseEvent, type PointerEvent } from "react";
 import type { MotionDocBlock } from "@/core/motion-doc/domain/motionDocTypes";
 import { isPositionLocked } from "@/features/pitch/application/motionDocCommands";
@@ -15,14 +15,10 @@ export function LayerTextIcon({ className = "", label }: { className?: string; l
 }
 
 export function BlockLayerIcon({ block, className = "" }: { block: MotionDocBlock; className?: string }) {
-  if (block.type === "Title") return <LayerTextIcon className={className} label="H" />;
-  if (block.type === "Text") return <LayerTextIcon className={className} label="T" />;
+  if (block.type === "Text") return <LayerTextIcon className={className} label={block.props.role === "title" ? "H" : "T"} />;
   if (block.type === "ImageBlock") return <ImageIcon className={className} size={12} />;
   if (block.type === "VideoBlock") return <PlaySquare className={className} size={12} />;
-  if (block.type === "Metric") return <Gauge className={className} size={12} />;
-  if (block.type === "Icon") return <Sparkles className={className} size={12} />;
   if (block.type === "Shape") return <Shapes className={className} size={12} />;
-  if (block.type === "Stack") return <Rows3 className={className} size={12} />;
   if (block.type === "Table") return <Table2 className={className} size={12} />;
 
   return <MousePointer2 className={className} size={12} />;

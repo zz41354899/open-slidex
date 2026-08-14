@@ -38,7 +38,7 @@ test("MCP prints copyable Codex and Claude Code configuration", () => {
   assert.match(openSlideXMcpConfig("codex", root), /OpenSlideX demo/);
   assert.equal(
     openSlideXMcpConfig("claude", root),
-    "claude mcp add open-slidex -- npx -y open-slidex@0.3.4 mcp --project '/tmp/OpenSlideX demo'"
+    "claude mcp add open-slidex -- npx -y open-slidex@latest mcp --project '/tmp/OpenSlideX demo'"
   );
   const desktop = JSON.parse(openSlideXMcpConfig("claude-desktop", root));
   assert.equal(desktop.mcpServers.open_slidex.command, "npx");
@@ -57,28 +57,55 @@ test("Workspace MCP prints user-level configuration and selects a presentation",
   const client = new Client({ name: "open-slidex-workspace-test", version: "1.0.0" });
 
   try {
+    await Promise.all(openSlideXProjectSkillNames.map(async (skill) => {
+      const skillRoot = path.join(root, ".agents", "skills", skill);
+      await mkdir(path.join(skillRoot, "references"), { recursive: true });
+      await writeFile(path.join(skillRoot, "SKILL.md"), `---\nname: ${skill}\ndescription: ${skill} guidance.\n---\n`, "utf8");
+      if (skill === "slidex-deck-design") {
+        await writeFile(path.join(skillRoot, "references", "source-to-story.md"), "# Source to story\n", "utf8");
+      }
+    }));
     await Promise.all(["alpha", "beta"].map(async (id) => {
       await mkdir(path.join(root, id), { recursive: true });
       await writeFile(path.join(root, id, "presentation.mdx"), blankPresentationMdx.replace("Untitled Presentation", id), "utf8");
     }));
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
 
-    const listed = structured(await client.callTool({ arguments: {}, name: "open_slidex_workspace_list" }));
+    const tools = await client.listTools();
+    assert.deepEqual(tools.tools.map((tool) => tool.name).sort(), [
+      "open_slidex_edit",
+      "open_slidex_media",
+      "open_slidex_read",
+      "open_slidex_review",
+      "open_slidex_workspace"
+    ]);
+
+    const listed = structured(await client.callTool({ arguments: { action: "list" }, name: "open_slidex_workspace" }));
     assert.deepEqual((listed.presentations as Array<{ id: string }>).map((item) => item.id).sort(), ["alpha", "beta"]);
 
     const selected = structured(await client.callTool({
-      arguments: { presentationId: "beta" },
-      name: "open_slidex_workspace_select"
+      arguments: { action: "select", presentationId: "beta" },
+      name: "open_slidex_workspace"
     }));
     assert.equal(selected.selectedPresentationId, "beta");
-    const opened = structured(await client.callTool({ arguments: { includeSource: false }, name: "open_slidex_open" }));
+    const opened = structured(await client.callTool({ arguments: {}, name: "open_slidex_read" }));
     assert.equal(opened.title, "beta");
+    const guidance = opened.guidance as Record<string, unknown>;
+    assert.equal(guidance.mode, "manifest");
+    assert.equal((guidance.recommended as unknown[]).length, 1);
+    assert.equal("references" in opened, false);
+
+    const skillResource = structured(await client.callTool({
+      arguments: { resourcePath: ".agents/skills/slidex-deck-design/references/source-to-story.md" },
+      name: "open_slidex_read"
+    }));
+    assert.match(String((skillResource.guidance as Record<string, unknown>).content), /Source to story/);
 
     assert.match(openSlideXWorkspaceMcpConfig("codex", root), /\[mcp_servers\.open_slidex_workspace\]/);
-    assert.match(openSlideXWorkspaceMcpConfig("codex", root), /open-slidex@0\.3\.4/);
+    assert.match(openSlideXWorkspaceMcpConfig("codex", root), /open-slidex@latest/);
     assert.match(openSlideXWorkspaceMcpConfig("codex", root), /--workspace/);
     assert.match(openSlideXWorkspaceMcpConfig("claude-code", root), /--scope user/);
-    assert.match(openSlideXWorkspaceMcpSetupPrompt("codex", root), /open_slidex_workspace_list/);
+    assert.match(openSlideXWorkspaceMcpSetupPrompt("codex", root), /open_slidex_workspace/);
   } finally {
     await client.close().catch(() => undefined);
     await server.close().catch(() => undefined);
@@ -95,13 +122,13 @@ test("Workspace MCP lists a not-yet-created starter workspace without failing", 
 
   try {
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
-    const listed = structured(await client.callTool({ arguments: {}, name: "open_slidex_workspace_list" }));
+    const listed = structured(await client.callTool({ arguments: { action: "list" }, name: "open_slidex_workspace" }));
 
     assert.deepEqual(listed.presentations, []);
     assert.equal(listed.selectedPresentationId, undefined);
     assert.equal(listed.workspaceRoot, workspaceRoot);
 
-    const opened = await client.callTool({ arguments: { includeSource: false }, name: "open_slidex_open" });
+    const opened = await client.callTool({ arguments: {}, name: "open_slidex_read" });
     assert.equal(opened.isError, true);
     assert.match(String(structured(opened).message), /has no presentations/i);
   } finally {
@@ -121,13 +148,15 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     await mkdir(path.join(root, "knowledge"));
     await Promise.all(openSlideXProjectSkillNames.map(async (skill) => {
       const skillRoot = path.join(root, ".agents", "skills", skill);
-      await mkdir(skillRoot, { recursive: true });
+      await mkdir(path.join(skillRoot, "references"), { recursive: true });
       await writeFile(path.join(skillRoot, "SKILL.md"), `---\nname: ${skill}\ndescription: ${skill} guidance.\n---\n\nUse a coherent visual world.\n`, "utf8");
+      if (skill === "slidex-deck-design") {
+        await writeFile(path.join(skillRoot, "references", "source-to-story.md"), "# Source to story\n", "utf8");
+      }
     }));
     await mkdir(path.join(root, ".open-slidex"), { recursive: true });
-    await writeFile(path.join(root, "presentation.mdx"), `${blankPresentationMdx}\n\n<Slide duration={5} background="#f5f5f5"><Text id="second-slide" x={10} y={20} w={80} h={20} fontSize={42}>Second slide</Text></Slide>`, "utf8");
+    await writeFile(path.join(root, "presentation.mdx"), `# Untitled Presentation\n\n<Slide duration={5} background="#ffffff"><Text id="first-slide" role="title" x={10} y={20} w={80} h={20} fontSize={42}>First slide</Text></Slide>\n\n<Slide duration={5} background="#f5f5f5"><Text id="second-slide" role="title" x={10} y={20} w={80} h={20} fontSize={42}>Second slide</Text></Slide>`, "utf8");
     await writeFile(path.join(root, "knowledge", "brief.md"), "# Brief\n\nThe launch metric is activation rate.\n", "utf8");
-    await writeFile(path.join(root, ".open-slidex", "template-lock.json"), `${JSON.stringify({ id: "summer-time-report", locale: "en", version: "1.0.0" })}\n`, "utf8");
     await writeFile(
       path.join(root, "import.png"),
       await sharp({ create: { background: "#3457d5", channels: 4, height: 64, width: 64 } }).png().toBuffer()
@@ -135,111 +164,140 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
 
     const opened = structured(await client.callTool({
-      arguments: { includeSource: false },
-      name: "open_slidex_open"
+      arguments: {},
+      name: "open_slidex_read"
     }));
     assert.match(String(opened.revision), /^sha256:/);
+    const authoringContract = opened.authoringContract as Record<string, unknown>;
+    assert.deepEqual(authoringContract.allowed, ["Text", "ImageBlock", "VideoBlock", "Chart", "Table", "Shape"]);
+    assert.deepEqual(authoringContract.removed, ["Card", "Group", "Icon", "Metric", "Notes", "Stack", "Title"]);
 
     const edited = structured(await client.callTool({
       arguments: {
-        commands: [{ title: "Agent edited", type: "document.setTitle" }],
-        expectedRevision: opened.revision
+        expectedRevision: opened.revision,
+        source: String(opened.source).replace("# Untitled Presentation", "# Agent edited"),
+        target: "deck"
       },
       name: "open_slidex_edit"
     }));
-    assert.equal(edited.title, "Agent edited");
+    assert.equal(edited.title, "Agent edited", JSON.stringify(edited));
     assert.notEqual(edited.revision, opened.revision);
 
     const conflict = await client.callTool({
       arguments: {
-        commands: [{ title: "Stale", type: "document.setTitle" }],
-        expectedRevision: opened.revision
+        expectedRevision: opened.revision,
+        source: String(opened.source).replace("# Untitled Presentation", "# Stale"),
+        target: "deck"
       },
       name: "open_slidex_edit"
     });
     assert.equal(conflict.isError, true);
     assert.equal(structured(conflict).currentRevision, edited.revision);
 
+    const forbiddenCard = await client.callTool({
+      arguments: {
+        expectedRevision: edited.revision,
+        slideIndex: 0,
+        source: `<Slide duration={5}><Card title="Wrong"><Text id="nested" x={10} y={10} w={40} h={10}>Nested</Text></Card></Slide>`,
+        target: "slide"
+      },
+      name: "open_slidex_edit"
+    });
+    assert.equal(forbiddenCard.isError, true);
+    assert.match(String(structured(forbiddenCard).message), /Unsupported MotionDoc component: Card/);
+
+    for (const [component, source] of [
+      ["Icon", `<Slide duration={5}><Icon id="legacy" x={10} y={10} w={10} h={10} icon="Sparkles" /></Slide>`],
+      ["Notes", `<Slide duration={5}><Notes>Legacy notes</Notes></Slide>`]
+    ] as const) {
+      const forbiddenLegacy = await client.callTool({
+        arguments: {
+          expectedRevision: edited.revision,
+          slideIndex: 0,
+          source,
+          target: "slide"
+        },
+        name: "open_slidex_edit"
+      });
+      assert.equal(forbiddenLegacy.isError, true);
+      assert.match(String(structured(forbiddenLegacy).message), new RegExp(`Unsupported MotionDoc component: ${component}`));
+    }
+
+    const forbiddenMarkdown = await client.callTool({
+      arguments: {
+        expectedRevision: edited.revision,
+        slideIndex: 0,
+        source: `<Slide duration={5}>## Unpositioned heading</Slide>`,
+        target: "slide"
+      },
+      name: "open_slidex_edit"
+    });
+    assert.equal(forbiddenMarkdown.isError, true);
+    assert.match(String(structured(forbiddenMarkdown).message), /visible Markdown/);
+    const unchangedAfterForbidden = structured(await client.callTool({ arguments: {}, name: "open_slidex_read" }));
+    assert.equal(unchangedAfterForbidden.revision, edited.revision);
+    assert.match(String(unchangedAfterForbidden.source), /Agent edited/);
+
     const imported = structured(await client.callTool({
-      arguments: { expectedRevision: edited.revision, filePath: "import.png" },
-      name: "open_slidex_asset_import"
+      arguments: { action: "import-local", expectedRevision: edited.revision, filePath: "import.png" },
+      name: "open_slidex_media"
     }));
     assert.match(String(imported.source), /^assets\/.+\.webp$/);
     assert.ok(Number(imported.bytes) <= Number(imported.targetOutputBytes));
 
     const escaped = await client.callTool({
-      arguments: { expectedRevision: edited.revision, filePath: "../outside.png" },
-      name: "open_slidex_asset_import"
+      arguments: { action: "import-local", expectedRevision: edited.revision, filePath: "../outside.png" },
+      name: "open_slidex_media"
     });
     assert.equal(escaped.isError, true);
     assert.match(String(structured(escaped).message), /escapes the configured root/);
 
-    const knowledge = structured(await client.callTool({
-      arguments: { limit: 4, query: "activation rate" },
-      name: "open_slidex_knowledge_search"
+    const context = structured(await client.callTool({
+      arguments: {
+        intent: "redesign",
+        knowledgeQuery: "activation rate"
+      },
+      name: "open_slidex_read"
     }));
+    const guidance = context.guidance as Record<string, unknown>;
+    assert.equal(guidance.mode, "manifest");
+    assert.equal(guidance.intent, "redesign");
+    assert.equal((guidance.skills as unknown[]).length, 4);
+    assert.equal((guidance.recommended as unknown[]).length, 4);
+    const knowledge = context.knowledge as Record<string, unknown>;
     const results = knowledge.results as Array<Record<string, unknown>>;
     assert.equal(results[0]?.path, "brief.md");
     assert.equal(results[0]?.section, "Brief");
     assert.match(String(results[0]?.hash), /^[0-9a-f]{64}$/);
+    assert.equal(results[0]?.resourcePath, "knowledge/brief.md");
+    assert.equal("content" in results[0]!, false);
 
-    const skill = structured(await client.callTool({
-      arguments: { skill: "slidex-deck-design" },
-      name: "open_slidex_skill_read"
+    const knowledgeResource = structured(await client.callTool({
+      arguments: { resourcePath: "knowledge/brief.md" },
+      name: "open_slidex_read"
     }));
-    assert.equal(skill.name, "slidex-deck-design");
-    assert.match(String(skill.content), /coherent visual world/);
-
-    const guidance = structured(await client.callTool({
-      arguments: { intent: "redesign", mode: "bundle" },
-      name: "open_slidex_skill_read"
-    }));
-    assert.equal(guidance.mode, "bundle");
-    assert.equal(guidance.intent, "redesign");
-    assert.equal((guidance.skills as unknown[]).length, 3);
-
-    const template = structured(await client.callTool({
-      arguments: { includeStarterSource: true, referenceMode: "role-samples", roles: ["cover", "next-steps"] },
-      name: "open_slidex_template_read"
-    }));
-    assert.equal(template.id, "summer-time-report");
-    assert.equal(template.version, "1.0.0");
-    assert.match(String(template.starterSource), /<Slide/);
-    assert.equal(template.referenceMode, "role-samples");
-    const samples = template.referenceSamples as Array<Record<string, unknown>>;
-    assert.deepEqual(samples.map((sample) => sample.role), ["cover", "next-steps"]);
-    assert.ok(samples.every((sample) => (String(sample.source).match(/<Slide\b/g) ?? []).length === 1));
-    assert.ok(samples.reduce((bytes, sample) => bytes + Number(sample.bytes), 0) < 20_000);
-    assert.match(String(template.starterSourceChecksum), /^[0-9a-f]{64}$/);
-    assert.doesNotMatch(samples.map((sample) => sample.source).join("\n"), /https:|data:|blob:/);
-    assert.equal((template.referenceUsage as Record<string, unknown>).mode, "design-reference");
-    assert.equal((template.qualityProfile as Record<string, unknown>).schemaVersion, 1);
-
-    const partialTemplate = await client.callTool({
-      arguments: { id: "summer-time-report" },
-      name: "open_slidex_template_read"
-    });
-    assert.equal(partialTemplate.isError, true);
-    assert.match(String(structured(partialTemplate).message), /requires id, locale, and version together/);
+    const resourceChunks = ((knowledgeResource.knowledge as Record<string, unknown>).chunks as Array<Record<string, unknown>>);
+    assert.match(String(resourceChunks[0]?.content), /activation rate/);
 
     const imageSearch = structured(await client.callTool({
-      arguments: { query: "product launch" },
-      name: "open_slidex_image_search"
+      arguments: { action: "search-trusted", query: "product launch" },
+      name: "open_slidex_media"
     }));
     assert.equal(imageSearch.status, "not_configured");
 
     const renderResult = await client.callTool({
-      arguments: { mode: "slide", slideIndex: 0 },
-      name: "open_slidex_render"
+      arguments: { scope: "slide", slideIndex: 0 },
+      name: "open_slidex_review"
     });
     const rendered = structured(renderResult);
     assert.notEqual(renderResult.isError, true, JSON.stringify(rendered));
-    assert.equal(rendered.outputPath, path.join(root, "dist", "renders", String(rendered.revision).replace(/^sha256:/, ""), "slide-0.png"));
-    assert.ok((await readFile(String(rendered.outputPath))).byteLength > 1_000);
+    const renderedPreview = rendered.preview as Record<string, unknown>;
+    assert.equal(renderedPreview.outputPath, path.join(root, "dist", "renders", String(rendered.revision).replace(/^sha256:/, ""), "slide-0.png"));
+    assert.ok((await readFile(String(renderedPreview.outputPath))).byteLength > 1_000);
 
     const qualityResult = await client.callTool({
-      arguments: { mode: "deck" },
-      name: "open_slidex_quality_check"
+      arguments: { scope: "deck" },
+      name: "open_slidex_review"
     });
     const quality = structured(qualityResult);
     assert.notEqual(qualityResult.isError, true, JSON.stringify(quality));
@@ -247,22 +305,20 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     assert.equal(report.passed, true);
     assert.equal((report.summary as Record<string, unknown>).errorCount, 0);
     const cacheBefore = getSlideXQualityCacheStats();
-    await client.callTool({ arguments: { mode: "deck" }, name: "open_slidex_quality_check" });
+    await client.callTool({ arguments: { scope: "deck" }, name: "open_slidex_review" });
     const cacheAfter = getSlideXQualityCacheStats();
     assert.ok(cacheAfter.hits > cacheBefore.hits);
     assert.equal(cacheAfter.misses, cacheBefore.misses);
 
     const brokenResult = await client.callTool({
       arguments: {
-        commands: [{
-          slideIndex: 0,
-          slideSource: `<Slide duration={5} background="#ffffff">
+        expectedRevision: edited.revision,
+        slideIndex: 0,
+        source: `<Slide duration={5} background="#ffffff">
   <Text id="first" x={8} y={12} w={50} h={3} fontSize={48}>Overlapping headline</Text>
   <Text id="second" x={8} y={12} w={50} h={3} fontSize={48}>Second headline</Text>
 </Slide>`,
-          type: "slide.replace"
-        }],
-        expectedRevision: edited.revision
+        target: "slide"
       },
       name: "open_slidex_edit"
     });
@@ -279,13 +335,11 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
 
     const recovered = structured(await client.callTool({
       arguments: {
-        commands: [{
-          slideIndex: 0,
-          slideSource: `<Slide duration={5} background="#ffffff"><Text id="recovered" x={10} y={20} w={80} h={20} fontSize={48}>Recovered</Text></Slide>`,
-          type: "slide.replace"
-        }],
         expectedRevision: edited.revision,
-        rejectedCandidateId: broken.rejectedCandidateId
+        rejectedCandidateId: broken.rejectedCandidateId,
+        slideIndex: 0,
+        source: `<Slide duration={5} background="#ffffff"><Text id="recovered" x={10} y={20} w={80} h={20} fontSize={48}>Recovered</Text></Slide>`,
+        target: "slide"
       },
       name: "open_slidex_edit"
     }));
@@ -294,14 +348,14 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     assert.match(String((recovered.preview as Record<string, unknown>).outputPath), /dist\/renders\/.+\/slide-0\.png$/);
 
     const crossRevisionCacheBefore = getSlideXQualityCacheStats();
-    await client.callTool({ arguments: { mode: "deck" }, name: "open_slidex_quality_check" });
+    await client.callTool({ arguments: { scope: "deck" }, name: "open_slidex_review" });
     const crossRevisionCacheAfter = getSlideXQualityCacheStats();
     assert.ok(crossRevisionCacheAfter.hits >= crossRevisionCacheBefore.hits + 2);
     assert.equal(crossRevisionCacheAfter.misses, crossRevisionCacheBefore.misses);
 
     const brokenQuality = structured(await client.callTool({
-      arguments: { mode: "slide", slideIndex: 0 },
-      name: "open_slidex_quality_check"
+      arguments: { scope: "slide", slideIndex: 0 },
+      name: "open_slidex_review"
     }));
     const brokenReport = brokenQuality.report as Record<string, unknown>;
     assert.equal(brokenReport.passed, true);

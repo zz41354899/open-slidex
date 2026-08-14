@@ -409,7 +409,7 @@ export function TextFrameEditor({
       >
         <div
           aria-label={locale === "zh-TW"
-            ? (block.type === "Title" ? "編輯標題文字" : "編輯文字內容")
+            ? (block.props.role === "title" ? "編輯標題文字" : "編輯文字內容")
             : `Edit ${block.type} text`}
           className={`${styles.editor} w-full outline-none`}
           contentEditable={isEditingEnabled ? "plaintext-only" : false}
@@ -520,9 +520,9 @@ function TextStyleToolbar({
     return () => document.removeEventListener("pointerdown", closeOptionsOnOutsidePointer, true);
   }, [isOptionsOpen, onOptionsOpenChange]);
   const fontSize = numberValue(block.props.fontSize) ?? motionDocDefaultFontSize(block.type);
-  const lineHeight = numberValue(block.props.lineHeight) ?? (block.type === "Title" ? 1.02 : 1.45);
+  const lineHeight = numberValue(block.props.lineHeight) ?? (block.props.role === "title" ? 1.02 : 1.45);
   const lineHeightPt = numberValue(block.props.lineHeightPt);
-  const fontWeight = numberValue(block.props.fontWeight) ?? (block.type === "Title" ? 600 : 400);
+  const fontWeight = numberValue(block.props.fontWeight) ?? (block.props.role === "title" ? 600 : 400);
   const letterSpacing = numberValue(block.props.letterSpacing) ?? 0;
   const baseItalic = block.props.fontStyle === "italic";
   const fontFamily = stringValue(block.props.fontFamily, "");

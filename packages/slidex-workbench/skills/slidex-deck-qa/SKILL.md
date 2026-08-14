@@ -1,35 +1,30 @@
 ---
 name: slidex-deck-qa
-description: Validate and visually inspect editable OpenSlideX MotionDoc decks. Use before declaring any presentation complete, after material MDX or design changes, and when checking overflow, contrast, montage, per-slide renders, animation names, or export readiness.
+description: Validate and visually inspect editable OpenSlideX decks. Use before completion, after material source or design changes, and for overflow, overlap, contrast, asset, montage, motion, evidence, or export-readiness review.
 ---
 
 # OpenSlideX Deck QA
 
-Source validity is necessary but not visual proof.
+Source validity is necessary but never substitutes for rendered proof.
 
-## Required loop
+## Required reference
 
-1. Treat `open_slidex_edit` as a pre-write quality transaction. It validates
-   and render-checks the complete candidate before changing `presentation.mdx`.
-2. If it returns `quality_gate_failed`, the source and revision did not change.
-   Correct the complete candidate using the reported slide, code, node IDs,
-   and metrics. Use at most two rejected candidate attempts.
-3. An accepted edit returns both the authoritative candidate report and an
-   immutable slide or montage preview produced by the same QA pass. Do not run
-   a second render, validate, or quality check after success.
-4. Use standalone `open_slidex_render`, `open_slidex_validate`, or
-   `open_slidex_quality_check` only for review-only work where no edit occurs.
-5. For a full deck, inspect both the returned montage and structured deck report for
-   story rhythm, focal variety, hierarchy, margins, balance, media treatment,
-   contrast, and accidental empty regions.
+Read [the review matrix](references/review-matrix.md). Apply every release
+blocker and the checks relevant to the deck's source type.
 
-## Acceptance
+## Acceptance loop
 
-- Content is legible at presentation distance.
-- Text fits its frame and no layer unintentionally leaves the canvas.
-- Media resolves, keeps useful alt text, and is not stretched.
-- Colors, typography, and animation vocabulary stay consistent.
-- HTML, MDX, and PPTX export without losing the intended hierarchy.
+1. Confirm the selected deck, current revision, and exact source scope with
+   `open_slidex_read`.
+2. For an edit, rely on `open_slidex_edit`: it validates, renders, visually
+   checks, and writes atomically only when the candidate passes.
+3. If rejected, repair the same candidate using the reported slide, code,
+   node IDs, and metrics. Stop after two focused repair attempts and report the
+   remaining blocker.
+4. For review-only work, call `open_slidex_review` and inspect the complete
+   montage plus every materially changed slide.
+5. Do one evidence pass and one visual pass. A deck is complete only when both
+   pass and the editable MDX preserves the intended hierarchy.
 
-If the edit QA or a review-only quality check cannot start, report visual QA as
-blocked. Never substitute source validation or a PNG path for visual proof.
+Never declare completion without an accepted rendered preview when visual QA is
+available.

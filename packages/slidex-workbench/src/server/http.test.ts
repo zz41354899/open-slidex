@@ -14,7 +14,7 @@ test("Workbench API can use a hidden operating-system-assigned port", async () =
   try {
     await writeFile(
       path.join(root, "presentation.mdx"),
-      "# Local deck\n\n<Slide><Title>Hidden API</Title></Slide>\n",
+      "# Local deck\n\n<Slide><Text role=\"title\">Hidden API</Text></Slide>\n",
       "utf8"
     );
     const project = new SlideXProject(root);

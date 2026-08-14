@@ -23,43 +23,6 @@ type TextBlockProps = AnimationProps & {
   textVerticalAlign?: string;
 } & RadiusProps & ColorProps;
 
-export function Title({
-  background,
-  backgroundColor,
-  children,
-  color,
-  fontFamily,
-  fontSize,
-  fontStyle,
-  fontWeight,
-  letterSpacing,
-  lineHeight,
-  lineHeightPt,
-  textAlign,
-  textColor,
-  textStyleRanges,
-  textVerticalAlign,
-  listStart,
-  listType,
-  ...animation
-}: TextBlockProps) {
-  useTextBlockFonts(children, fontFamily, textStyleRanges);
-
-  return (
-    <MotionBlock
-      className={`w-full text-5xl font-semibold leading-[1.02] tracking-normal text-[var(--slide-fg)] md:text-7xl`}
-      style={{
-        ...textStyle({ fontFamily, fontSize: fontSize ?? MOTION_DOC_FONT_SIZES.display, fontStyle, fontWeight, letterSpacing, lineHeight, lineHeightPt }, 1.02, textAlign),
-        ...textBoxAlignment(textVerticalAlign),
-        ...surfaceStyle({ background, backgroundColor, color, textColor }, true)
-      }}
-      {...animation}
-    >
-      {renderContent(children, listType, textStyleRanges, listStart)}
-    </MotionBlock>
-  );
-}
-
 export function Text({
   background,
   backgroundColor,

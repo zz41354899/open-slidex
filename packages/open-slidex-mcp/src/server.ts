@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { basename, extname, join, resolve, win32 } from "node:path";
+import { basename, dirname, extname, join, resolve, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
 import { access, mkdir, readFile, readdir, realpath, stat } from "node:fs/promises";
 
@@ -10,35 +10,25 @@ import { z } from "zod/v4";
 
 import {
   applySlideXBatch,
-  getSlideXCatalog,
-  getOfficialTemplatePackage,
-  getOfficialTemplateQualityProfile,
-  inspectSlideXDocument,
   motionDocChartMotions,
   motionDocChartTypes,
   motionDocSlideSourceRanges,
   parseMotionDoc,
-  stripNonLocalMotionDocMedia,
-  summarizeMotionDoc,
-  type SlideXEditCommand
+  summarizeMotionDoc
 } from "@open-slidex/sdk";
 import {
   analyzeSlideXDocumentQuality,
   importSlideXImageAsset,
-  renderSlideXDocument,
   resolveInsideRoot,
   SlideXFileDocumentAdapter,
   type SlideXQualityReport,
   SlideXRevisionConflictError
 } from "@open-slidex/sdk/node";
-import { searchOpenSlideXKnowledge } from "./knowledge";
+import { readOpenSlideXKnowledgeResource, searchOpenSlideXKnowledge } from "./knowledge";
 import {
   openSlideXGuidanceIntents,
-  openSlideXProjectSkillNames,
-  readOpenSlideXProjectSkill,
-  readOpenSlideXProjectSkillBundle,
-  readOpenSlideXProjectSkillManifest,
-  readOpenSlideXTemplateLock
+  readOpenSlideXProjectGuidanceManifest,
+  readOpenSlideXProjectGuidanceResource
 } from "./projectGuidance";
 import {
   appendImageProvenance,
@@ -49,24 +39,16 @@ import {
 const projectRoot = projectRootFromArgs(process.argv.slice(2));
 const adapter = new SlideXFileDocumentAdapter({ projectRoot });
 const workspaceRoot = workspaceRootFromArgs(process.argv.slice(2));
-const propValueSchema = z.union([z.string(), z.number(), z.boolean()]);
-const propsSchema = z.record(z.string(), propValueSchema);
-const editCommandSchema = z.discriminatedUnion("type", [
-  z.object({ title: z.string(), type: z.literal("document.setTitle") }),
-  z.object({ from: z.string(), to: z.string(), type: z.literal("asset.repath") }),
-  z.object({ afterSlideIndex: z.number().int().min(0).optional(), slideSource: z.string().optional(), type: z.literal("slide.add") }),
-  z.object({ slideIndex: z.number().int().min(0), type: z.literal("slide.delete") }),
-  z.object({ slideIndex: z.number().int().min(0), type: z.literal("slide.duplicate") }),
-  z.object({ fromIndex: z.number().int().min(0), toIndex: z.number().int().min(0), type: z.literal("slide.reorder") }),
-  z.object({ slideIndex: z.number().int().min(0), slideSource: z.string(), type: z.literal("slide.replace") }),
-  z.object({ layoutId: z.string(), options: propsSchema.optional(), slideIndex: z.number().int().min(0).optional(), type: z.literal("slide.applyLayout") }),
-  z.object({ props: propsSchema, slideIndex: z.number().int().min(0), type: z.literal("slide.updateProps") }),
-  z.object({ blockType: z.string(), options: z.record(z.string(), z.unknown()).optional(), slideIndex: z.number().int().min(0), type: z.literal("block.add") }),
-  z.object({ blockIndex: z.number().int().min(0).optional(), nodeId: z.string().optional(), props: propsSchema.optional(), slideIndex: z.number().int().min(0), text: z.string().optional(), type: z.literal("block.update") }),
-  z.object({ blockIndex: z.number().int().min(0).optional(), nodeId: z.string().optional(), slideIndex: z.number().int().min(0), type: z.literal("block.delete") }),
-  z.object({ blockIndex: z.number().int().min(0).optional(), nodeId: z.string().optional(), offset: z.number().optional(), slideIndex: z.number().int().min(0), type: z.literal("block.duplicate") }),
-  z.object({ fromIndex: z.number().int().min(0), slideIndex: z.number().int().min(0), toIndex: z.number().int().min(0), type: z.literal("block.reorder") })
+const authorableMotionDocTags = new Set([
+  "Chart",
+  "ImageBlock",
+  "Shape",
+  "Slide",
+  "Table",
+  "Text",
+  "VideoBlock"
 ]);
+const removedMotionDocTags = ["Card", "Group", "Icon", "Metric", "Notes", "Stack", "Title"] as const;
 
 class SlideXVisualQualityGateError extends Error {
   readonly currentRevision: string;
@@ -93,7 +75,8 @@ class SlideXVisualQualityGateError extends Error {
 }
 
 export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string } = projectRoot) {
-  const workspace = typeof root === "string" ? undefined : new OpenSlideXWorkspaceMcpScope(root.workspaceRoot);
+  const configuredWorkspaceRoot = typeof root === "string" ? undefined : resolve(root.workspaceRoot);
+  const workspace = typeof root === "string" ? undefined : new OpenSlideXWorkspaceMcpScope(configuredWorkspaceRoot!);
   const fixedRoot = typeof root === "string" ? root : undefined;
   const projectContext = async () => {
     const resolvedRoot = fixedRoot ?? await workspace!.selectedRoot();
@@ -102,7 +85,21 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       root: resolvedRoot
     };
   };
-  const server = new McpServer({ name: "open-slidex-local", version: "0.3.4" });
+  const server = new McpServer(
+    { name: "open-slidex-local", version: "0.3.5" },
+    {
+      instructions: [
+        "For Workspace scope, use open_slidex_workspace to list and explicitly select the intended presentation.",
+        "Use open_slidex_read first to obtain the current revision, exact source scope, and a small skill manifest.",
+        "Follow progressive disclosure: read each recommended SKILL.md, then only the reference files it routes to by passing their exact resourcePath back to open_slidex_read.",
+        "Search user notes, documents, and research in knowledge/ with knowledgeQuery, then read one returned resourcePath at a time.",
+        "Author only toolbar-native layers: Text, ImageBlock, VideoBlock, Chart, Table, and Shape.",
+        "Card, Metric, Stack, Group, Title, Icon, and Notes no longer exist and make a document invalid.",
+        "The project skills own narrative and visual direction; the MCP server owns safe file access, revision control, validation, and rendered quality gates.",
+        "Submit either one complete deck source or one complete slide source to open_slidex_edit; it validates and visually checks the candidate before writing."
+      ].join(" ")
+    }
+  );
   const rejectedCandidates = new Map<string, {
     attempts: number;
     expectedRevision: string;
@@ -111,250 +108,143 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   }>();
 
   if (workspace) {
-    server.registerTool("open_slidex_workspace_list", {
-      title: "List OpenSlideX workspace presentations",
-      description: "List presentation folders available to this workspace-scoped MCP server and show the active selection.",
-      inputSchema: {}
-    }, () => runTool(() => workspace.list()));
-    server.registerTool("open_slidex_workspace_select", {
-      title: "Select OpenSlideX workspace presentation",
-      description: "Select one workspace presentation. All other open_slidex tools use this presentation until another is selected.",
-      inputSchema: { presentationId: z.string().regex(/^[A-Za-z0-9._-]+$/) }
-    }, ({ presentationId }) => runTool(() => workspace.select(presentationId)));
+    server.registerTool("open_slidex_workspace", {
+      title: "Choose an OpenSlideX workspace presentation",
+      description: "List Workspace decks or select exactly one deck for all later read, edit, media, and review calls.",
+      inputSchema: {
+        action: z.enum(["list", "select"]).default("list"),
+        presentationId: z.string().regex(/^[A-Za-z0-9._-]+$/).optional()
+      }
+    }, ({ action, presentationId }) => runTool(() => {
+      if (action === "select") {
+        if (!presentationId) throw new Error("presentationId is required when action is select.");
+        return workspace.select(presentationId);
+      }
+      return workspace.list();
+    }));
   }
 
-  server.registerTool("open_slidex_open", {
-    title: "Open OpenSlideX presentation",
-    description: "Read the canonical local presentation.mdx and its SHA-256 revision.",
-    inputSchema: { includeSource: z.boolean().default(true) }
-  }, ({ includeSource }) => runTool(async () => {
-    const { documentAdapter } = await projectContext();
+  server.registerTool("open_slidex_read", {
+    title: "Read OpenSlideX source or one project resource",
+    description: "Read the current deck or slide plus a compact guidance manifest. Search knowledge/ by query, or load exactly one returned skill/reference/knowledge resourcePath at a time.",
+    inputSchema: {
+      intent: z.enum(openSlideXGuidanceIntents).default("authoring").describe(
+        "Task route for the manifest: create, redesign, design, authoring, motion, or qa."
+      ),
+      knowledgeQuery: z.string().trim().max(500).optional().describe(
+        "Search terms for user files under knowledge/. Results are compact citations with readable resourcePath values."
+      ),
+      resourceCursor: z.number().int().min(0).default(0).describe(
+        "Continuation cursor returned when a long knowledge resource has more chunks."
+      ),
+      resourcePath: z.string().trim().min(1).max(500).optional().describe(
+        "Exact .agents/skills/... or knowledge/... path returned by a previous read. Loads only that resource."
+      ),
+      slideIndex: z.number().int().min(0).optional().describe(
+        "Zero-based slide index for a focused source read; omit for the complete deck."
+      )
+    }
+  }, ({ intent, knowledgeQuery, resourceCursor, resourcePath, slideIndex }) => runTool(async () => {
+    const { documentAdapter, root } = await projectContext();
+    const guidanceRoot = await resolveAuthoringGuidanceRoot(root, configuredWorkspaceRoot);
+    if (resourcePath) {
+      if (slideIndex !== undefined || knowledgeQuery) {
+        throw new Error("resourcePath cannot be combined with slideIndex or knowledgeQuery.");
+      }
+      if (resourcePath.startsWith(".agents/skills/")) {
+        return {
+          guidance: await readOpenSlideXProjectGuidanceResource(guidanceRoot, resourcePath),
+          mode: "resource"
+        };
+      }
+      if (resourcePath.startsWith("knowledge/")) {
+        return {
+          knowledge: await readOpenSlideXKnowledgeResource(root, resourcePath, resourceCursor),
+          mode: "resource"
+        };
+      }
+      throw new Error("resourcePath must be an exact .agents/skills/... or knowledge/... path returned by open_slidex_read.");
+    }
+    if (resourceCursor !== 0) throw new Error("resourceCursor requires a knowledge resourcePath.");
+
     const document = await documentAdapter.open();
+    const [guidance, knowledge] = await Promise.all([
+      readOpenSlideXProjectGuidanceManifest(guidanceRoot, intent).catch((error: unknown) => ({
+        error: error instanceof Error ? error.message : "Project skill guidance is unavailable.",
+        intent,
+        mode: "unavailable"
+      })),
+      knowledgeQuery ? searchOpenSlideXKnowledge(root, knowledgeQuery, 8) : undefined
+    ]);
+    const ranges = motionDocSlideSourceRanges(document.source);
+    if (slideIndex !== undefined && !ranges[slideIndex]) throw new Error(`Slide index is out of range: ${slideIndex}`);
     const summary = summarizeMotionDoc(document.source);
     return {
+      authoringContract: {
+        allowed: ["Text", "ImageBlock", "VideoBlock", "Chart", "Table", "Shape"],
+        removed: removedMotionDocTags,
+        geometry: "Every visible layer needs stable id plus explicit percentage x/y/w/h; fontSize uses pt.",
+        rule: "Removed tags are rejected, not parsed for compatibility. Put all visible copy inside positioned Text layers."
+      },
+      charts: { motions: motionDocChartMotions, types: motionDocChartTypes },
+      guidance,
+      knowledge,
       revision: document.revision,
-      source: includeSource ? document.source : undefined,
+      source: slideIndex === undefined ? document.source : ranges[slideIndex]!.source,
       stats: summary.stats,
       title: document.title,
-      validation: summary.validation
+      validation: summary.validation,
+      workflow: [
+        "Read the recommended SKILL.md files and only their task-relevant references.",
+        "Plan hierarchy and geometry from the current source before writing.",
+        "Submit one complete deck or slide source to open_slidex_edit with this revision.",
+        "If rejected, patch the same candidate from the reported node-specific findings."
+      ]
     };
   }));
 
-  server.registerTool("open_slidex_inspect", {
-    title: "Inspect OpenSlideX presentation",
-    description: "Inspect one slide or selected node without returning unrelated deck source.",
-    inputSchema: {
-      nodeId: z.string().optional(),
-      slideIndex: z.number().int().min(0).optional()
-    }
-  }, (input) => runTool(async () => {
-    const { documentAdapter } = await projectContext();
-    const document = await documentAdapter.open();
-    return { revision: document.revision, result: inspectSlideXDocument(document.source, input) };
-  }));
-
-  server.registerTool("open_slidex_catalog", {
-    title: "OpenSlideX component catalog",
-    description: "Read only the component catalog section needed for the task. Use section 'all' only when planning a full deck.",
-    inputSchema: {
-      includeLayoutSource: z.boolean().default(false),
-      section: z.enum(["all", "blocks", "design-rules", "exports", "layouts", "schema", "shaders"]).default("all")
-    }
-  }, ({ includeLayoutSource, section }) => runTool(() => ({
-    ...(section === "all" ? { charts: { motions: motionDocChartMotions, types: motionDocChartTypes } } : {}),
-    catalog: getSlideXCatalog({ includeLayoutSource, section }),
-    section
-  })));
-
-  server.registerTool("open_slidex_knowledge_search", {
-    title: "Search local OpenSlideX knowledge",
-    description: "Search user-provided Markdown, text, CSV, and PDF files under knowledge/. Results include relative source paths, line ranges, and hashes.",
-    inputSchema: {
-      limit: z.number().int().min(1).max(20).default(8),
-      query: z.string().max(500)
-    }
-  }, ({ limit, query }) => runTool(async () => {
-    const { root } = await projectContext();
-    return searchOpenSlideXKnowledge(root, query, limit);
-  }));
-
-  server.registerTool("open_slidex_skill_read", {
-    title: "Read approved OpenSlideX project guidance",
-    description: "Read root-confined approved guidance. Prefer one mode='bundle' call with the task intent; use mode='manifest' only to discover capabilities, or mode='skill' for one named approved skill. Arbitrary paths and names are rejected.",
-    inputSchema: {
-      intent: z.enum(openSlideXGuidanceIntents).default("authoring"),
-      mode: z.enum(["bundle", "manifest", "skill"]).default("skill"),
-      skill: z.enum(openSlideXProjectSkillNames).optional()
-    }
-  }, ({ intent, mode, skill }) => runTool(async () => {
-    const { root } = await projectContext();
-    if (mode === "manifest") return readOpenSlideXProjectSkillManifest(root);
-    if (mode === "bundle") return readOpenSlideXProjectSkillBundle(root, intent);
-    if (!skill) throw new Error("mode='skill' requires one approved skill name.");
-    return readOpenSlideXProjectSkill(root, skill);
-  }));
-
-  server.registerTool("open_slidex_template_read", {
-    title: "Read official template MDX and blueprint",
-    description: "Read a validated official Template Blueprint plus localized quality profile. Prefer role-samples for compact, concrete MDX geometry references; full reference source is retained only for compatibility and diagnostics. Defaults to the template lock selected for this project.",
-    inputSchema: {
-      id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
-      includeReferenceSource: z.boolean().default(false),
-      includeStarterSource: z.boolean().default(false),
-      locale: z.enum(["en", "zh-TW"]).optional(),
-      referenceMode: z.enum(["none", "role-samples", "full"]).default("none"),
-      roles: z.array(z.string().trim().min(1).max(80)).max(8).optional(),
-      version: z.string().regex(/^\d+\.\d+\.\d+$/).optional()
-    }
-  }, ({ id, includeReferenceSource, includeStarterSource, locale, referenceMode, roles, version }) => runTool(async () => {
-    const { root } = await projectContext();
-    const explicitTemplateFields = [id, locale, version].filter((value) => value !== undefined).length;
-    if (explicitTemplateFields > 0 && explicitTemplateFields < 3) {
-      throw new Error("An explicit template requires id, locale, and version together.");
-    }
-    const lock = explicitTemplateFields === 3
-      ? { id: id!, locale: locale!, version: version! }
-      : await readOpenSlideXTemplateLock(root);
-    const template = getOfficialTemplatePackage(lock.id, lock.version);
-    if (!template) throw new Error(`Official template package is unavailable: ${lock.id}@${lock.version}`);
-    const qualityProfile = getOfficialTemplateQualityProfile(lock.id, lock.locale);
-    if (!qualityProfile) throw new Error(`Official template quality profile is unavailable: ${lock.id}@${lock.locale}`);
-    const referenceSource = stripNonLocalMotionDocMedia(template.sources[lock.locale]);
-    const resolvedReferenceMode = includeReferenceSource ? "full" : referenceMode;
-    const referenceSamples = resolvedReferenceMode === "role-samples"
-      ? templateRoleSamples(referenceSource, template.blueprint.narrative.slideRoles, roles)
-      : undefined;
-    const starterSource = template.starterSources[lock.locale];
-    return {
-      blueprint: template.blueprint,
-      catalog: template.catalog,
-      id: template.id,
-      locale: lock.locale,
-      metadata: template.locales[lock.locale],
-      qualityProfile,
-      referenceUsage: {
-        mode: "design-reference",
-        rules: [
-          "Use the reference MDX for visual grammar and layout variety; do not submit it unchanged as the candidate deck.",
-          "Recalculate every text frame for the replacement copy. As a baseline, reserve at least 4.5% canvas height for a one-line label, 8% for supporting copy, and 16% for a display title.",
-          "Shorten copy or enlarge and reposition its frame before editing. Never shrink text below the quality profile to force a fit.",
-          "Remote media is intentionally removed from this Local reference. Import user-confirmed media through the approved asset tools only."
-        ]
-      },
-      referenceMode: resolvedReferenceMode,
-      referenceSamples,
-      referenceSource: resolvedReferenceMode === "full" ? referenceSource : undefined,
-      referenceSourceBytes: resolvedReferenceMode === "full" ? Buffer.byteLength(referenceSource) : undefined,
-      referenceSourceChecksum: resolvedReferenceMode === "full" ? sourceChecksum(referenceSource) : undefined,
-      starterSource: includeStarterSource ? starterSource : undefined,
-      starterSourceBytes: includeStarterSource ? Buffer.byteLength(starterSource) : undefined,
-      starterSourceChecksum: includeStarterSource ? sourceChecksum(starterSource) : undefined,
-      version: template.version
-    };
-  }));
-
-  server.registerTool("open_slidex_image_search", {
-    title: "Search trusted external images",
-    description: "Search the configured Unsplash provider and return attribution-safe candidates. Search never downloads or writes an asset.",
-    inputSchema: { query: z.string().trim().min(2).max(200) }
-  }, ({ query }) => runTool(() => searchTrustedImages(query, { accessKey: process.env.UNSPLASH_ACCESS_KEY })));
-
-  server.registerTool("open_slidex_image_import", {
-    title: "Import a user-confirmed trusted image",
-    description: "Import one explicitly user-confirmed Unsplash candidate as a local content-addressed WebP and record provenance. Never call without a clear user confirmation naming the candidate ID.",
-    inputSchema: {
+  const mediaSchema = z.discriminatedUnion("action", [
+    z.object({ action: z.literal("search-trusted"), query: z.string().trim().min(2).max(200) }),
+    z.object({
+      action: z.literal("import-trusted"),
       confirmedByUser: z.literal(true),
       expectedRevision: z.string().startsWith("sha256:"),
       providerAssetId: z.string().regex(/^[A-Za-z0-9_-]{1,80}$/)
-    }
-  }, ({ expectedRevision, providerAssetId }) => runTool(async () => {
-    const { documentAdapter, root } = await projectContext();
-    const current = await documentAdapter.open();
-    if (current.revision !== expectedRevision) throw new SlideXRevisionConflictError(current.revision);
-    const downloaded = await downloadTrustedImage(providerAssetId, { accessKey: process.env.UNSPLASH_ACCESS_KEY });
-    const asset = await importSlideXImageAsset({
-      bytes: downloaded.bytes,
-      fileName: `unsplash-${providerAssetId}.${downloaded.mediaType.split("/")[1] ?? "jpg"}`,
-      mediaType: downloaded.mediaType,
-      projectRoot: root
-    });
-    await appendImageProvenance(root, {
-      ...downloaded.photo,
-      importedAt: new Date().toISOString(),
-      source: asset.source
-    });
-    return { ...asset, provenance: downloaded.photo, revision: current.revision };
-  }));
-
-  server.registerTool("open_slidex_validate", {
-    title: "Validate OpenSlideX presentation",
-    description: "Validate the current canonical presentation without writing it.",
-    inputSchema: {}
-  }, () => runTool(async () => {
-    const { documentAdapter } = await projectContext();
-    const document = await documentAdapter.open();
-    return { revision: document.revision, validation: summarizeMotionDoc(document.source).validation };
-  }));
-
-  server.registerTool("open_slidex_render", {
-    title: "Render OpenSlideX presentation",
-    description: "Render a montage or one slide to the local dist/ directory.",
-    inputSchema: {
-      mode: z.enum(["montage", "slide"]).default("montage"),
-      slideIndex: z.number().int().min(0).optional()
-    }
-  }, ({ mode, slideIndex }, extra) => runTool(async () => {
-    const { documentAdapter, root } = await projectContext();
-    const document = await documentAdapter.open();
-    const revisionDirectory = document.revision.replace(/^sha256:/, "");
-    const dist = resolveInsideRoot(root, join("dist", "renders", revisionDirectory));
-    await mkdir(dist, { recursive: true });
-    const outputPath = join(dist, mode === "montage" ? "montage.png" : `slide-${slideIndex ?? 0}.png`);
-    const result = await renderSlideXDocument({
-      mode,
-      outputPath,
-      projectRoot: root,
-      slideIndex: mode === "slide" ? slideIndex ?? 0 : undefined,
-      source: document.source,
-      signal: extra.signal
-    });
-    return { ...result, revision: document.revision };
-  }));
-
-  server.registerTool("open_slidex_quality_check", {
-    title: "Check OpenSlideX visual quality",
-    description: "Measure the actual rendered DOM and return structured slide-specific findings for text overflow, collisions, CJK orphan lines, unresolved media, unsafe edges, density, and repeated deck composition. This is the AI-readable visual QA gate after render.",
-    inputSchema: {
-      mode: z.enum(["deck", "slide"]).default("deck"),
-      slideIndex: z.number().int().min(0).optional()
-    }
-  }, ({ mode, slideIndex }, extra) => runTool(async () => {
-    const { documentAdapter, root } = await projectContext();
-    const document = await documentAdapter.open();
-    const report = await analyzeSlideXDocumentQuality({
-      mode,
-      projectRoot: root,
-      slideIndex: mode === "slide" ? slideIndex ?? 0 : undefined,
-      source: document.source,
-      title: document.title,
-      signal: extra.signal
-    });
-    return { report, revision: document.revision };
-  }));
-
-  server.registerTool("open_slidex_asset_import", {
-    title: "Import local image asset",
-    description: "Read a local binary image path, optimize it to content-addressed WebP, and return its presentation-relative source. Base64 and data URLs are rejected.",
-    inputSchema: {
+    }),
+    z.object({
+      action: z.literal("import-local"),
       expectedRevision: z.string().startsWith("sha256:"),
       filePath: z.string().min(1)
+    })
+  ]);
+  server.registerTool("open_slidex_media", {
+    title: "Search or import OpenSlideX media",
+    description: "One media workflow: search trusted Unsplash candidates, import one user-confirmed candidate, or import a root-confined local image as content-addressed WebP.",
+    inputSchema: mediaSchema
+  }, (input) => runTool(async () => {
+    if (input.action === "search-trusted") {
+      return searchTrustedImages(input.query, { accessKey: process.env.UNSPLASH_ACCESS_KEY });
     }
-  }, ({ expectedRevision, filePath }) => runTool(async () => {
     const { documentAdapter, root } = await projectContext();
     const current = await documentAdapter.open();
-    if (current.revision !== expectedRevision) throw new SlideXRevisionConflictError(current.revision);
-    if (/^(?:data|blob|https?):/i.test(filePath)) throw new Error("filePath must be a local file path, not Base64 or a URL.");
-    const inputPath = resolveInsideRoot(root, filePath);
+    if (current.revision !== input.expectedRevision) throw new SlideXRevisionConflictError(current.revision);
+    if (input.action === "import-trusted") {
+      const downloaded = await downloadTrustedImage(input.providerAssetId, { accessKey: process.env.UNSPLASH_ACCESS_KEY });
+      const asset = await importSlideXImageAsset({
+        bytes: downloaded.bytes,
+        fileName: `unsplash-${input.providerAssetId}.${downloaded.mediaType.split("/")[1] ?? "jpg"}`,
+        mediaType: downloaded.mediaType,
+        projectRoot: root
+      });
+      await appendImageProvenance(root, {
+        ...downloaded.photo,
+        importedAt: new Date().toISOString(),
+        source: asset.source
+      });
+      return { ...asset, provenance: downloaded.photo, revision: current.revision };
+    }
+    if (/^(?:data|blob|https?):/i.test(input.filePath)) throw new Error("filePath must be a local file path, not Base64 or a URL.");
+    const inputPath = resolveInsideRoot(root, input.filePath);
     await access(inputPath);
     const canonicalRoot = await realpath(root);
     const canonicalInput = resolveInsideRoot(canonicalRoot, await realpath(inputPath));
@@ -367,15 +257,49 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     return { ...asset, revision: current.revision };
   }));
 
+  server.registerTool("open_slidex_review", {
+    title: "Review OpenSlideX presentation",
+    description: "Run structural validation and rendered visual QA together, returning one immutable slide or montage preview. Use for review-only work; edits already include this gate.",
+    inputSchema: {
+      scope: z.enum(["deck", "slide"]).default("deck"),
+      slideIndex: z.number().int().min(0).optional()
+    }
+  }, ({ scope, slideIndex }, extra) => runTool(async () => {
+    const { documentAdapter, root } = await projectContext();
+    const document = await documentAdapter.open();
+    const mode = scope === "slide" ? "slide" : "deck";
+    const revisionDirectory = document.revision.replace(/^sha256:/, "");
+    const dist = resolveInsideRoot(root, join("dist", "renders", revisionDirectory));
+    await mkdir(dist, { recursive: true });
+    const previewOutputPath = join(dist, mode === "deck" ? "montage.png" : `slide-${slideIndex ?? 0}.png`);
+    const report = await analyzeSlideXDocumentQuality({
+      mode,
+      previewOutputPath,
+      projectRoot: root,
+      slideIndex: mode === "slide" ? slideIndex ?? 0 : undefined,
+      source: document.source,
+      title: document.title,
+      signal: extra.signal
+    });
+    return {
+      preview: report.preview,
+      report,
+      revision: document.revision,
+      validation: summarizeMotionDoc(document.source).validation
+    };
+  }));
+
   server.registerTool("open_slidex_edit", {
     title: "Edit OpenSlideX presentation",
-    description: "Build and structurally validate a candidate batch, render-check it, return an immutable preview, and atomically write only when visual QA passes. A rejected result includes rejectedCandidateId; retry with that ID and small patch commands instead of regenerating the whole candidate. Revision conflicts are terminal.",
+    description: "Replace one complete deck or one complete slide. The server rejects removed components, validates deterministic geometry, render-checks the candidate, and atomically writes only when visual QA passes.",
     inputSchema: {
-      commands: z.array(editCommandSchema).min(1).max(100),
       expectedRevision: z.string().startsWith("sha256:"),
-      rejectedCandidateId: z.string().uuid().optional()
+      rejectedCandidateId: z.string().uuid().optional(),
+      slideIndex: z.number().int().min(0).optional(),
+      source: z.string().min(1),
+      target: z.enum(["deck", "slide"])
     }
-  }, ({ commands, expectedRevision, rejectedCandidateId }, extra) => runTool(async () => {
+  }, ({ expectedRevision, rejectedCandidateId, slideIndex, source, target }, extra) => runTool(async () => {
     const { documentAdapter, root } = await projectContext();
     extra.signal.throwIfAborted();
     const current = await documentAdapter.open();
@@ -391,49 +315,58 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     if (rejected && rejected.attempts >= 3) {
       throw new Error("The rejected candidate reached its patch retry limit. Build a materially different candidate.");
     }
-    const typedCommands = commands as SlideXEditCommand[];
-    const candidate = applySlideXBatch(rejected?.source ?? current.source, typedCommands);
-    const candidateRevision = createCandidateRevision(candidate.source);
-    const qualityScope = qualityScopeForCommands(typedCommands);
-    const previewOutputPath = qualityScope
-      ? resolveInsideRoot(root, join(
-          "dist",
-          "renders",
-          candidateRevision.replace(/^sha256:/, ""),
-          qualityScope.mode === "slide" ? `slide-${qualityScope.slideIndex ?? 0}.png` : "montage.png"
-        ))
-      : undefined;
-    const quality = qualityScope
-      ? await analyzeSlideXDocumentQuality({
-          ...qualityScope,
-          previewOutputPath,
-          projectRoot: root,
-          source: candidate.source,
-          title: parseMotionDoc(candidate.source).title,
-          signal: extra.signal
-        })
-      : undefined;
-    if (quality && !quality.passed) {
+    const baseSource = rejected?.source ?? current.source;
+    if (target === "slide" && slideIndex === undefined) {
+      throw new Error("slideIndex is required when target is slide.");
+    }
+    const candidateSource = target === "deck"
+      ? source
+      : applySlideXBatch(baseSource, [{ slideIndex: slideIndex!, slideSource: source, type: "slide.replace" }]).source;
+    assertToolbarNativeDocument(candidateSource);
+    const candidateDocument = parseMotionDoc(candidateSource);
+    const validation = summarizeMotionDoc(candidateSource).validation;
+    const blockingValidation = validation.issues.filter((issue) => issue.severity === "error");
+    if (blockingValidation.length > 0) {
+      throw new Error(`Candidate source is invalid: ${blockingValidation.slice(0, 6).map((issue) => issue.message).join(" ")}`);
+    }
+    const candidateRevision = createCandidateRevision(candidateSource);
+    const qualityScope = target === "slide"
+      ? { mode: "slide" as const, slideIndex }
+      : { mode: "deck" as const };
+    const previewOutputPath = resolveInsideRoot(root, join(
+      "dist",
+      "renders",
+      candidateRevision.replace(/^sha256:/, ""),
+      qualityScope.mode === "slide" ? `slide-${slideIndex}.png` : "montage.png"
+    ));
+    const quality = await analyzeSlideXDocumentQuality({
+      ...qualityScope,
+      previewOutputPath,
+      projectRoot: root,
+      source: candidateSource,
+      title: candidateDocument.title,
+      signal: extra.signal
+    });
+    if (!quality.passed) {
       const candidateId = rejectedCandidateId ?? randomUUID();
       rejectedCandidates.set(candidateId, {
         attempts: (rejected?.attempts ?? 0) + 1,
         expectedRevision,
         expiresAt: Date.now() + 10 * 60_000,
-        source: candidate.source
+        source: candidateSource
       });
       throw new SlideXVisualQualityGateError(current.revision, quality, candidateId);
     }
     extra.signal.throwIfAborted();
-    const candidateDocument = parseMotionDoc(candidate.source);
     const document = await documentAdapter.save({
       expectedRevision,
-      source: candidate.source,
+      source: candidateSource,
       title: candidateDocument.title
     });
     if (rejectedCandidateId) rejectedCandidates.delete(rejectedCandidateId);
     return {
       candidateQuality: quality,
-      preview: quality?.preview,
+      preview: quality.preview,
       revision: document.revision,
       stats: summarizeMotionDoc(document.source).stats,
       title: document.title,
@@ -444,33 +377,71 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   return server;
 }
 
-function qualityScopeForCommands(commands: readonly SlideXEditCommand[]): {
-  mode: "deck" | "slide";
-  slideIndex?: number;
-} | undefined {
-  const visualCommands = commands.filter((command) => command.type !== "document.setTitle");
-  if (visualCommands.length === 0) return undefined;
-
-  const slideIndices = new Set<number>();
-  for (const command of visualCommands) {
-    if (
-      command.type === "asset.repath" ||
-      command.type === "slide.add" ||
-      command.type === "slide.delete" ||
-      command.type === "slide.duplicate" ||
-      command.type === "slide.reorder" ||
-      command.type === "slide.applyLayout" && command.slideIndex === undefined
-    ) {
-      return { mode: "deck" };
+async function resolveAuthoringGuidanceRoot(deckRoot: string, configuredWorkspaceRoot?: string) {
+  const candidates = [
+    deckRoot,
+    ...(configuredWorkspaceRoot ? [dirname(configuredWorkspaceRoot), configuredWorkspaceRoot] : [])
+  ];
+  for (const candidate of [...new Set(candidates)]) {
+    try {
+      const skillDirectory = await stat(join(candidate, ".agents", "skills"));
+      if (skillDirectory.isDirectory()) return candidate;
+    } catch (error) {
+      if (!isNodeError(error) || error.code !== "ENOENT") throw error;
     }
-    if ("slideIndex" in command && typeof command.slideIndex === "number") {
-      slideIndices.add(command.slideIndex);
+  }
+  return deckRoot;
+}
+
+function assertToolbarNativeDocument(source: string) {
+  const removed = removedMotionDocTags.filter((tag) => new RegExp(`<${tag}\\b`).test(source));
+  if (removed.length > 0) {
+    throw new Error(
+      `Removed MotionDoc component${removed.length === 1 ? "" : "s"}: ${removed.join(", ")}. ` +
+      "These tags are no longer parsed or supported."
+    );
+  }
+  for (const [slideIndex, range] of motionDocSlideSourceRanges(source).entries()) {
+    assertToolbarNativeSlideSource(range.source, `slide ${slideIndex + 1}`);
+  }
+}
+
+function assertToolbarNativeSlideSource(source: string, label: string) {
+  const tags = [...source.matchAll(/<\/?([A-Z][A-Za-z0-9]*)\b/g)].map((match) => match[1]);
+  const forbidden = [...new Set(tags.filter((tag) => !authorableMotionDocTags.has(tag)))];
+  if (forbidden.length > 0) {
+    throw new Error(
+      `${label} may only use Workspace toolbar layers. ` +
+      `Unsupported component${forbidden.length === 1 ? "" : "s"}: ${forbidden.join(", ")}. ` +
+      "Use Text, ImageBlock, VideoBlock, Chart, Table, or Shape with explicit geometry."
+    );
+  }
+
+  for (const match of source.matchAll(/<(Text|Chart|ImageBlock|Shape|Table|VideoBlock)\b([^>]*)>/g)) {
+    const tag = match[1];
+    const attributes = match[2] ?? "";
+    const missing = ["id", "x", "y", "w", "h"].filter(
+      (key) => !new RegExp(`\\b${key}\\s*=`).test(attributes)
+    );
+    if (missing.length > 0) {
+      throw new Error(
+        `${label} <${tag}> is missing deterministic layer attributes: ${missing.join(", ")}. ` +
+        "Every MCP-authored visible layer needs a stable id and explicit percentage x/y/w/h geometry."
+      );
     }
   }
 
-  return slideIndices.size === 1
-    ? { mode: "slide", slideIndex: [...slideIndices][0] }
-    : { mode: "deck" };
+  const visibleRemainder = source
+    .replace(/<Text\b[^>]*>[\s\S]*?<\/Text>/g, "")
+    .replace(/<(?:Chart|ImageBlock|Shape|Table|VideoBlock)\b[^>]*\/>/g, "")
+    .replace(/<\/?Slide\b[^>]*>/g, "")
+    .trim();
+  if (visibleRemainder) {
+    throw new Error(
+      `${label} contains visible Markdown or malformed component markup outside toolbar-native layers. ` +
+      "Put visible copy inside positioned <Text> layers."
+    );
+  }
 }
 
 class OpenSlideXWorkspaceMcpScope {
@@ -567,7 +538,7 @@ async function main() {
 
 export type OpenSlideXMcpClient = "claude" | "claude-code" | "claude-desktop" | "codex";
 export type OpenSlideXPlatform = "macos" | "windows";
-export const openSlideXMcpNpxPackage = "open-slidex@0.3.4";
+export const openSlideXMcpNpxPackage = "open-slidex@latest";
 
 export function openSlideXMcpConfig(
   client: OpenSlideXMcpClient,
@@ -647,7 +618,7 @@ export function openSlideXMcpSetupPrompt(
     "",
     openSlideXMcpConfig(client, absoluteRoot, platform),
     "",
-    "After configuration, restart the client when required and verify open_slidex_open, open_slidex_edit with expectedRevision, open_slidex_render, and open_slidex_quality_check."
+    "After configuration, restart the client when required and verify open_slidex_read, open_slidex_edit with expectedRevision, and open_slidex_review."
   ].join("\n");
 }
 
@@ -668,7 +639,7 @@ export function openSlideXWorkspaceMcpSetupPrompt(
     "",
     openSlideXWorkspaceMcpConfig(client, absoluteRoot, platform),
     "",
-    "After restarting the client, call open_slidex_workspace_list, select a presentation, then verify open_slidex_open and open_slidex_validate."
+    "After restarting the client, use open_slidex_workspace to list and select a presentation, then verify open_slidex_read and open_slidex_review."
   ].join("\n");
 }
 
@@ -729,33 +700,6 @@ function sourceChecksum(source: string) {
 
 function createCandidateRevision(source: string) {
   return `sha256:${sourceChecksum(source)}`;
-}
-
-function templateRoleSamples(
-  source: string,
-  slideRoles: readonly string[],
-  requestedRoles?: readonly string[]
-) {
-  const ranges = motionDocSlideSourceRanges(source);
-  const wanted = requestedRoles?.length
-    ? [...new Set(requestedRoles)]
-    : [...new Set(slideRoles)].slice(0, 4);
-  const selected = new Set<number>();
-  for (const role of wanted) {
-    const index = slideRoles.findIndex((candidate, slideIndex) => candidate === role && !selected.has(slideIndex));
-    if (index >= 0 && ranges[index]) selected.add(index);
-  }
-  if (selected.size === 0 && ranges[0]) selected.add(0);
-  return [...selected].map((slideIndex) => {
-    const sample = ranges[slideIndex]!.source;
-    return {
-      bytes: Buffer.byteLength(sample),
-      checksum: sourceChecksum(sample),
-      role: slideRoles[slideIndex] ?? "slide",
-      slideIndex,
-      source: sample
-    };
-  });
 }
 
 function pruneRejectedCandidates(

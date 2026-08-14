@@ -21,7 +21,7 @@ import { fileURLToPath } from "node:url";
 
 // core/motion-doc/domain/officialTemplateDefinitions.ts
 var officialTemplatePackageVersion = "1.0.0";
-var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.4" };
+var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.5" };
 var officialTemplateDefinitions = [
   {
     id: "summer-time-report",
@@ -9014,17 +9014,15 @@ function motionDocBlocksFromMarkdownNode(node2, source) {
       },
       id
     );
-    if (node2.depth === 1) {
-      return [{ props, text: content3.text, type: "Title" }];
-    }
     return [{
       props: {
         ...props,
         fontSize: markdownHeadingFontSize(node2.depth),
-        fontWeight: 700
+        fontWeight: 700,
+        ...node2.depth === 1 ? { role: "title" } : {}
       },
       text: content3.text,
-      type: "heading"
+      type: node2.depth === 1 ? "Text" : "heading"
     }];
   }
   if (node2.type === "paragraph") {
@@ -9350,7 +9348,14 @@ function sanitizeMotionDocVideoSource(value) {
 
 // core/motion-doc/domain/motionDocParser.ts
 var mediaSourcePropNames = /* @__PURE__ */ new Set(["backgroundImage", "poster", "shapeImageSrc", "src"]);
+var removedComponentPattern = /<(Card|Metric|Stack|Group|Title|Icon|Notes)\b/;
 function parseMotionDoc(source) {
+  const removedComponent = source.match(removedComponentPattern)?.[1];
+  if (removedComponent) {
+    throw new Error(
+      `Unsupported MotionDoc component: ${removedComponent}. Rebuild it with Text, ImageBlock, VideoBlock, Chart, Table, or Shape.`
+    );
+  }
   const firstSlideOffset = source.search(/<(?:Slide|Scene)\b/);
   const documentHeader = firstSlideOffset >= 0 ? source.slice(0, firstSlideOffset) : source;
   const title = documentHeader.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? "Slider Preview";
@@ -9366,40 +9371,19 @@ function parseMotionDoc(source) {
       return {
         duration: typeof durationValue === "number" && Number.isFinite(durationValue) ? durationValue : 0,
         props,
-        blocks: parseSceneBlocks(removeSpeakerNotes(sceneSource)),
-        notes: parseSpeakerNotes(sceneSource)
+        blocks: parseSceneBlocks(sceneSource)
       };
     })
   };
 }
-function parseSpeakerNotes(sceneSource) {
-  const match = sceneSource.match(/<Notes\b[^>]*>([\s\S]*?)<\/Notes>/);
-  if (!match) return void 0;
-  const markdown = dedentSpeakerNotes(match[1] ?? "");
-  const plainText = parseMotionDocMarkdown(markdown).flatMap((block) => "text" in block ? [block.text] : []).join("\n").trim();
-  return { markdown, plainText };
-}
-function dedentSpeakerNotes(source) {
-  const lines = source.replace(/\r\n?/g, "\n").split("\n");
-  while (lines[0]?.trim() === "") lines.shift();
-  while (lines.at(-1)?.trim() === "") lines.pop();
-  const indent2 = Math.min(
-    ...lines.filter((line) => line.trim()).map((line) => line.match(/^[ \t]*/)?.[0].length ?? 0)
-  );
-  return lines.map((line) => line.slice(Number.isFinite(indent2) ? indent2 : 0)).join("\n").trimEnd();
-}
-function removeSpeakerNotes(sceneSource) {
-  return sceneSource.replace(/<Notes\b[^>]*>[\s\S]*?<\/Notes>/g, "\n");
-}
 function parseSceneBlocks(sceneSource) {
-  const normalizedSceneSource = expandGroupMarkup(sceneSource);
   const blocks = [];
-  const blockPattern = /<(Title|Text)\b([^>]*)>([\s\S]*?)<\/\1>|<(Card|Chart|ImageBlock|VideoBlock|Metric|Icon|Shape|Stack|Table)\b([\s\S]*?)\/>/g;
+  const blockPattern = /<(Text)\b([^>]*)>([\s\S]*?)<\/\1>|<(Chart|ImageBlock|VideoBlock|Shape|Table)\b([\s\S]*?)\/>/g;
   let cursor = 0;
-  for (const match of normalizedSceneSource.matchAll(blockPattern)) {
+  for (const match of sceneSource.matchAll(blockPattern)) {
     const matchStart = match.index ?? cursor;
     blocks.push(
-      ...parseMotionDocMarkdown(normalizedSceneSource.slice(cursor, matchStart))
+      ...parseMotionDocMarkdown(sceneSource.slice(cursor, matchStart))
     );
     const pairedType = match[1];
     const selfClosingType = match[4];
@@ -9424,23 +9408,8 @@ function parseSceneBlocks(sceneSource) {
       });
     }
   }
-  blocks.push(...parseMotionDocMarkdown(normalizedSceneSource.slice(cursor)));
+  blocks.push(...parseMotionDocMarkdown(sceneSource.slice(cursor)));
   return blocks;
-}
-function expandGroupMarkup(sceneSource) {
-  return sceneSource.replace(/<Group\b([^>]*)>([\s\S]*?)<\/Group>/g, (_match, rawProps, children, offset) => {
-    const props = parseProps(rawProps);
-    const groupId = String(props.id ?? props.groupId ?? `group-${offset}`);
-    const groupName = String(props.name ?? props.groupName ?? "Group");
-    const groupAttrs = ` groupId="${encodeInjectedAttribute(groupId)}" groupName="${encodeInjectedAttribute(groupName)}"`;
-    return children.replace(
-      /<(Title|Text|Card|Chart|ImageBlock|VideoBlock|Metric|Icon|Shape|Stack|Table)\b/g,
-      (opening) => `${opening}${groupAttrs}`
-    );
-  });
-}
-function encodeInjectedAttribute(value) {
-  return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 function parseProps(rawProps) {
   const props = {};
@@ -9616,60 +9585,17 @@ function slidePattern() {
 function generateSlideString(slide) {
   const identifiedSlide = ensureMotionDocSceneBlockIds(slide);
   const tag = formatSlideTag(identifiedSlide.props);
-  const blockStrings = [];
-  for (let index2 = 0; index2 < identifiedSlide.blocks.length; ) {
-    const block = identifiedSlide.blocks[index2];
-    const groupId = groupIdOf(block);
-    if (!groupId) {
-      blockStrings.push(`  ${generateBlockString(block)}`);
-      index2 += 1;
-      continue;
-    }
-    const groupedBlocks = [];
-    while (index2 < identifiedSlide.blocks.length && groupIdOf(identifiedSlide.blocks[index2]) === groupId) {
-      groupedBlocks.push(identifiedSlide.blocks[index2]);
-      index2 += 1;
-    }
-    blockStrings.push(indentGroupString(generateGroupString(groupedBlocks, groupId)));
-  }
-  const notes = identifiedSlide.notes?.markdown.trim();
-  const notesString = notes ? `
-  <Notes>
-${notes.split("\n").map((line) => `    ${line}`).join("\n")}
-  </Notes>` : "";
+  const blockStrings = identifiedSlide.blocks.map((block) => `  ${generateBlockString(block)}`);
   return `${tag}
-${blockStrings.join("\n")}${notesString}
+${blockStrings.join("\n")}
 </Slide>`;
-}
-function generateGroupString(blocks, groupId) {
-  const identifiedBlocks = ensureMotionDocBlockIds(blocks);
-  const namedBlock = identifiedBlocks.find((block) => "props" in block && typeof block.props.groupName === "string");
-  const groupName = namedBlock?.props.groupName;
-  const nameAttr = typeof groupName === "string" && groupName.trim() ? ` name="${escapeMdxAttribute(groupName)}"` : "";
-  const children = identifiedBlocks.map((block) => `  ${generateBlockStringWithProps(block, withoutGroupProps("props" in block ? block.props : void 0))}`);
-  return `<Group id="${escapeMdxAttribute(groupId)}"${nameAttr}>
-${children.join("\n")}
-</Group>`;
-}
-function indentGroupString(value) {
-  return value.split("\n").map((line) => `  ${line}`).join("\n");
-}
-function groupIdOf(block) {
-  return "props" in block && typeof block.props.groupId === "string" && block.props.groupId.trim() ? block.props.groupId : "";
-}
-function withoutGroupProps(props) {
-  if (!props) return props;
-  const { groupId, groupName, ...rest } = props;
-  void groupId;
-  void groupName;
-  return rest;
 }
 function generateBlockString(block) {
   const identifiedBlock = ensureMotionDocBlockIds([block])[0] ?? block;
   return generateBlockStringWithProps(identifiedBlock, "props" in identifiedBlock ? identifiedBlock.props : void 0);
 }
 function generateBlockStringWithProps(block, overrideProps) {
-  if (block.type === "Title" || block.type === "Text") {
+  if (block.type === "Text") {
     const propsStr = formatTextProps(overrideProps ?? block.props);
     return `<${block.type}${propsStr ? " " + propsStr : ""}>${escapeMdxText(block.text)}</${block.type}>`;
   }
@@ -9790,7 +9716,7 @@ function fullHdFontPixelsToPoints(value) {
   return roundFontSize(value * CSS_PIXELS_TO_POINTS / MOTION_DOC_TYPOGRAPHY_SCALE);
 }
 function motionDocDefaultFontSize(type) {
-  return type === "Title" ? MOTION_DOC_FONT_SIZES.display : MOTION_DOC_FONT_SIZES.body;
+  return type === "heading" ? MOTION_DOC_FONT_SIZES.heading : MOTION_DOC_FONT_SIZES.body;
 }
 function roundFontSize(value) {
   return Math.round(value * 1e3) / 1e3;
@@ -9838,24 +9764,20 @@ function materializeFreeformScene(scene) {
   };
 }
 function defaultBlockFrame(block) {
-  if (block.type === "Title") return { x: 8, y: 12, w: 62, h: 18 };
+  if (isTitleText(block)) return { x: 8, y: 12, w: 62, h: 18 };
   if (block.type === "Text") return { x: 8, y: 38, w: 52, h: 16 };
-  if (block.type === "Card") return { x: 8, y: 38, w: 40, h: 32 };
-  if (block.type === "Metric") return { x: 8, y: 38, w: 32, h: 36 };
-  if (block.type === "Icon") return { x: 42, y: 28, w: 16, h: 28 };
   if (block.type === "Shape") return { x: 34, y: 30, w: 28, h: 28 };
-  if (block.type === "Stack") return { x: 10, y: 64, w: 80, h: 20 };
   if (block.type === "ImageBlock" || block.type === "VideoBlock") return { x: 8, y: 16, w: 72, h: 52 };
   return { x: 8, y: 12, w: 42, h: 18 };
 }
 function layoutBlock(block, originalIndex, blocksWithProps, hasCenteredCopy) {
   const defaults = defaultBlockFrame(block);
   const propIndex = blocksWithProps.findIndex((item) => item === block);
-  const titleIndex = blocksWithProps.findIndex((item) => item.type === "Title");
+  const titleIndex = blocksWithProps.findIndex(isTitleText);
   const titleOffset = titleIndex >= 0 && propIndex > titleIndex ? 1 : 0;
   const contentIndex = Math.max(propIndex - titleOffset, 0);
-  const contentBlocks = blocksWithProps.filter((item) => item.type !== "Title");
-  if (block.type === "Title") {
+  const contentBlocks = blocksWithProps.filter((item) => !isTitleText(item));
+  if (isTitleText(block)) {
     return hasCenteredCopy ? { x: 18, y: contentBlocks.length > 0 ? 26 : 34, w: 64, h: 18 } : { x: 8, y: 12, w: 64, h: 18 };
   }
   if (hasCenteredCopy && block.type === "Text") {
@@ -9885,14 +9807,11 @@ function singleBlockFrame(block, defaults) {
   if (block.type === "ImageBlock" || block.type === "VideoBlock") {
     return { x: 10, y: 20, w: 80, h: 54 };
   }
-  if (block.type === "Metric") {
-    return { x: 10, y: 40, w: 34, h: 36 };
-  }
   return { ...defaults, x: 8, y: 38 };
 }
 function defaultFontSize(block) {
-  if (block.type === "Title" || block.type === "Text") {
-    return motionDocDefaultFontSize(block.type);
+  if (block.type === "Text") {
+    return isTitleText(block) ? MOTION_DOC_FONT_SIZES.display : motionDocDefaultFontSize(block.type);
   }
   return void 0;
 }
@@ -9923,10 +9842,13 @@ function migrateOverrideFontSizes(overrides, convert2) {
   );
 }
 function defaultRadius(block) {
-  if (block.type === "Card" || block.type === "Icon" || block.type === "ImageBlock" || block.type === "Metric" || block.type === "Shape" || block.type === "Stack" || block.type === "VideoBlock") {
+  if (block.type === "ImageBlock" || block.type === "Shape" || block.type === "VideoBlock") {
     return 16;
   }
   return 0;
+}
+function isTitleText(block) {
+  return block.type === "Text" && (block.props.role === "title" || Number(block.props.fontSize) >= MOTION_DOC_FONT_SIZES.slideTitle);
 }
 
 // core/motion-doc/presets/templates/moodboard.ts
@@ -10201,8 +10123,7 @@ function createPackage(item) {
 
 // packages/open-slidex/src/cliOptions.ts
 var minimumNodeVersion = "22.12.0";
-var packageManagers = ["npm", "pnpm", "bun"];
-function parseCreateSlideXArguments(args, environment = process.env) {
+function parseCreateSlideXArguments(args) {
   if (args.includes("--help") || args.includes("-h")) {
     return { action: "help" };
   }
@@ -10210,7 +10131,6 @@ function parseCreateSlideXArguments(args, environment = process.env) {
     return { action: "version" };
   }
   let installDependencies = true;
-  let packageManager;
   let target;
   let templateId;
   let templateLocale = "en";
@@ -10246,29 +10166,6 @@ function parseCreateSlideXArguments(args, environment = process.env) {
       index2 += 1;
       continue;
     }
-    if (argument === "--package-manager") {
-      const value = args[index2 + 1];
-      if (!value || value.startsWith("-")) {
-        throw new Error("--package-manager requires npm, pnpm, or bun.");
-      }
-      packageManager = selectPackageManager(packageManager, value);
-      index2 += 1;
-      continue;
-    }
-    if (argument.startsWith("--package-manager=")) {
-      packageManager = selectPackageManager(
-        packageManager,
-        argument.slice("--package-manager=".length)
-      );
-      continue;
-    }
-    if (argument === "--npm" || argument === "--pnpm" || argument === "--bun") {
-      packageManager = selectPackageManager(
-        packageManager,
-        argument.slice(2)
-      );
-      continue;
-    }
     if (argument.startsWith("-")) {
       throw new Error(`Unknown option: ${argument}. Run open-slidex init --help.`);
     }
@@ -10280,23 +10177,9 @@ function parseCreateSlideXArguments(args, environment = process.env) {
   return {
     action: "create",
     installDependencies,
-    packageManager: packageManager ?? detectPackageManager(
-      environment.npm_config_user_agent,
-      environment.npm_execpath,
-      process.versions.bun
-    ),
     target: target ?? "my-slidex-deck",
     ...templateId ? { template: { id: templateId, locale: templateLocale } } : {}
   };
-}
-function detectPackageManager(userAgent, executablePath, bunVersion) {
-  if (bunVersion || executablePath?.toLowerCase().includes("bun")) {
-    return "bun";
-  }
-  const command = userAgent?.split(/\s+/, 1)[0]?.split("/", 1)[0];
-  if (isPackageManager(command)) return command;
-  if (executablePath?.toLowerCase().includes("pnpm")) return "pnpm";
-  return "npm";
 }
 function assertSupportedNodeVersion(currentVersion = process.versions.node) {
   const current = parseVersion(currentVersion);
@@ -10308,12 +10191,11 @@ function assertSupportedNodeVersion(currentVersion = process.versions.node) {
     );
   }
 }
-function installCommand(packageManager) {
-  return { args: ["install"], command: packageManager };
+function installCommand() {
+  return { args: ["install"], command: "npm" };
 }
-function runScriptCommand(packageManager, script) {
-  if (packageManager === "pnpm") return `pnpm ${script}`;
-  return `${packageManager} run ${script}`;
+function runScriptCommand(script) {
+  return `npm run ${script}`;
 }
 function createSlideXHelp() {
   return `Create a private, MDX-first OpenSlideX Local Workbench.
@@ -10324,37 +10206,15 @@ Usage:
 Options:
   --template <official-template-id> Create from an official template blueprint
   --locale <en|zh-TW>               Template language (default: en)
-  --package-manager <npm|pnpm|bun>  Select the installer
-  --npm                             Use npm
-  --pnpm                            Use pnpm
-  --bun                             Use bun
   --no-install                      Create files without installing dependencies
   -h, --help                        Show this help
   -v, --version                     Show the installed CLI version
 
 Examples:
-  npx open-slidex@0.3.4 init my-deck
-  pnpm dlx open-slidex@0.3.4 init my-deck
-  bunx open-slidex@0.3.4 init my-deck
-  open-slidex init my-deck --package-manager pnpm --no-install
+  npx open-slidex@latest init my-deck
+  open-slidex init my-deck --no-install
   open-slidex init my-deck --template summer-time-report --locale zh-TW
 `;
-}
-function selectPackageManager(current, requested) {
-  if (!isPackageManager(requested)) {
-    throw new Error(
-      `Unsupported package manager: ${requested || "missing"}. Use npm, pnpm, or bun.`
-    );
-  }
-  if (current && current !== requested) {
-    throw new Error(
-      `Choose only one package manager; received ${current} and ${requested}.`
-    );
-  }
-  return requested;
-}
-function isPackageManager(value) {
-  return packageManagers.includes(value);
 }
 function parseVersion(value) {
   const match = value.replace(/^v/, "").match(/^(\d+)\.(\d+)\.(\d+)/);
@@ -10395,7 +10255,7 @@ async function main() {
   );
   await assertTargetIsAvailable(targetDir);
   if (options.installDependencies) {
-    await assertPackageManagerAvailable(options.packageManager);
+    await assertNpmAvailable();
   }
   await mkdir(targetDir, { recursive: true });
   await cp(templateDir, targetDir, { recursive: true });
@@ -10403,18 +10263,18 @@ async function main() {
     path2.join(targetDir, "gitignore"),
     path2.join(targetDir, ".gitignore")
   );
+  await mkdir(path2.join(targetDir, "open-slidex-workspace"), { recursive: true });
   await replaceProjectName(targetDir, path2.basename(targetDir));
   if (options.template) {
-    await applyOfficialTemplate(targetDir, options.template);
+    await createInitialTemplateDeck(targetDir, templateDir, options.template);
   }
   if (options.installDependencies) {
-    const install = installCommand(options.packageManager);
+    const install = installCommand();
     await run(install.command, install.args, targetDir, "inherit");
   }
   process.stdout.write(
     completionMessage({
       installDependencies: options.installDependencies,
-      packageManager: options.packageManager,
       targetDir,
       templateId: options.template?.id
     })
@@ -10422,25 +10282,20 @@ async function main() {
 }
 function completionMessage({
   installDependencies,
-  packageManager,
   targetDir,
   templateId
 }) {
-  const install = installCommand(packageManager);
+  const install = installCommand();
   return [
     "",
     `Created OpenSlideX MDX-first Local Workbench in ${targetDir}`,
-    `Package manager: ${packageManager}`,
     ...templateId ? [`Official template: ${templateId}`] : [],
     "",
     `  cd ${path2.relative(process.cwd(), targetDir) || "."}`,
     ...installDependencies ? [] : [`  ${install.command} ${install.args.join(" ")}`],
-    `  ${runScriptCommand(packageManager, "dev")}`,
+    `  ${runScriptCommand("dev")}`,
     "",
-    "CLI checks and exports:",
-    `  ${runScriptCommand(packageManager, "validate")}`,
-    `  ${runScriptCommand(packageManager, "render")}`,
-    "",
+    ...templateId ? [`The ${templateId} deck is ready in open-slidex-workspace/.`, ""] : ["Create or import your first deck in Workspace.", ""],
     "Project-local OpenSlideX skills are ready in .agents/skills:",
     "  slidex-mdx-authoring",
     "  slidex-deck-design",
@@ -10474,6 +10329,14 @@ async function applyOfficialTemplate(root, reference) {
     "utf8"
   );
 }
+async function createInitialTemplateDeck(workspaceRoot, templateDir, reference) {
+  const deckRoot = path2.join(workspaceRoot, "open-slidex-workspace", reference.id);
+  await mkdir(path2.dirname(deckRoot), { recursive: true });
+  await cp(templateDir, deckRoot, { recursive: true });
+  await rename(path2.join(deckRoot, "gitignore"), path2.join(deckRoot, ".gitignore"));
+  await replaceProjectName(deckRoot, reference.id);
+  await applyOfficialTemplate(deckRoot, reference);
+}
 async function assertTargetIsAvailable(target) {
   const exists = await access(target).then(
     () => true,
@@ -10485,13 +10348,11 @@ async function assertTargetIsAvailable(target) {
     throw new Error(`Target directory is not empty: ${target}`);
   }
 }
-async function assertPackageManagerAvailable(packageManager) {
+async function assertNpmAvailable() {
   try {
-    await run(packageManager, ["--version"], process.cwd(), "ignore");
+    await run("npm", ["--version"], process.cwd(), "ignore");
   } catch {
-    throw new Error(
-      `${packageManager} is not available. Install it, select another package manager, or pass --no-install.`
-    );
+    throw new Error("npm is not available. Install npm or pass --no-install.");
   }
 }
 async function replaceProjectName(root, projectName) {

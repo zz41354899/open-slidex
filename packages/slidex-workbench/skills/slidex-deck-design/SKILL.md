@@ -1,75 +1,46 @@
 ---
 name: slidex-deck-design
-description: Art-direct polished, non-generic OpenSlideX presentations in editable MotionDoc MDX. Use when creating or redesigning a deck, choosing narrative structure, typography, spacing, color, imagery, composition, or a coherent visual system across slides.
+description: Turn a prompt, notes, document, research report, data brief, or existing deck into a polished editable OpenSlideX presentation. Use for narrative planning, information synthesis, layout systems, typography, color, imagery, charts, tables, or redesign.
 ---
 
 # OpenSlideX Deck Design
 
-Create one recognizable visual world for the deck. Resolve content hierarchy
-before decoration.
+Design from meaning outward. Every slide communicates one claim, earns its
+place in the story, and remains editable with native MotionDoc layers.
 
-## Direction
+## Progressive route
 
-1. Define the audience, presentation goal, tone, and one-sentence visual concept.
-2. Build a story arc: hook, context, evidence, decision, close.
-3. Choose one type system, spacing rhythm, palette, and image treatment.
-4. Vary composition while preserving margins, hierarchy, and visual logic.
+1. Read [source to story](references/source-to-story.md) to classify the input,
+   preserve evidence, and define audience, decision, and missing information.
+2. Read [narrative patterns](references/narrative-patterns.md) and choose one
+   primary deck pattern.
+3. Read [visual direction](references/visual-direction.md) to establish the
+   composition, type, color, image, and data rules.
+4. Read exactly one closest native-layer example unless the task truly needs a
+   second pattern:
 
-Before writing MDX for a new deck, make a compact slide plan. For each slide,
-choose its narrative role, one-sentence claim, proof or next action, dominant
-focal element, content density, and image need. Adjacent slides must not reuse
-the same focal position, text width, and content density.
+   - Keynote, vision, brand story: [editorial story](references/editorial-story.mdx)
+   - KPI, research, status, operations: [data brief](references/data-brief.mdx)
+   - Product, sales, feature launch: [product launch](references/product-launch.mdx)
+   - Recommendation, board memo, plan: [strategy proposal](references/strategy-proposal.mdx)
+   - Lesson, onboarding, workshop: [training workshop](references/training-workshop.mdx)
 
-For a focused edit, inherit the existing deck's type, palette, spacing, and
-image language. Do not introduce a second visual system for one slide.
+Borrow reading paths and composition principles—not sample wording, facts,
+IDs, palettes, or brand claims.
 
-## Layout rules
+## Design pass
 
-- Use a 1920x1080 canvas with 6-8% outer margins.
-- Align to a 12-column mental grid and avoid near-miss alignment.
-- Give each slide one dominant focal element.
-- Prefer 42-72pt display text, 24-36pt headings, and 14-24pt body text.
-- Use whitespace as structure and avoid repeated generic card grids.
-- Limit a normal slide to one title plus roughly 3-5 meaningful content units.
-- Keep contrast and line length readable at presentation distance.
-- Leave at least 2.5% canvas distance between independent text frames. Large
-  numerals and display words need optical clearance beyond their declared box.
-- Size the frame for the rendered line height. Never solve overflow by reducing
-  body text below the readable scale.
+1. Write a one-line audience outcome and a one-line visual concept.
+2. Create a claim-led slide outline. Combine repetitive sections; do not make
+   one slide per source heading.
+3. Assign a distinct visual job to every slide: hook, explain, compare, prove,
+   sequence, decide, or close.
+4. Establish one coherent type system, restrained palette, spacing rhythm, and
+   media treatment. Vary focal position and density across adjacent slides.
+5. Compose with native layers. Prefer a chart or table only when it explains
+   evidence better than a sentence.
+6. Inspect the accepted montage for hierarchy, rhythm, contrast, density,
+   repetition, and accidental empty regions. Revise weak slides, not just errors.
 
-## Copy and typesetting
-
-- Give each slide one repeatable claim, one supporting reason, and one proof
-  point or next action. Do not fill space with generic adjectives.
-- Lead with the conclusion and use concrete verbs. Preserve unknown facts as a
-  clearly marked gap instead of inventing metrics, customers, or evidence.
-- Keep a headline to two rendered lines. Keep normal body copy to roughly three
-  to five rendered lines and split the idea when it needs more.
-- For `zh-TW`, avoid a final line containing only one or two CJK characters,
-  and never leave punctuation alone at the start or end of a line. Rewrite or
-  rebalance width before shrinking type.
-- For English, avoid one- or two-word widow lines and keep phrases intact when
-  a line break would weaken meaning.
-- Use manual line breaks only when they improve meaning and have been checked
-  in the rendered output; do not use them to force a fragile fit.
-
-## Images and data
-
-- Use supplied brand and user assets first.
-- Choose one image language and crop for composition without stretching.
-- Use data graphics only when they communicate evidence better than prose.
-- If no suitable image exists, compose with typography, shape, icon, and data
-  layers instead of fake URLs.
-
-Every slide must work as a still frame and remain editable native MDX.
-
-## Tool workflow
-
-- Inspect the selected slide before proposing visual changes.
-- Use `open_slidex_catalog` with the smallest relevant section; request `all`
-  only when planning a full deck.
-- Apply one revision-safe edit batch. `open_slidex_edit` performs structural
-  validation and rendered QA before writing, then returns the accepted preview.
-  Correct its node-specific findings through rejected-candidate patch retry.
-- Do not call validate, render, or quality-check again after an accepted edit.
-  Use those standalone tools only for an explicit read-only review.
+Never invent metrics, quotations, customers, citations, or media. Label gaps
+and uncertainty instead of filling them with plausible fiction.

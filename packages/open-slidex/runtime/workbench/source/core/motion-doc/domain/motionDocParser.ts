@@ -8,8 +8,16 @@ import { sanitizeMotionDocMediaSource } from "@/core/motion-doc/domain/mediaSour
 import { sanitizeMotionDocVideoSource } from "@/core/motion-doc/domain/videoSource";
 
 const mediaSourcePropNames = new Set(["backgroundImage", "poster", "shapeImageSrc", "src"]);
+const removedComponentPattern = /<(Card|Metric|Stack|Group|Title|Icon|Notes)\b/;
 
 export function parseMotionDoc(source: string): ParsedMotionDoc {
+  const removedComponent = source.match(removedComponentPattern)?.[1];
+  if (removedComponent) {
+    throw new Error(
+      `Unsupported MotionDoc component: ${removedComponent}. ` +
+      "Rebuild it with Text, ImageBlock, VideoBlock, Chart, Table, or Shape."
+    );
+  }
   const firstSlideOffset = source.search(/<(?:Slide|Scene)\b/);
   const documentHeader =
     firstSlideOffset >= 0 ? source.slice(0, firstSlideOffset) : source;
@@ -32,65 +40,28 @@ export function parseMotionDoc(source: string): ParsedMotionDoc {
             ? durationValue
             : 0,
         props,
-        blocks: parseSceneBlocks(removeSpeakerNotes(sceneSource)),
-        notes: parseSpeakerNotes(sceneSource)
+        blocks: parseSceneBlocks(sceneSource)
       };
     })
   };
 }
 
-function parseSpeakerNotes(sceneSource: string) {
-  const match = sceneSource.match(/<Notes\b[^>]*>([\s\S]*?)<\/Notes>/);
-  if (!match) return undefined;
-  const markdown = dedentSpeakerNotes(match[1] ?? "");
-  const plainText = parseMotionDocMarkdown(markdown)
-    .flatMap((block) => "text" in block ? [block.text] : [])
-    .join("\n")
-    .trim();
-
-  return { markdown, plainText };
-}
-
-function dedentSpeakerNotes(source: string) {
-  const lines = source.replace(/\r\n?/g, "\n").split("\n");
-  while (lines[0]?.trim() === "") lines.shift();
-  while (lines.at(-1)?.trim() === "") lines.pop();
-  const indent = Math.min(
-    ...lines
-      .filter((line) => line.trim())
-      .map((line) => line.match(/^[ \t]*/)?.[0].length ?? 0)
-  );
-  return lines
-    .map((line) => line.slice(Number.isFinite(indent) ? indent : 0))
-    .join("\n")
-    .trimEnd();
-}
-
-function removeSpeakerNotes(sceneSource: string) {
-  return sceneSource.replace(/<Notes\b[^>]*>[\s\S]*?<\/Notes>/g, "\n");
-}
-
 function parseSceneBlocks(sceneSource: string): MotionDocBlock[] {
-  const normalizedSceneSource = expandGroupMarkup(sceneSource);
   const blocks: MotionDocBlock[] = [];
   const blockPattern =
-    /<(Title|Text)\b([^>]*)>([\s\S]*?)<\/\1>|<(Card|Chart|ImageBlock|VideoBlock|Metric|Icon|Shape|Stack|Table)\b([\s\S]*?)\/>/g;
+    /<(Text)\b([^>]*)>([\s\S]*?)<\/\1>|<(Chart|ImageBlock|VideoBlock|Shape|Table)\b([\s\S]*?)\/>/g;
   let cursor = 0;
 
-  for (const match of normalizedSceneSource.matchAll(blockPattern)) {
+  for (const match of sceneSource.matchAll(blockPattern)) {
     const matchStart = match.index ?? cursor;
     blocks.push(
-      ...parseMotionDocMarkdown(normalizedSceneSource.slice(cursor, matchStart))
+      ...parseMotionDocMarkdown(sceneSource.slice(cursor, matchStart))
     );
-    const pairedType = match[1] as "Title" | "Text" | undefined;
+    const pairedType = match[1] as "Text" | undefined;
     const selfClosingType = match[4] as
-      | "Card"
       | "Chart"
-      | "Icon"
       | "ImageBlock"
-      | "Metric"
       | "Shape"
-      | "Stack"
       | "Table"
       | "VideoBlock"
       | undefined;
@@ -119,27 +90,9 @@ function parseSceneBlocks(sceneSource: string): MotionDocBlock[] {
 
   }
 
-  blocks.push(...parseMotionDocMarkdown(normalizedSceneSource.slice(cursor)));
+  blocks.push(...parseMotionDocMarkdown(sceneSource.slice(cursor)));
 
   return blocks;
-}
-
-function expandGroupMarkup(sceneSource: string) {
-  return sceneSource.replace(/<Group\b([^>]*)>([\s\S]*?)<\/Group>/g, (_match, rawProps: string, children: string, offset: number) => {
-    const props = parseProps(rawProps);
-    const groupId = String(props.id ?? props.groupId ?? `group-${offset}`);
-    const groupName = String(props.name ?? props.groupName ?? "Group");
-    const groupAttrs = ` groupId="${encodeInjectedAttribute(groupId)}" groupName="${encodeInjectedAttribute(groupName)}"`;
-
-    return children.replace(
-      /<(Title|Text|Card|Chart|ImageBlock|VideoBlock|Metric|Icon|Shape|Stack|Table)\b/g,
-      (opening) => `${opening}${groupAttrs}`
-    );
-  });
-}
-
-function encodeInjectedAttribute(value: string) {
-  return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
 function parseProps(rawProps: string): MotionDocProps {

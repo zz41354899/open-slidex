@@ -1,8 +1,6 @@
 import { createHash } from "node:crypto";
-import { readFile, realpath, stat } from "node:fs/promises";
+import { readFile, readdir, realpath, stat } from "node:fs/promises";
 import path from "node:path";
-
-import { parseTemplateRef } from "@open-slidex/sdk";
 
 export const openSlideXProjectSkillNames = [
   "slidex-mdx-authoring",
@@ -26,90 +24,154 @@ export type OpenSlideXGuidanceIntent = (typeof openSlideXGuidanceIntents)[number
 
 const intentSkills = {
   authoring: ["slidex-mdx-authoring"],
-  create: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-deck-qa"],
+  create: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-motion-direction", "slidex-deck-qa"],
   design: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-deck-qa"],
   motion: ["slidex-mdx-authoring", "slidex-motion-direction", "slidex-deck-qa"],
   qa: ["slidex-deck-qa"],
-  redesign: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-deck-qa"]
+  redesign: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-motion-direction", "slidex-deck-qa"]
 } as const satisfies Record<OpenSlideXGuidanceIntent, readonly OpenSlideXProjectSkillName[]>;
 
-const maximumGuidanceBytes = 64 * 1024;
-const guidanceCache = new Map<string, { signature: string; value: OpenSlideXProjectSkill }>();
+const maximumGuidanceBytes = 256 * 1024;
+const guidanceCache = new Map<string, { signature: string; value: OpenSlideXGuidanceResource }>();
+const referenceExtensions = new Set([".json", ".md", ".mdx", ".txt"]);
 
-export type OpenSlideXProjectSkill = {
+export type OpenSlideXGuidanceResource = {
   bytes: number;
   checksum: string;
   content: string;
   description: string;
-  name: OpenSlideXProjectSkillName;
+  kind: "reference" | "skill";
   path: string;
+  skill: OpenSlideXProjectSkillName;
 };
 
-export async function readOpenSlideXProjectSkill(root: string, skill: OpenSlideXProjectSkillName) {
+type OpenSlideXGuidanceResourceMetadata = Omit<OpenSlideXGuidanceResource, "content">;
+
+export async function readOpenSlideXProjectGuidanceManifest(
+  root: string,
+  intent: OpenSlideXGuidanceIntent
+) {
+  const skills = await Promise.all(openSlideXProjectSkillNames.map(async (skill) => {
+    const skillResource = await readOpenSlideXProjectGuidanceResource(
+      root,
+      `.agents/skills/${skill}/SKILL.md`
+    );
+    const references = await listSkillReferences(root, skill);
+    return {
+      ...withoutContent(skillResource),
+      references: references.map(withoutContent)
+    };
+  }));
+
+  return {
+    intent,
+    mode: "manifest" as const,
+    recommended: [...intentSkills[intent]],
+    skills,
+    totalBytes: skills.reduce(
+      (total, skill) => total + skill.bytes + skill.references.reduce((sum, resource) => sum + resource.bytes, 0),
+      0
+    ),
+    usage: "Read each recommended SKILL.md, then only the references it routes to. Pass an exact manifest path as resourcePath to open_slidex_read."
+  };
+}
+
+export async function readOpenSlideXProjectGuidanceResource(
+  root: string,
+  requestedPath: string
+): Promise<OpenSlideXGuidanceResource> {
+  const parsedPath = parseGuidancePath(requestedPath);
   const canonicalRoot = await realpath(root);
-  const requested = path.join(canonicalRoot, ".agents", "skills", skill, "SKILL.md");
+  const canonicalSkillRoot = await realpath(path.join(canonicalRoot, ".agents", "skills", parsedPath.skill));
+  assertInside(canonicalRoot, canonicalSkillRoot);
+  const requested = path.join(canonicalRoot, ...parsedPath.segments);
   const canonicalFile = await realpath(requested);
-  assertInside(canonicalRoot, canonicalFile);
+  assertInside(canonicalSkillRoot, canonicalFile);
+
   const fileStats = await stat(canonicalFile);
   if (!fileStats.isFile() || fileStats.size > maximumGuidanceBytes) {
-    throw new Error("The requested project skill is not a readable OpenSlideX skill.");
+    throw new Error("The requested OpenSlideX guidance resource is not readable.");
   }
+
   const signature = `${fileStats.size}:${fileStats.mtimeMs}`;
   const cached = guidanceCache.get(canonicalFile);
   if (cached?.signature === signature) return cached.value;
+
   const content = await readFile(canonicalFile, "utf8");
-  const value: OpenSlideXProjectSkill = {
+  const value: OpenSlideXGuidanceResource = {
     bytes: Buffer.byteLength(content),
     checksum: createHash("sha256").update(content).digest("hex"),
     content,
-    description: frontmatterDescription(content),
-    name: skill,
-    path: path.relative(canonicalRoot, canonicalFile).split(path.sep).join("/")
+    description: parsedPath.kind === "skill" ? frontmatterDescription(content) : referenceDescription(content),
+    kind: parsedPath.kind,
+    path: path.relative(canonicalRoot, canonicalFile).split(path.sep).join("/"),
+    skill: parsedPath.skill
   };
   guidanceCache.set(canonicalFile, { signature, value });
   return value;
 }
 
-export async function readOpenSlideXProjectSkillManifest(root: string) {
-  const skills = await Promise.all(openSlideXProjectSkillNames.map((skill) => readOpenSlideXProjectSkill(root, skill)));
-  return {
-    intents: Object.fromEntries(Object.entries(intentSkills).map(([intent, names]) => [intent, [...names]])),
-    mode: "manifest" as const,
-    skills: skills.map(({ bytes, checksum, description, name, path }) => ({ bytes, checksum, description, name, path }))
-  };
+async function listSkillReferences(root: string, skill: OpenSlideXProjectSkillName) {
+  const referencesRoot = path.join(root, ".agents", "skills", skill, "references");
+  const entries = await readdir(referencesRoot, { withFileTypes: true }).catch((error: unknown) => {
+    if (isNodeError(error) && error.code === "ENOENT") return [];
+    throw error;
+  });
+  return Promise.all(entries
+    .filter((entry) => entry.isFile() && referenceExtensions.has(path.extname(entry.name).toLowerCase()))
+    .sort((left, right) => left.name.localeCompare(right.name))
+    .map((entry) => readOpenSlideXProjectGuidanceResource(
+      root,
+      `.agents/skills/${skill}/references/${entry.name}`
+    )));
 }
 
-export async function readOpenSlideXProjectSkillBundle(root: string, intent: OpenSlideXGuidanceIntent) {
-  const names = intentSkills[intent];
-  const skills = await Promise.all(names.map((skill) => readOpenSlideXProjectSkill(root, skill)));
-  return {
-    intent,
-    mode: "bundle" as const,
-    order: [...names],
-    skills,
-    totalBytes: skills.reduce((total, skill) => total + skill.bytes, 0)
-  };
-}
-
-export async function readOpenSlideXTemplateLock(root: string) {
-  const canonicalRoot = await realpath(root);
-  const requested = path.join(canonicalRoot, ".open-slidex", "template-lock.json");
-  const canonicalFile = await realpath(requested);
-  assertInside(canonicalRoot, canonicalFile);
-  const fileStats = await stat(canonicalFile);
-  if (!fileStats.isFile() || fileStats.size > 8 * 1024) {
-    throw new Error("The OpenSlideX template lock is invalid.");
+function parseGuidancePath(requestedPath: string) {
+  if (requestedPath.includes("\\") || path.posix.normalize(requestedPath) !== requestedPath) {
+    throw new Error("resourcePath must be an exact path from the OpenSlideX guidance manifest.");
   }
-  return parseTemplateRef(JSON.parse(await readFile(canonicalFile, "utf8")));
+  const segments = requestedPath.split("/");
+  if (segments[0] !== ".agents" || segments[1] !== "skills") {
+    throw new Error("resourcePath must point to a project-local OpenSlideX skill resource.");
+  }
+  const skill = segments[2];
+  if (!openSlideXProjectSkillNames.includes(skill as OpenSlideXProjectSkillName)) {
+    throw new Error("resourcePath names an unapproved OpenSlideX skill.");
+  }
+  if (segments.length === 4 && segments[3] === "SKILL.md") {
+    return { kind: "skill" as const, segments, skill: skill as OpenSlideXProjectSkillName };
+  }
+  if (
+    segments.length === 5 &&
+    segments[3] === "references" &&
+    Boolean(segments[4]) &&
+    referenceExtensions.has(path.posix.extname(segments[4]!).toLowerCase())
+  ) {
+    return { kind: "reference" as const, segments, skill: skill as OpenSlideXProjectSkillName };
+  }
+  throw new Error("resourcePath must name SKILL.md or one direct file under that skill's references/ directory.");
+}
+
+function withoutContent(resource: OpenSlideXGuidanceResource): OpenSlideXGuidanceResourceMetadata {
+  const { content: _content, ...metadata } = resource;
+  return metadata;
 }
 
 function frontmatterDescription(content: string) {
   const match = content.match(/^---\s*\n[\s\S]*?^description:\s*(.+?)\s*$[\s\S]*?^---\s*$/m);
-  return match?.[1]?.replace(/^['"]|['"]$/g, "") ?? "Approved OpenSlideX project guidance.";
+  return match?.[1]?.replace(/^['"]|['"]$/g, "") ?? "Approved OpenSlideX project skill.";
+}
+
+function referenceDescription(content: string) {
+  return content.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? "Approved OpenSlideX skill reference.";
 }
 
 function assertInside(root: string, candidate: string) {
   if (candidate !== root && !candidate.startsWith(`${root}${path.sep}`)) {
     throw new Error("The requested guidance path escapes the OpenSlideX project root.");
   }
+}
+
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && "code" in error;
 }

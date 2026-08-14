@@ -72,14 +72,10 @@ export function Presenter({ initialSlide, onClose, source }: PresenterProps) {
             title={`Current slide ${slideIndex + 1}`}
           />
         </div>
-        <aside className="presenter-notes">
+        <aside className="presenter-sidebar">
           <div>
             <span>Next</span>
             <strong>{nextScene ? sceneTitle(nextScene, slideIndex + 1) : "End of deck"}</strong>
-          </div>
-          <div>
-            <span>Speaker notes</span>
-            <pre>{scene?.notes?.plainText || "No notes for this slide."}</pre>
           </div>
           <div className="presenter-controls">
             <button onClick={() => setSlideIndex((value) => Math.max(value - 1, 0))} type="button">Previous</button>

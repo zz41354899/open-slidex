@@ -170,7 +170,7 @@ function normalizeLayoutSourceTextMotion(layoutSource: string) {
 
 function normalizeLayoutBlocksTextMotion(blocks: MotionDocBlock[]) {
   return blocks.map((block) => {
-    if ((block.type !== "Title" && block.type !== "Text") || !("props" in block)) {
+    if (block.type !== "Text" || !("props" in block)) {
       return block;
     }
 
@@ -530,12 +530,7 @@ export function updatePositionedBlockFrames(slide: MotionDocScene, updates: Bloc
       ...frame
     };
 
-    blocks[blockIndex] = {
-      ...currentBlock,
-      props: currentBlock.type === "Icon"
-        ? { ...nextProps, size: Math.round(Math.min(Number(nextProps.w) / 100 * 1920, Number(nextProps.h) / 100 * 1080)) }
-        : nextProps
-    };
+    blocks[blockIndex] = { ...currentBlock, props: nextProps };
   }
 
   return { ...slide, blocks };
@@ -639,7 +634,7 @@ export function updateBlockInSlide(
     return null;
   }
 
-  if (currentBlock.type === "Title" || currentBlock.type === "Text" || currentBlock.type === "heading") {
+  if (currentBlock.type === "Text" || currentBlock.type === "heading") {
     const nextProps = withoutTextFrameOnlyProps(normalizeElementMotionProps(newProps));
 
     blocks[blockIndex] = {

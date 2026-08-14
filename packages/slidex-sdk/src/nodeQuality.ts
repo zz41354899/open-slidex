@@ -377,7 +377,7 @@ const measureRenderedSlideScript = String.raw`(() => {
   const slide = rect(slideElement.getBoundingClientRect());
   const blocks = Array.from(slideElement.querySelectorAll(".motion-block--positioned"))
     .map((block, blockIndex) => {
-      const content = block.querySelector(".block-title, .block-text") || block.firstElementChild;
+      const content = block.querySelector(".block-text") || block.firstElementChild;
       const text = (content?.textContent || "").replace(/\s+/g, " ").trim();
       const lineRects = content
         ? Array.from(content.querySelectorAll(".block-line")).map((line) => line.getBoundingClientRect())

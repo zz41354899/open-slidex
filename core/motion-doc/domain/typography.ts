@@ -86,9 +86,7 @@ export function matchingOfficeSpacingPreset(
 }
 
 export function motionDocDefaultFontSize(type: string) {
-  return type === "Title"
-    ? MOTION_DOC_FONT_SIZES.display
-    : MOTION_DOC_FONT_SIZES.body;
+  return type === "heading" ? MOTION_DOC_FONT_SIZES.heading : MOTION_DOC_FONT_SIZES.body;
 }
 
 function roundFontSize(value: number) {

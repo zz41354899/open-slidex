@@ -26,6 +26,17 @@ async function fixture() {
   await writeFile(path.join(templateRoot, "presentation.mdx"), "# Stale starter\n\n<Slide></Slide>\n", "utf8");
   await writeFile(path.join(templateRoot, ".open-slidex", "current.json"), "{}\n", "utf8");
   await writeFile(path.join(templateRoot, ".open-slidex", "template-lock.json"), `${JSON.stringify({ id: "stale" })}\n`, "utf8");
+  await mkdir(path.join(templateRoot, ".agents", "skills", "slidex-deck-design", "references"), { recursive: true });
+  await writeFile(
+    path.join(templateRoot, ".agents", "skills", "slidex-deck-design", "SKILL.md"),
+    "---\nname: slidex-deck-design\ndescription: Test deck design.\n---\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(templateRoot, ".agents", "skills", "slidex-deck-design", "references", "source-to-story.md"),
+    "# Source to story\n",
+    "utf8"
+  );
   const workspace = new OpenSlideXWorkspace({
     root: workspaceRoot,
     templateRoot,
@@ -48,6 +59,11 @@ test("local workspace creates isolated blank presentations without inherited run
   await assert.rejects(access(path.join(projectRoot, ".open-slidex", "current.json")));
   await assert.rejects(access(path.join(projectRoot, ".open-slidex", "template-lock.json")));
   assert.equal(JSON.parse(await readFile(path.join(projectRoot, "package.json"), "utf8")).name, created.id);
+  await access(path.join(projectRoot, ".agents", "skills", "slidex-deck-design", "SKILL.md"));
+  assert.match(
+    await readFile(path.join(projectRoot, ".agents", "skills", "slidex-deck-design", "references", "source-to-story.md"), "utf8"),
+    /Source to story/
+  );
 });
 
 test("local workspace still creates and imports decks when the starter folder is unavailable", async (context) => {
@@ -395,7 +411,7 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   assert.equal(mcpPayload.configPath, "~/.codex/config.toml");
   assert.equal(mcpPayload.workspaceRoot, workspaceRoot);
   assert.match(mcpPayload.config, /\[mcp_servers\.open_slidex_workspace\]/);
-  assert.match(mcpPayload.config, /open-slidex@0\.3\.4/);
+  assert.match(mcpPayload.config, /open-slidex@latest/);
   assert.match(mcpPayload.config, /--workspace/);
 
   const windowsMcpSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=codex&platform=windows`);

@@ -2903,8 +2903,8 @@ var require_utils = __commonJS({
       var result = transform[inputType][outputType](input);
       return result;
     };
-    exports.resolve = function(path9) {
-      var parts = path9.split("/");
+    exports.resolve = function(path10) {
+      var parts = path10.split("/");
       var result = [];
       for (var index = 0; index < parts.length; index++) {
         var part = parts[index];
@@ -8757,18 +8757,18 @@ var require_object = __commonJS({
       var object = new ZipObject(name, zipObjectContent, o);
       this.files[name] = object;
     };
-    var parentFolder = function(path9) {
-      if (path9.slice(-1) === "/") {
-        path9 = path9.substring(0, path9.length - 1);
+    var parentFolder = function(path10) {
+      if (path10.slice(-1) === "/") {
+        path10 = path10.substring(0, path10.length - 1);
       }
-      var lastSlash = path9.lastIndexOf("/");
-      return lastSlash > 0 ? path9.substring(0, lastSlash) : "";
+      var lastSlash = path10.lastIndexOf("/");
+      return lastSlash > 0 ? path10.substring(0, lastSlash) : "";
     };
-    var forceTrailingSlash = function(path9) {
-      if (path9.slice(-1) !== "/") {
-        path9 += "/";
+    var forceTrailingSlash = function(path10) {
+      if (path10.slice(-1) !== "/") {
+        path10 += "/";
       }
-      return path9;
+      return path10;
     };
     var folderAdd = function(name, createFolders) {
       createFolders = typeof createFolders !== "undefined" ? createFolders : defaults.createFolders;
@@ -9769,10 +9769,10 @@ var require_lib3 = __commonJS({
 
 // packages/slidex-workbench/src/cli.ts
 import { spawn } from "node:child_process";
-import { cp as cp2, mkdir as mkdir3, readFile as readFile3, readdir as readdir3, rm as rm3, stat as stat4, writeFile as writeFile3 } from "node:fs/promises";
+import { cp as cp3, readFile as readFile3, rm as rm4, stat as stat5, writeFile as writeFile3 } from "node:fs/promises";
 import { createServer as createServer3 } from "node:http";
 import { createRequire } from "node:module";
-import path8 from "node:path";
+import path9 from "node:path";
 import { fileURLToPath } from "node:url";
 
 // packages/slidex-workbench/src/server/project.ts
@@ -10309,11 +10309,53 @@ function exists(filePath) {
   return access(filePath).then(() => true, () => false);
 }
 
+// packages/slidex-workbench/src/server/projectSkills.ts
+import { cp, readdir as readdir2, rm as rm2, stat as stat2 } from "node:fs/promises";
+import path3 from "node:path";
+async function discoverOpenSlideXSkillTargets(invocationRoot) {
+  const root = path3.resolve(invocationRoot);
+  if (await isFile(path3.join(root, "presentation.mdx"))) return [root];
+  const targets = [root];
+  const workspaceRoot = path3.join(root, "open-slidex-workspace");
+  const entries = await readdir2(workspaceRoot, { withFileTypes: true }).catch((error) => {
+    if (isNodeError(error) && error.code === "ENOENT") return [];
+    throw error;
+  });
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
+    const candidate = path3.join(workspaceRoot, entry.name);
+    if (await isFile(path3.join(candidate, "presentation.mdx"))) targets.push(candidate);
+  }
+  return targets;
+}
+async function syncOpenSlideXProjectSkills(skillsRoot, targetRoots) {
+  const sourceEntries = (await readdir2(skillsRoot, { withFileTypes: true })).filter((entry) => entry.isDirectory() && !entry.name.startsWith("."));
+  if (sourceEntries.length === 0) throw new Error("The bundled OpenSlideX skills are missing.");
+  for (const targetRoot of targetRoots) {
+    const target = path3.join(targetRoot, ".agents", "skills");
+    for (const entry of sourceEntries) {
+      const targetSkill = path3.join(target, entry.name);
+      await rm2(targetSkill, { force: true, recursive: true });
+      await cp(path3.join(skillsRoot, entry.name), targetSkill, { recursive: true });
+    }
+  }
+  return {
+    skillCount: sourceEntries.length,
+    targetCount: targetRoots.length
+  };
+}
+async function isFile(filePath) {
+  return (await stat2(filePath).catch(() => void 0))?.isFile() === true;
+}
+function isNodeError(error) {
+  return error instanceof Error && "code" in error;
+}
+
 // packages/slidex-workbench/src/server/http.ts
 import { createReadStream, watch } from "node:fs";
-import { stat as stat2 } from "node:fs/promises";
+import { stat as stat3 } from "node:fs/promises";
 import { createServer } from "node:http";
-import path4 from "node:path";
+import path5 from "node:path";
 import { Readable } from "node:stream";
 import {
   SlideXImageAssetError,
@@ -10443,7 +10485,7 @@ async function documentRoutes(context) {
 }
 
 // packages/slidex-workbench/src/server/exportRoutes.ts
-import path3 from "node:path";
+import path4 from "node:path";
 async function exportRoutes(context) {
   const { outgoing, project, request, url } = context;
   if (url.pathname === "/api/v1/export" && request.method === "POST") {
@@ -10478,7 +10520,7 @@ async function exportRoutes(context) {
   return false;
 }
 function mimeType(filePath) {
-  const extension = path3.extname(filePath).toLowerCase();
+  const extension = path4.extname(filePath).toLowerCase();
   return {
     ".html": "text/html; charset=utf-8",
     ".mdx": "text/mdx; charset=utf-8",
@@ -10548,7 +10590,7 @@ data: {}
 `);
   };
   const documentWatcher = watch(
-    path4.join(project.root, "presentation.mdx"),
+    path5.join(project.root, "presentation.mdx"),
     { persistent: false },
     () => notify("document.changed")
   );
@@ -10588,12 +10630,12 @@ async function routeRequest(incoming, outgoing, input, router) {
   if (await router.route({ incoming, outgoing, request, url })) return;
   if (request.method === "GET") {
     const requested = url.pathname === "/" ? "index.html" : url.pathname.slice(1);
-    const filePath = path4.resolve(input.clientRoot, requested);
-    if (!filePath.startsWith(`${path4.resolve(input.clientRoot)}${path4.sep}`) && filePath !== path4.join(input.clientRoot, "index.html")) {
+    const filePath = path5.resolve(input.clientRoot, requested);
+    if (!filePath.startsWith(`${path5.resolve(input.clientRoot)}${path5.sep}`) && filePath !== path5.join(input.clientRoot, "index.html")) {
       sendJson(outgoing, { code: "not_found", message: "Not found." }, 404);
       return;
     }
-    const fileStats = await stat2(filePath).catch(() => null);
+    const fileStats = await stat3(filePath).catch(() => null);
     if (fileStats?.isFile()) {
       outgoing.writeHead(200, {
         "cache-control": requested === "index.html" ? "no-cache" : "public, max-age=31536000, immutable",
@@ -10661,7 +10703,7 @@ function sendWorkbenchError(response, error) {
   }, status);
 }
 function mimeType2(filePath) {
-  const extension = path4.extname(filePath).toLowerCase();
+  const extension = path5.extname(filePath).toLowerCase();
   return {
     ".css": "text/css; charset=utf-8",
     ".html": "text/html; charset=utf-8",
@@ -10676,18 +10718,18 @@ function mimeType2(filePath) {
 
 // packages/slidex-workbench/src/server/workspace.ts
 import {
-  cp,
+  cp as cp2,
   lstat,
   mkdir as mkdir2,
   readFile as readFile2,
-  readdir as readdir2,
+  readdir as readdir3,
   realpath,
   rename as rename2,
-  rm as rm2,
-  stat as stat3,
+  rm as rm3,
+  stat as stat4,
   writeFile as writeFile2
 } from "node:fs/promises";
-import path5 from "node:path";
+import path6 from "node:path";
 import {
   applySlideXBatch as applySlideXBatch2,
   blankPresentationMdx,
@@ -10708,10 +10750,10 @@ var OpenSlideXWorkspace = class {
   templateRoot;
   workspaceUrl;
   constructor(input) {
-    this.mcpPresentationRoot = input.mcpPresentationRoot ? path5.resolve(input.mcpPresentationRoot) : void 0;
-    this.root = path5.resolve(input.root);
-    this.stateRoot = path5.join(this.root, ".open-slidex-workspace");
-    this.templateRoot = path5.resolve(input.templateRoot);
+    this.mcpPresentationRoot = input.mcpPresentationRoot ? path6.resolve(input.mcpPresentationRoot) : void 0;
+    this.root = path6.resolve(input.root);
+    this.stateRoot = path6.join(this.root, ".open-slidex-workspace");
+    this.templateRoot = path6.resolve(input.templateRoot);
     this.workspaceUrl = input.workspaceUrl;
   }
   async prepare() {
@@ -10721,7 +10763,7 @@ var OpenSlideXWorkspace = class {
   async snapshot(locale) {
     return {
       locale,
-      name: path5.basename(this.root) || "OpenSlideX Workspace",
+      name: path6.basename(this.root) || "OpenSlideX Workspace",
       presentations: await this.listPresentations(),
       root: this.root,
       templates: officialTemplatePackages2.map((template) => ({
@@ -10740,7 +10782,7 @@ var OpenSlideXWorkspace = class {
     };
   }
   async listPresentations() {
-    const entries = await readdir2(this.root, { withFileTypes: true });
+    const entries = await readdir3(this.root, { withFileTypes: true });
     const presentations = await Promise.all(entries.flatMap((entry) => {
       if (!entry.isDirectory() || entry.name.startsWith(".")) return [];
       return [this.presentationSummary(entry.name)];
@@ -10761,16 +10803,16 @@ var OpenSlideXWorkspace = class {
         template ? template.sources[locale] : blankPresentationMdx,
         title
       );
-      await writeFile2(path5.join(target, "presentation.mdx"), source, "utf8");
+      await writeFile2(path6.join(target, "presentation.mdx"), source, "utf8");
       if (template) {
-        await writeJson(path5.join(target, ".open-slidex", "template-lock.json"), {
+        await writeJson(path6.join(target, ".open-slidex", "template-lock.json"), {
           id: template.id,
           locale,
           version: template.version
         });
       }
     } catch (error) {
-      await rm2(target, { force: true, recursive: true });
+      await rm3(target, { force: true, recursive: true });
       throw error;
     }
     const presentation = await this.presentationSummary(id);
@@ -10819,9 +10861,9 @@ var OpenSlideXWorkspace = class {
       if (!localMedia.isValid) {
         throw Object.assign(new Error(localMedia.issues[0]?.message ?? "The imported presentation contains unsupported media."), { status: 400 });
       }
-      await writeFile2(path5.join(target, "presentation.mdx"), importedSource, "utf8");
+      await writeFile2(path6.join(target, "presentation.mdx"), importedSource, "utf8");
     } catch (error) {
-      await rm2(target, { force: true, recursive: true });
+      await rm3(target, { force: true, recursive: true });
       throw error;
     }
     const presentation = await this.presentationSummary(id);
@@ -10878,18 +10920,18 @@ var OpenSlideXWorkspace = class {
     if (typeof value.confirmationTitle !== "string" || value.confirmationTitle !== document.title) {
       throw Object.assign(new Error("Enter the exact presentation title to confirm deletion."), { status: 400 });
     }
-    const trashRoot = path5.join(this.stateRoot, "trash");
+    const trashRoot = path6.join(this.stateRoot, "trash");
     await mkdir2(trashRoot, { recursive: true });
     const suffix = (/* @__PURE__ */ new Date()).toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
-    const target = path5.join(trashRoot, `${id}-${suffix}`);
+    const target = path6.join(trashRoot, `${id}-${suffix}`);
     await rename2(root, target);
     return { deleted: true, recoverableFrom: target };
   }
   async presentationSummary(id) {
     try {
       const root = await this.existingProjectRoot(id);
-      const documentPath = path5.join(root, "presentation.mdx");
-      const [document, fileStats] = await Promise.all([new SlideXProject(root).open(), stat3(documentPath)]);
+      const documentPath = path6.join(root, "presentation.mdx");
+      const [document, fileStats] = await Promise.all([new SlideXProject(root).open(), stat4(documentPath)]);
       return {
         cover: `/api/v1/workspace/presentations/${encodeURIComponent(id)}/cover.svg`,
         id,
@@ -10908,10 +10950,10 @@ var OpenSlideXWorkspace = class {
       realpath(this.root),
       realpath(candidate).catch(() => "")
     ]);
-    if (!canonicalProject || !canonicalProject.startsWith(`${canonicalWorkspace}${path5.sep}`)) {
+    if (!canonicalProject || !canonicalProject.startsWith(`${canonicalWorkspace}${path6.sep}`)) {
       throw Object.assign(new Error("The requested local presentation was not found."), { status: 404 });
     }
-    const documentStats = await stat3(path5.join(canonicalProject, "presentation.mdx")).catch(() => null);
+    const documentStats = await stat4(path6.join(canonicalProject, "presentation.mdx")).catch(() => null);
     if (!documentStats?.isFile()) {
       throw Object.assign(new Error("The requested local presentation was not found."), { status: 404 });
     }
@@ -10919,7 +10961,7 @@ var OpenSlideXWorkspace = class {
   }
   projectPath(id) {
     assertProjectId(id);
-    return path5.join(this.root, id);
+    return path6.join(this.root, id);
   }
   /**
    * A Workspace deck must remain creatable after npm installation even if a
@@ -10927,9 +10969,9 @@ var OpenSlideXWorkspace = class {
    * project conveniences; the MotionDoc and local state are created below.
    */
   async seedProject(target) {
-    const templateStats = await stat3(this.templateRoot).catch(() => null);
+    const templateStats = await stat4(this.templateRoot).catch(() => null);
     if (templateStats?.isDirectory()) {
-      await cp(this.templateRoot, target, { errorOnExist: true, force: false, recursive: true });
+      await cp2(this.templateRoot, target, { errorOnExist: true, force: false, recursive: true });
       return;
     }
     await mkdir2(target, { recursive: false });
@@ -10941,14 +10983,14 @@ var OpenSlideXWorkspace = class {
    */
   async recoverWorkspaceImageAsset(source) {
     if (!isOpenSlideXLocalAssetSource(source) || !source.toLowerCase().endsWith(".webp")) return void 0;
-    const fileName = path5.posix.basename(source);
+    const fileName = path6.posix.basename(source);
     for (const projectRoot of await this.workspaceProjectRoots()) {
-      const candidate = path5.join(projectRoot, "assets", fileName);
+      const candidate = path6.join(projectRoot, "assets", fileName);
       const [canonicalProjectRoot, canonicalAssetPath] = await Promise.all([
         realpath(projectRoot).catch(() => ""),
         realpath(candidate).catch(() => "")
       ]);
-      if (!canonicalProjectRoot || !canonicalAssetPath.startsWith(`${canonicalProjectRoot}${path5.sep}`)) continue;
+      if (!canonicalProjectRoot || !canonicalAssetPath.startsWith(`${canonicalProjectRoot}${path6.sep}`)) continue;
       const assetStats = await lstat(canonicalAssetPath).catch(() => null);
       if (!assetStats?.isFile() || assetStats.size > 25 * 1024 * 1024) continue;
       return {
@@ -10963,7 +11005,7 @@ var OpenSlideXWorkspace = class {
   async workspaceProjectRoots() {
     const [activeProjects, recoverableProjects] = await Promise.all([
       directChildDirectories(this.root),
-      directChildDirectories(path5.join(this.stateRoot, "trash"))
+      directChildDirectories(path6.join(this.stateRoot, "trash"))
     ]);
     return [...activeProjects, ...recoverableProjects];
   }
@@ -10971,14 +11013,14 @@ var OpenSlideXWorkspace = class {
     const base = projectSlug(title);
     for (let index = 0; index < 1e3; index += 1) {
       const id = index === 0 ? base : `${base}-${index + 1}`;
-      if (!await stat3(this.projectPath(id)).then(() => true, () => false)) return id;
+      if (!await stat4(this.projectPath(id)).then(() => true, () => false)) return id;
     }
     throw new Error("Could not allocate a local presentation folder.");
   }
 };
 async function directChildDirectories(root) {
-  const entries = await readdir2(root, { withFileTypes: true }).catch(() => []);
-  return entries.filter((entry) => entry.isDirectory() && !entry.name.startsWith(".")).map((entry) => path5.join(root, entry.name));
+  const entries = await readdir3(root, { withFileTypes: true }).catch(() => []);
+  return entries.filter((entry) => entry.isDirectory() && !entry.name.startsWith(".")).map((entry) => path6.join(root, entry.name));
 }
 function parseLocale(value) {
   return value === "zh-TW" ? "zh-TW" : "en";
@@ -11014,17 +11056,17 @@ function withDocumentTitle(source, title) {
 ${source}`;
 }
 async function resetGeneratedProjectState(root) {
-  const stateRoot = path5.join(root, ".open-slidex");
-  await rm2(stateRoot, { force: true, recursive: true });
+  const stateRoot = path6.join(root, ".open-slidex");
+  await rm3(stateRoot, { force: true, recursive: true });
   await Promise.all([
     mkdir2(stateRoot, { recursive: true }),
-    mkdir2(path5.join(root, "assets"), { recursive: true }),
-    mkdir2(path5.join(root, "dist"), { recursive: true }),
-    mkdir2(path5.join(root, "knowledge"), { recursive: true })
+    mkdir2(path6.join(root, "assets"), { recursive: true }),
+    mkdir2(path6.join(root, "dist"), { recursive: true }),
+    mkdir2(path6.join(root, "knowledge"), { recursive: true })
   ]);
 }
 async function replaceProjectName(root, projectName) {
-  const packagePath = path5.join(root, "package.json");
+  const packagePath = path6.join(root, "package.json");
   const parsed = JSON.parse(await readFile2(packagePath, "utf8").catch(() => "{}"));
   parsed.name = projectName;
   parsed.private = true;
@@ -11040,19 +11082,19 @@ async function writeJson(filePath, value) {
 
 // packages/slidex-workbench/src/server/workspaceHttp.ts
 import { createServer as createServer2 } from "node:http";
-import path7 from "node:path";
+import path8 from "node:path";
 import { Readable as Readable2 } from "node:stream";
 
 // packages/slidex-workbench/src/server/mcpConfig.ts
-import path6 from "node:path";
-var openSlideXMcpNpxPackage = "open-slidex@0.3.4";
+import path7 from "node:path";
+var openSlideXMcpNpxPackage = "open-slidex@latest";
 var openSlideXMcpClients = ["codex", "claude-code", "claude-desktop"];
 function resolveMcpRoot(root, platform) {
-  return platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? path6.win32.resolve(root) : path6.resolve(root);
+  return platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? path7.win32.resolve(root) : path7.resolve(root);
 }
 function presentationPath(root, platform) {
   const absoluteRoot = resolveMcpRoot(root, platform);
-  return platform === "windows" && /^[A-Za-z]:[\\/]/.test(absoluteRoot) ? path6.win32.join(absoluteRoot, "presentation.mdx") : path6.join(absoluteRoot, "presentation.mdx");
+  return platform === "windows" && /^[A-Za-z]:[\\/]/.test(absoluteRoot) ? path7.win32.join(absoluteRoot, "presentation.mdx") : path7.join(absoluteRoot, "presentation.mdx");
 }
 function mcpConfig(client, root, platform, target) {
   const absoluteRoot = resolveMcpRoot(root, platform);
@@ -11087,7 +11129,7 @@ function presentationMcpPrompt(client, root, platform) {
     "",
     presentationMcpConfig(client, root, platform),
     "",
-    "After restarting the client, verify open_slidex_open and open_slidex_validate."
+    "After restarting the client, verify open_slidex_read, open_slidex_edit, and open_slidex_review."
   ].join("\n");
 }
 function workspaceMcpPrompt(client, root, platform) {
@@ -11100,7 +11142,7 @@ function workspaceMcpPrompt(client, root, platform) {
     "",
     workspaceMcpConfig(client, root, platform),
     "",
-    "After restarting the client, call open_slidex_workspace_list, select one presentation, then verify open_slidex_open and open_slidex_validate."
+    "After restarting the client, use open_slidex_workspace to list and select one presentation, then verify open_slidex_read and open_slidex_review."
   ].join("\n");
 }
 function parseWorkspaceMcpClient(value) {
@@ -11164,7 +11206,7 @@ async function routeWorkspaceRequest(incoming, outgoing, input, editorRouters) {
       config: presentationRoot ? presentationMcpConfig(client, root, platform) : workspaceMcpConfig(client, root, platform),
       configPath,
       platform,
-      presentationPath: presentationRoot ? path7.join(presentationRoot, "presentation.mdx") : void 0,
+      presentationPath: presentationRoot ? path8.join(presentationRoot, "presentation.mdx") : void 0,
       prompt: presentationRoot ? presentationMcpPrompt(client, root, platform) : workspaceMcpPrompt(client, root, platform),
       scope: "user",
       scopeRoot: root,
@@ -11347,12 +11389,12 @@ async function main() {
     if (!await canListen(port)) {
       throw new Error(`Workspace port ${port} is already in use. Stop the existing server or choose --port <number>.`);
     }
-    const invocationRoot = path8.resolve(process.cwd());
-    const workspaceRoot = path8.resolve(invocationRoot, positionalOption(args) ?? "open-slidex-workspace");
-    const invocationPresentation = await stat4(path8.join(invocationRoot, "presentation.mdx")).catch(() => void 0);
+    const invocationRoot = path9.resolve(process.cwd());
+    const workspaceRoot = path9.resolve(invocationRoot, positionalOption(args) ?? "open-slidex-workspace");
+    const invocationPresentation = await stat5(path9.join(invocationRoot, "presentation.mdx")).catch(() => void 0);
     const mcpPresentationRoot = invocationPresentation?.isFile() ? invocationRoot : void 0;
     const packagedSourceRoot = fileURLToPath(new URL("./source/", import.meta.url));
-    const checkoutRoot = path8.resolve(fileURLToPath(new URL("../../../", import.meta.url)));
+    const checkoutRoot = path9.resolve(fileURLToPath(new URL("../../../", import.meta.url)));
     const configPath = new URL("./vite.config.mjs", import.meta.url);
     const workspaceUrl = `http://127.0.0.1:${port}/workspace`;
     const workspace = new OpenSlideXWorkspace({
@@ -11368,7 +11410,7 @@ async function main() {
     const { createSlideXWorkbenchViteConfig } = await import(configPath.href);
     const vite = await createViteServer(createSlideXWorkbenchViteConfig({
       apiPort: running.port,
-      cacheDir: path8.join(workspace.stateRoot, "vite-cache"),
+      cacheDir: path9.join(workspace.stateRoot, "vite-cache"),
       port,
       sourceRoot,
       workspaceUrl
@@ -11387,6 +11429,16 @@ async function main() {
       await vite.close();
       await running.close();
     }
+    return;
+  }
+  if (command === "sync:skills") {
+    const skillsRoot = fileURLToPath(new URL("../skills/", import.meta.url));
+    const targets = await discoverOpenSlideXSkillTargets(process.cwd());
+    const result = await syncOpenSlideXProjectSkills(skillsRoot, targets);
+    process.stdout.write(
+      `Synchronized ${result.skillCount} OpenSlideX skills to ${result.targetCount} project location${result.targetCount === 1 ? "" : "s"}.
+`
+    );
     return;
   }
   const project = new SlideXProject(process.cwd());
@@ -11408,7 +11460,7 @@ async function main() {
     const { createSlideXWorkbenchViteConfig } = await import(configPath.href);
     const vite = await createViteServer(createSlideXWorkbenchViteConfig({
       apiPort: running.port,
-      cacheDir: path8.join(project.stateRoot, "vite-cache"),
+      cacheDir: path9.join(project.stateRoot, "vite-cache"),
       port,
       sourceRoot,
       workspaceUrl: process.env.OPEN_SLIDEX_WORKSPACE_URL
@@ -11434,14 +11486,14 @@ async function main() {
     return;
   }
   if (command === "preview") {
-    const root = path8.join(project.distRoot, "site");
+    const root = path9.join(project.distRoot, "site");
     if (!await isDirectory(root)) throw new Error("Run open-slidex-workbench build first.");
     const requestedPort = numberOption(args, "--port") ?? 4174;
     const port = await availablePort(requestedPort);
     const server = createServer3(async (request, response) => {
       const requested = request.url === "/" ? "index.html" : (request.url ?? "").slice(1);
-      const filePath = path8.resolve(root, requested);
-      if (!filePath.startsWith(`${root}${path8.sep}`) && filePath !== path8.join(root, "index.html")) {
+      const filePath = path9.resolve(root, requested);
+      if (!filePath.startsWith(`${root}${path9.sep}`) && filePath !== path9.join(root, "index.html")) {
         response.writeHead(404).end();
         return;
       }
@@ -11461,21 +11513,6 @@ async function main() {
 `);
     await waitForSignal();
     server.close();
-    return;
-  }
-  if (command === "sync:skills") {
-    const skillsRoot = fileURLToPath(new URL("../skills/", import.meta.url));
-    const target = path8.join(project.root, ".agents", "skills");
-    await mkdir3(target, { recursive: true });
-    for (const entry of await readdir3(skillsRoot, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
-        await cp2(path8.join(skillsRoot, entry.name), path8.join(target, entry.name), {
-          force: true,
-          recursive: true
-        });
-      }
-    }
-    process.stdout.write("Synchronized OpenSlideX project skills.\n");
     return;
   }
   throw new Error(`Unknown command: ${command}. Run open-slidex-workbench --help.`);
@@ -11533,21 +11570,21 @@ function openBrowser(url) {
   child.unref();
 }
 async function isDirectory(filePath) {
-  return stat4(filePath).then((value) => value.isDirectory(), () => false);
+  return stat5(filePath).then((value) => value.isDirectory(), () => false);
 }
 async function prepareWorkbenchSource(project, packagedSourceRoot) {
-  const checkoutClient = path8.join(project.root, "packages/slidex-workbench/src/client");
+  const checkoutClient = path9.join(project.root, "packages/slidex-workbench/src/client");
   if (await isDirectory(checkoutClient)) return project.root;
-  const target = path8.join(project.stateRoot, "workbench-source");
-  await rm3(target, { force: true, recursive: true });
-  await cp2(packagedSourceRoot, target, { recursive: true });
+  const target = path9.join(project.stateRoot, "workbench-source");
+  await rm4(target, { force: true, recursive: true });
+  await cp3(packagedSourceRoot, target, { recursive: true });
   await rewritePackagedTailwindImport(target);
   return target;
 }
 async function rewritePackagedTailwindImport(sourceRoot) {
-  const cssPath = path8.join(sourceRoot, "packages/editor-ui/src/editor.css");
+  const cssPath = path9.join(sourceRoot, "packages/editor-ui/src/editor.css");
   const source = await readFile3(cssPath, "utf8");
-  const tailwindCssPath = runtimeRequire.resolve("tailwindcss/index.css").replaceAll(path8.sep, "/");
+  const tailwindCssPath = runtimeRequire.resolve("tailwindcss/index.css").replaceAll(path9.sep, "/");
   const rewritten = source.replace(
     '@import "tailwindcss" source(none);',
     `@import "${tailwindCssPath}" source(none);`
@@ -11558,7 +11595,7 @@ async function rewritePackagedTailwindImport(sourceRoot) {
 async function prepareWorkspaceSource(_workspace, packagedSourceRoot, checkoutRoot) {
   const checkoutCandidates = [process.cwd(), checkoutRoot];
   for (const candidate of checkoutCandidates) {
-    if (await isDirectory(path8.join(candidate, "packages/slidex-workbench/src/client"))) return candidate;
+    if (await isDirectory(path9.join(candidate, "packages/slidex-workbench/src/client"))) return candidate;
   }
   if (!await isDirectory(packagedSourceRoot)) {
     throw new Error("The Workspace UI sources are missing. Reinstall or rebuild open-slidex.");
@@ -11572,7 +11609,7 @@ async function resolveTemplateRoot() {
     fileURLToPath(new URL("../../template/", import.meta.url)),
     // Source checkout: packages/slidex-workbench/src/cli.ts -> packages/open-slidex/template.
     fileURLToPath(new URL("../../open-slidex/template/", import.meta.url)),
-    path8.join(process.cwd(), "packages/open-slidex/template")
+    path9.join(process.cwd(), "packages/open-slidex/template")
   ].filter((value) => Boolean(value));
   for (const candidate of candidates) {
     if (await isDirectory(candidate)) return candidate;

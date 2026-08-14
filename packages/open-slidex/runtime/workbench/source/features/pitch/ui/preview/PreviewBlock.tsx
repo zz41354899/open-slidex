@@ -7,10 +7,7 @@ import { objectShadowCss } from "@/core/motion-doc/application/objectShadow";
 import { MOTION_DOC_CANVAS_HEIGHT, MOTION_DOC_CANVAS_WIDTH } from "@/core/motion-doc/domain/viewport";
 import type { BlockFrameOverrides } from "@/features/pitch/application/pitchGeometry";
 import {
-  blockWidthProp,
   booleanProp,
-  cardLayoutProp,
-  cardWidthProp,
   enterProp,
   fitProp,
   isPositionedBlock,
@@ -22,7 +19,7 @@ import {
   stringProp
 } from "@/features/pitch/application/previewProps";
 import { blockFrame } from "@/features/pitch/application/previewCanvas";
-import { Card, IconBlock, ImageBlock, Metric, ShapeBlock, StackBlock, Text, Title, VideoBlock } from "@/features/pitch/ui/preview/motion-blocks";
+import { ImageBlock, ShapeBlock, Text, VideoBlock } from "@/features/pitch/ui/preview/motion-blocks";
 import { TableBlock } from "@/features/pitch/ui/preview/motion/TableBlock";
 import { ChartBlock } from "@/features/pitch/ui/preview/motion/ChartBlock";
 
@@ -147,33 +144,6 @@ export const PreviewBlock = memo(function PreviewBlock({
     );
   }
 
-  if (block.type === "Title") {
-    return (
-      <Title
-        background={stringProp(block.props.background ?? block.props.backgroundColor ?? block.props.bg)}
-        delay={numberProp(block.props.delay)}
-        duration={numberProp(block.props.duration)}
-        enter={enterProp(block.props.enter)}
-        fillFrame={fillFrame}
-        fontFamily={stringProp(block.props.fontFamily)}
-        fontSize={sizeNumberProp(block.props.fontSize, undefined)}
-        fontStyle={stringProp(block.props.fontStyle)}
-        fontWeight={spacingProp(block.props.fontWeight)}
-        letterSpacing={spacingProp(block.props.letterSpacing)}
-        lineHeight={spacingProp(block.props.lineHeight)}
-        lineHeightPt={spacingProp(block.props.lineHeightPt)}
-        listStart={numberProp(block.props.listStart)}
-        listType={stringProp(block.props.listType)}
-        textAlign={optionalTextAlignProp(block.props.textAlign)}
-        textColor={stringProp(block.props.color ?? block.props.textColor)}
-        textStyleRanges={stringProp(block.props.textStyleRanges)}
-        textVerticalAlign={stringProp(block.props.textVerticalAlign)}
-      >
-        {block.text}
-      </Title>
-    );
-  }
-
   if (block.type === "Text") {
     return (
       <Text
@@ -198,26 +168,6 @@ export const PreviewBlock = memo(function PreviewBlock({
       >
         {block.text}
       </Text>
-    );
-  }
-
-  if (block.type === "Card") {
-    return (
-      <Card
-        background={stringProp(block.props.background ?? block.props.backgroundColor ?? block.props.bg)}
-        color={stringProp(block.props.color ?? block.props.textColor)}
-        delay={numberProp(block.props.delay)}
-        duration={numberProp(block.props.duration)}
-        enter={enterProp(block.props.enter)}
-        fillFrame={fillFrame}
-        icon={stringProp(block.props.icon)}
-        layout={cardLayoutProp(block.props.layout)}
-        mutedColor={stringProp(block.props.mutedColor)}
-        radius={spacingProp(block.props.radius ?? block.props.borderRadius ?? 0)}
-        text={String(block.props.text ?? "")}
-        title={String(block.props.title ?? "Card")}
-        width={cardWidthProp(block.props.width)}
-      />
     );
   }
 
@@ -273,43 +223,6 @@ export const PreviewBlock = memo(function PreviewBlock({
     );
   }
 
-  if (block.type === "Metric") {
-    return (
-      <Metric
-        background={stringProp(block.props.background ?? block.props.backgroundColor ?? block.props.bg)}
-        caption={stringProp(block.props.caption)}
-        color={stringProp(block.props.color ?? block.props.textColor)}
-        delay={numberProp(block.props.delay)}
-        duration={numberProp(block.props.duration)}
-        enter={enterProp(block.props.enter)}
-        fillFrame={fillFrame}
-        label={String(block.props.label ?? "Metric")}
-        mutedColor={stringProp(block.props.mutedColor)}
-        radius={spacingProp(block.props.radius ?? block.props.borderRadius)}
-        value={String(block.props.value ?? "0")}
-        width={blockWidthProp(block.props.width, "sm")}
-      />
-    );
-  }
-
-  if (block.type === "Icon") {
-    return (
-      <IconBlock
-        background={stringProp(block.props.background ?? block.props.backgroundColor ?? block.props.bg)}
-        color={stringProp(block.props.color ?? block.props.textColor)}
-        delay={numberProp(block.props.delay)}
-        duration={numberProp(block.props.duration)}
-        enter={enterProp(block.props.enter)}
-        fillFrame={fillFrame}
-        icon={stringProp(block.props.icon)}
-        mutedColor={stringProp(block.props.mutedColor)}
-        radius={spacingProp(block.props.radius ?? block.props.borderRadius)}
-        size={sizeNumberProp(block.props.size, 96)}
-        strokeWidth={spacingProp(block.props.strokeWidth)}
-      />
-    );
-  }
-
   if (block.type === "Shape") {
     const frame = blockFrame(block);
 
@@ -344,27 +257,6 @@ export const PreviewBlock = memo(function PreviewBlock({
         sides={spacingProp(block.props.sides)}
         stroke={stringProp(block.props.stroke)}
         strokeWidth={spacingProp(block.props.strokeWidth)}
-      />
-    );
-  }
-
-  if (block.type === "Stack") {
-    return (
-      <StackBlock
-        align={stringProp(block.props.align)}
-        background={stringProp(block.props.background ?? block.props.backgroundColor ?? block.props.bg)}
-        color={stringProp(block.props.color ?? block.props.textColor)}
-        delay={numberProp(block.props.delay)}
-        duration={numberProp(block.props.duration)}
-        enter={enterProp(block.props.enter)}
-        fillFrame={fillFrame}
-        gap={spacingProp(block.props.gap)}
-        items={stringProp(block.props.items)}
-        layout={stringProp(block.props.layout)}
-        mutedColor={stringProp(block.props.mutedColor)}
-        padding={spacingProp(block.props.padding)}
-        radius={spacingProp(block.props.radius ?? block.props.borderRadius)}
-        stroke={stringProp(block.props.stroke)}
       />
     );
   }

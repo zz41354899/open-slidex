@@ -86,7 +86,7 @@ function help() {
 
 Usage:
   open-slidex workspace [directory] [--port 4172] [--no-open]
-  open-slidex init [directory] [--template <id>] [--locale <en|zh-TW>] [--npm|--pnpm|--bun|--no-install]
+  open-slidex init [directory] [--template <id>] [--locale <en|zh-TW>] [--no-install]
   open-slidex dev [--port 4173] [--no-open]
   open-slidex build
   open-slidex preview [--port 4174]
@@ -100,7 +100,7 @@ Usage:
 
 Examples:
   open-slidex workspace ~/Presentations
-  npx open-slidex@0.3.4 init my-deck
+  npx open-slidex@latest init my-deck
   open-slidex init my-deck --template summer-time-report --locale zh-TW
   cd my-deck && npm run dev
   open-slidex mcp --project ./my-deck --print-config codex

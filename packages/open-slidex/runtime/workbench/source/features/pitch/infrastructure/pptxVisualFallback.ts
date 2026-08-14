@@ -1,5 +1,4 @@
 const EDITABLE_CONTENT_SELECTORS = [
-  ".block-title",
   ".block-text",
   ".block-table",
   ".block-icon",

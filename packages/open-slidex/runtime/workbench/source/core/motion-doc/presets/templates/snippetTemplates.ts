@@ -22,7 +22,7 @@ export const snippetTemplates = [
   {
     id: "snip-card",
     label: "Proof Point",
-    code: `<Icon icon="Sparkles" size={42} strokeWidth={1.5} x={8} y={38} w={5} h={8} />
+    code: `<Shape shape="rectangle" fill="#171717" stroke="transparent" radius={8} x={8} y={38} w={5} h={8} />
 <Text fontSize={18} fontWeight={700} x={8} y={50} w={40} h={8}>Key point</Text>
 <Text fontSize={13.5} lineHeight={1.5} x={8} y={62} w={40} h={18}>Describe one benefit or detail.</Text>`
   },

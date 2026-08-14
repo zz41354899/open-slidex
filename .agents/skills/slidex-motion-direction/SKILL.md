@@ -1,47 +1,27 @@
 ---
 name: slidex-motion-direction
-description: Add deliberate, valid animation to OpenSlideX MotionDoc MDX. Use when a presentation needs element entrances, staggered reveals, slide transitions, motion timing, or animation review.
+description: Add or review deliberate OpenSlideX animation after static design is complete. Use for entrances, staggered reveals, slide transitions, chart motion, timing, reduced-motion behavior, or motion polish.
 ---
 
 # OpenSlideX Motion Direction
 
-Finish the static composition first. Motion must communicate hierarchy,
-sequence, causality, feedback, or a state transition.
+Finish and verify the static composition first. Motion must clarify hierarchy,
+sequence, causality, feedback, or state change; otherwise use `none`.
 
-## Valid vocabulary
+## Required reference
 
-Element `enter` values:
+Read [motion patterns](references/motion-patterns.md) before adding or changing
+motion. It contains the valid vocabulary, timing ranges, and pattern selection.
 
-`none`, `fadeIn`, `fadeUp`, `rise`, `slideLeft`, `zoomIn`, `pop`, `reveal`, `blurIn`
+## Workflow
 
-Slide `slideTransition` values:
+1. Read the complete affected slide and its latest revision.
+2. State what the motion explains in one sentence.
+3. Use at most two entrance families on a normal slide and preserve a complete
+   static final frame.
+4. Submit the complete updated slide through `open_slidex_edit`.
+5. Inspect the accepted preview and verify reduced-motion, raster, and PPTX
+   output do not hide information.
 
-`none`, `fade`, `rise`, `pushLeft`, `scale`, `wipe`, `curtain`
-
-Unknown values are invalid and must never silently fall back.
-
-Chart `chartMotion` values:
-
-`auto`, `grow`, `draw`, `sweep`, `pop`, `none`
-
-Prefer `grow` for bars, `draw` for line and area, `sweep` for pie and donut,
-and `pop` for scatter. Preview and HTML animate; raster and PPTX keep the same
-visible final state. Always honor reduced-motion preferences.
-
-## Timing
-
-- Use 0.45-0.8 seconds for normal entrances.
-- Stagger related layers by 0.08-0.16 seconds.
-- Keep slide transitions between 0.6-0.9 seconds.
-- Reveal the focal element first and supporting evidence second.
-- Use the same motion family for elements with the same role.
-- Most slides need no more than two entrance styles.
-
-Keep the final static frame valid and inspect the accepted preview.
-
-## Tool workflow
-
-Inspect the affected slide first. Apply motion through `open_slidex_edit` with
-the latest revision; its accepted result already includes validation, rendered
-QA, and preview. Do not repeat validate, render, or quality tools after success.
-Never use shell commands or invent unsupported motion names.
+Never use unsupported motion names, removed components, or motion to conceal an
+overcrowded static layout.

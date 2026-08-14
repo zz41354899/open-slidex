@@ -11,6 +11,7 @@ import {
   fullHdFontPixelsToPoints,
   legacyFontPixelsToPoints,
   MOTION_DOC_CANVAS_PROPS,
+  MOTION_DOC_FONT_SIZES,
   MOTION_DOC_FONT_SIZE_UNIT,
   motionDocDefaultFontSize
 } from "@/core/motion-doc/domain/typography";
@@ -71,13 +72,9 @@ export function materializeFreeformScene(scene: MotionDocScene): MotionDocScene 
 }
 
 export function defaultBlockFrame(block: MotionDocBlock): PositionProps {
-  if (block.type === "Title") return { x: 8, y: 12, w: 62, h: 18 };
+  if (isTitleText(block)) return { x: 8, y: 12, w: 62, h: 18 };
   if (block.type === "Text") return { x: 8, y: 38, w: 52, h: 16 };
-  if (block.type === "Card") return { x: 8, y: 38, w: 40, h: 32 };
-  if (block.type === "Metric") return { x: 8, y: 38, w: 32, h: 36 };
-  if (block.type === "Icon") return { x: 42, y: 28, w: 16, h: 28 };
   if (block.type === "Shape") return { x: 34, y: 30, w: 28, h: 28 };
-  if (block.type === "Stack") return { x: 10, y: 64, w: 80, h: 20 };
   if (block.type === "ImageBlock" || block.type === "VideoBlock") return { x: 8, y: 16, w: 72, h: 52 };
 
   return { x: 8, y: 12, w: 42, h: 18 };
@@ -91,12 +88,12 @@ function layoutBlock(
 ): PositionProps {
   const defaults = defaultBlockFrame(block);
   const propIndex = blocksWithProps.findIndex((item) => item === block);
-  const titleIndex = blocksWithProps.findIndex((item) => item.type === "Title");
+  const titleIndex = blocksWithProps.findIndex(isTitleText);
   const titleOffset = titleIndex >= 0 && propIndex > titleIndex ? 1 : 0;
   const contentIndex = Math.max(propIndex - titleOffset, 0);
-  const contentBlocks = blocksWithProps.filter((item) => item.type !== "Title");
+  const contentBlocks = blocksWithProps.filter((item) => !isTitleText(item));
 
-  if (block.type === "Title") {
+  if (isTitleText(block)) {
     return hasCenteredCopy
       ? { x: 18, y: contentBlocks.length > 0 ? 26 : 34, w: 64, h: 18 }
       : { x: 8, y: 12, w: 64, h: 18 };
@@ -136,16 +133,12 @@ function singleBlockFrame(block: MotionDocBlock, defaults: PositionProps): Posit
     return { x: 10, y: 20, w: 80, h: 54 };
   }
 
-  if (block.type === "Metric") {
-    return { x: 10, y: 40, w: 34, h: 36 };
-  }
-
   return { ...defaults, x: 8, y: 38 };
 }
 
 function defaultFontSize(block: MotionDocBlock) {
-  if (block.type === "Title" || block.type === "Text") {
-    return motionDocDefaultFontSize(block.type);
+  if (block.type === "Text") {
+    return isTitleText(block) ? MOTION_DOC_FONT_SIZES.display : motionDocDefaultFontSize(block.type);
   }
 
   return undefined;
@@ -185,9 +178,13 @@ function migrateOverrideFontSizes(overrides: StyleOverrides, convert: (pixels: n
 }
 
 function defaultRadius(block: MotionDocBlock) {
-  if (block.type === "Card" || block.type === "Icon" || block.type === "ImageBlock" || block.type === "Metric" || block.type === "Shape" || block.type === "Stack" || block.type === "VideoBlock") {
+  if (block.type === "ImageBlock" || block.type === "Shape" || block.type === "VideoBlock") {
     return 16;
   }
 
   return 0;
+}
+
+function isTitleText(block: MotionDocBlock) {
+  return block.type === "Text" && (block.props.role === "title" || Number(block.props.fontSize) >= MOTION_DOC_FONT_SIZES.slideTitle);
 }

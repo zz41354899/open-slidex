@@ -5643,8 +5643,8 @@ var require_additionalProperties = __commonJS({
         function isAdditional(key) {
           let definedProp;
           if (props.length > 8) {
-            const propsSchema2 = (0, util_1.schemaRefOrVal)(it, parentSchema.properties, "properties");
-            definedProp = (0, code_1.isOwnProperty)(gen, propsSchema2, key);
+            const propsSchema = (0, util_1.schemaRefOrVal)(it, parentSchema.properties, "properties");
+            definedProp = (0, code_1.isOwnProperty)(gen, propsSchema, key);
           } else if (props.length) {
             definedProp = (0, codegen_1.or)(...props.map((p) => (0, codegen_1._)`${key} === ${p}`));
           } else {
@@ -6917,9 +6917,9 @@ var require_dist = __commonJS({
 
 // packages/open-slidex-mcp/src/server.ts
 import { createHash as createHash6, randomUUID as randomUUID4 } from "node:crypto";
-import { basename, extname, join, resolve, win32 } from "node:path";
+import { basename, dirname, extname, join, resolve, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
-import { access as access2, mkdir as mkdir6, readFile as readFile8, readdir as readdir2, realpath as realpath5, stat as stat4 } from "node:fs/promises";
+import { access as access2, mkdir as mkdir6, readFile as readFile8, readdir as readdir3, realpath as realpath5, stat as stat4 } from "node:fs/promises";
 
 // node_modules/zod/v3/helpers/util.js
 var util;
@@ -31257,7 +31257,7 @@ function motionDocLineHeightCanvasValue(lineHeight, lineHeightPt, defaultLineHei
   return positiveNumber(lineHeight) ?? defaultLineHeight;
 }
 function motionDocDefaultFontSize(type) {
-  return type === "Title" ? MOTION_DOC_FONT_SIZES.display : MOTION_DOC_FONT_SIZES.body;
+  return type === "heading" ? MOTION_DOC_FONT_SIZES.heading : MOTION_DOC_FONT_SIZES.body;
 }
 function roundFontSize(value) {
   return Math.round(value * 1e3) / 1e3;
@@ -31580,12 +31580,8 @@ function motionDocBlockFrame(block) {
   };
 }
 function defaultBlockWidth(type) {
-  if (type === "Title") return 52;
   if (type === "Text") return 42;
-  if (type === "Icon") return 16;
-  if (type === "Metric") return 32;
   if (type === "Shape") return widthPercentForPhysicalAspectRatio(28);
-  if (type === "Stack") return 80;
   if (type === "Table") return 56;
   if (type === "Chart") return 78;
   if (type === "ImageBlock" || type === "VideoBlock") return 80;
@@ -31595,23 +31591,17 @@ function widthPercentForPhysicalAspectRatio(heightPercent, aspectRatio = 1) {
   return heightPercent * MOTION_DOC_CANVAS_HEIGHT / MOTION_DOC_CANVAS_WIDTH * aspectRatio;
 }
 function defaultBlockHeight(type) {
-  if (type === "Title") return 18;
   if (type === "Text") return 9;
-  if (type === "Icon") return 28;
-  if (type === "Metric") return 36;
   if (type === "Shape") return 28;
-  if (type === "Stack") return 20;
   if (type === "Table") return 30;
   if (type === "Chart") return 52;
   if (type === "ImageBlock" || type === "VideoBlock") return 54;
   return 32;
 }
 function defaultBlockY(type) {
-  if (type === "Title") return 18;
-  if (type === "Icon" || type === "Shape") return 30;
+  if (type === "Shape") return 30;
   if (type === "Table") return 34;
   if (type === "Chart") return 25;
-  if (type === "Stack") return 64;
   if (type === "ImageBlock" || type === "VideoBlock") return 20;
   return 38;
 }
@@ -31659,8 +31649,6 @@ function createMotionDocBlockWithoutId(type) {
           y: 34
         }
       };
-    case "Title":
-      return { type: "Title", props: { enter: "none", fontSize: MOTION_DOC_FONT_SIZES.display, x: 9, y: 18, w: 52, h: 18 }, text: "New Title" };
     case "Text":
       return { type: "Text", props: { enter: "none", fontSize: MOTION_DOC_FONT_SIZES.body, x: 10, y: 45, w: 42, h: 9 }, text: "Add some descriptive text here." };
     case "Text96":
@@ -31675,16 +31663,10 @@ function createMotionDocBlockWithoutId(type) {
       return createTextPresetBlock(MOTION_DOC_FONT_SIZES.supportingTitle, "Supporting title");
     case "Text24":
       return createTextPresetBlock(MOTION_DOC_FONT_SIZES.body, "Body copy");
-    case "Card":
-      return { type: "Card", props: { icon: "Sparkles", layout: "vertical", title: "Feature", text: "Feature description", width: "md", enter: "none", radius: 16, x: 8, y: 38, w: 40, h: 32 } };
-    case "Metric":
-      return { type: "Metric", props: { label: "Pipeline", value: "$2.4M", caption: "Qualified revenue influenced this quarter.", width: "sm", enter: "none", radius: 16, x: 8, y: 38, w: 32, h: 36 } };
     case "Image":
       return { type: "ImageBlock", props: { src: "", alt: "", fit: "cover", scaleX: 1, scaleY: 1, enter: "none", radius: 0, x: 10, y: 20, w: 80, h: 54 } };
     case "Video":
       return { type: "VideoBlock", props: { src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", fit: "cover", controls: "true", loop: "true", muted: "true", enter: "none", radius: 0, x: 10, y: 20, w: 80, h: 54 } };
-    case "Icon":
-      return { type: "Icon", props: { icon: "Sparkles", color: "#ffffff", strokeWidth: 2.2, size: 112, enter: "none", radius: 0, x: 47.0833, y: 44.8148, w: 5.8333, h: 10.3704 } };
     case "Chart":
       return {
         type: "Chart",
@@ -31824,53 +31806,10 @@ function normalizeMotionDocSpacing(source) {
 function generateSlideString(slide) {
   const identifiedSlide = ensureMotionDocSceneBlockIds(slide);
   const tag = formatSlideTag(identifiedSlide.props);
-  const blockStrings = [];
-  for (let index2 = 0; index2 < identifiedSlide.blocks.length; ) {
-    const block = identifiedSlide.blocks[index2];
-    const groupId = groupIdOf(block);
-    if (!groupId) {
-      blockStrings.push(`  ${generateBlockString(block)}`);
-      index2 += 1;
-      continue;
-    }
-    const groupedBlocks = [];
-    while (index2 < identifiedSlide.blocks.length && groupIdOf(identifiedSlide.blocks[index2]) === groupId) {
-      groupedBlocks.push(identifiedSlide.blocks[index2]);
-      index2 += 1;
-    }
-    blockStrings.push(indentGroupString(generateGroupString(groupedBlocks, groupId)));
-  }
-  const notes = identifiedSlide.notes?.markdown.trim();
-  const notesString = notes ? `
-  <Notes>
-${notes.split("\n").map((line) => `    ${line}`).join("\n")}
-  </Notes>` : "";
+  const blockStrings = identifiedSlide.blocks.map((block) => `  ${generateBlockString(block)}`);
   return `${tag}
-${blockStrings.join("\n")}${notesString}
+${blockStrings.join("\n")}
 </Slide>`;
-}
-function generateGroupString(blocks, groupId) {
-  const identifiedBlocks = ensureMotionDocBlockIds(blocks);
-  const namedBlock = identifiedBlocks.find((block) => "props" in block && typeof block.props.groupName === "string");
-  const groupName = namedBlock?.props.groupName;
-  const nameAttr = typeof groupName === "string" && groupName.trim() ? ` name="${escapeMdxAttribute(groupName)}"` : "";
-  const children = identifiedBlocks.map((block) => `  ${generateBlockStringWithProps(block, withoutGroupProps("props" in block ? block.props : void 0))}`);
-  return `<Group id="${escapeMdxAttribute(groupId)}"${nameAttr}>
-${children.join("\n")}
-</Group>`;
-}
-function indentGroupString(value) {
-  return value.split("\n").map((line) => `  ${line}`).join("\n");
-}
-function groupIdOf(block) {
-  return "props" in block && typeof block.props.groupId === "string" && block.props.groupId.trim() ? block.props.groupId : "";
-}
-function withoutGroupProps(props) {
-  if (!props) return props;
-  const { groupId, groupName, ...rest } = props;
-  void groupId;
-  void groupName;
-  return rest;
 }
 function generateBlockString(block) {
   const identifiedBlock = ensureMotionDocBlockIds([block])[0] ?? block;
@@ -31897,7 +31836,7 @@ function ensureMotionDocSourceBlockIds(source) {
   );
 }
 function generateBlockStringWithProps(block, overrideProps) {
-  if (block.type === "Title" || block.type === "Text") {
+  if (block.type === "Text") {
     const propsStr = formatTextProps(overrideProps ?? block.props);
     return `<${block.type}${propsStr ? " " + propsStr : ""}>${escapeMdxText(block.text)}</${block.type}>`;
   }
@@ -31913,16 +31852,11 @@ function generateBlockStringWithProps(block, overrideProps) {
   return "";
 }
 var sourceBlockTagNames = /* @__PURE__ */ new Set([
-  "Card",
   "Chart",
-  "Icon",
   "ImageBlock",
-  "Metric",
   "Shape",
-  "Stack",
   "Table",
   "Text",
-  "Title",
   "VideoBlock"
 ]);
 function sourceBlockIdentityCandidates(slideSource, sourceOffset) {
@@ -32029,7 +31963,7 @@ function sourceOpeningTagEnd(source, start) {
 }
 function protectedSourceBlockRanges(slideSource) {
   const ranges = [];
-  const pairedBlockPattern = /<((?!Slide\b|Scene\b|Group\b)[A-Z][A-Za-z0-9]*)\b[^>]*>[\s\S]*?<\/\1>/g;
+  const pairedBlockPattern = /<((?!Slide\b|Scene\b)[A-Z][A-Za-z0-9]*)\b[^>]*>[\s\S]*?<\/\1>/g;
   for (const match of slideSource.matchAll(pairedBlockPattern)) {
     const start = match.index ?? 0;
     ranges.push({ end: start + match[0].length, start });
@@ -40999,17 +40933,15 @@ function motionDocBlocksFromMarkdownNode(node2, source) {
       },
       id
     );
-    if (node2.depth === 1) {
-      return [{ props, text: content3.text, type: "Title" }];
-    }
     return [{
       props: {
         ...props,
         fontSize: markdownHeadingFontSize(node2.depth),
-        fontWeight: 700
+        fontWeight: 700,
+        ...node2.depth === 1 ? { role: "title" } : {}
       },
       text: content3.text,
-      type: "heading"
+      type: node2.depth === 1 ? "Text" : "heading"
     }];
   }
   if (node2.type === "paragraph") {
@@ -41381,7 +41313,14 @@ function youtubeVideoId(source) {
 
 // core/motion-doc/domain/motionDocParser.ts
 var mediaSourcePropNames = /* @__PURE__ */ new Set(["backgroundImage", "poster", "shapeImageSrc", "src"]);
+var removedComponentPattern = /<(Card|Metric|Stack|Group|Title|Icon|Notes)\b/;
 function parseMotionDoc(source) {
+  const removedComponent = source.match(removedComponentPattern)?.[1];
+  if (removedComponent) {
+    throw new Error(
+      `Unsupported MotionDoc component: ${removedComponent}. Rebuild it with Text, ImageBlock, VideoBlock, Chart, Table, or Shape.`
+    );
+  }
   const firstSlideOffset = source.search(/<(?:Slide|Scene)\b/);
   const documentHeader = firstSlideOffset >= 0 ? source.slice(0, firstSlideOffset) : source;
   const title = documentHeader.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? "Slider Preview";
@@ -41397,40 +41336,19 @@ function parseMotionDoc(source) {
       return {
         duration: typeof durationValue === "number" && Number.isFinite(durationValue) ? durationValue : 0,
         props,
-        blocks: parseSceneBlocks(removeSpeakerNotes(sceneSource)),
-        notes: parseSpeakerNotes(sceneSource)
+        blocks: parseSceneBlocks(sceneSource)
       };
     })
   };
 }
-function parseSpeakerNotes(sceneSource) {
-  const match = sceneSource.match(/<Notes\b[^>]*>([\s\S]*?)<\/Notes>/);
-  if (!match) return void 0;
-  const markdown = dedentSpeakerNotes(match[1] ?? "");
-  const plainText = parseMotionDocMarkdown(markdown).flatMap((block) => "text" in block ? [block.text] : []).join("\n").trim();
-  return { markdown, plainText };
-}
-function dedentSpeakerNotes(source) {
-  const lines = source.replace(/\r\n?/g, "\n").split("\n");
-  while (lines[0]?.trim() === "") lines.shift();
-  while (lines.at(-1)?.trim() === "") lines.pop();
-  const indent2 = Math.min(
-    ...lines.filter((line) => line.trim()).map((line) => line.match(/^[ \t]*/)?.[0].length ?? 0)
-  );
-  return lines.map((line) => line.slice(Number.isFinite(indent2) ? indent2 : 0)).join("\n").trimEnd();
-}
-function removeSpeakerNotes(sceneSource) {
-  return sceneSource.replace(/<Notes\b[^>]*>[\s\S]*?<\/Notes>/g, "\n");
-}
 function parseSceneBlocks(sceneSource) {
-  const normalizedSceneSource = expandGroupMarkup(sceneSource);
   const blocks = [];
-  const blockPattern = /<(Title|Text)\b([^>]*)>([\s\S]*?)<\/\1>|<(Card|Chart|ImageBlock|VideoBlock|Metric|Icon|Shape|Stack|Table)\b([\s\S]*?)\/>/g;
+  const blockPattern = /<(Text)\b([^>]*)>([\s\S]*?)<\/\1>|<(Chart|ImageBlock|VideoBlock|Shape|Table)\b([\s\S]*?)\/>/g;
   let cursor = 0;
-  for (const match of normalizedSceneSource.matchAll(blockPattern)) {
+  for (const match of sceneSource.matchAll(blockPattern)) {
     const matchStart = match.index ?? cursor;
     blocks.push(
-      ...parseMotionDocMarkdown(normalizedSceneSource.slice(cursor, matchStart))
+      ...parseMotionDocMarkdown(sceneSource.slice(cursor, matchStart))
     );
     const pairedType = match[1];
     const selfClosingType = match[4];
@@ -41455,23 +41373,8 @@ function parseSceneBlocks(sceneSource) {
       });
     }
   }
-  blocks.push(...parseMotionDocMarkdown(normalizedSceneSource.slice(cursor)));
+  blocks.push(...parseMotionDocMarkdown(sceneSource.slice(cursor)));
   return blocks;
-}
-function expandGroupMarkup(sceneSource) {
-  return sceneSource.replace(/<Group\b([^>]*)>([\s\S]*?)<\/Group>/g, (_match, rawProps, children, offset) => {
-    const props = parseProps(rawProps);
-    const groupId = String(props.id ?? props.groupId ?? `group-${offset}`);
-    const groupName = String(props.name ?? props.groupName ?? "Group");
-    const groupAttrs = ` groupId="${encodeInjectedAttribute(groupId)}" groupName="${encodeInjectedAttribute(groupName)}"`;
-    return children.replace(
-      /<(Title|Text|Card|Chart|ImageBlock|VideoBlock|Metric|Icon|Shape|Stack|Table)\b/g,
-      (opening) => `${opening}${groupAttrs}`
-    );
-  });
-}
-function encodeInjectedAttribute(value) {
-  return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 function parseProps(rawProps) {
   const props = {};
@@ -41600,24 +41503,20 @@ function materializeFreeformScene(scene) {
   };
 }
 function defaultBlockFrame(block) {
-  if (block.type === "Title") return { x: 8, y: 12, w: 62, h: 18 };
+  if (isTitleText(block)) return { x: 8, y: 12, w: 62, h: 18 };
   if (block.type === "Text") return { x: 8, y: 38, w: 52, h: 16 };
-  if (block.type === "Card") return { x: 8, y: 38, w: 40, h: 32 };
-  if (block.type === "Metric") return { x: 8, y: 38, w: 32, h: 36 };
-  if (block.type === "Icon") return { x: 42, y: 28, w: 16, h: 28 };
   if (block.type === "Shape") return { x: 34, y: 30, w: 28, h: 28 };
-  if (block.type === "Stack") return { x: 10, y: 64, w: 80, h: 20 };
   if (block.type === "ImageBlock" || block.type === "VideoBlock") return { x: 8, y: 16, w: 72, h: 52 };
   return { x: 8, y: 12, w: 42, h: 18 };
 }
 function layoutBlock(block, originalIndex, blocksWithProps, hasCenteredCopy) {
   const defaults = defaultBlockFrame(block);
   const propIndex = blocksWithProps.findIndex((item) => item === block);
-  const titleIndex = blocksWithProps.findIndex((item) => item.type === "Title");
+  const titleIndex = blocksWithProps.findIndex(isTitleText);
   const titleOffset = titleIndex >= 0 && propIndex > titleIndex ? 1 : 0;
   const contentIndex = Math.max(propIndex - titleOffset, 0);
-  const contentBlocks = blocksWithProps.filter((item) => item.type !== "Title");
-  if (block.type === "Title") {
+  const contentBlocks = blocksWithProps.filter((item) => !isTitleText(item));
+  if (isTitleText(block)) {
     return hasCenteredCopy ? { x: 18, y: contentBlocks.length > 0 ? 26 : 34, w: 64, h: 18 } : { x: 8, y: 12, w: 64, h: 18 };
   }
   if (hasCenteredCopy && block.type === "Text") {
@@ -41647,14 +41546,11 @@ function singleBlockFrame(block, defaults) {
   if (block.type === "ImageBlock" || block.type === "VideoBlock") {
     return { x: 10, y: 20, w: 80, h: 54 };
   }
-  if (block.type === "Metric") {
-    return { x: 10, y: 40, w: 34, h: 36 };
-  }
   return { ...defaults, x: 8, y: 38 };
 }
 function defaultFontSize(block) {
-  if (block.type === "Title" || block.type === "Text") {
-    return motionDocDefaultFontSize(block.type);
+  if (block.type === "Text") {
+    return isTitleText(block) ? MOTION_DOC_FONT_SIZES.display : motionDocDefaultFontSize(block.type);
   }
   return void 0;
 }
@@ -41685,10 +41581,13 @@ function migrateOverrideFontSizes(overrides, convert2) {
   );
 }
 function defaultRadius(block) {
-  if (block.type === "Card" || block.type === "Icon" || block.type === "ImageBlock" || block.type === "Metric" || block.type === "Shape" || block.type === "Stack" || block.type === "VideoBlock") {
+  if (block.type === "ImageBlock" || block.type === "Shape" || block.type === "VideoBlock") {
     return 16;
   }
   return 0;
+}
+function isTitleText(block) {
+  return block.type === "Text" && (block.props.role === "title" || Number(block.props.fontSize) >= MOTION_DOC_FONT_SIZES.slideTitle);
 }
 
 // core/motion-doc/domain/motionVocabulary.ts
@@ -41726,26 +41625,18 @@ var motionDocAddBlockTypes = [
   "Text",
   "Image",
   "Video",
-  "Icon",
   "Chart",
   "Table",
   "ShapeRectangle"
 ];
 var supportedComponentTags = /* @__PURE__ */ new Set([
-  "Card",
   "Chart",
-  "Group",
-  "Icon",
   "ImageBlock",
-  "Metric",
-  "Notes",
   "Scene",
   "Shape",
   "Slide",
-  "Stack",
   "Table",
   "Text",
-  "Title",
   "VideoBlock"
 ]);
 var nonCanonicalMotionDocPropAliases = {
@@ -41939,7 +41830,7 @@ function applyBlockOptions(block, options) {
     ...coerceMotionProps(options.props ?? {}),
     ...coerceMotionProps(options.position ?? {})
   };
-  if ((block.type === "Title" || block.type === "Text") && options.text !== void 0) {
+  if (block.type === "Text" && options.text !== void 0) {
     return {
       ...block,
       props: nextProps,
@@ -42004,33 +41895,6 @@ function validateMotionDocSource(source, document4) {
       message: `<${tag}> is not a supported SlideX MotionDoc component.`,
       severity: "error"
     });
-  }
-  for (const [sceneIndex, range] of motionDocSlideSourceRanges(source).entries()) {
-    const noteMatches = [...range.source.matchAll(/<Notes\b[^>]*>([\s\S]*?)<\/Notes>/g)];
-    if (noteMatches.length > 1) {
-      issues.push({
-        message: "A slide may contain at most one <Notes> block.",
-        path: `scenes[${sceneIndex}].notes`,
-        severity: "error"
-      });
-    }
-    if (/<Group\b[^>]*>[\s\S]*?<Notes\b/.test(range.source)) {
-      issues.push({
-        message: "<Notes> must be a direct child of <Slide>, not nested inside <Group>.",
-        path: `scenes[${sceneIndex}].notes`,
-        severity: "error"
-      });
-    }
-    for (const noteMatch of noteMatches) {
-      const noteSource = noteMatch[1] ?? "";
-      if (/<\/?[A-Z][A-Za-z0-9]*\b/.test(noteSource)) {
-        issues.push({
-          message: "<Notes> accepts CommonMark only; MotionDoc and JSX elements are not allowed.",
-          path: `scenes[${sceneIndex}].notes`,
-          severity: "error"
-        });
-      }
-    }
   }
   document4.scenes.forEach((scene, sceneIndex) => {
     const slideTransition = scene.props.slideTransition;
@@ -42307,62 +42171,6 @@ function numberProp(value) {
 }
 function safeMdxText2(value) {
   return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("{", "&#123;").replaceAll("}", "&#125;");
-}
-
-// core/motion-doc/application/motionDocCanvas.ts
-var coordinatePrecision = 3;
-function getMotionDocCanvasNodes(source, requestedSlideIndex) {
-  const document4 = parseMotionDoc(source);
-  const slides = document4.scenes.flatMap((slide, slideIndex) => {
-    if (requestedSlideIndex !== void 0 && requestedSlideIndex !== slideIndex) return [];
-    return [{
-      background: slide.props.background,
-      nodes: slide.blocks.map((block, blockIndex) => formatCanvasNode(block, blockIndex)),
-      slideIndex,
-      theme: slide.props.theme
-    }];
-  });
-  if (requestedSlideIndex !== void 0 && slides.length === 0) {
-    throw new Error(`slideIndex ${requestedSlideIndex} is outside the slide range.`);
-  }
-  return {
-    canvas: {
-      coordinateSystem: "percent",
-      height: MOTION_DOC_CANVAS_HEIGHT,
-      precision: coordinatePrecision,
-      width: MOTION_DOC_CANVAS_WIDTH
-    },
-    slides
-  };
-}
-function formatCanvasNode(block, blockIndex) {
-  const framePercent2 = roundFrame(motionDocBlockFrame(block));
-  return {
-    blockIndex,
-    editableFrame: "props" in block,
-    framePercent: framePercent2,
-    framePixels: {
-      h: round(framePercent2.h / 100 * MOTION_DOC_CANVAS_HEIGHT),
-      w: round(framePercent2.w / 100 * MOTION_DOC_CANVAS_WIDTH),
-      x: round(framePercent2.x / 100 * MOTION_DOC_CANVAS_WIDTH),
-      y: round(framePercent2.y / 100 * MOTION_DOC_CANVAS_HEIGHT)
-    },
-    nodeId: motionDocBlockKey(block, blockIndex),
-    text: "text" in block ? block.text.slice(0, 160) : void 0,
-    type: block.type
-  };
-}
-function roundFrame(frame) {
-  return {
-    h: round(frame.h),
-    w: round(frame.w),
-    x: round(frame.x),
-    y: round(frame.y)
-  };
-}
-function round(value) {
-  const scale = 10 ** coordinatePrecision;
-  return Math.round(value * scale) / scale;
 }
 
 // core/motion-doc/domain/slideLayouts.ts
@@ -43150,119 +42958,6 @@ function applySlideXBatch(source, commands) {
   }
   return { source: nextSource, summary };
 }
-function inspectSlideXDocument(source, input = {}) {
-  const document4 = parseMotionDoc(source);
-  if (input.sourceRange) {
-    const { end, start } = input.sourceRange;
-    if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end <= start || end > source.length) {
-      throw new Error("sourceRange must be inside presentation.mdx.");
-    }
-    return {
-      kind: "source-range",
-      range: { end, start },
-      source: source.slice(start, end)
-    };
-  }
-  if (input.nodeId) {
-    for (const [slideIndex, slide] of document4.scenes.entries()) {
-      const blockIndex = slide.blocks.findIndex(
-        (block, index2) => motionDocBlockKey(block, index2) === input.nodeId
-      );
-      if (blockIndex >= 0) {
-        return {
-          block: slide.blocks[blockIndex],
-          blockIndex,
-          kind: "node",
-          nodeId: input.nodeId,
-          slideIndex
-        };
-      }
-    }
-    throw new Error(`Node ${input.nodeId} does not exist.`);
-  }
-  if (input.slideIndex !== void 0) {
-    const slide = document4.scenes[input.slideIndex];
-    const range = motionDocSlideSourceRanges(source)[input.slideIndex];
-    if (!slide || !range) {
-      throw new Error(`slideIndex ${input.slideIndex} is outside the slide range.`);
-    }
-    return {
-      canvas: getMotionDocCanvasNodes(source, input.slideIndex).slides[0],
-      kind: "slide",
-      slide,
-      slideIndex: input.slideIndex,
-      source: range.source,
-      sourceRange: { end: range.end, start: range.start }
-    };
-  }
-  const summary = summarizeMotionDoc(source);
-  return {
-    kind: "document",
-    slides: summary.document.scenes.map((scene, slideIndex) => ({
-      blockCount: scene.blocks.length,
-      duration: scene.duration,
-      slideIndex,
-      title: scene.blocks.find((block) => "text" in block)?.text ?? `Slide ${slideIndex + 1}`
-    })),
-    stats: summary.stats,
-    title: summary.document.title,
-    validation: summary.validation
-  };
-}
-function getSlideXCatalog(input = {}) {
-  const section = input.section ?? "all";
-  const catalog = {
-    blocks: {
-      addable: ["Text", "Image", "Video", "Icon", "Chart", "Table", "ShapeRectangle"],
-      nodeIdentity: "Every editable block has a stable id prop exposed as nodeId."
-    },
-    designRules: {
-      canvas: { height: 1080, unit: "percent", width: 1920 },
-      guidance: [
-        "Keep text inside its x/y/w/h frame.",
-        "Use a clear type hierarchy and consistent margins.",
-        "Use one atomic batch for one coherent design change.",
-        "Render after material visual changes."
-      ],
-      media: "Use project assets or verified HTTPS URLs. Do not invent asset URLs."
-    },
-    exports: ["html", "mdx", "pptx"],
-    layouts: publicLayouts.map((layout) => ({
-      id: layout.id,
-      name: layout.name,
-      ...input.includeLayoutSource ? { source: layout.source } : {}
-    })),
-    schema: {
-      document: "# Title followed by one or more <Slide> blocks.",
-      slide: '<Slide duration={5} width={1920} height={1080} fontSizeUnit="pt" background="#fff" theme="light">...</Slide>',
-      supportedElements: [
-        "Text",
-        "Title",
-        "ImageBlock",
-        "VideoBlock",
-        "Icon",
-        "Chart",
-        "Table",
-        "Shape",
-        "Card",
-        "Metric",
-        "Group",
-        "Stack"
-      ]
-    },
-    shaders: paperShaderDefinitions.map((shader) => ({
-      category: shader.category,
-      controls: shader.controls,
-      defaultPreset: shader.defaultPreset,
-      id: shader.id,
-      name: shader.name,
-      presets: shader.presets.map((preset) => preset.name)
-    }))
-  };
-  if (section === "all") return catalog;
-  if (section === "design-rules") return catalog.designRules;
-  return catalog[section];
-}
 function applySlideXCommand(source, command) {
   switch (command.type) {
     case "document.setTitle":
@@ -43501,13 +43196,10 @@ var templatePackageV1Schema = external_exports.strictObject({
   starterSources: external_exports.record(external_exports.enum(templatePackageLocales), external_exports.string().min(1)),
   version: semver
 });
-function parseTemplateRef(value) {
-  return templateRefSchema.parse(value);
-}
 
 // core/motion-doc/domain/officialTemplateDefinitions.ts
 var officialTemplatePackageVersion = "1.0.0";
-var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.4" };
+var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.5" };
 var officialTemplateDefinitions = [
   {
     id: "summer-time-report",
@@ -43835,9 +43527,6 @@ function localTemplateSource(source) {
 
 // core/motion-doc/presets/officialTemplatePackages.ts
 var officialTemplatePackages = officialTemplateDefinitions.map(createPackage);
-function getOfficialTemplatePackage(id, version2 = officialTemplatePackageVersion) {
-  return version2 === officialTemplatePackageVersion ? officialTemplatePackages.find((template) => template.id === id) : void 0;
-}
 function createPackage(item) {
   const sourceEn = getBundledTemplateLibrarySource(item.id, "en");
   const sourceZhTw = getBundledTemplateLibrarySource(item.id, "zh-TW");
@@ -43895,52 +43584,6 @@ var templateQualityProfileV1Schema = external_exports.strictObject({
     titlePt: external_exports.tuple([external_exports.number().min(8).max(180), external_exports.number().min(8).max(180)])
   })
 });
-function parseTemplateQualityProfileV1(value) {
-  return templateQualityProfileV1Schema.parse(value);
-}
-
-// core/motion-doc/presets/officialTemplateQualityProfiles.ts
-function getOfficialTemplateQualityProfile(id, locale) {
-  if (id === "summer-time-report") {
-    return parseTemplateQualityProfileV1({
-      schemaVersion: 1,
-      locale,
-      copy: {
-        bodyMaxLines: 5,
-        headlineMaxLines: 2,
-        orphanMinCharacters: 3,
-        rules: locale === "zh-TW" ? ["\u6BCF\u9801\u53EA\u8AAA\u660E\u4E00\u500B\u5B63\u7BC0\u56DE\u9867\u8A0A\u606F\u3002", "\u6307\u6A19\u642D\u914D\u7C21\u77ED\u89E3\u8B80\uFF0C\u4E26\u4EE5\u660E\u78BA\u4E0B\u4E00\u6B65\u6536\u5C3E\u3002"] : ["Express one seasonal-reporting message per slide.", "Pair metrics with a concise interpretation and close with a clear next step."],
-        voice: locale === "zh-TW" ? "\u660E\u4EAE\u3001\u5177\u9AD4\u3001\u9762\u5411\u884C\u52D5\u3002" : "Bright, specific, and action-oriented."
-      },
-      layout: {
-        maxContentUnits: 5,
-        minElementGapPercent: 2.5,
-        outerMarginPercent: [6, 8],
-        roleRecipes: [
-          ["cover", "Use a generous blue cover field with one dominant title and a short supporting line."],
-          ["about", "Pair a concise left text zone with editable geometric accents on the right."],
-          ["highlights", "Use up to three evenly spaced highlight cards with one simple icon each."],
-          ["metrics", "Use up to four consistent metric cards with short labels and interpretations."],
-          ["timeline", "Use a single horizontal timeline with evenly spaced milestones."],
-          ["next-steps", "Use a dark action list with one owner-ready action per line."],
-          ["closing", "Return to the blue cover treatment with a concise closing message."]
-        ].map(([role, composition]) => ({
-          role,
-          composition,
-          imagePolicy: "optional",
-          messagePattern: locale === "zh-TW" ? "\u7D50\u8AD6 \u2192 \u8B49\u64DA \u2192 \u4E0B\u4E00\u6B65" : "Conclusion \u2192 evidence \u2192 next step"
-        }))
-      },
-      rhythm: {
-        maxRepeatedComposition: 2,
-        minCompositionVariants: 4,
-        rules: [locale === "zh-TW" ? "\u9023\u7E8C\u9801\u9762\u5728\u6587\u5B57\u3001\u5361\u7247\u3001\u6642\u9593\u8EF8\u8207\u6E05\u55AE\u4E4B\u9593\u5207\u63DB\u7126\u9EDE\u3002" : "Vary the focal treatment across text, cards, timeline, and action-list slides."]
-      },
-      typography: { bodyPt: [13, 24], headingPt: [22, 40], titlePt: [48, 72] }
-    });
-  }
-  return void 0;
-}
 
 // core/motion-doc/domain/textStyleRanges.ts
 var TEXT_STYLE_RANGES_PROP = "textStyleRanges";
@@ -44163,160 +43806,6 @@ function colorWithAlpha(color2, opacity) {
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
 }
 
-// core/motion-doc/domain/lucideIconRegistry.ts
-var slidexIconNames = [
-  "Sparkles",
-  "Zap",
-  "Target",
-  "Image",
-  "Lightbulb",
-  "CheckCircle",
-  "BarChart3",
-  "ArrowUpRight",
-  "TrendingUp",
-  "Rocket",
-  "BriefcaseBusiness",
-  "Presentation",
-  "Megaphone",
-  "Palette",
-  "PenTool",
-  "Layers",
-  "LayoutTemplate",
-  "MousePointer2",
-  "ScanSearch",
-  "Search",
-  "ChartNoAxesCombined",
-  "PieChart",
-  "LineChart",
-  "BadgeCheck",
-  "CircleAlert",
-  "Info",
-  "Star",
-  "Heart",
-  "Gem",
-  "Trophy",
-  "Award",
-  "ShieldCheck",
-  "Clock",
-  "Calendar",
-  "MapPin",
-  "Globe",
-  "Users",
-  "UserCheck",
-  "MessageSquare",
-  "Mail",
-  "Link",
-  "Download",
-  "Upload",
-  "FileText",
-  "Code2",
-  "Terminal",
-  "Database",
-  "Cloud",
-  "Lock",
-  "KeyRound",
-  "Settings",
-  "SlidersHorizontal"
-];
-var lucideIconLabels = Object.fromEntries(
-  slidexIconNames.map((name) => [name, name.replace(/([a-z0-9])([A-Z])/g, "$1 $2")])
-);
-var lucideIconPaths = {
-  Sparkles: [
-    "m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z",
-    "M5 3v4",
-    "M19 17v4",
-    "M3 5h4",
-    "M17 19h4"
-  ],
-  Zap: ["M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46L12 10h8a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46L12 14Z"],
-  Target: ["circle 12 12 10", "circle 12 12 6", "circle 12 12 2"],
-  Image: ["rect 3 3 18 18 2 2", "circle 9 9 2", "M21 15l-3.1-3.1a2 2 0 0 0-2.8 0L6 21"],
-  Lightbulb: ["M15 14c.2-1 .7-1.7 1.5-2.5A5 5 0 1 0 8 11.5c.8.8 1.3 1.5 1.5 2.5", "M9 18h6", "M10 22h4"],
-  CheckCircle: ["M22 11.08V12a10 10 0 1 1-5.93-9.14", "M22 4 12 14.01l-3-3"],
-  BarChart3: ["M3 3v18h18", "M18 17V9", "M13 17V5", "M8 17v-3"],
-  ArrowUpRight: ["M7 7h10v10", "M7 17 17 7"],
-  TrendingUp: ["M16 7h6v6", "m22 7-8.5 8.5-5-5L2 17"],
-  Rocket: [
-    "M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5",
-    "M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09",
-    "M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z",
-    "M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05"
-  ],
-  BriefcaseBusiness: ["M12 12h.01", "M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2", "M22 13a18.15 18.15 0 0 1-20 0", "rect 2 6 20 14 2 2"],
-  Presentation: ["M2 3h20", "M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3", "M7 21l5-5 5 5"],
-  Megaphone: ["M11 6a13 13 0 0 0 8-3v18a13 13 0 0 0-8-3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z", "M6 18a7 7 0 0 0 2 4"],
-  Palette: ["M12 22a10 10 0 1 1 10-10 4 4 0 0 1-4 4h-1.5a2.5 2.5 0 0 0 0 5H12z", "circle 7.5 10.5 .5", "circle 12 7.5 .5", "circle 16.5 10.5 .5"],
-  PenTool: ["M15.7 2.3a1 1 0 0 1 1.4 0l4.6 4.6a1 1 0 0 1 0 1.4l-13 13H2v-6.7z", "M14 4 20 10"],
-  Layers: ["M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.84l8.57 3.9a2 2 0 0 0 1.66 0l8.57-3.9a1 1 0 0 0 0-1.84z", "M22 12 12.83 16.18a2 2 0 0 1-1.66 0L2 12", "M22 17 12.83 21.18a2 2 0 0 1-1.66 0L2 17"],
-  LayoutTemplate: ["rect 3 3 18 18 2 2", "M3 9h18", "M9 21V9"],
-  MousePointer2: ["M4 4l7.07 17 2.51-7.39L21 11.07z"],
-  ScanSearch: ["M7 3H5a2 2 0 0 0-2 2v2", "M17 3h2a2 2 0 0 1 2 2v2", "M7 21H5a2 2 0 0 1-2-2v-2", "M17 21h2a2 2 0 0 0 2-2v-2", "circle 12 12 3", "M16 16l-1.9-1.9"],
-  Search: ["circle 11 11 8", "M21 21l-4.35-4.35"],
-  ChartNoAxesCombined: ["M12 16v5", "M16 14v7", "M20 10v11", "M22 3l-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.708 0L2 15", "M4 18v3", "M8 14v7"],
-  PieChart: ["M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951C12.449 1.996 12 2.448 12 3v8a1 1 0 0 0 1 1z", "M21.21 15.89A10 10 0 1 1 8 2.83"],
-  LineChart: ["M3 3v18h18", "m19 9-5 5-4-4-3 3"],
-  BadgeCheck: ["path M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z", "M9 12l2 2 4-4"],
-  CircleAlert: ["circle 12 12 10", "M12 8v4", "M12 16h.01"],
-  Info: ["circle 12 12 10", "M12 16v-4", "M12 8h.01"],
-  Star: ["M11.5 2.3a.5.5 0 0 1 1 0l2.3 6.9a.5.5 0 0 0 .47.34h7.25a.5.5 0 0 1 .29.9l-5.86 4.25a.5.5 0 0 0-.18.56l2.24 6.9a.5.5 0 0 1-.77.56l-5.86-4.25a.5.5 0 0 0-.58 0l-5.86 4.25a.5.5 0 0 1-.77-.56l2.24-6.9a.5.5 0 0 0-.18-.56L1.2 10.44a.5.5 0 0 1 .29-.9h7.25a.5.5 0 0 0 .47-.34z"],
-  Heart: ["M2 9.5a5.5 5.5 0 0 1 9.6-3.65L12 6.25l.4-.4A5.5 5.5 0 1 1 22 9.5c0 4.2-6 8.6-10 11.1C8 18.1 2 13.7 2 9.5Z"],
-  Gem: ["M6 3h12l4 6-10 12L2 9z", "M11 3 8 9l4 12 4-12-3-6", "M2 9h20"],
-  Trophy: ["M6 9H4.5A2.5 2.5 0 0 1 2 6.5V4h4", "M18 9h1.5A2.5 2.5 0 0 0 22 6.5V4h-4", "M4 22h16", "M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22", "M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22", "M18 2H6v7a6 6 0 0 0 12 0z"],
-  Award: ["circle 12 8 6", "M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"],
-  ShieldCheck: ["M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z", "M9 12l2 2 4-4"],
-  Clock: ["circle 12 12 10", "M12 6v6l4 2"],
-  Calendar: ["rect 3 4 18 18 2 2", "M16 2v4", "M8 2v4", "M3 10h18"],
-  MapPin: ["M20 10c0 4.99-5.54 10.19-7.4 11.82a1 1 0 0 1-1.2 0C9.54 20.19 4 14.99 4 10a8 8 0 0 1 16 0", "circle 12 10 3"],
-  Globe: ["circle 12 12 10", "M2 12h20", "M12 2a15.3 15.3 0 0 1 0 20", "M12 2a15.3 15.3 0 0 0 0 20"],
-  Users: ["M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", "circle 9 7 4", "M22 21v-2a4 4 0 0 0-3-3.87", "M16 3.13a4 4 0 0 1 0 7.75"],
-  UserCheck: ["M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", "circle 9 7 4", "M16 11l2 2 4-4"],
-  MessageSquare: ["path M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"],
-  Mail: ["rect 2 4 20 16 2 2", "M22 7 12 13 2 7"],
-  Link: ["M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71", "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"],
-  Download: ["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", "M7 10l5 5 5-5", "M12 15V3"],
-  Upload: ["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", "M17 8l-5-5-5 5", "M12 3v12"],
-  FileText: ["M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z", "M14 2v4a2 2 0 0 0 2 2h4", "M10 9H8", "M16 13H8", "M16 17H8"],
-  Code2: ["M18 16l4-4-4-4", "M6 8l-4 4 4 4", "M14.5 4l-5 16"],
-  Terminal: ["M4 17l6-6-6-6", "M12 19h8"],
-  Database: ["ellipse 12 5 9 3", "M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5", "M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"],
-  Cloud: ["M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"],
-  Lock: ["rect 3 11 18 11 2 2", "M7 11V7a5 5 0 0 1 10 0v4"],
-  KeyRound: ["M2 18a6 6 0 1 0 6-6 6 6 0 0 0-6 6", "M14 14l8-8", "M18 6l2 2", "M16 8l2 2"],
-  Settings: ["circle 12 12 3", "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8.92 3a1.65 1.65 0 0 0 1-1.51V1a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15.08 3a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 8c.14.31.49.52.86.52H21a2 2 0 1 1 0 4h-.09A1.65 1.65 0 0 0 19.4 15Z"],
-  SlidersHorizontal: ["M21 4h-7", "M10 4H3", "M21 12h-9", "M8 12H3", "M21 20h-5", "M12 20H3", "circle 12 4 2", "circle 10 12 2", "circle 14 20 2"]
-};
-function isSlideXIconName(value) {
-  return slidexIconNames.includes(value);
-}
-
-// core/motion-doc/application/svgDataUri.ts
-function escapeSvgAttribute(value) {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
-}
-
-// core/motion-doc/application/lucideIconSvg.ts
-function renderLucideIconSvg(name, options = {}) {
-  if (!isSlideXIconName(name)) return "";
-  const color2 = options.color?.trim() || "currentColor";
-  const strokeWidth = Math.min(Math.max(options.strokeWidth ?? 2, 0), 24);
-  const children = lucideIconPaths[name].map(renderLucideIconPath).join("");
-  return `<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="none" preserveAspectRatio="xMidYMid meet" stroke="${escapeSvgAttribute(color2)}" stroke-linecap="round" stroke-linejoin="round" stroke-width="${strokeWidth}" viewBox="0 0 24 24">${children}</svg>`;
-}
-function renderLucideIconPath(path10) {
-  const [shape, ...parts] = path10.split(" ");
-  if (shape === "circle") {
-    return `<circle cx="${parts[0]}" cy="${parts[1]}" r="${parts[2]}" />`;
-  }
-  if (shape === "ellipse") {
-    return `<ellipse cx="${parts[0]}" cy="${parts[1]}" rx="${parts[2]}" ry="${parts[3]}" />`;
-  }
-  if (shape === "rect") {
-    return `<rect x="${parts[0]}" y="${parts[1]}" width="${parts[2]}" height="${parts[3]}" rx="${parts[4]}" ry="${parts[5]}" />`;
-  }
-  return `<path d="${escapeSvgAttribute(shape === "path" ? parts.join(" ") : path10)}" />`;
-}
-
 // core/motion-doc/application/chartSvg.ts
 var WIDTH = 800;
 var HEIGHT = 420;
@@ -44330,9 +43819,9 @@ function renderMotionDocChartSvg(props, options = {}) {
   const appearanceClass = appearance === "editor-modern" ? " motion-chart--modern" : "";
   const styleVariables = [
     ...appearance === "editor-modern" ? [
-      `--chart-label-size:${round2(clamp2(Math.min(layout.width, layout.height) * 0.052, 19, 32))}px`,
-      `--chart-value-size:${round2(clamp2(Math.min(layout.width, layout.height) * 0.06, 22, 36))}px`,
-      `--chart-center-size:${round2(clamp2(Math.min(layout.width, layout.height) * 0.075, 28, 46))}px`
+      `--chart-label-size:${round(clamp2(Math.min(layout.width, layout.height) * 0.052, 19, 32))}px`,
+      `--chart-value-size:${round(clamp2(Math.min(layout.width, layout.height) * 0.06, 22, 36))}px`,
+      `--chart-center-size:${round(clamp2(Math.min(layout.width, layout.height) * 0.075, 28, 46))}px`
     ] : [],
     ...model.labelColor ? [`--chart-label-color:${model.labelColor}`] : []
   ];
@@ -44363,7 +43852,7 @@ function renderBars(model, layout, appearance) {
     const fill = model.colorMode === "gradient" ? `url(#${gradientBaseId}-${index2})` : chartColor(model, index2, appearance);
     const defaultRadius2 = appearance === "editor-modern" ? Math.min(barWidth / 7, 10) : Math.min(barWidth / 4, 18);
     const radius = model.barRadiusCustom ? model.barRadius >= 999 ? barWidth / 2 : Math.min(model.barRadius, barWidth / 2) : defaultRadius2;
-    return `<g class="chart-series" style="--chart-delay:${delay}"><rect class="chart-bar" fill="${fill}" fill-opacity="${chartOpacity(model, index2)}" height="${round2(height)}" rx="${round2(radius)}" width="${round2(barWidth)}" x="${round2(x)}" y="${round2(y)}" />${valueLabel(model, item.value, round2(x + barWidth / 2), round2(Math.max(y - 12, 18)))}${categoryLabel(model, item.label, round2(x + barWidth / 2), layout.labelY)}</g>`;
+    return `<g class="chart-series" style="--chart-delay:${delay}"><rect class="chart-bar" fill="${fill}" fill-opacity="${chartOpacity(model, index2)}" height="${round(height)}" rx="${round(radius)}" width="${round(barWidth)}" x="${round(x)}" y="${round(y)}" />${valueLabel(model, item.value, round(x + barWidth / 2), round(Math.max(y - 12, 18)))}${categoryLabel(model, item.label, round(x + barWidth / 2), layout.labelY)}</g>`;
   }).join("");
   const annotationIndex = model.annotationIndex ?? model.emphasisIndex;
   const annotationItem = typeof annotationIndex === "number" ? model.data[annotationIndex] : void 0;
@@ -44387,14 +43876,14 @@ function renderTrend(model, area, layout, appearance) {
     y: plot.bottom - (item.value - minimum) / range * (plot.bottom - plot.top)
   }));
   const linePath = model.lineSmooth ? smoothPath(points) : straightPath(points);
-  const areaPath = `${linePath} L ${round2(points.at(-1)?.x ?? plot.right)} ${plot.bottom} L ${round2(points[0]?.x ?? plot.left)} ${plot.bottom} Z`;
+  const areaPath = `${linePath} L ${round(points.at(-1)?.x ?? plot.right)} ${plot.bottom} L ${round(points[0]?.x ?? plot.left)} ${plot.bottom} Z`;
   const gradientId = `chart-area-gradient-${stableId2(`${model.type}:${model.data.map((item) => `${item.label}:${item.value}`).join("|")}`)}`;
-  const labels = model.showLabels ? points.map(({ item, x, y }, index2) => `<g class="chart-series" style="--chart-delay:${index2 * 70}ms">${appearance === "editor-modern" ? `<circle class="chart-point-halo" cx="${round2(x)}" cy="${round2(y)}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${chartOpacity(model, index2)}" r="10" />` : ""}<circle class="chart-point" cx="${round2(x)}" cy="${round2(y)}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${chartOpacity(model, index2)}" r="${appearance === "editor-modern" ? 4.5 : 6}" />${valueLabel(model, item.value, round2(x), round2(y - 15))}${categoryLabel(model, item.label, round2(x), layout.labelY)}</g>`).join("") : "";
+  const labels = model.showLabels ? points.map(({ item, x, y }, index2) => `<g class="chart-series" style="--chart-delay:${index2 * 70}ms">${appearance === "editor-modern" ? `<circle class="chart-point-halo" cx="${round(x)}" cy="${round(y)}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${chartOpacity(model, index2)}" r="10" />` : ""}<circle class="chart-point" cx="${round(x)}" cy="${round(y)}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${chartOpacity(model, index2)}" r="${appearance === "editor-modern" ? 4.5 : 6}" />${valueLabel(model, item.value, round(x), round(y - 15))}${categoryLabel(model, item.label, round(x), layout.labelY)}</g>`).join("") : "";
   const primaryColor = chartColor(model, 0, appearance);
   const areaOpacity = model.areaOpacityCustom ? model.areaOpacity : appearance === "editor-modern" ? 0.2 : 0.38;
   const annotationIndex = model.annotationIndex ?? model.emphasisIndex;
   const annotationPoint = annotationIndex === null ? void 0 : points[annotationIndex];
-  return `${model.showAxes ? renderGrid(model, maximum, 4, layout, minimum, model.showGrid) : ""}${renderReferenceLine(model, maximum, layout, minimum)}<defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${primaryColor}" stop-opacity="${round2(areaOpacity)}"/><stop offset="1" stop-color="${primaryColor}" stop-opacity=".02"/></linearGradient></defs>${area ? `<path class="chart-area" d="${areaPath}" fill="url(#${gradientId})" />` : ""}<path class="chart-line" d="${linePath}" fill="none" stroke="${primaryColor}" stroke-linecap="round" stroke-linejoin="round" stroke-width="${appearance === "editor-modern" ? 5 : 7}" pathLength="1" />${labels}${annotationPoint && model.annotationText ? renderPointAnnotation(model, annotationPoint.x, annotationPoint.y, layout) : ""}`;
+  return `${model.showAxes ? renderGrid(model, maximum, 4, layout, minimum, model.showGrid) : ""}${renderReferenceLine(model, maximum, layout, minimum)}<defs><linearGradient id="${gradientId}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${primaryColor}" stop-opacity="${round(areaOpacity)}"/><stop offset="1" stop-color="${primaryColor}" stop-opacity=".02"/></linearGradient></defs>${area ? `<path class="chart-area" d="${areaPath}" fill="url(#${gradientId})" />` : ""}<path class="chart-line" d="${linePath}" fill="none" stroke="${primaryColor}" stroke-linecap="round" stroke-linejoin="round" stroke-width="${appearance === "editor-modern" ? 5 : 7}" pathLength="1" />${labels}${annotationPoint && model.annotationText ? renderPointAnnotation(model, annotationPoint.x, annotationPoint.y, layout) : ""}`;
 }
 function renderRadial(model, donut, layout, appearance) {
   const wide = layout.width / layout.height >= 1.45 && layout.width >= 520;
@@ -44412,7 +43901,7 @@ function renderRadial(model, donut, layout, appearance) {
     const path10 = radialSlicePath(cx, cy, outerRadius, innerRadius, startAngle, endAngle);
     const labelRadius = donut ? (outerRadius + innerRadius) / 2 : outerRadius * 0.66;
     const middle = polar(cx, cy, labelRadius, startAngle + angle / 2);
-    const slice = `<path class="chart-slice" d="${path10}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${chartOpacity(model, index2)}" style="--chart-delay:${index2 * 75}ms" />${showValueLabel(model) && angle > 12 ? `<text class="chart-value chart-value--radial" text-anchor="middle" x="${round2(middle.x)}" y="${round2(middle.y)}">${Math.round(angle / 3.6)}%</text>` : ""}`;
+    const slice = `<path class="chart-slice" d="${path10}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${chartOpacity(model, index2)}" style="--chart-delay:${index2 * 75}ms" />${showValueLabel(model) && angle > 12 ? `<text class="chart-value chart-value--radial" text-anchor="middle" x="${round(middle.x)}" y="${round(middle.y)}">${Math.round(angle / 3.6)}%</text>` : ""}`;
     startAngle = endAngle;
     return slice;
   }).join("");
@@ -44422,10 +43911,10 @@ function renderRadial(model, donut, layout, appearance) {
     const legendX = wide ? layout.width * 0.66 : layout.width * 0.12;
     const legendY = wide ? layout.height * 0.18 + index2 * itemHeight : layout.height * 0.7 + index2 * itemHeight;
     const valueX = wide ? layout.width * 0.28 : layout.width * 0.72;
-    return `<g class="chart-legend-item" transform="translate(${round2(legendX)} ${round2(legendY)})"><rect fill="${chartColor(model, index2, appearance)}" fill-opacity="${chartOpacity(model, index2)}" height="${round2(markerSize)}" rx="${round2(appearance === "editor-modern" ? markerSize / 2 : markerSize / 3)}" width="${round2(markerSize)}"/>${showCategoryLabel(model) ? `<text class="chart-legend" x="${round2(markerSize + 14)}" y="${round2(markerSize * 0.78)}">${escapeXml(item.label)}</text>` : ""}${showValueLabel(model) ? `<text class="chart-legend-value" text-anchor="end" x="${round2(valueX)}" y="${round2(markerSize * 0.78)}">${formatMotionDocChartValue(model, item.value)}</text>` : ""}</g>`;
+    return `<g class="chart-legend-item" transform="translate(${round(legendX)} ${round(legendY)})"><rect fill="${chartColor(model, index2, appearance)}" fill-opacity="${chartOpacity(model, index2)}" height="${round(markerSize)}" rx="${round(appearance === "editor-modern" ? markerSize / 2 : markerSize / 3)}" width="${round(markerSize)}"/>${showCategoryLabel(model) ? `<text class="chart-legend" x="${round(markerSize + 14)}" y="${round(markerSize * 0.78)}">${escapeXml(item.label)}</text>` : ""}${showValueLabel(model) ? `<text class="chart-legend-value" text-anchor="end" x="${round(valueX)}" y="${round(markerSize * 0.78)}">${formatMotionDocChartValue(model, item.value)}</text>` : ""}</g>`;
   }).join("") : "";
-  const centerMetric = donut && appearance === "editor-modern" ? `<g class="chart-center-metric"><text text-anchor="middle" x="${round2(cx)}" y="${round2(cy - 2)}">${formatMotionDocChartValue(model, total)}</text><text class="chart-center-label" text-anchor="middle" x="${round2(cx)}" y="${round2(cy + 22)}">Total</text></g>` : "";
-  const annotation = model.annotationText ? `<text class="chart-annotation-text" fill="${model.annotationColor}" text-anchor="end" x="${round2(layout.width - 20)}" y="${round2(layout.height * 0.08)}">${escapeXml(model.annotationText)}</text>` : "";
+  const centerMetric = donut && appearance === "editor-modern" ? `<g class="chart-center-metric"><text text-anchor="middle" x="${round(cx)}" y="${round(cy - 2)}">${formatMotionDocChartValue(model, total)}</text><text class="chart-center-label" text-anchor="middle" x="${round(cx)}" y="${round(cy + 22)}">Total</text></g>` : "";
+  const annotation = model.annotationText ? `<text class="chart-annotation-text" fill="${model.annotationColor}" text-anchor="end" x="${round(layout.width - 20)}" y="${round(layout.height * 0.08)}">${escapeXml(model.annotationText)}</text>` : "";
   return `<g class="chart-radial">${slices}</g>${centerMetric}${legend}${annotation}`;
 }
 function renderScatter(model, layout, appearance) {
@@ -44440,7 +43929,7 @@ function renderScatter(model, layout, appearance) {
     const x = plot.left + ((item.x ?? index2 + 1) - xMin) / Math.max(xMax - xMin, 1) * (plot.right - plot.left);
     const y = plot.bottom - (item.value - yMin) / Math.max(yMax - yMin, 1) * (plot.bottom - plot.top);
     const radius = Math.min(item.size ?? 10, Math.max((plot.bottom - plot.top) * 0.08, 6));
-    return `<g class="chart-series" style="--chart-delay:${index2 * 70}ms"><circle class="chart-bubble" cx="${round2(x)}" cy="${round2(y)}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${round2(chartOpacity(model, index2) * (appearance === "editor-modern" ? 0.9 : 0.78))}" r="${radius}"/>${showCategoryLabel(model) ? `<text class="chart-value" text-anchor="middle" x="${round2(x)}" y="${round2(y - radius - 10)}">${escapeXml(item.label)}</text>` : ""}${showValueLabel(model) ? `<text class="chart-label" text-anchor="middle" x="${round2(x)}" y="${round2(y + radius + 18)}">${formatMotionDocChartValue(model, item.value)}</text>` : ""}</g>`;
+    return `<g class="chart-series" style="--chart-delay:${index2 * 70}ms"><circle class="chart-bubble" cx="${round(x)}" cy="${round(y)}" fill="${chartColor(model, index2, appearance)}" fill-opacity="${round(chartOpacity(model, index2) * (appearance === "editor-modern" ? 0.9 : 0.78))}" r="${radius}"/>${showCategoryLabel(model) ? `<text class="chart-value" text-anchor="middle" x="${round(x)}" y="${round(y - radius - 10)}">${escapeXml(item.label)}</text>` : ""}${showValueLabel(model) ? `<text class="chart-label" text-anchor="middle" x="${round(x)}" y="${round(y + radius + 18)}">${formatMotionDocChartValue(model, item.value)}</text>` : ""}</g>`;
   }).join("");
   const annotationIndex = model.annotationIndex ?? model.emphasisIndex;
   const annotationItem = annotationIndex === null ? void 0 : model.data[annotationIndex];
@@ -44457,7 +43946,7 @@ function renderGrid(model, maximum, count, layout, minimum = 0, showGrid = true)
   return Array.from({ length: count + 1 }, (_, index2) => {
     const value = minimum + (maximum - minimum) * index2 / count;
     const y = plot.bottom - index2 / count * (plot.bottom - plot.top);
-    return `${showGrid ? `<line class="chart-grid${index2 === 0 ? " chart-grid--baseline" : ""}" x1="${plot.left}" x2="${plot.right}" y1="${round2(y)}" y2="${round2(y)}"/>` : ""}<text class="chart-axis-label" text-anchor="end" x="${round2(plot.left - 16)}" y="${round2(y + 5)}">${formatMotionDocChartValue(model, value)}</text>`;
+    return `${showGrid ? `<line class="chart-grid${index2 === 0 ? " chart-grid--baseline" : ""}" x1="${plot.left}" x2="${plot.right}" y1="${round(y)}" y2="${round(y)}"/>` : ""}<text class="chart-axis-label" text-anchor="end" x="${round(plot.left - 16)}" y="${round(y + 5)}">${formatMotionDocChartValue(model, value)}</text>`;
   }).join("");
 }
 function renderReferenceLine(model, maximum, layout, minimum = 0) {
@@ -44465,29 +43954,29 @@ function renderReferenceLine(model, maximum, layout, minimum = 0) {
   const { plot } = layout;
   const y = plot.bottom - (model.referenceValue - minimum) / Math.max(maximum - minimum, 1) * (plot.bottom - plot.top);
   const label = model.referenceLabel || formatMotionDocChartValue(model, model.referenceValue);
-  return `<g class="chart-reference" style="--chart-reference-color:${model.referenceColor}"><line x1="${plot.left}" x2="${plot.right}" y1="${round2(y)}" y2="${round2(y)}"/><text text-anchor="end" x="${plot.right}" y="${round2(y - 8)}">${escapeXml(label)}</text></g>`;
+  return `<g class="chart-reference" style="--chart-reference-color:${model.referenceColor}"><line x1="${plot.left}" x2="${plot.right}" y1="${round(y)}" y2="${round(y)}"/><text text-anchor="end" x="${plot.right}" y="${round(y - 8)}">${escapeXml(label)}</text></g>`;
 }
 function renderPointAnnotation(model, x, y, layout) {
   const anchorRight = x > layout.width * 0.64;
   const targetX = clamp2(x + (anchorRight ? -32 : 32), 18, layout.width - 18);
   const targetY = clamp2(y - 38, 18, layout.height - 18);
-  return `<g class="chart-annotation" style="--chart-annotation-color:${model.annotationColor}"><line x1="${round2(x)}" x2="${round2(targetX)}" y1="${round2(y)}" y2="${round2(targetY)}"/><circle cx="${round2(x)}" cy="${round2(y)}" r="4"/><text text-anchor="${anchorRight ? "end" : "start"}" x="${round2(targetX + (anchorRight ? -6 : 6))}" y="${round2(targetY - 4)}">${escapeXml(model.annotationText)}</text></g>`;
+  return `<g class="chart-annotation" style="--chart-annotation-color:${model.annotationColor}"><line x1="${round(x)}" x2="${round(targetX)}" y1="${round(y)}" y2="${round(targetY)}"/><circle cx="${round(x)}" cy="${round(y)}" r="4"/><text text-anchor="${anchorRight ? "end" : "start"}" x="${round(targetX + (anchorRight ? -6 : 6))}" y="${round(targetY - 4)}">${escapeXml(model.annotationText)}</text></g>`;
 }
 function chartLayout(frame, appearance = "default") {
-  const width = frame ? Math.max(240, round2(frame.w / 100 * MOTION_DOC_CANVAS_WIDTH)) : WIDTH;
-  const height = frame ? Math.max(160, round2(frame.h / 100 * MOTION_DOC_CANVAS_HEIGHT)) : HEIGHT;
+  const width = frame ? Math.max(240, round(frame.w / 100 * MOTION_DOC_CANVAS_WIDTH)) : WIDTH;
+  const height = frame ? Math.max(160, round(frame.h / 100 * MOTION_DOC_CANVAS_HEIGHT)) : HEIGHT;
   const horizontalInset = clamp2(width * (appearance === "editor-modern" ? 0.07 : 0.085), 42, 76);
   const rightInset = clamp2(width * (appearance === "editor-modern" ? 0.035 : 0.04), 20, 42);
   const topInset = clamp2(height * (appearance === "editor-modern" ? 0.1 : 0.075), 18, 38);
   const bottomInset = clamp2(height * (appearance === "editor-modern" ? 0.16 : 0.17), 44, 66);
   return {
     height,
-    labelY: round2(height - clamp2(height * 0.055, 20, 30)),
+    labelY: round(height - clamp2(height * 0.055, 20, 30)),
     plot: {
-      bottom: round2(height - bottomInset),
-      left: round2(horizontalInset),
-      right: round2(width - rightInset),
-      top: round2(topInset)
+      bottom: round(height - bottomInset),
+      left: round(horizontalInset),
+      right: round(width - rightInset),
+      top: round(topInset)
     },
     width
   };
@@ -44522,26 +44011,26 @@ function clamp2(value, minimum, maximum) {
 }
 function smoothPath(points) {
   if (points.length === 0) return "";
-  if (points.length === 1) return `M ${round2(points[0].x)} ${round2(points[0].y)}`;
+  if (points.length === 1) return `M ${round(points[0].x)} ${round(points[0].y)}`;
   return points.reduce((path10, point3, index2) => {
-    if (index2 === 0) return `M ${round2(point3.x)} ${round2(point3.y)}`;
+    if (index2 === 0) return `M ${round(point3.x)} ${round(point3.y)}`;
     const previous3 = points[index2 - 1];
     const controlX = (previous3.x + point3.x) / 2;
-    return `${path10} C ${round2(controlX)} ${round2(previous3.y)}, ${round2(controlX)} ${round2(point3.y)}, ${round2(point3.x)} ${round2(point3.y)}`;
+    return `${path10} C ${round(controlX)} ${round(previous3.y)}, ${round(controlX)} ${round(point3.y)}, ${round(point3.x)} ${round(point3.y)}`;
   }, "");
 }
 function straightPath(points) {
-  return points.map((point3, index2) => `${index2 === 0 ? "M" : "L"} ${round2(point3.x)} ${round2(point3.y)}`).join(" ");
+  return points.map((point3, index2) => `${index2 === 0 ? "M" : "L"} ${round(point3.x)} ${round(point3.y)}`).join(" ");
 }
 function radialSlicePath(cx, cy, outer, inner, start, end) {
   const safeEnd = end - start >= 360 ? end - 1e-3 : end;
   const outerStart = polar(cx, cy, outer, start);
   const outerEnd = polar(cx, cy, outer, safeEnd);
   const large = safeEnd - start > 180 ? 1 : 0;
-  if (inner <= 0) return `M ${cx} ${cy} L ${round2(outerStart.x)} ${round2(outerStart.y)} A ${outer} ${outer} 0 ${large} 1 ${round2(outerEnd.x)} ${round2(outerEnd.y)} Z`;
+  if (inner <= 0) return `M ${cx} ${cy} L ${round(outerStart.x)} ${round(outerStart.y)} A ${outer} ${outer} 0 ${large} 1 ${round(outerEnd.x)} ${round(outerEnd.y)} Z`;
   const innerEnd = polar(cx, cy, inner, safeEnd);
   const innerStart = polar(cx, cy, inner, start);
-  return `M ${round2(outerStart.x)} ${round2(outerStart.y)} A ${outer} ${outer} 0 ${large} 1 ${round2(outerEnd.x)} ${round2(outerEnd.y)} L ${round2(innerEnd.x)} ${round2(innerEnd.y)} A ${inner} ${inner} 0 ${large} 0 ${round2(innerStart.x)} ${round2(innerStart.y)} Z`;
+  return `M ${round(outerStart.x)} ${round(outerStart.y)} A ${outer} ${outer} 0 ${large} 1 ${round(outerEnd.x)} ${round(outerEnd.y)} L ${round(innerEnd.x)} ${round(innerEnd.y)} A ${inner} ${inner} 0 ${large} 0 ${round(innerStart.x)} ${round(innerStart.y)} Z`;
 }
 function polar(cx, cy, radius, angle) {
   const radians = angle * Math.PI / 180;
@@ -44551,7 +44040,7 @@ function niceMaximum(value) {
   const magnitude = 10 ** Math.floor(Math.log10(Math.max(value, 1)));
   return Math.ceil(value / magnitude) * magnitude;
 }
-function round2(value) {
+function round(value) {
   return Math.round(value * 100) / 100;
 }
 function escapeXml(value) {
@@ -44580,6 +44069,11 @@ function numberProp2(value, fallback) {
 }
 function clampImageCropScale(value) {
   return Math.round(Math.min(Math.max(value, 0.1), 8) * 1e3) / 1e3;
+}
+
+// core/motion-doc/application/svgDataUri.ts
+function escapeSvgAttribute(value) {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 }
 
 // core/motion-doc/application/shapeVectorSvg.ts
@@ -50800,7 +50294,6 @@ var motionDocExportStyles = `      :root {
       .motion-block:not(.motion-block--positioned):not(.motion-block--full) > * {
         height: auto;
       }
-      .motion-block .block-title,
       .motion-block .block-text {
         width: 100%;
         max-width: none;
@@ -50917,19 +50410,6 @@ var motionDocExportStyles = `      :root {
           transform: translate3d(0, 0, 0);
         }
       }
-      .block-title {
-        margin: 0;
-        max-width: 48rem;
-        border-radius: var(--motion-radius, 0);
-        font-size: calc(var(--motion-font-size, ${motionDocFontPointsToCanvasPixels(MOTION_DOC_FONT_SIZES.display)}px) * var(--frame-scale, 1));
-        font-weight: var(--motion-font-weight, 650);
-        letter-spacing: var(--motion-letter-spacing, 0px);
-        line-height: var(--motion-line-height, 1.02);
-        padding: var(--motion-text-padding, 0);
-        background: var(--motion-bg, transparent);
-        color: var(--motion-fg, var(--slide-fg));
-        text-align: var(--motion-text-align, inherit);
-      }
       .block-text {
         margin: 0;
         max-width: 46rem;
@@ -50958,8 +50438,7 @@ var motionDocExportStyles = `      :root {
       .block-markdown-heading {
         color: var(--motion-fg, var(--slide-fg));
       }
-      .block-text a,
-      .block-title a {
+      .block-text a {
         color: inherit;
         text-decoration-thickness: 0.07em;
         text-underline-offset: 0.12em;
@@ -50979,112 +50458,6 @@ var motionDocExportStyles = `      :root {
         font-size: calc(var(--motion-font-size, ${motionDocFontPointsToCanvasPixels(MOTION_DOC_FONT_SIZES.body * 0.86)}px) * var(--frame-scale, 1));
         line-height: 1.5;
         white-space: pre-wrap;
-      }
-      .block-card {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        margin: 0;
-        max-width: 42rem;
-        overflow: hidden;
-        padding: 20px;
-        border-radius: var(--motion-radius, 16px);
-        border: 1px solid var(--slide-border);
-        background: var(--motion-bg, var(--slide-card));
-        box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-        backdrop-filter: blur(16px);
-      }
-      .block-card--sm {
-        max-width: 24rem;
-      }
-      .block-card--lg {
-        max-width: 48rem;
-      }
-      .block-card--full {
-        width: 100%;
-        max-width: none;
-      }
-      .block-card--horizontal {
-        flex-direction: row;
-        align-items: flex-start;
-        gap: 18px;
-      }
-      .block-card__icon {
-        display: grid;
-        flex: 0 0 auto;
-        width: 36px;
-        height: 36px;
-        place-items: center;
-        margin-bottom: 16px;
-        border-radius: 8px;
-        border: 1px solid var(--slide-border);
-        background: rgba(255,255,255,0.06);
-        color: var(--motion-fg, var(--slide-fg));
-      }
-      .block-card--horizontal .block-card__icon {
-        margin-bottom: 0;
-      }
-      .block-card__content {
-        min-width: 0;
-      }
-      .block-card__icon svg {
-        width: 24px;
-        height: 24px;
-      }
-      .block-card h3 {
-        margin: 0;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(20)}px;
-        line-height: 1.4;
-        color: var(--motion-fg, var(--slide-fg));
-      }
-      .block-card p {
-        margin: 8px 0 0;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(16)}px;
-        line-height: 1.75;
-        color: var(--motion-muted, var(--slide-muted));
-      }
-      .block-metric {
-        margin: 0;
-        width: 100%;
-        max-width: calc(54rem * var(--frame-scale, 1));
-        padding: calc(20px * var(--frame-scale, 1));
-        border-radius: var(--motion-radius, 16px);
-        border: 1px solid var(--slide-border);
-        background: var(--motion-bg, rgba(255,255,255,0.06));
-        box-shadow: 0 calc(24px * var(--frame-scale, 1)) calc(72px * var(--frame-scale, 1)) rgba(0,0,0,0.24);
-      }
-      .block-metric {
-        max-width: 24rem;
-      }
-      .block-metric--md {
-        max-width: 28rem;
-      }
-      .block-metric--lg {
-        max-width: 42rem;
-      }
-      .block-metric--full {
-        max-width: none;
-      }
-      .block-metric__label {
-        margin: 0;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(12)}px;
-        font-weight: 700;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: var(--motion-muted, var(--slide-muted));
-      }
-      .block-metric__value {
-        margin: 12px 0 0;
-        font-size: ${motionDocFontPointsToCanvasPixels(MOTION_DOC_FONT_SIZES.heading)}px;
-        font-weight: 650;
-        line-height: 1;
-        color: var(--motion-fg, var(--slide-fg));
-      }
-      .block-metric__caption {
-        margin: 12px 0 0;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(14)}px;
-        line-height: 1.5rem;
-        color: var(--motion-muted, var(--slide-muted));
       }
       .block-image {
         margin: 0;
@@ -51239,37 +50612,6 @@ var motionDocExportStyles = `      :root {
       .shape-line-vector-endpoint { position:absolute; top:50%; overflow:visible; pointer-events:none; }
       .shape-line-vector-endpoint--start { left:0; transform:translate(-50%,-50%); }
       .shape-line-vector-endpoint--end { right:0; transform:translate(50%,-50%); }
-      .block-stack {
-        display: flex;
-        width: 100%;
-        height: 100%;
-        flex-direction: var(--stack-direction, row);
-        align-items: var(--stack-align, stretch);
-        gap: var(--stack-gap, 16px);
-        padding: var(--stack-padding, 20px);
-        border: 1px solid var(--stack-stroke, var(--slide-border));
-        border-radius: var(--motion-radius, 16px);
-        background: var(--motion-bg, var(--slide-card));
-        color: var(--motion-fg, var(--slide-fg));
-        box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-        backdrop-filter: blur(16px);
-      }
-      .block-stack__item {
-        display: grid;
-        min-width: 0;
-        min-height: 0;
-        flex: 1;
-        place-items: center;
-        overflow: hidden;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.08);
-        background: rgba(255,255,255,0.06);
-        padding: 8px 12px;
-        color: inherit;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(12)}px;
-        font-weight: 650;
-        text-align: center;
-      }
       .block-table {
         display: grid;
         width: 100%;
@@ -51899,21 +51241,13 @@ function renderSplitSceneContent(contentBlocks, imageBlocks, layout, options) {
   return `<div class="slide-split-pane slide-split-pane--content" style="order:${textOrder}">${contentHtml}</div><div class="slide-split-pane slide-split-pane--media" style="order:${imageOrder}">${imageHtml}</div>`;
 }
 function renderBlock(block, blockIndex, options = {}) {
-  if (block.type === "Title") {
-    const depth = numberProp5(block.props.markdownDepth, 1);
-    const tag = depth > 1 ? `h${Math.min(Math.max(Math.round(depth), 2), 6)}` : "h1";
-    return renderMotionBlock(
-      block,
-      `<${tag} class="block-title block-markdown-heading">${renderTextLines(String(block.text ?? ""), block.props?.listType, block.props)}</${tag}>`
-    );
-  }
   if (block.type === "Text" || block.type === "heading") {
     const listType = "props" in block ? block.props?.listType : void 0;
     const props = "props" in block ? block.props : {};
     const markdownKind = stringProp5(props.markdownKind);
     const contents = renderTextLines(String(block.text ?? ""), listType, props);
-    if (markdownKind === "heading") {
-      const depth = Math.min(Math.max(Math.round(numberProp5(props.markdownDepth, 2)), 2), 6);
+    if (markdownKind === "heading" || props.role === "title") {
+      const depth = Math.min(Math.max(Math.round(numberProp5(props.markdownDepth, props.role === "title" ? 1 : 2)), 1), 6);
       return renderMotionBlock(block, `<h${depth} class="block-text block-markdown-heading">${contents}</h${depth}>`);
     }
     if (markdownKind === "blockquote") {
@@ -51923,15 +51257,6 @@ function renderBlock(block, blockIndex, options = {}) {
       return renderMotionBlock(block, `<pre class="block-text block-text--code"><code>${contents}</code></pre>`);
     }
     return renderMotionBlock(block, `<p class="block-text">${contents}</p>`);
-  }
-  if (block.type === "Card") {
-    const icon = String(block.props.icon ?? "");
-    const cardLayoutClass = block.props.layout === "horizontal" ? " block-card--horizontal" : "";
-    const cardWidthClass = cardWidthClassName(block.props.width);
-    return renderMotionBlock(
-      block,
-      `<article class="block-card${cardLayoutClass}${cardWidthClass}">${icon ? `<div class="block-card__icon">${renderLucideIconSvg(icon)}</div>` : ""}<div class="block-card__content"><h3>${escapeHtml(String(block.props.title ?? "Card"))}</h3><p>${escapeHtml(String(block.props.text ?? ""))}</p></div></article>`
-    );
   }
   if (block.type === "Chart") {
     return renderMotionBlock(
@@ -52069,40 +51394,10 @@ function renderBlock(block, blockIndex, options = {}) {
       `<figure class="block-image block-video"><video src="${escapeAttribute(src)}"${posterAttr}${controls}${loop}${muted} style="${escapeAttribute(inlineCss({ "object-fit": fit }))}"></video></figure>`
     );
   }
-  if (block.type === "Metric") {
-    const metricWidthClass = metricWidthClassName(block.props.width);
-    return renderMotionBlock(
-      block,
-      `<article class="block-metric${metricWidthClass}"><p class="block-metric__label">${escapeHtml(String(block.props.label ?? "Metric"))}</p><p class="block-metric__value">${escapeHtml(String(block.props.value ?? "0"))}</p><p class="block-metric__caption">${escapeHtml(String(block.props.caption ?? ""))}</p></article>`
-    );
-  }
-  if (block.type === "Icon") {
-    const strokeWidth = numberProp5(block.props.strokeWidth, 2);
-    return renderMotionBlock(
-      block,
-      `<div class="block-icon">${renderLucideIconSvg(String(block.props.icon ?? "Sparkles"), { strokeWidth })}</div>`
-    );
-  }
   if (block.type === "Shape") {
     return renderMotionBlock(
       block,
       `<div class="block-shape">${renderShapeHtmlFallback(block.props)}${renderShapeSvg(block.props, blockIndex)}</div>`
-    );
-  }
-  if (block.type === "Stack") {
-    const items = String(block.props.items ?? "Panel A|Panel B|Panel C").split("|").map((item) => item.trim()).filter(Boolean);
-    const direction = block.props.layout === "column" ? "column" : "row";
-    const align = block.props.align === "center" ? "center" : block.props.align === "end" ? "flex-end" : "stretch";
-    const stackItems = (items.length > 0 ? items : ["Item 1", "Item 2"]).map((item) => `<div class="block-stack__item">${escapeHtml(item)}</div>`).join("");
-    return renderMotionBlock(
-      block,
-      `<div class="block-stack" style="${escapeAttribute(inlineCss({
-        "--stack-align": align,
-        "--stack-direction": direction,
-        "--stack-gap": `${numberProp5(block.props.gap, 16)}px`,
-        "--stack-padding": `${numberProp5(block.props.padding, 20)}px`,
-        "--stack-stroke": stringProp5(block.props.stroke) ?? "var(--slide-border)"
-      }))}">${stackItems}</div>`
     );
   }
   if (block.type === "Table") {
@@ -52413,18 +51708,6 @@ function framePositionPercent(value, fallbackPercent) {
 }
 function roundValue(value) {
   return Math.round(value * 100) / 100;
-}
-function cardWidthClassName(value) {
-  if (value === "sm") return " block-card--sm";
-  if (value === "lg") return " block-card--lg";
-  if (value === "full") return " block-card--full";
-  return "";
-}
-function metricWidthClassName(value) {
-  if (value === "md") return " block-metric--md";
-  if (value === "lg") return " block-metric--lg";
-  if (value === "full") return " block-metric--full";
-  return "";
 }
 function fitProp(value) {
   if (value === "cover" || value === "contain" || value === "fill" || value === "scale-down") {
@@ -53389,7 +52672,7 @@ var measureRenderedSlideScript = String.raw`(() => {
   const slide = rect(slideElement.getBoundingClientRect());
   const blocks = Array.from(slideElement.querySelectorAll(".motion-block--positioned"))
     .map((block, blockIndex) => {
-      const content = block.querySelector(".block-title, .block-text") || block.firstElementChild;
+      const content = block.querySelector(".block-text") || block.firstElementChild;
       const text = (content?.textContent || "").replace(/\s+/g, " ").trim();
       const lineRects = content
         ? Array.from(content.querySelectorAll(".block-line")).map((line) => line.getBoundingClientRect())
@@ -53439,7 +52722,7 @@ function qualityIssuesForSlide(slideIndex, measurement) {
       issues.push({
         code: "out_of_canvas",
         message: `${nodeId} leaves the 1920\xD71080 canvas.`,
-        metrics: { bottom: round3(frame.bottom), left: round3(frame.left), right: round3(frame.right), top: round3(frame.top) },
+        metrics: { bottom: round2(frame.bottom), left: round2(frame.left), right: round2(frame.right), top: round2(frame.top) },
         nodeIds: [nodeId],
         severity: "error",
         slideIndex
@@ -53456,8 +52739,8 @@ function qualityIssuesForSlide(slideIndex, measurement) {
       if (maxOverflow > 3) {
         issues.push({
           code: "text_overflow",
-          message: `${nodeId} text exceeds its frame by ${round3(maxOverflow)}px; enlarge the frame or shorten the copy.`,
-          metrics: Object.fromEntries(Object.entries(overflow).map(([key, value]) => [key, round3(value)])),
+          message: `${nodeId} text exceeds its frame by ${round2(maxOverflow)}px; enlarge the frame or shorten the copy.`,
+          metrics: Object.fromEntries(Object.entries(overflow).map(([key, value]) => [key, round2(value)])),
           nodeIds: [nodeId],
           severity: "error",
           slideIndex
@@ -53485,8 +52768,8 @@ function qualityIssuesForSlide(slideIndex, measurement) {
     if (block.text && block.fontSize > 0 && block.fontSize < 16) {
       issues.push({
         code: "tiny_text",
-        message: `${nodeId} renders at ${round3(block.fontSize)}px and may be unreadable at presentation distance.`,
-        metrics: { fontSizePx: round3(block.fontSize) },
+        message: `${nodeId} renders at ${round2(block.fontSize)}px and may be unreadable at presentation distance.`,
+        metrics: { fontSizePx: round2(block.fontSize) },
         nodeIds: [nodeId],
         severity: "warning",
         slideIndex
@@ -53517,7 +52800,7 @@ function qualityIssuesForSlide(slideIndex, measurement) {
       issues.push({
         code: "text_collision",
         message: `${left.nodeId} and ${right.nodeId} overlap in the rendered slide.`,
-        metrics: { overlapHeight: round3(overlapHeight), overlapWidth: round3(overlapWidth) },
+        metrics: { overlapHeight: round2(overlapHeight), overlapWidth: round2(overlapWidth) },
         nodeIds: [left.nodeId, right.nodeId],
         severity: "error",
         slideIndex
@@ -53560,7 +52843,7 @@ function repeatedCompositionIssues(measurements) {
   }
   return issues;
 }
-function round3(value) {
+function round2(value) {
   return Math.round(value * 10) / 10;
 }
 
@@ -53663,146 +52946,50 @@ function createSlideXDocument(source) {
     title: parseMotionDoc(source).title
   };
 }
-async function renderSlideXDocument(input) {
-  input.signal?.throwIfAborted();
-  assertValidMotionDoc(input.source);
-  const document4 = parseMotionDoc(input.source);
-  if (document4.scenes.length === 0) {
-    throw new Error("The MotionDoc has no slides to render.");
-  }
-  const slideIndex = input.slideIndex ?? 0;
-  if (input.mode === "slide" && (!Number.isInteger(slideIndex) || slideIndex < 0 || slideIndex >= document4.scenes.length)) {
-    throw new Error(`slideIndex ${slideIndex} is outside the slide range.`);
-  }
-  await mkdir3(path6.dirname(input.outputPath), { recursive: true });
-  const portableSource = input.projectRoot ? await embedSlideXProjectMedia(input.source, input.projectRoot) : input.source;
-  if (input.mode === "slide") {
-    return withSlideXChromiumPage({
-      viewport: { height: MOTION_DOC_PNG_HEIGHT, width: MOTION_DOC_PNG_WIDTH }
-    }, async (page) => {
-      await page.setContent(
-        buildMotionDocRasterHtml(portableSource, input.title, [slideIndex]),
-        { waitUntil: "networkidle" }
-      );
-      await prepareSlideXPageForStaticExport(page, input.signal);
-      input.signal?.throwIfAborted();
-      await page.screenshot({ path: input.outputPath, type: "png" });
-      return {
-        height: MOTION_DOC_PNG_HEIGHT,
-        outputPath: input.outputPath,
-        slideIndices: [slideIndex],
-        width: MOTION_DOC_PNG_WIDTH
-      };
-    }, input.signal);
-  }
-  const columns = document4.scenes.length === 1 ? 1 : 2;
-  const thumbWidth = 960;
-  const thumbHeight = 540;
-  const gap = 32;
-  const labelHeight = 44;
-  const rows = Math.ceil(document4.scenes.length / columns);
-  const width = columns * thumbWidth + (columns + 1) * gap;
-  const height = rows * (thumbHeight + labelHeight) + (rows + 1) * gap;
-  const images = [];
-  for (let index2 = 0; index2 < document4.scenes.length; index2 += 1) {
-    input.signal?.throwIfAborted();
-    const buffer = await withSlideXChromiumPage({
-      viewport: { height: MOTION_DOC_PNG_HEIGHT, width: MOTION_DOC_PNG_WIDTH }
-    }, async (page) => {
-      await page.setContent(
-        buildMotionDocRasterHtml(portableSource, input.title, [index2]),
-        { waitUntil: "networkidle" }
-      );
-      await prepareSlideXPageForStaticExport(page, input.signal);
-      input.signal?.throwIfAborted();
-      return page.screenshot({ type: "png" });
-    }, input.signal);
-    images.push(`data:image/png;base64,${buffer.toString("base64")}`);
-  }
-  await withSlideXChromiumPage({ viewport: { height, width } }, async (page) => {
-    await page.setContent(buildMontageHtml(images, columns, thumbWidth, thumbHeight, gap));
-    input.signal?.throwIfAborted();
-    await page.screenshot({ path: input.outputPath, type: "png" });
-  }, input.signal);
-  return {
-    height,
-    outputPath: input.outputPath,
-    slideIndices: document4.scenes.map((_scene, index2) => index2),
-    width
-  };
-}
-function assertValidMotionDoc(source) {
-  const summary = summarizeMotionDoc(source);
-  if (summary.validation.isValid) return;
-  const messages = summary.validation.issues.filter((issue2) => issue2.severity === "error").map((issue2) => issue2.message).join(" ");
-  throw new Error(`The MotionDoc source is invalid. ${messages}`.trim());
-}
-function buildMontageHtml(images, columns, width, height, gap) {
-  return `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; background: #111; }
-    main { display: grid; grid-template-columns: repeat(${columns}, ${width}px); gap: ${gap}px; padding: ${gap}px; }
-    figure { margin: 0; }
-    img { display: block; width: ${width}px; height: ${height}px; object-fit: cover; }
-    figcaption { color: #fff; font: 600 24px/44px system-ui; height: 44px; }
-  </style>
-</head>
-<body>
-  <main>${images.map(
-    (image, index2) => `<figure><img alt="Slide ${index2 + 1}" src="${image}"><figcaption>${index2 + 1}</figcaption></figure>`
-  ).join("")}</main>
-</body>
-</html>`;
-}
 
 // packages/open-slidex-mcp/src/knowledge.ts
 import { createHash as createHash4 } from "node:crypto";
 import { lstat as lstat2, mkdir as mkdir4, readFile as readFile5, readdir, realpath as realpath3, stat as stat2, writeFile as writeFile4 } from "node:fs/promises";
 import path7 from "node:path";
 var allowedExtensions = /* @__PURE__ */ new Set([".csv", ".md", ".markdown", ".pdf", ".txt"]);
-var builtInKnowledgeVersion = "motiondoc-v1";
-var builtInKnowledge = [
-  {
-    path: `builtin://${builtInKnowledgeVersion}/components.md`,
-    section: "Serializable components",
-    content: "OpenSlideX MDX uses built-in serializable MotionDoc JSX blocks. Supported visual blocks include Title, Text, heading, ImageBlock, Icon, Shape, Table, VideoBlock, Group, and Chart. Do not add imports, scripts, JavaScript expressions, or unknown runtime components."
-  },
-  {
-    path: `builtin://${builtInKnowledgeVersion}/charts.md`,
-    section: "Chart V1",
-    content: "Chart V1 supports bar, line, area, pie, donut, and scatter. Chart data is strict JSON with label and value; scatter may add x, size, and color. Use chartMotion grow for bars, draw for line and area, sweep for pie and donut, and pop for scatter. Preview and HTML animate; PPTX is an editable static final state."
-  },
-  {
-    path: `builtin://${builtInKnowledgeVersion}/motion.md`,
-    section: "Motion",
-    content: "Use restrained entrance animation and chart motion to clarify hierarchy. Honor reduced-motion preferences. Final-state raster and PPTX export must never hide animated content."
-  },
-  {
-    path: `builtin://${builtInKnowledgeVersion}/layouts.md`,
-    section: "Layout",
-    content: "Keep every slide inside the 100 by 100 MotionDoc canvas, preserve safe margins, avoid overlap, and favor one clear visual hierarchy. Use Group only for readable layer organization."
-  },
-  {
-    path: `builtin://${builtInKnowledgeVersion}/qa.md`,
-    section: "Visual QA",
-    content: "Validate source, render a montage, inspect every materially changed slide at desktop size, then verify narrow Workbench layout. Check clipping, contrast, empty states, animation final state, asset portability, HTML, and editable PPTX."
-  }
-];
 async function searchOpenSlideXKnowledge(projectRoot2, query, limit = 8) {
   const index2 = await buildOpenSlideXKnowledgeIndex(projectRoot2);
   const terms = tokenize(query);
   const results = index2.chunks.map((chunk) => ({
     ...chunk,
     score: scoreChunk(chunk, terms)
-  })).filter((chunk) => terms.length === 0 || chunk.score > 0).sort((left, right) => right.score - left.score || left.path.localeCompare(right.path)).slice(0, Math.min(Math.max(limit, 1), 20));
+  })).filter((chunk) => terms.length === 0 || chunk.score > 0).sort((left, right) => right.score - left.score || left.path.localeCompare(right.path)).slice(0, Math.min(Math.max(limit, 1), 20)).map(({ content: content3, ...chunk }) => ({
+    ...chunk,
+    resourcePath: `knowledge/${chunk.path}`,
+    snippet: content3.length > 600 ? `${content3.slice(0, 597)}...` : content3
+  }));
   return {
     generatedAt: index2.generatedAt,
     query,
     results
+  };
+}
+async function readOpenSlideXKnowledgeResource(projectRoot2, resourcePath, cursor = 0, limit = 4) {
+  if (resourcePath.includes("\\") || path7.posix.normalize(resourcePath) !== resourcePath || !resourcePath.startsWith("knowledge/")) {
+    throw new Error("resourcePath must be an exact knowledge/... path returned by open_slidex_read.");
+  }
+  if (!Number.isInteger(cursor) || cursor < 0) throw new Error("resourceCursor must be a non-negative integer.");
+  const relativePath = resourcePath.slice("knowledge/".length);
+  if (!relativePath) throw new Error("resourcePath must name one knowledge file.");
+  const index2 = await buildOpenSlideXKnowledgeIndex(projectRoot2);
+  const chunks = index2.chunks.filter((chunk) => chunk.path === relativePath);
+  if (chunks.length === 0) {
+    throw new Error("The requested knowledge resource is unavailable or has no readable content.");
+  }
+  if (cursor >= chunks.length) throw new Error("resourceCursor is past the end of this knowledge resource.");
+  const selected = chunks.slice(cursor, cursor + Math.min(Math.max(limit, 1), 8));
+  const nextCursor = cursor + selected.length < chunks.length ? cursor + selected.length : void 0;
+  return {
+    chunks: selected,
+    mode: "resource",
+    nextCursor,
+    resourcePath,
+    totalChunks: chunks.length
   };
 }
 async function buildOpenSlideXKnowledgeIndex(projectRoot2) {
@@ -53817,16 +53004,7 @@ async function buildOpenSlideXKnowledgeIndex(projectRoot2) {
   const actualRoot = await realpath3(knowledgeRoot);
   const actualStateRoot = await realpath3(stateRoot);
   const files = await listKnowledgeFiles(actualRoot);
-  const chunks = [
-    ...builtInKnowledge.map((entry) => ({
-      ...entry,
-      end: 1,
-      hash: createHash4("sha256").update(entry.content).digest("hex"),
-      source: "builtin",
-      start: 1
-    })),
-    ...(await Promise.all(files.map((file2) => fileChunks(actualRoot, file2)))).flat()
-  ];
+  const chunks = (await Promise.all(files.map((file2) => fileChunks(actualRoot, file2)))).flat();
   const index2 = {
     chunks,
     generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
@@ -53932,7 +53110,7 @@ ${chunk.content}`.toLowerCase();
 
 // packages/open-slidex-mcp/src/projectGuidance.ts
 import { createHash as createHash5 } from "node:crypto";
-import { readFile as readFile6, realpath as realpath4, stat as stat3 } from "node:fs/promises";
+import { readFile as readFile6, readdir as readdir2, realpath as realpath4, stat as stat3 } from "node:fs/promises";
 import path8 from "node:path";
 var openSlideXProjectSkillNames = [
   "slidex-mdx-authoring",
@@ -53950,22 +53128,50 @@ var openSlideXGuidanceIntents = [
 ];
 var intentSkills = {
   authoring: ["slidex-mdx-authoring"],
-  create: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-deck-qa"],
+  create: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-motion-direction", "slidex-deck-qa"],
   design: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-deck-qa"],
   motion: ["slidex-mdx-authoring", "slidex-motion-direction", "slidex-deck-qa"],
   qa: ["slidex-deck-qa"],
-  redesign: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-deck-qa"]
+  redesign: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-motion-direction", "slidex-deck-qa"]
 };
-var maximumGuidanceBytes = 64 * 1024;
+var maximumGuidanceBytes = 256 * 1024;
 var guidanceCache = /* @__PURE__ */ new Map();
-async function readOpenSlideXProjectSkill(root, skill) {
+var referenceExtensions = /* @__PURE__ */ new Set([".json", ".md", ".mdx", ".txt"]);
+async function readOpenSlideXProjectGuidanceManifest(root, intent) {
+  const skills = await Promise.all(openSlideXProjectSkillNames.map(async (skill) => {
+    const skillResource = await readOpenSlideXProjectGuidanceResource(
+      root,
+      `.agents/skills/${skill}/SKILL.md`
+    );
+    const references = await listSkillReferences(root, skill);
+    return {
+      ...withoutContent(skillResource),
+      references: references.map(withoutContent)
+    };
+  }));
+  return {
+    intent,
+    mode: "manifest",
+    recommended: [...intentSkills[intent]],
+    skills,
+    totalBytes: skills.reduce(
+      (total, skill) => total + skill.bytes + skill.references.reduce((sum, resource) => sum + resource.bytes, 0),
+      0
+    ),
+    usage: "Read each recommended SKILL.md, then only the references it routes to. Pass an exact manifest path as resourcePath to open_slidex_read."
+  };
+}
+async function readOpenSlideXProjectGuidanceResource(root, requestedPath) {
+  const parsedPath = parseGuidancePath(requestedPath);
   const canonicalRoot = await realpath4(root);
-  const requested = path8.join(canonicalRoot, ".agents", "skills", skill, "SKILL.md");
+  const canonicalSkillRoot = await realpath4(path8.join(canonicalRoot, ".agents", "skills", parsedPath.skill));
+  assertInside(canonicalRoot, canonicalSkillRoot);
+  const requested = path8.join(canonicalRoot, ...parsedPath.segments);
   const canonicalFile = await realpath4(requested);
-  assertInside(canonicalRoot, canonicalFile);
+  assertInside(canonicalSkillRoot, canonicalFile);
   const fileStats = await stat3(canonicalFile);
   if (!fileStats.isFile() || fileStats.size > maximumGuidanceBytes) {
-    throw new Error("The requested project skill is not a readable OpenSlideX skill.");
+    throw new Error("The requested OpenSlideX guidance resource is not readable.");
   }
   const signature = `${fileStats.size}:${fileStats.mtimeMs}`;
   const cached2 = guidanceCache.get(canonicalFile);
@@ -53975,51 +53181,63 @@ async function readOpenSlideXProjectSkill(root, skill) {
     bytes: Buffer.byteLength(content3),
     checksum: createHash5("sha256").update(content3).digest("hex"),
     content: content3,
-    description: frontmatterDescription(content3),
-    name: skill,
-    path: path8.relative(canonicalRoot, canonicalFile).split(path8.sep).join("/")
+    description: parsedPath.kind === "skill" ? frontmatterDescription(content3) : referenceDescription(content3),
+    kind: parsedPath.kind,
+    path: path8.relative(canonicalRoot, canonicalFile).split(path8.sep).join("/"),
+    skill: parsedPath.skill
   };
   guidanceCache.set(canonicalFile, { signature, value });
   return value;
 }
-async function readOpenSlideXProjectSkillManifest(root) {
-  const skills = await Promise.all(openSlideXProjectSkillNames.map((skill) => readOpenSlideXProjectSkill(root, skill)));
-  return {
-    intents: Object.fromEntries(Object.entries(intentSkills).map(([intent, names]) => [intent, [...names]])),
-    mode: "manifest",
-    skills: skills.map(({ bytes, checksum, description, name, path: path10 }) => ({ bytes, checksum, description, name, path: path10 }))
-  };
+async function listSkillReferences(root, skill) {
+  const referencesRoot = path8.join(root, ".agents", "skills", skill, "references");
+  const entries = await readdir2(referencesRoot, { withFileTypes: true }).catch((error51) => {
+    if (isNodeError(error51) && error51.code === "ENOENT") return [];
+    throw error51;
+  });
+  return Promise.all(entries.filter((entry) => entry.isFile() && referenceExtensions.has(path8.extname(entry.name).toLowerCase())).sort((left, right) => left.name.localeCompare(right.name)).map((entry) => readOpenSlideXProjectGuidanceResource(
+    root,
+    `.agents/skills/${skill}/references/${entry.name}`
+  )));
 }
-async function readOpenSlideXProjectSkillBundle(root, intent) {
-  const names = intentSkills[intent];
-  const skills = await Promise.all(names.map((skill) => readOpenSlideXProjectSkill(root, skill)));
-  return {
-    intent,
-    mode: "bundle",
-    order: [...names],
-    skills,
-    totalBytes: skills.reduce((total, skill) => total + skill.bytes, 0)
-  };
-}
-async function readOpenSlideXTemplateLock(root) {
-  const canonicalRoot = await realpath4(root);
-  const requested = path8.join(canonicalRoot, ".open-slidex", "template-lock.json");
-  const canonicalFile = await realpath4(requested);
-  assertInside(canonicalRoot, canonicalFile);
-  const fileStats = await stat3(canonicalFile);
-  if (!fileStats.isFile() || fileStats.size > 8 * 1024) {
-    throw new Error("The OpenSlideX template lock is invalid.");
+function parseGuidancePath(requestedPath) {
+  if (requestedPath.includes("\\") || path8.posix.normalize(requestedPath) !== requestedPath) {
+    throw new Error("resourcePath must be an exact path from the OpenSlideX guidance manifest.");
   }
-  return parseTemplateRef(JSON.parse(await readFile6(canonicalFile, "utf8")));
+  const segments = requestedPath.split("/");
+  if (segments[0] !== ".agents" || segments[1] !== "skills") {
+    throw new Error("resourcePath must point to a project-local OpenSlideX skill resource.");
+  }
+  const skill = segments[2];
+  if (!openSlideXProjectSkillNames.includes(skill)) {
+    throw new Error("resourcePath names an unapproved OpenSlideX skill.");
+  }
+  if (segments.length === 4 && segments[3] === "SKILL.md") {
+    return { kind: "skill", segments, skill };
+  }
+  if (segments.length === 5 && segments[3] === "references" && Boolean(segments[4]) && referenceExtensions.has(path8.posix.extname(segments[4]).toLowerCase())) {
+    return { kind: "reference", segments, skill };
+  }
+  throw new Error("resourcePath must name SKILL.md or one direct file under that skill's references/ directory.");
+}
+function withoutContent(resource) {
+  const { content: _content, ...metadata } = resource;
+  return metadata;
 }
 function frontmatterDescription(content3) {
   const match = content3.match(/^---\s*\n[\s\S]*?^description:\s*(.+?)\s*$[\s\S]*?^---\s*$/m);
-  return match?.[1]?.replace(/^['"]|['"]$/g, "") ?? "Approved OpenSlideX project guidance.";
+  return match?.[1]?.replace(/^['"]|['"]$/g, "") ?? "Approved OpenSlideX project skill.";
+}
+function referenceDescription(content3) {
+  return content3.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? "Approved OpenSlideX skill reference.";
 }
 function assertInside(root, candidate) {
   if (candidate !== root && !candidate.startsWith(`${root}${path8.sep}`)) {
     throw new Error("The requested guidance path escapes the OpenSlideX project root.");
   }
+}
+function isNodeError(error51) {
+  return error51 instanceof Error && "code" in error51;
 }
 
 // packages/open-slidex-mcp/src/trustedImages.ts
@@ -54168,24 +53386,16 @@ function isRecord(value) {
 var projectRoot = projectRootFromArgs(process.argv.slice(2));
 var adapter = new SlideXFileDocumentAdapter({ projectRoot });
 var workspaceRoot = workspaceRootFromArgs(process.argv.slice(2));
-var propValueSchema = external_exports.union([external_exports.string(), external_exports.number(), external_exports.boolean()]);
-var propsSchema = external_exports.record(external_exports.string(), propValueSchema);
-var editCommandSchema = external_exports.discriminatedUnion("type", [
-  external_exports.object({ title: external_exports.string(), type: external_exports.literal("document.setTitle") }),
-  external_exports.object({ from: external_exports.string(), to: external_exports.string(), type: external_exports.literal("asset.repath") }),
-  external_exports.object({ afterSlideIndex: external_exports.number().int().min(0).optional(), slideSource: external_exports.string().optional(), type: external_exports.literal("slide.add") }),
-  external_exports.object({ slideIndex: external_exports.number().int().min(0), type: external_exports.literal("slide.delete") }),
-  external_exports.object({ slideIndex: external_exports.number().int().min(0), type: external_exports.literal("slide.duplicate") }),
-  external_exports.object({ fromIndex: external_exports.number().int().min(0), toIndex: external_exports.number().int().min(0), type: external_exports.literal("slide.reorder") }),
-  external_exports.object({ slideIndex: external_exports.number().int().min(0), slideSource: external_exports.string(), type: external_exports.literal("slide.replace") }),
-  external_exports.object({ layoutId: external_exports.string(), options: propsSchema.optional(), slideIndex: external_exports.number().int().min(0).optional(), type: external_exports.literal("slide.applyLayout") }),
-  external_exports.object({ props: propsSchema, slideIndex: external_exports.number().int().min(0), type: external_exports.literal("slide.updateProps") }),
-  external_exports.object({ blockType: external_exports.string(), options: external_exports.record(external_exports.string(), external_exports.unknown()).optional(), slideIndex: external_exports.number().int().min(0), type: external_exports.literal("block.add") }),
-  external_exports.object({ blockIndex: external_exports.number().int().min(0).optional(), nodeId: external_exports.string().optional(), props: propsSchema.optional(), slideIndex: external_exports.number().int().min(0), text: external_exports.string().optional(), type: external_exports.literal("block.update") }),
-  external_exports.object({ blockIndex: external_exports.number().int().min(0).optional(), nodeId: external_exports.string().optional(), slideIndex: external_exports.number().int().min(0), type: external_exports.literal("block.delete") }),
-  external_exports.object({ blockIndex: external_exports.number().int().min(0).optional(), nodeId: external_exports.string().optional(), offset: external_exports.number().optional(), slideIndex: external_exports.number().int().min(0), type: external_exports.literal("block.duplicate") }),
-  external_exports.object({ fromIndex: external_exports.number().int().min(0), slideIndex: external_exports.number().int().min(0), toIndex: external_exports.number().int().min(0), type: external_exports.literal("block.reorder") })
+var authorableMotionDocTags = /* @__PURE__ */ new Set([
+  "Chart",
+  "ImageBlock",
+  "Shape",
+  "Slide",
+  "Table",
+  "Text",
+  "VideoBlock"
 ]);
+var removedMotionDocTags = ["Card", "Group", "Icon", "Metric", "Notes", "Stack", "Title"];
 var SlideXVisualQualityGateError = class extends Error {
   currentRevision;
   preview;
@@ -54204,7 +53414,8 @@ var SlideXVisualQualityGateError = class extends Error {
   }
 };
 function createOpenSlideXMcpServer(root = projectRoot) {
-  const workspace = typeof root === "string" ? void 0 : new OpenSlideXWorkspaceMcpScope(root.workspaceRoot);
+  const configuredWorkspaceRoot = typeof root === "string" ? void 0 : resolve(root.workspaceRoot);
+  const workspace = typeof root === "string" ? void 0 : new OpenSlideXWorkspaceMcpScope(configuredWorkspaceRoot);
   const fixedRoot = typeof root === "string" ? root : void 0;
   const projectContext = async () => {
     const resolvedRoot = fixedRoot ?? await workspace.selectedRoot();
@@ -54213,237 +53424,157 @@ function createOpenSlideXMcpServer(root = projectRoot) {
       root: resolvedRoot
     };
   };
-  const server = new McpServer({ name: "open-slidex-local", version: "0.3.4" });
+  const server = new McpServer(
+    { name: "open-slidex-local", version: "0.3.5" },
+    {
+      instructions: [
+        "For Workspace scope, use open_slidex_workspace to list and explicitly select the intended presentation.",
+        "Use open_slidex_read first to obtain the current revision, exact source scope, and a small skill manifest.",
+        "Follow progressive disclosure: read each recommended SKILL.md, then only the reference files it routes to by passing their exact resourcePath back to open_slidex_read.",
+        "Search user notes, documents, and research in knowledge/ with knowledgeQuery, then read one returned resourcePath at a time.",
+        "Author only toolbar-native layers: Text, ImageBlock, VideoBlock, Chart, Table, and Shape.",
+        "Card, Metric, Stack, Group, Title, Icon, and Notes no longer exist and make a document invalid.",
+        "The project skills own narrative and visual direction; the MCP server owns safe file access, revision control, validation, and rendered quality gates.",
+        "Submit either one complete deck source or one complete slide source to open_slidex_edit; it validates and visually checks the candidate before writing."
+      ].join(" ")
+    }
+  );
   const rejectedCandidates = /* @__PURE__ */ new Map();
   if (workspace) {
-    server.registerTool("open_slidex_workspace_list", {
-      title: "List OpenSlideX workspace presentations",
-      description: "List presentation folders available to this workspace-scoped MCP server and show the active selection.",
-      inputSchema: {}
-    }, () => runTool(() => workspace.list()));
-    server.registerTool("open_slidex_workspace_select", {
-      title: "Select OpenSlideX workspace presentation",
-      description: "Select one workspace presentation. All other open_slidex tools use this presentation until another is selected.",
-      inputSchema: { presentationId: external_exports.string().regex(/^[A-Za-z0-9._-]+$/) }
-    }, ({ presentationId }) => runTool(() => workspace.select(presentationId)));
+    server.registerTool("open_slidex_workspace", {
+      title: "Choose an OpenSlideX workspace presentation",
+      description: "List Workspace decks or select exactly one deck for all later read, edit, media, and review calls.",
+      inputSchema: {
+        action: external_exports.enum(["list", "select"]).default("list"),
+        presentationId: external_exports.string().regex(/^[A-Za-z0-9._-]+$/).optional()
+      }
+    }, ({ action, presentationId }) => runTool(() => {
+      if (action === "select") {
+        if (!presentationId) throw new Error("presentationId is required when action is select.");
+        return workspace.select(presentationId);
+      }
+      return workspace.list();
+    }));
   }
-  server.registerTool("open_slidex_open", {
-    title: "Open OpenSlideX presentation",
-    description: "Read the canonical local presentation.mdx and its SHA-256 revision.",
-    inputSchema: { includeSource: external_exports.boolean().default(true) }
-  }, ({ includeSource }) => runTool(async () => {
-    const { documentAdapter } = await projectContext();
+  server.registerTool("open_slidex_read", {
+    title: "Read OpenSlideX source or one project resource",
+    description: "Read the current deck or slide plus a compact guidance manifest. Search knowledge/ by query, or load exactly one returned skill/reference/knowledge resourcePath at a time.",
+    inputSchema: {
+      intent: external_exports.enum(openSlideXGuidanceIntents).default("authoring").describe(
+        "Task route for the manifest: create, redesign, design, authoring, motion, or qa."
+      ),
+      knowledgeQuery: external_exports.string().trim().max(500).optional().describe(
+        "Search terms for user files under knowledge/. Results are compact citations with readable resourcePath values."
+      ),
+      resourceCursor: external_exports.number().int().min(0).default(0).describe(
+        "Continuation cursor returned when a long knowledge resource has more chunks."
+      ),
+      resourcePath: external_exports.string().trim().min(1).max(500).optional().describe(
+        "Exact .agents/skills/... or knowledge/... path returned by a previous read. Loads only that resource."
+      ),
+      slideIndex: external_exports.number().int().min(0).optional().describe(
+        "Zero-based slide index for a focused source read; omit for the complete deck."
+      )
+    }
+  }, ({ intent, knowledgeQuery, resourceCursor, resourcePath, slideIndex }) => runTool(async () => {
+    const { documentAdapter, root: root2 } = await projectContext();
+    const guidanceRoot = await resolveAuthoringGuidanceRoot(root2, configuredWorkspaceRoot);
+    if (resourcePath) {
+      if (slideIndex !== void 0 || knowledgeQuery) {
+        throw new Error("resourcePath cannot be combined with slideIndex or knowledgeQuery.");
+      }
+      if (resourcePath.startsWith(".agents/skills/")) {
+        return {
+          guidance: await readOpenSlideXProjectGuidanceResource(guidanceRoot, resourcePath),
+          mode: "resource"
+        };
+      }
+      if (resourcePath.startsWith("knowledge/")) {
+        return {
+          knowledge: await readOpenSlideXKnowledgeResource(root2, resourcePath, resourceCursor),
+          mode: "resource"
+        };
+      }
+      throw new Error("resourcePath must be an exact .agents/skills/... or knowledge/... path returned by open_slidex_read.");
+    }
+    if (resourceCursor !== 0) throw new Error("resourceCursor requires a knowledge resourcePath.");
     const document4 = await documentAdapter.open();
+    const [guidance, knowledge] = await Promise.all([
+      readOpenSlideXProjectGuidanceManifest(guidanceRoot, intent).catch((error51) => ({
+        error: error51 instanceof Error ? error51.message : "Project skill guidance is unavailable.",
+        intent,
+        mode: "unavailable"
+      })),
+      knowledgeQuery ? searchOpenSlideXKnowledge(root2, knowledgeQuery, 8) : void 0
+    ]);
+    const ranges = motionDocSlideSourceRanges(document4.source);
+    if (slideIndex !== void 0 && !ranges[slideIndex]) throw new Error(`Slide index is out of range: ${slideIndex}`);
     const summary = summarizeMotionDoc(document4.source);
     return {
+      authoringContract: {
+        allowed: ["Text", "ImageBlock", "VideoBlock", "Chart", "Table", "Shape"],
+        removed: removedMotionDocTags,
+        geometry: "Every visible layer needs stable id plus explicit percentage x/y/w/h; fontSize uses pt.",
+        rule: "Removed tags are rejected, not parsed for compatibility. Put all visible copy inside positioned Text layers."
+      },
+      charts: { motions: motionDocChartMotions, types: motionDocChartTypes },
+      guidance,
+      knowledge,
       revision: document4.revision,
-      source: includeSource ? document4.source : void 0,
+      source: slideIndex === void 0 ? document4.source : ranges[slideIndex].source,
       stats: summary.stats,
       title: document4.title,
-      validation: summary.validation
+      validation: summary.validation,
+      workflow: [
+        "Read the recommended SKILL.md files and only their task-relevant references.",
+        "Plan hierarchy and geometry from the current source before writing.",
+        "Submit one complete deck or slide source to open_slidex_edit with this revision.",
+        "If rejected, patch the same candidate from the reported node-specific findings."
+      ]
     };
   }));
-  server.registerTool("open_slidex_inspect", {
-    title: "Inspect OpenSlideX presentation",
-    description: "Inspect one slide or selected node without returning unrelated deck source.",
-    inputSchema: {
-      nodeId: external_exports.string().optional(),
-      slideIndex: external_exports.number().int().min(0).optional()
-    }
-  }, (input) => runTool(async () => {
-    const { documentAdapter } = await projectContext();
-    const document4 = await documentAdapter.open();
-    return { revision: document4.revision, result: inspectSlideXDocument(document4.source, input) };
-  }));
-  server.registerTool("open_slidex_catalog", {
-    title: "OpenSlideX component catalog",
-    description: "Read only the component catalog section needed for the task. Use section 'all' only when planning a full deck.",
-    inputSchema: {
-      includeLayoutSource: external_exports.boolean().default(false),
-      section: external_exports.enum(["all", "blocks", "design-rules", "exports", "layouts", "schema", "shaders"]).default("all")
-    }
-  }, ({ includeLayoutSource, section }) => runTool(() => ({
-    ...section === "all" ? { charts: { motions: motionDocChartMotions, types: motionDocChartTypes } } : {},
-    catalog: getSlideXCatalog({ includeLayoutSource, section }),
-    section
-  })));
-  server.registerTool("open_slidex_knowledge_search", {
-    title: "Search local OpenSlideX knowledge",
-    description: "Search user-provided Markdown, text, CSV, and PDF files under knowledge/. Results include relative source paths, line ranges, and hashes.",
-    inputSchema: {
-      limit: external_exports.number().int().min(1).max(20).default(8),
-      query: external_exports.string().max(500)
-    }
-  }, ({ limit, query }) => runTool(async () => {
-    const { root: root2 } = await projectContext();
-    return searchOpenSlideXKnowledge(root2, query, limit);
-  }));
-  server.registerTool("open_slidex_skill_read", {
-    title: "Read approved OpenSlideX project guidance",
-    description: "Read root-confined approved guidance. Prefer one mode='bundle' call with the task intent; use mode='manifest' only to discover capabilities, or mode='skill' for one named approved skill. Arbitrary paths and names are rejected.",
-    inputSchema: {
-      intent: external_exports.enum(openSlideXGuidanceIntents).default("authoring"),
-      mode: external_exports.enum(["bundle", "manifest", "skill"]).default("skill"),
-      skill: external_exports.enum(openSlideXProjectSkillNames).optional()
-    }
-  }, ({ intent, mode, skill }) => runTool(async () => {
-    const { root: root2 } = await projectContext();
-    if (mode === "manifest") return readOpenSlideXProjectSkillManifest(root2);
-    if (mode === "bundle") return readOpenSlideXProjectSkillBundle(root2, intent);
-    if (!skill) throw new Error("mode='skill' requires one approved skill name.");
-    return readOpenSlideXProjectSkill(root2, skill);
-  }));
-  server.registerTool("open_slidex_template_read", {
-    title: "Read official template MDX and blueprint",
-    description: "Read a validated official Template Blueprint plus localized quality profile. Prefer role-samples for compact, concrete MDX geometry references; full reference source is retained only for compatibility and diagnostics. Defaults to the template lock selected for this project.",
-    inputSchema: {
-      id: external_exports.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
-      includeReferenceSource: external_exports.boolean().default(false),
-      includeStarterSource: external_exports.boolean().default(false),
-      locale: external_exports.enum(["en", "zh-TW"]).optional(),
-      referenceMode: external_exports.enum(["none", "role-samples", "full"]).default("none"),
-      roles: external_exports.array(external_exports.string().trim().min(1).max(80)).max(8).optional(),
-      version: external_exports.string().regex(/^\d+\.\d+\.\d+$/).optional()
-    }
-  }, ({ id, includeReferenceSource, includeStarterSource, locale, referenceMode, roles, version: version2 }) => runTool(async () => {
-    const { root: root2 } = await projectContext();
-    const explicitTemplateFields = [id, locale, version2].filter((value) => value !== void 0).length;
-    if (explicitTemplateFields > 0 && explicitTemplateFields < 3) {
-      throw new Error("An explicit template requires id, locale, and version together.");
-    }
-    const lock = explicitTemplateFields === 3 ? { id, locale, version: version2 } : await readOpenSlideXTemplateLock(root2);
-    const template = getOfficialTemplatePackage(lock.id, lock.version);
-    if (!template) throw new Error(`Official template package is unavailable: ${lock.id}@${lock.version}`);
-    const qualityProfile = getOfficialTemplateQualityProfile(lock.id, lock.locale);
-    if (!qualityProfile) throw new Error(`Official template quality profile is unavailable: ${lock.id}@${lock.locale}`);
-    const referenceSource = stripNonLocalMotionDocMedia(template.sources[lock.locale]);
-    const resolvedReferenceMode = includeReferenceSource ? "full" : referenceMode;
-    const referenceSamples = resolvedReferenceMode === "role-samples" ? templateRoleSamples(referenceSource, template.blueprint.narrative.slideRoles, roles) : void 0;
-    const starterSource = template.starterSources[lock.locale];
-    return {
-      blueprint: template.blueprint,
-      catalog: template.catalog,
-      id: template.id,
-      locale: lock.locale,
-      metadata: template.locales[lock.locale],
-      qualityProfile,
-      referenceUsage: {
-        mode: "design-reference",
-        rules: [
-          "Use the reference MDX for visual grammar and layout variety; do not submit it unchanged as the candidate deck.",
-          "Recalculate every text frame for the replacement copy. As a baseline, reserve at least 4.5% canvas height for a one-line label, 8% for supporting copy, and 16% for a display title.",
-          "Shorten copy or enlarge and reposition its frame before editing. Never shrink text below the quality profile to force a fit.",
-          "Remote media is intentionally removed from this Local reference. Import user-confirmed media through the approved asset tools only."
-        ]
-      },
-      referenceMode: resolvedReferenceMode,
-      referenceSamples,
-      referenceSource: resolvedReferenceMode === "full" ? referenceSource : void 0,
-      referenceSourceBytes: resolvedReferenceMode === "full" ? Buffer.byteLength(referenceSource) : void 0,
-      referenceSourceChecksum: resolvedReferenceMode === "full" ? sourceChecksum(referenceSource) : void 0,
-      starterSource: includeStarterSource ? starterSource : void 0,
-      starterSourceBytes: includeStarterSource ? Buffer.byteLength(starterSource) : void 0,
-      starterSourceChecksum: includeStarterSource ? sourceChecksum(starterSource) : void 0,
-      version: template.version
-    };
-  }));
-  server.registerTool("open_slidex_image_search", {
-    title: "Search trusted external images",
-    description: "Search the configured Unsplash provider and return attribution-safe candidates. Search never downloads or writes an asset.",
-    inputSchema: { query: external_exports.string().trim().min(2).max(200) }
-  }, ({ query }) => runTool(() => searchTrustedImages(query, { accessKey: process.env.UNSPLASH_ACCESS_KEY })));
-  server.registerTool("open_slidex_image_import", {
-    title: "Import a user-confirmed trusted image",
-    description: "Import one explicitly user-confirmed Unsplash candidate as a local content-addressed WebP and record provenance. Never call without a clear user confirmation naming the candidate ID.",
-    inputSchema: {
+  const mediaSchema = external_exports.discriminatedUnion("action", [
+    external_exports.object({ action: external_exports.literal("search-trusted"), query: external_exports.string().trim().min(2).max(200) }),
+    external_exports.object({
+      action: external_exports.literal("import-trusted"),
       confirmedByUser: external_exports.literal(true),
       expectedRevision: external_exports.string().startsWith("sha256:"),
       providerAssetId: external_exports.string().regex(/^[A-Za-z0-9_-]{1,80}$/)
-    }
-  }, ({ expectedRevision, providerAssetId }) => runTool(async () => {
-    const { documentAdapter, root: root2 } = await projectContext();
-    const current = await documentAdapter.open();
-    if (current.revision !== expectedRevision) throw new SlideXRevisionConflictError(current.revision);
-    const downloaded = await downloadTrustedImage(providerAssetId, { accessKey: process.env.UNSPLASH_ACCESS_KEY });
-    const asset = await importSlideXImageAsset({
-      bytes: downloaded.bytes,
-      fileName: `unsplash-${providerAssetId}.${downloaded.mediaType.split("/")[1] ?? "jpg"}`,
-      mediaType: downloaded.mediaType,
-      projectRoot: root2
-    });
-    await appendImageProvenance(root2, {
-      ...downloaded.photo,
-      importedAt: (/* @__PURE__ */ new Date()).toISOString(),
-      source: asset.source
-    });
-    return { ...asset, provenance: downloaded.photo, revision: current.revision };
-  }));
-  server.registerTool("open_slidex_validate", {
-    title: "Validate OpenSlideX presentation",
-    description: "Validate the current canonical presentation without writing it.",
-    inputSchema: {}
-  }, () => runTool(async () => {
-    const { documentAdapter } = await projectContext();
-    const document4 = await documentAdapter.open();
-    return { revision: document4.revision, validation: summarizeMotionDoc(document4.source).validation };
-  }));
-  server.registerTool("open_slidex_render", {
-    title: "Render OpenSlideX presentation",
-    description: "Render a montage or one slide to the local dist/ directory.",
-    inputSchema: {
-      mode: external_exports.enum(["montage", "slide"]).default("montage"),
-      slideIndex: external_exports.number().int().min(0).optional()
-    }
-  }, ({ mode, slideIndex }, extra) => runTool(async () => {
-    const { documentAdapter, root: root2 } = await projectContext();
-    const document4 = await documentAdapter.open();
-    const revisionDirectory = document4.revision.replace(/^sha256:/, "");
-    const dist = resolveInsideRoot(root2, join("dist", "renders", revisionDirectory));
-    await mkdir6(dist, { recursive: true });
-    const outputPath = join(dist, mode === "montage" ? "montage.png" : `slide-${slideIndex ?? 0}.png`);
-    const result = await renderSlideXDocument({
-      mode,
-      outputPath,
-      projectRoot: root2,
-      slideIndex: mode === "slide" ? slideIndex ?? 0 : void 0,
-      source: document4.source,
-      signal: extra.signal
-    });
-    return { ...result, revision: document4.revision };
-  }));
-  server.registerTool("open_slidex_quality_check", {
-    title: "Check OpenSlideX visual quality",
-    description: "Measure the actual rendered DOM and return structured slide-specific findings for text overflow, collisions, CJK orphan lines, unresolved media, unsafe edges, density, and repeated deck composition. This is the AI-readable visual QA gate after render.",
-    inputSchema: {
-      mode: external_exports.enum(["deck", "slide"]).default("deck"),
-      slideIndex: external_exports.number().int().min(0).optional()
-    }
-  }, ({ mode, slideIndex }, extra) => runTool(async () => {
-    const { documentAdapter, root: root2 } = await projectContext();
-    const document4 = await documentAdapter.open();
-    const report = await analyzeSlideXDocumentQuality({
-      mode,
-      projectRoot: root2,
-      slideIndex: mode === "slide" ? slideIndex ?? 0 : void 0,
-      source: document4.source,
-      title: document4.title,
-      signal: extra.signal
-    });
-    return { report, revision: document4.revision };
-  }));
-  server.registerTool("open_slidex_asset_import", {
-    title: "Import local image asset",
-    description: "Read a local binary image path, optimize it to content-addressed WebP, and return its presentation-relative source. Base64 and data URLs are rejected.",
-    inputSchema: {
+    }),
+    external_exports.object({
+      action: external_exports.literal("import-local"),
       expectedRevision: external_exports.string().startsWith("sha256:"),
       filePath: external_exports.string().min(1)
+    })
+  ]);
+  server.registerTool("open_slidex_media", {
+    title: "Search or import OpenSlideX media",
+    description: "One media workflow: search trusted Unsplash candidates, import one user-confirmed candidate, or import a root-confined local image as content-addressed WebP.",
+    inputSchema: mediaSchema
+  }, (input) => runTool(async () => {
+    if (input.action === "search-trusted") {
+      return searchTrustedImages(input.query, { accessKey: process.env.UNSPLASH_ACCESS_KEY });
     }
-  }, ({ expectedRevision, filePath }) => runTool(async () => {
     const { documentAdapter, root: root2 } = await projectContext();
     const current = await documentAdapter.open();
-    if (current.revision !== expectedRevision) throw new SlideXRevisionConflictError(current.revision);
-    if (/^(?:data|blob|https?):/i.test(filePath)) throw new Error("filePath must be a local file path, not Base64 or a URL.");
-    const inputPath = resolveInsideRoot(root2, filePath);
+    if (current.revision !== input.expectedRevision) throw new SlideXRevisionConflictError(current.revision);
+    if (input.action === "import-trusted") {
+      const downloaded = await downloadTrustedImage(input.providerAssetId, { accessKey: process.env.UNSPLASH_ACCESS_KEY });
+      const asset2 = await importSlideXImageAsset({
+        bytes: downloaded.bytes,
+        fileName: `unsplash-${input.providerAssetId}.${downloaded.mediaType.split("/")[1] ?? "jpg"}`,
+        mediaType: downloaded.mediaType,
+        projectRoot: root2
+      });
+      await appendImageProvenance(root2, {
+        ...downloaded.photo,
+        importedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        source: asset2.source
+      });
+      return { ...asset2, provenance: downloaded.photo, revision: current.revision };
+    }
+    if (/^(?:data|blob|https?):/i.test(input.filePath)) throw new Error("filePath must be a local file path, not Base64 or a URL.");
+    const inputPath = resolveInsideRoot(root2, input.filePath);
     await access2(inputPath);
     const canonicalRoot = await realpath5(root2);
     const canonicalInput = resolveInsideRoot(canonicalRoot, await realpath5(inputPath));
@@ -54455,15 +53586,48 @@ function createOpenSlideXMcpServer(root = projectRoot) {
     });
     return { ...asset, revision: current.revision };
   }));
+  server.registerTool("open_slidex_review", {
+    title: "Review OpenSlideX presentation",
+    description: "Run structural validation and rendered visual QA together, returning one immutable slide or montage preview. Use for review-only work; edits already include this gate.",
+    inputSchema: {
+      scope: external_exports.enum(["deck", "slide"]).default("deck"),
+      slideIndex: external_exports.number().int().min(0).optional()
+    }
+  }, ({ scope, slideIndex }, extra) => runTool(async () => {
+    const { documentAdapter, root: root2 } = await projectContext();
+    const document4 = await documentAdapter.open();
+    const mode = scope === "slide" ? "slide" : "deck";
+    const revisionDirectory = document4.revision.replace(/^sha256:/, "");
+    const dist = resolveInsideRoot(root2, join("dist", "renders", revisionDirectory));
+    await mkdir6(dist, { recursive: true });
+    const previewOutputPath = join(dist, mode === "deck" ? "montage.png" : `slide-${slideIndex ?? 0}.png`);
+    const report = await analyzeSlideXDocumentQuality({
+      mode,
+      previewOutputPath,
+      projectRoot: root2,
+      slideIndex: mode === "slide" ? slideIndex ?? 0 : void 0,
+      source: document4.source,
+      title: document4.title,
+      signal: extra.signal
+    });
+    return {
+      preview: report.preview,
+      report,
+      revision: document4.revision,
+      validation: summarizeMotionDoc(document4.source).validation
+    };
+  }));
   server.registerTool("open_slidex_edit", {
     title: "Edit OpenSlideX presentation",
-    description: "Build and structurally validate a candidate batch, render-check it, return an immutable preview, and atomically write only when visual QA passes. A rejected result includes rejectedCandidateId; retry with that ID and small patch commands instead of regenerating the whole candidate. Revision conflicts are terminal.",
+    description: "Replace one complete deck or one complete slide. The server rejects removed components, validates deterministic geometry, render-checks the candidate, and atomically writes only when visual QA passes.",
     inputSchema: {
-      commands: external_exports.array(editCommandSchema).min(1).max(100),
       expectedRevision: external_exports.string().startsWith("sha256:"),
-      rejectedCandidateId: external_exports.string().uuid().optional()
+      rejectedCandidateId: external_exports.string().uuid().optional(),
+      slideIndex: external_exports.number().int().min(0).optional(),
+      source: external_exports.string().min(1),
+      target: external_exports.enum(["deck", "slide"])
     }
-  }, ({ commands, expectedRevision, rejectedCandidateId }, extra) => runTool(async () => {
+  }, ({ expectedRevision, rejectedCandidateId, slideIndex, source, target }, extra) => runTool(async () => {
     const { documentAdapter, root: root2 } = await projectContext();
     extra.signal.throwIfAborted();
     const current = await documentAdapter.open();
@@ -54479,45 +53643,54 @@ function createOpenSlideXMcpServer(root = projectRoot) {
     if (rejected && rejected.attempts >= 3) {
       throw new Error("The rejected candidate reached its patch retry limit. Build a materially different candidate.");
     }
-    const typedCommands = commands;
-    const candidate = applySlideXBatch(rejected?.source ?? current.source, typedCommands);
-    const candidateRevision = createCandidateRevision(candidate.source);
-    const qualityScope = qualityScopeForCommands(typedCommands);
-    const previewOutputPath = qualityScope ? resolveInsideRoot(root2, join(
+    const baseSource = rejected?.source ?? current.source;
+    if (target === "slide" && slideIndex === void 0) {
+      throw new Error("slideIndex is required when target is slide.");
+    }
+    const candidateSource = target === "deck" ? source : applySlideXBatch(baseSource, [{ slideIndex, slideSource: source, type: "slide.replace" }]).source;
+    assertToolbarNativeDocument(candidateSource);
+    const candidateDocument = parseMotionDoc(candidateSource);
+    const validation = summarizeMotionDoc(candidateSource).validation;
+    const blockingValidation = validation.issues.filter((issue2) => issue2.severity === "error");
+    if (blockingValidation.length > 0) {
+      throw new Error(`Candidate source is invalid: ${blockingValidation.slice(0, 6).map((issue2) => issue2.message).join(" ")}`);
+    }
+    const candidateRevision = createCandidateRevision(candidateSource);
+    const qualityScope = target === "slide" ? { mode: "slide", slideIndex } : { mode: "deck" };
+    const previewOutputPath = resolveInsideRoot(root2, join(
       "dist",
       "renders",
       candidateRevision.replace(/^sha256:/, ""),
-      qualityScope.mode === "slide" ? `slide-${qualityScope.slideIndex ?? 0}.png` : "montage.png"
-    )) : void 0;
-    const quality = qualityScope ? await analyzeSlideXDocumentQuality({
+      qualityScope.mode === "slide" ? `slide-${slideIndex}.png` : "montage.png"
+    ));
+    const quality = await analyzeSlideXDocumentQuality({
       ...qualityScope,
       previewOutputPath,
       projectRoot: root2,
-      source: candidate.source,
-      title: parseMotionDoc(candidate.source).title,
+      source: candidateSource,
+      title: candidateDocument.title,
       signal: extra.signal
-    }) : void 0;
-    if (quality && !quality.passed) {
+    });
+    if (!quality.passed) {
       const candidateId = rejectedCandidateId ?? randomUUID4();
       rejectedCandidates.set(candidateId, {
         attempts: (rejected?.attempts ?? 0) + 1,
         expectedRevision,
         expiresAt: Date.now() + 10 * 6e4,
-        source: candidate.source
+        source: candidateSource
       });
       throw new SlideXVisualQualityGateError(current.revision, quality, candidateId);
     }
     extra.signal.throwIfAborted();
-    const candidateDocument = parseMotionDoc(candidate.source);
     const document4 = await documentAdapter.save({
       expectedRevision,
-      source: candidate.source,
+      source: candidateSource,
       title: candidateDocument.title
     });
     if (rejectedCandidateId) rejectedCandidates.delete(rejectedCandidateId);
     return {
       candidateQuality: quality,
-      preview: quality?.preview,
+      preview: quality.preview,
       revision: document4.revision,
       stats: summarizeMotionDoc(document4.source).stats,
       title: document4.title,
@@ -54526,19 +53699,58 @@ function createOpenSlideXMcpServer(root = projectRoot) {
   }));
   return server;
 }
-function qualityScopeForCommands(commands) {
-  const visualCommands = commands.filter((command) => command.type !== "document.setTitle");
-  if (visualCommands.length === 0) return void 0;
-  const slideIndices = /* @__PURE__ */ new Set();
-  for (const command of visualCommands) {
-    if (command.type === "asset.repath" || command.type === "slide.add" || command.type === "slide.delete" || command.type === "slide.duplicate" || command.type === "slide.reorder" || command.type === "slide.applyLayout" && command.slideIndex === void 0) {
-      return { mode: "deck" };
-    }
-    if ("slideIndex" in command && typeof command.slideIndex === "number") {
-      slideIndices.add(command.slideIndex);
+async function resolveAuthoringGuidanceRoot(deckRoot, configuredWorkspaceRoot) {
+  const candidates = [
+    deckRoot,
+    ...configuredWorkspaceRoot ? [dirname(configuredWorkspaceRoot), configuredWorkspaceRoot] : []
+  ];
+  for (const candidate of [...new Set(candidates)]) {
+    try {
+      const skillDirectory = await stat4(join(candidate, ".agents", "skills"));
+      if (skillDirectory.isDirectory()) return candidate;
+    } catch (error51) {
+      if (!isNodeError2(error51) || error51.code !== "ENOENT") throw error51;
     }
   }
-  return slideIndices.size === 1 ? { mode: "slide", slideIndex: [...slideIndices][0] } : { mode: "deck" };
+  return deckRoot;
+}
+function assertToolbarNativeDocument(source) {
+  const removed = removedMotionDocTags.filter((tag) => new RegExp(`<${tag}\\b`).test(source));
+  if (removed.length > 0) {
+    throw new Error(
+      `Removed MotionDoc component${removed.length === 1 ? "" : "s"}: ${removed.join(", ")}. These tags are no longer parsed or supported.`
+    );
+  }
+  for (const [slideIndex, range] of motionDocSlideSourceRanges(source).entries()) {
+    assertToolbarNativeSlideSource(range.source, `slide ${slideIndex + 1}`);
+  }
+}
+function assertToolbarNativeSlideSource(source, label) {
+  const tags = [...source.matchAll(/<\/?([A-Z][A-Za-z0-9]*)\b/g)].map((match) => match[1]);
+  const forbidden = [...new Set(tags.filter((tag) => !authorableMotionDocTags.has(tag)))];
+  if (forbidden.length > 0) {
+    throw new Error(
+      `${label} may only use Workspace toolbar layers. Unsupported component${forbidden.length === 1 ? "" : "s"}: ${forbidden.join(", ")}. Use Text, ImageBlock, VideoBlock, Chart, Table, or Shape with explicit geometry.`
+    );
+  }
+  for (const match of source.matchAll(/<(Text|Chart|ImageBlock|Shape|Table|VideoBlock)\b([^>]*)>/g)) {
+    const tag = match[1];
+    const attributes = match[2] ?? "";
+    const missing = ["id", "x", "y", "w", "h"].filter(
+      (key) => !new RegExp(`\\b${key}\\s*=`).test(attributes)
+    );
+    if (missing.length > 0) {
+      throw new Error(
+        `${label} <${tag}> is missing deterministic layer attributes: ${missing.join(", ")}. Every MCP-authored visible layer needs a stable id and explicit percentage x/y/w/h geometry.`
+      );
+    }
+  }
+  const visibleRemainder = source.replace(/<Text\b[^>]*>[\s\S]*?<\/Text>/g, "").replace(/<(?:Chart|ImageBlock|Shape|Table|VideoBlock)\b[^>]*\/>/g, "").replace(/<\/?Slide\b[^>]*>/g, "").trim();
+  if (visibleRemainder) {
+    throw new Error(
+      `${label} contains visible Markdown or malformed component markup outside toolbar-native layers. Put visible copy inside positioned <Text> layers.`
+    );
+  }
 }
 var OpenSlideXWorkspaceMcpScope = class {
   selectedPresentationId;
@@ -54547,8 +53759,8 @@ var OpenSlideXWorkspaceMcpScope = class {
     this.workspaceRoot = resolve(workspaceRoot2);
   }
   async list() {
-    const entries = await readdir2(this.workspaceRoot, { withFileTypes: true }).catch((error51) => {
-      if (isNodeError(error51) && error51.code === "ENOENT") return [];
+    const entries = await readdir3(this.workspaceRoot, { withFileTypes: true }).catch((error51) => {
+      if (isNodeError2(error51) && error51.code === "ENOENT") return [];
       throw error51;
     });
     const described = await Promise.all(entries.flatMap((entry) => {
@@ -54593,7 +53805,7 @@ var OpenSlideXWorkspaceMcpScope = class {
     }
   }
 };
-function isNodeError(error51) {
+function isNodeError2(error51) {
   return error51 instanceof Error && "code" in error51;
 }
 async function main() {
@@ -54618,7 +53830,7 @@ async function main() {
   process.stderr.write(`OpenSlideX MCP connected to ${workspaceRoot ? `workspace ${workspaceRoot}` : projectRoot}
 `);
 }
-var openSlideXMcpNpxPackage = "open-slidex@0.3.4";
+var openSlideXMcpNpxPackage = "open-slidex@latest";
 function openSlideXMcpConfig(client, root, platform = process.platform === "win32" ? "windows" : "macos") {
   const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? win32.resolve(root) : resolve(root);
   const command = platform === "windows" ? "cmd" : "npx";
@@ -54669,7 +53881,7 @@ function openSlideXMcpSetupPrompt(client, root, platform = process.platform === 
     "",
     openSlideXMcpConfig(client, absoluteRoot, platform),
     "",
-    "After configuration, restart the client when required and verify open_slidex_open, open_slidex_edit with expectedRevision, open_slidex_render, and open_slidex_quality_check."
+    "After configuration, restart the client when required and verify open_slidex_read, open_slidex_edit with expectedRevision, and open_slidex_review."
   ].join("\n");
 }
 function openSlideXWorkspaceMcpSetupPrompt(client, root, platform = process.platform === "win32" ? "windows" : "macos") {
@@ -54683,7 +53895,7 @@ function openSlideXWorkspaceMcpSetupPrompt(client, root, platform = process.plat
     "",
     openSlideXWorkspaceMcpConfig(client, absoluteRoot, platform),
     "",
-    "After restarting the client, call open_slidex_workspace_list, select a presentation, then verify open_slidex_open and open_slidex_validate."
+    "After restarting the client, use open_slidex_workspace to list and select a presentation, then verify open_slidex_read and open_slidex_review."
   ].join("\n");
 }
 function parseMcpClient(value) {
@@ -54735,26 +53947,6 @@ function sourceChecksum(source) {
 }
 function createCandidateRevision(source) {
   return `sha256:${sourceChecksum(source)}`;
-}
-function templateRoleSamples(source, slideRoles, requestedRoles) {
-  const ranges = motionDocSlideSourceRanges(source);
-  const wanted = requestedRoles?.length ? [...new Set(requestedRoles)] : [...new Set(slideRoles)].slice(0, 4);
-  const selected = /* @__PURE__ */ new Set();
-  for (const role of wanted) {
-    const index2 = slideRoles.findIndex((candidate, slideIndex) => candidate === role && !selected.has(slideIndex));
-    if (index2 >= 0 && ranges[index2]) selected.add(index2);
-  }
-  if (selected.size === 0 && ranges[0]) selected.add(0);
-  return [...selected].map((slideIndex) => {
-    const sample = ranges[slideIndex].source;
-    return {
-      bytes: Buffer.byteLength(sample),
-      checksum: sourceChecksum(sample),
-      role: slideRoles[slideIndex] ?? "slide",
-      slideIndex,
-      source: sample
-    };
-  });
 }
 function pruneRejectedCandidates(candidates) {
   const now = Date.now();

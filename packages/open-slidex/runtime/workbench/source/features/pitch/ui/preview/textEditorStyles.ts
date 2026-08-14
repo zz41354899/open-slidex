@@ -30,12 +30,12 @@ export function editableTextStyle(block: MotionDocTextBlock, canvasScale: number
   const textAlign = stringValue(block.props.textAlign, "left") as CSSProperties["textAlign"];
   const color = stringValue(block.props.color ?? block.props.textColor, "inherit");
   const hasSurface = Boolean(stringValue(block.props.background ?? block.props.backgroundColor ?? block.props.bg, ""));
-  const fontWeight = numberValue(block.props.fontWeight) ?? (block.type === "Title" ? 600 : 400);
+  const fontWeight = numberValue(block.props.fontWeight) ?? (block.props.role === "title" ? 600 : 400);
   const lineHeight = motionDocLineHeightCanvasPixels(
     fontSize,
     block.props.lineHeight,
     block.props.lineHeightPt,
-    block.type === "Title" ? 1.02 : 1.45
+    block.props.role === "title" ? 1.02 : 1.45
   );
   const letterSpacing = numberValue(block.props.letterSpacing) ?? 0;
   const fontFamily = stringValue(block.props.fontFamily, "");

@@ -194,7 +194,6 @@ export const motionDocExportStyles = `      :root {
       .motion-block:not(.motion-block--positioned):not(.motion-block--full) > * {
         height: auto;
       }
-      .motion-block .block-title,
       .motion-block .block-text {
         width: 100%;
         max-width: none;
@@ -311,19 +310,6 @@ export const motionDocExportStyles = `      :root {
           transform: translate3d(0, 0, 0);
         }
       }
-      .block-title {
-        margin: 0;
-        max-width: 48rem;
-        border-radius: var(--motion-radius, 0);
-        font-size: calc(var(--motion-font-size, ${motionDocFontPointsToCanvasPixels(MOTION_DOC_FONT_SIZES.display)}px) * var(--frame-scale, 1));
-        font-weight: var(--motion-font-weight, 650);
-        letter-spacing: var(--motion-letter-spacing, 0px);
-        line-height: var(--motion-line-height, 1.02);
-        padding: var(--motion-text-padding, 0);
-        background: var(--motion-bg, transparent);
-        color: var(--motion-fg, var(--slide-fg));
-        text-align: var(--motion-text-align, inherit);
-      }
       .block-text {
         margin: 0;
         max-width: 46rem;
@@ -352,8 +338,7 @@ export const motionDocExportStyles = `      :root {
       .block-markdown-heading {
         color: var(--motion-fg, var(--slide-fg));
       }
-      .block-text a,
-      .block-title a {
+      .block-text a {
         color: inherit;
         text-decoration-thickness: 0.07em;
         text-underline-offset: 0.12em;
@@ -373,112 +358,6 @@ export const motionDocExportStyles = `      :root {
         font-size: calc(var(--motion-font-size, ${motionDocFontPointsToCanvasPixels(MOTION_DOC_FONT_SIZES.body * 0.86)}px) * var(--frame-scale, 1));
         line-height: 1.5;
         white-space: pre-wrap;
-      }
-      .block-card {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        margin: 0;
-        max-width: 42rem;
-        overflow: hidden;
-        padding: 20px;
-        border-radius: var(--motion-radius, 16px);
-        border: 1px solid var(--slide-border);
-        background: var(--motion-bg, var(--slide-card));
-        box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-        backdrop-filter: blur(16px);
-      }
-      .block-card--sm {
-        max-width: 24rem;
-      }
-      .block-card--lg {
-        max-width: 48rem;
-      }
-      .block-card--full {
-        width: 100%;
-        max-width: none;
-      }
-      .block-card--horizontal {
-        flex-direction: row;
-        align-items: flex-start;
-        gap: 18px;
-      }
-      .block-card__icon {
-        display: grid;
-        flex: 0 0 auto;
-        width: 36px;
-        height: 36px;
-        place-items: center;
-        margin-bottom: 16px;
-        border-radius: 8px;
-        border: 1px solid var(--slide-border);
-        background: rgba(255,255,255,0.06);
-        color: var(--motion-fg, var(--slide-fg));
-      }
-      .block-card--horizontal .block-card__icon {
-        margin-bottom: 0;
-      }
-      .block-card__content {
-        min-width: 0;
-      }
-      .block-card__icon svg {
-        width: 24px;
-        height: 24px;
-      }
-      .block-card h3 {
-        margin: 0;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(20)}px;
-        line-height: 1.4;
-        color: var(--motion-fg, var(--slide-fg));
-      }
-      .block-card p {
-        margin: 8px 0 0;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(16)}px;
-        line-height: 1.75;
-        color: var(--motion-muted, var(--slide-muted));
-      }
-      .block-metric {
-        margin: 0;
-        width: 100%;
-        max-width: calc(54rem * var(--frame-scale, 1));
-        padding: calc(20px * var(--frame-scale, 1));
-        border-radius: var(--motion-radius, 16px);
-        border: 1px solid var(--slide-border);
-        background: var(--motion-bg, rgba(255,255,255,0.06));
-        box-shadow: 0 calc(24px * var(--frame-scale, 1)) calc(72px * var(--frame-scale, 1)) rgba(0,0,0,0.24);
-      }
-      .block-metric {
-        max-width: 24rem;
-      }
-      .block-metric--md {
-        max-width: 28rem;
-      }
-      .block-metric--lg {
-        max-width: 42rem;
-      }
-      .block-metric--full {
-        max-width: none;
-      }
-      .block-metric__label {
-        margin: 0;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(12)}px;
-        font-weight: 700;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: var(--motion-muted, var(--slide-muted));
-      }
-      .block-metric__value {
-        margin: 12px 0 0;
-        font-size: ${motionDocFontPointsToCanvasPixels(MOTION_DOC_FONT_SIZES.heading)}px;
-        font-weight: 650;
-        line-height: 1;
-        color: var(--motion-fg, var(--slide-fg));
-      }
-      .block-metric__caption {
-        margin: 12px 0 0;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(14)}px;
-        line-height: 1.5rem;
-        color: var(--motion-muted, var(--slide-muted));
       }
       .block-image {
         margin: 0;
@@ -633,37 +512,6 @@ export const motionDocExportStyles = `      :root {
       .shape-line-vector-endpoint { position:absolute; top:50%; overflow:visible; pointer-events:none; }
       .shape-line-vector-endpoint--start { left:0; transform:translate(-50%,-50%); }
       .shape-line-vector-endpoint--end { right:0; transform:translate(50%,-50%); }
-      .block-stack {
-        display: flex;
-        width: 100%;
-        height: 100%;
-        flex-direction: var(--stack-direction, row);
-        align-items: var(--stack-align, stretch);
-        gap: var(--stack-gap, 16px);
-        padding: var(--stack-padding, 20px);
-        border: 1px solid var(--stack-stroke, var(--slide-border));
-        border-radius: var(--motion-radius, 16px);
-        background: var(--motion-bg, var(--slide-card));
-        color: var(--motion-fg, var(--slide-fg));
-        box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-        backdrop-filter: blur(16px);
-      }
-      .block-stack__item {
-        display: grid;
-        min-width: 0;
-        min-height: 0;
-        flex: 1;
-        place-items: center;
-        overflow: hidden;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.08);
-        background: rgba(255,255,255,0.06);
-        padding: 8px 12px;
-        color: inherit;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(12)}px;
-        font-weight: 650;
-        text-align: center;
-      }
       .block-table {
         display: grid;
         width: 100%;

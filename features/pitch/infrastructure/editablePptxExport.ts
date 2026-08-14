@@ -1,5 +1,4 @@
 import type PptxGenJS from "pptxgenjs";
-import { lucideIconSvgDataUri } from "@/core/motion-doc/application/lucideIconSvg";
 import { shapeNeedsExactSvgExport, shapeVectorSvgDataUri } from "@/core/motion-doc/application/shapeVectorSvg";
 import { objectShadowFromProps } from "@/core/motion-doc/application/objectShadow";
 import { getPaperImageFilterDefinition } from "@/core/motion-doc/application/shaders/paperImageFilterCatalog";
@@ -60,10 +59,8 @@ export type EditablePptxOptions = {
 };
 
 const NATIVE_PPTX_BLOCK_TYPES = new Set([
-  "Title",
   "Text",
   "heading",
-  "Icon",
   "ImageBlock",
   "Shape",
   "Table",
@@ -113,17 +110,13 @@ export async function addEditableSlides(
     const hasVisualFallback = Boolean(renderedBackground && needsVisualFallback(scene.blocks, scene.props, options.additionalNativeBlockTypes));
 
     slide.background = { color: pptxColor(theme.background, "0F172A") };
-    if (scene.notes?.plainText) {
-      slide.addNotes(scene.notes.plainText);
-    }
-
     if (hasVisualFallback) {
       slide.background = { data: renderedBackground };
     }
 
     let filteredImageIndex = 0;
     for (const block of scene.blocks) {
-      if (block.type === "Title" || block.type === "Text" || block.type === "heading") {
+      if (block.type === "Text" || block.type === "heading") {
         addEditableText(slide, block, theme.foreground, theme.muted);
       } else if (block.type === "ImageBlock") {
         const needsFilterRasterization = imageNeedsPptxRasterization(block);
@@ -136,8 +129,6 @@ export async function addEditableSlides(
         }
 
         await addEditableImage(slide, block, filteredImageData ?? preparedBlockAssets.get(block));
-      } else if (block.type === "Icon") {
-        await addEditableIcon(slide, block, theme.isLight, preparedBlockAssets.get(block));
       } else if (block.type === "Shape") {
         await addEditableShape(slide, block, preparedBlockAssets.get(block));
       } else if (block.type === "Table") {
@@ -155,21 +146,10 @@ export async function addEditableSlides(
 
 async function preparePortableBlockAssets(document: ParsedMotionDoc): Promise<PreparedBlockAssets> {
   const jobs = document.scenes.flatMap((scene) => {
-    const theme = resolveSlideThemeColors(scene.props);
-
     return scene.blocks.flatMap((block): PortableBlockAssetJob[] => {
       if (block.type === "ImageBlock" && !imageNeedsPptxRasterization(block)) {
         const source = stringProp(block.props.src);
         return source ? [{ block, fit: imageFit(block.props.fit), frame: pptxFrame(blockFrame(block)), source }] : [];
-      }
-
-      if (block.type === "Icon") {
-        const iconName = stringProp(block.props.icon) ?? "Sparkles";
-        const source = lucideIconSvgDataUri(iconName, {
-          color: theme.isLight ? "#000000" : "#ffffff",
-          strokeWidth: numericProp(block.props.strokeWidth, 2)
-        });
-        return source ? [{ block, fit: "contain", frame: pptxFrame(blockFrame(block)), source }] : [];
       }
 
       if (block.type === "Shape" && shapeNeedsExactSvgExport(block.props)) {
@@ -262,12 +242,12 @@ function addEditableText(
 ) {
   const frame = block.type === "heading" ? { x: 8, y: 18, w: 52, h: 10 } : blockFrame(block);
   const props = "props" in block ? block.props : {};
-  const isTitle = block.type === "Title";
+  const isTitle = block.type === "Text" && block.props.role === "title";
   const fontSize = numericProp(
     props.fontSize,
     block.type === "heading"
       ? MOTION_DOC_FONT_SIZES.heading
-      : motionDocDefaultFontSize(isTitle ? "Title" : "Text")
+      : isTitle ? MOTION_DOC_FONT_SIZES.display : motionDocDefaultFontSize("Text")
   );
   const background = stringProp(props.background ?? props.backgroundColor ?? props.bg);
   const baseFontWeight = numericProp(props.fontWeight, isTitle ? 600 : 400);
@@ -378,35 +358,6 @@ async function addEditableImage(slide: PptxSlide, block: PropsBlock, renderedDat
   const data = renderedData ?? await portablePptxImageData(src, frame, fit);
 
   slide.addImage({
-    data,
-    ...frame,
-    shadow: pptxShadow(block.props),
-    transparency: 0
-  });
-}
-
-async function addEditableIcon(
-  slide: PptxSlide,
-  block: PropsBlock,
-  isLightBackground: boolean,
-  preparedData?: string
-) {
-  const iconName = stringProp(block.props.icon) ?? "Sparkles";
-  const svgData = lucideIconSvgDataUri(
-    iconName,
-    {
-      color: isLightBackground ? "#000000" : "#ffffff",
-      strokeWidth: numericProp(block.props.strokeWidth, 2)
-    }
-  );
-
-  if (!svgData) return;
-
-  const frame = pptxBlockFrame(block);
-  const data = preparedData ?? await portablePptxImageData(svgData, frame);
-
-  slide.addImage({
-    altText: `${iconName} icon`,
     data,
     ...frame,
     shadow: pptxShadow(block.props),

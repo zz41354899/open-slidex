@@ -1,11 +1,7 @@
 
 import type { ReactNode } from "react";
-import { CardFields } from "@/features/pitch/ui/inspector/CardFields";
-import { IconFields } from "@/features/pitch/ui/inspector/IconFields";
 import { ImageFields } from "@/features/pitch/ui/inspector/ImageFields";
-import { MetricFields } from "@/features/pitch/ui/inspector/MetricFields";
 import { ShapeFields } from "@/features/pitch/ui/inspector/ShapeFields";
-import { StackFields } from "@/features/pitch/ui/inspector/StackFields";
 import { TableFields } from "@/features/pitch/ui/inspector/TableFields";
 import { VideoFields } from "@/features/pitch/ui/inspector/VideoFields";
 import type { BlockFieldProps } from "@/features/pitch/ui/inspector/InspectorControls";
@@ -27,14 +23,6 @@ type BlockFieldRegistryEntry = {
 };
 
 const blockFieldRegistry: Partial<Record<MotionDocBlockType, BlockFieldRegistryEntry>> = {
-  Card: {
-    render: (context) => <CardFields {...context} />,
-    title: "Card properties"
-  },
-  Icon: {
-    render: (context) => <IconFields {...context} />,
-    title: "Icon properties"
-  },
   ImageBlock: {
     render: (context) => (
       <ImageFields
@@ -49,10 +37,6 @@ const blockFieldRegistry: Partial<Record<MotionDocBlockType, BlockFieldRegistryE
     ),
     title: "Image properties"
   },
-  Metric: {
-    render: (context) => <MetricFields {...context} />,
-    title: "Metric properties"
-  },
   Shape: {
     render: (context) => (
       <ShapeFields
@@ -64,10 +48,6 @@ const blockFieldRegistry: Partial<Record<MotionDocBlockType, BlockFieldRegistryE
       />
     ),
     title: "Shape properties"
-  },
-  Stack: {
-    render: (context) => <StackFields {...context} />,
-    title: "Stack properties"
   },
   Table: {
     render: (context) => <TableFields {...context} />,

@@ -24,12 +24,8 @@ export function motionDocBlockFrame(block: MotionDocBlock | undefined): MotionDo
 }
 
 export function defaultBlockWidth(type: MotionDocBlock["type"]) {
-  if (type === "Title") return 52;
   if (type === "Text") return 42;
-  if (type === "Icon") return 16;
-  if (type === "Metric") return 32;
   if (type === "Shape") return widthPercentForPhysicalAspectRatio(28);
-  if (type === "Stack") return 80;
   if (type === "Table") return 56;
   if (type === "Chart") return 78;
   if (type === "ImageBlock" || type === "VideoBlock") return 80;
@@ -42,12 +38,8 @@ export function widthPercentForPhysicalAspectRatio(heightPercent: number, aspect
 }
 
 export function defaultBlockHeight(type: MotionDocBlock["type"]) {
-  if (type === "Title") return 18;
   if (type === "Text") return 9;
-  if (type === "Icon") return 28;
-  if (type === "Metric") return 36;
   if (type === "Shape") return 28;
-  if (type === "Stack") return 20;
   if (type === "Table") return 30;
   if (type === "Chart") return 52;
   if (type === "ImageBlock" || type === "VideoBlock") return 54;
@@ -56,8 +48,7 @@ export function defaultBlockHeight(type: MotionDocBlock["type"]) {
 }
 
 export function defaultBlockX(type: MotionDocBlock["type"]) {
-  if (type === "Icon") return 42;
-  if (type === "ImageBlock" || type === "VideoBlock" || type === "Stack") return 10;
+  if (type === "ImageBlock" || type === "VideoBlock") return 10;
   if (type === "Table") return 22;
   if (type === "Chart") return 11;
   if (type === "Shape") return 34;
@@ -66,11 +57,9 @@ export function defaultBlockX(type: MotionDocBlock["type"]) {
 }
 
 export function defaultBlockY(type: MotionDocBlock["type"]) {
-  if (type === "Title") return 18;
-  if (type === "Icon" || type === "Shape") return 30;
+  if (type === "Shape") return 30;
   if (type === "Table") return 34;
   if (type === "Chart") return 25;
-  if (type === "Stack") return 64;
   if (type === "ImageBlock" || type === "VideoBlock") return 20;
 
   return 38;

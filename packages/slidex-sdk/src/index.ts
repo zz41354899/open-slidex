@@ -121,7 +121,6 @@ export type {
   MotionDocBlock,
   MotionDocProps,
   MotionDocScene,
-  MotionDocSpeakerNotes,
   ParsedMotionDoc
 } from "@/core/motion-doc/domain/motionDocTypes";
 export {

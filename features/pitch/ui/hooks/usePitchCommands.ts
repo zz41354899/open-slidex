@@ -514,13 +514,13 @@ export function usePitchCommands({
     const currentBlock = activeSlide.blocks[blockIndex];
     if (
       currentBlock &&
-      (currentBlock.type === "Title" || currentBlock.type === "Text" || currentBlock.type === "heading") &&
+      (currentBlock.type === "Text" || currentBlock.type === "heading") &&
       currentBlock.props.fontFamily !== newProps.fontFamily
     ) {
       lastUsedFontFamilyRef.current = typeof newProps.fontFamily === "string" ? newProps.fontFamily.trim() : "";
     } else if (
       currentBlock &&
-      (currentBlock.type === "Title" || currentBlock.type === "Text" || currentBlock.type === "heading") &&
+      (currentBlock.type === "Text" || currentBlock.type === "heading") &&
       currentBlock.props.textStyleRanges !== newProps.textStyleRanges
     ) {
       const textLength = (newText ?? currentBlock.text).length;
@@ -618,5 +618,5 @@ export function usePitchCommands({
 }
 
 function isTextAddBlockType(type: AddBlockType) {
-  return type === "Title" || type === "Text" || type.startsWith("Text");
+  return type === "Text" || type.startsWith("Text");
 }

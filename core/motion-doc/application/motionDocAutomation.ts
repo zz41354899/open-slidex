@@ -36,7 +36,6 @@ export const motionDocAddBlockTypes = [
   "Text",
   "Image",
   "Video",
-  "Icon",
   "Chart",
   "Table",
   "ShapeRectangle"
@@ -91,20 +90,13 @@ export type MotionDocAddBlockOptions = {
 };
 
 const supportedComponentTags = new Set([
-  "Card",
   "Chart",
-  "Group",
-  "Icon",
   "ImageBlock",
-  "Metric",
-  "Notes",
   "Scene",
   "Shape",
   "Slide",
-  "Stack",
   "Table",
   "Text",
-  "Title",
   "VideoBlock"
 ]);
 
@@ -551,7 +543,7 @@ function applyBlockOptions(
     ...coerceMotionProps(options.position ?? {})
   };
 
-  if ((block.type === "Title" || block.type === "Text") && options.text !== undefined) {
+  if (block.type === "Text" && options.text !== undefined) {
     return {
       ...block,
       props: nextProps,
@@ -629,34 +621,6 @@ function validateMotionDocSource(
       message: `<${tag}> is not a supported SlideX MotionDoc component.`,
       severity: "error"
     });
-  }
-
-  for (const [sceneIndex, range] of motionDocSlideSourceRanges(source).entries()) {
-    const noteMatches = [...range.source.matchAll(/<Notes\b[^>]*>([\s\S]*?)<\/Notes>/g)];
-    if (noteMatches.length > 1) {
-      issues.push({
-        message: "A slide may contain at most one <Notes> block.",
-        path: `scenes[${sceneIndex}].notes`,
-        severity: "error"
-      });
-    }
-    if (/<Group\b[^>]*>[\s\S]*?<Notes\b/.test(range.source)) {
-      issues.push({
-        message: "<Notes> must be a direct child of <Slide>, not nested inside <Group>.",
-        path: `scenes[${sceneIndex}].notes`,
-        severity: "error"
-      });
-    }
-    for (const noteMatch of noteMatches) {
-      const noteSource = noteMatch[1] ?? "";
-      if (/<\/?[A-Z][A-Za-z0-9]*\b/.test(noteSource)) {
-        issues.push({
-          message: "<Notes> accepts CommonMark only; MotionDoc and JSX elements are not allowed.",
-          path: `scenes[${sceneIndex}].notes`,
-          severity: "error"
-        });
-      }
-    }
   }
 
   document.scenes.forEach((scene, sceneIndex) => {

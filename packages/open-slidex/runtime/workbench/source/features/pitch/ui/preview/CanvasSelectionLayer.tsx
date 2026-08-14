@@ -187,7 +187,7 @@ export function CanvasSelectionLayer({
         const tableBlock = isEditableTableBlock(block) ? block : null;
         const isTextBlock = isEditableTextBlock(block);
         const isShapeImage = block.type === "Shape" && block.props.shape !== "line" && Boolean(block.props.shapeImageSrc);
-        const isVisualBlock = block.type === "Icon" || block.type === "ImageBlock" || block.type === "VideoBlock" || (block.type === "Shape" && block.props.shape !== "line");
+        const isVisualBlock = block.type === "ImageBlock" || block.type === "VideoBlock" || (block.type === "Shape" && block.props.shape !== "line");
         const isImageCropActive = (block.type === "ImageBlock" || isShapeImage) && imageCropBlockIndex === blockIndex;
         const isLineShape = block.type === "Shape" && block.props.shape === "line";
         const isGroupedTextEditor = isGroupedSelection && isSelected && isTextBlock;
@@ -265,7 +265,7 @@ export function CanvasSelectionLayer({
                 blockIndex={blockIndex}
                 canvasScale={canvasScale}
                 inheritedTextColor={
-                  block.type === "Title" || block.type === "heading" || block.props.role === "title"
+                  block.type === "heading" || block.props.role === "title"
                     ? slideTextColors?.foreground
                     : slideTextColors?.muted
                 }

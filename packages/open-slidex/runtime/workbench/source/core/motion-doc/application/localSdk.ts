@@ -258,8 +258,10 @@ export function getSlideXCatalog(input: {
   const section = input.section ?? "all";
   const catalog = {
     blocks: {
-      addable: ["Text", "Image", "Video", "Icon", "Chart", "Table", "ShapeRectangle"],
-      nodeIdentity: "Every editable block has a stable id prop exposed as nodeId."
+      addable: ["Text", "Image", "Video", "Chart", "Table", "ShapeRectangle"],
+      authorableTags: ["Text", "ImageBlock", "VideoBlock", "Chart", "Table", "Shape"],
+      nodeIdentity: "Every editable block has a stable id prop exposed as nodeId.",
+      rule: "MCP authoring exactly matches the Workspace toolbar. Removed component tags are rejected during parsing."
     },
     designRules: {
       canvas: { height: 1080, unit: "percent", width: 1920 },
@@ -281,19 +283,13 @@ export function getSlideXCatalog(input: {
       document: "# Title followed by one or more <Slide> blocks.",
       slide:
         '<Slide duration={5} width={1920} height={1080} fontSizeUnit="pt" background="#fff" theme="light">...</Slide>',
-      supportedElements: [
+      authorableElements: [
         "Text",
-        "Title",
         "ImageBlock",
         "VideoBlock",
-        "Icon",
         "Chart",
         "Table",
-        "Shape",
-        "Card",
-        "Metric",
-        "Group",
-        "Stack"
+        "Shape"
       ]
     },
     shaders: paperShaderDefinitions.map((shader) => ({

@@ -180,9 +180,8 @@ function LegacyAssistantCanvasActivityOverlay({
 
 function canvasStatusLabel(activity: AssistantCanvasActivity) {
   if (activity.toolName === "open_slidex_edit") return "Editing";
-  if (activity.toolName === "open_slidex_validate") return "Validating";
-  if (activity.toolName === "open_slidex_render") return "Rendering";
-  if (activity.toolName === "open_slidex_inspect" || activity.toolName === "open_slidex_open") return "Reading";
+  if (activity.toolName === "open_slidex_review") return "Reviewing";
+  if (activity.toolName === "open_slidex_read") return "Reading";
   return activity.summary;
 }
 

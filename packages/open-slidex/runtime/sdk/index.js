@@ -255,7 +255,7 @@ function motionDocLineHeightCanvasValue(lineHeight, lineHeightPt, defaultLineHei
   return positiveNumber(lineHeight) ?? defaultLineHeight;
 }
 function motionDocDefaultFontSize(type) {
-  return type === "Title" ? MOTION_DOC_FONT_SIZES.display : MOTION_DOC_FONT_SIZES.body;
+  return type === "heading" ? MOTION_DOC_FONT_SIZES.heading : MOTION_DOC_FONT_SIZES.body;
 }
 function roundFontSize(value) {
   return Math.round(value * 1e3) / 1e3;
@@ -578,12 +578,8 @@ function motionDocBlockFrame(block) {
   };
 }
 function defaultBlockWidth(type) {
-  if (type === "Title") return 52;
   if (type === "Text") return 42;
-  if (type === "Icon") return 16;
-  if (type === "Metric") return 32;
   if (type === "Shape") return widthPercentForPhysicalAspectRatio(28);
-  if (type === "Stack") return 80;
   if (type === "Table") return 56;
   if (type === "Chart") return 78;
   if (type === "ImageBlock" || type === "VideoBlock") return 80;
@@ -593,23 +589,17 @@ function widthPercentForPhysicalAspectRatio(heightPercent, aspectRatio = 1) {
   return heightPercent * MOTION_DOC_CANVAS_HEIGHT / MOTION_DOC_CANVAS_WIDTH * aspectRatio;
 }
 function defaultBlockHeight(type) {
-  if (type === "Title") return 18;
   if (type === "Text") return 9;
-  if (type === "Icon") return 28;
-  if (type === "Metric") return 36;
   if (type === "Shape") return 28;
-  if (type === "Stack") return 20;
   if (type === "Table") return 30;
   if (type === "Chart") return 52;
   if (type === "ImageBlock" || type === "VideoBlock") return 54;
   return 32;
 }
 function defaultBlockY(type) {
-  if (type === "Title") return 18;
-  if (type === "Icon" || type === "Shape") return 30;
+  if (type === "Shape") return 30;
   if (type === "Table") return 34;
   if (type === "Chart") return 25;
-  if (type === "Stack") return 64;
   if (type === "ImageBlock" || type === "VideoBlock") return 20;
   return 38;
 }
@@ -657,8 +647,6 @@ function createMotionDocBlockWithoutId(type) {
           y: 34
         }
       };
-    case "Title":
-      return { type: "Title", props: { enter: "none", fontSize: MOTION_DOC_FONT_SIZES.display, x: 9, y: 18, w: 52, h: 18 }, text: "New Title" };
     case "Text":
       return { type: "Text", props: { enter: "none", fontSize: MOTION_DOC_FONT_SIZES.body, x: 10, y: 45, w: 42, h: 9 }, text: "Add some descriptive text here." };
     case "Text96":
@@ -673,16 +661,10 @@ function createMotionDocBlockWithoutId(type) {
       return createTextPresetBlock(MOTION_DOC_FONT_SIZES.supportingTitle, "Supporting title");
     case "Text24":
       return createTextPresetBlock(MOTION_DOC_FONT_SIZES.body, "Body copy");
-    case "Card":
-      return { type: "Card", props: { icon: "Sparkles", layout: "vertical", title: "Feature", text: "Feature description", width: "md", enter: "none", radius: 16, x: 8, y: 38, w: 40, h: 32 } };
-    case "Metric":
-      return { type: "Metric", props: { label: "Pipeline", value: "$2.4M", caption: "Qualified revenue influenced this quarter.", width: "sm", enter: "none", radius: 16, x: 8, y: 38, w: 32, h: 36 } };
     case "Image":
       return { type: "ImageBlock", props: { src: "", alt: "", fit: "cover", scaleX: 1, scaleY: 1, enter: "none", radius: 0, x: 10, y: 20, w: 80, h: 54 } };
     case "Video":
       return { type: "VideoBlock", props: { src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", fit: "cover", controls: "true", loop: "true", muted: "true", enter: "none", radius: 0, x: 10, y: 20, w: 80, h: 54 } };
-    case "Icon":
-      return { type: "Icon", props: { icon: "Sparkles", color: "#ffffff", strokeWidth: 2.2, size: 112, enter: "none", radius: 0, x: 47.0833, y: 44.8148, w: 5.8333, h: 10.3704 } };
     case "Chart":
       return {
         type: "Chart",
@@ -822,53 +804,10 @@ function normalizeMotionDocSpacing(source) {
 function generateSlideString(slide) {
   const identifiedSlide = ensureMotionDocSceneBlockIds(slide);
   const tag = formatSlideTag(identifiedSlide.props);
-  const blockStrings = [];
-  for (let index2 = 0; index2 < identifiedSlide.blocks.length; ) {
-    const block = identifiedSlide.blocks[index2];
-    const groupId = groupIdOf(block);
-    if (!groupId) {
-      blockStrings.push(`  ${generateBlockString(block)}`);
-      index2 += 1;
-      continue;
-    }
-    const groupedBlocks = [];
-    while (index2 < identifiedSlide.blocks.length && groupIdOf(identifiedSlide.blocks[index2]) === groupId) {
-      groupedBlocks.push(identifiedSlide.blocks[index2]);
-      index2 += 1;
-    }
-    blockStrings.push(indentGroupString(generateGroupString(groupedBlocks, groupId)));
-  }
-  const notes = identifiedSlide.notes?.markdown.trim();
-  const notesString = notes ? `
-  <Notes>
-${notes.split("\n").map((line) => `    ${line}`).join("\n")}
-  </Notes>` : "";
+  const blockStrings = identifiedSlide.blocks.map((block) => `  ${generateBlockString(block)}`);
   return `${tag}
-${blockStrings.join("\n")}${notesString}
+${blockStrings.join("\n")}
 </Slide>`;
-}
-function generateGroupString(blocks, groupId) {
-  const identifiedBlocks = ensureMotionDocBlockIds(blocks);
-  const namedBlock = identifiedBlocks.find((block) => "props" in block && typeof block.props.groupName === "string");
-  const groupName = namedBlock?.props.groupName;
-  const nameAttr = typeof groupName === "string" && groupName.trim() ? ` name="${escapeMdxAttribute(groupName)}"` : "";
-  const children = identifiedBlocks.map((block) => `  ${generateBlockStringWithProps(block, withoutGroupProps("props" in block ? block.props : void 0))}`);
-  return `<Group id="${escapeMdxAttribute(groupId)}"${nameAttr}>
-${children.join("\n")}
-</Group>`;
-}
-function indentGroupString(value) {
-  return value.split("\n").map((line) => `  ${line}`).join("\n");
-}
-function groupIdOf(block) {
-  return "props" in block && typeof block.props.groupId === "string" && block.props.groupId.trim() ? block.props.groupId : "";
-}
-function withoutGroupProps(props) {
-  if (!props) return props;
-  const { groupId, groupName, ...rest } = props;
-  void groupId;
-  void groupName;
-  return rest;
 }
 function generateBlockString(block) {
   const identifiedBlock = ensureMotionDocBlockIds([block])[0] ?? block;
@@ -895,7 +834,7 @@ function ensureMotionDocSourceBlockIds(source) {
   );
 }
 function generateBlockStringWithProps(block, overrideProps) {
-  if (block.type === "Title" || block.type === "Text") {
+  if (block.type === "Text") {
     const propsStr = formatTextProps(overrideProps ?? block.props);
     return `<${block.type}${propsStr ? " " + propsStr : ""}>${escapeMdxText(block.text)}</${block.type}>`;
   }
@@ -911,16 +850,11 @@ function generateBlockStringWithProps(block, overrideProps) {
   return "";
 }
 var sourceBlockTagNames = /* @__PURE__ */ new Set([
-  "Card",
   "Chart",
-  "Icon",
   "ImageBlock",
-  "Metric",
   "Shape",
-  "Stack",
   "Table",
   "Text",
-  "Title",
   "VideoBlock"
 ]);
 function sourceBlockIdentityCandidates(slideSource, sourceOffset) {
@@ -1027,7 +961,7 @@ function sourceOpeningTagEnd(source, start) {
 }
 function protectedSourceBlockRanges(slideSource) {
   const ranges = [];
-  const pairedBlockPattern = /<((?!Slide\b|Scene\b|Group\b)[A-Z][A-Za-z0-9]*)\b[^>]*>[\s\S]*?<\/\1>/g;
+  const pairedBlockPattern = /<((?!Slide\b|Scene\b)[A-Z][A-Za-z0-9]*)\b[^>]*>[\s\S]*?<\/\1>/g;
   for (const match of slideSource.matchAll(pairedBlockPattern)) {
     const start = match.index ?? 0;
     ranges.push({ end: start + match[0].length, start });
@@ -9997,17 +9931,15 @@ function motionDocBlocksFromMarkdownNode(node2, source) {
       },
       id
     );
-    if (node2.depth === 1) {
-      return [{ props, text: content3.text, type: "Title" }];
-    }
     return [{
       props: {
         ...props,
         fontSize: markdownHeadingFontSize(node2.depth),
-        fontWeight: 700
+        fontWeight: 700,
+        ...node2.depth === 1 ? { role: "title" } : {}
       },
       text: content3.text,
-      type: "heading"
+      type: node2.depth === 1 ? "Text" : "heading"
     }];
   }
   if (node2.type === "paragraph") {
@@ -10379,7 +10311,14 @@ function youtubeVideoId(source) {
 
 // core/motion-doc/domain/motionDocParser.ts
 var mediaSourcePropNames = /* @__PURE__ */ new Set(["backgroundImage", "poster", "shapeImageSrc", "src"]);
+var removedComponentPattern = /<(Card|Metric|Stack|Group|Title|Icon|Notes)\b/;
 function parseMotionDoc(source) {
+  const removedComponent = source.match(removedComponentPattern)?.[1];
+  if (removedComponent) {
+    throw new Error(
+      `Unsupported MotionDoc component: ${removedComponent}. Rebuild it with Text, ImageBlock, VideoBlock, Chart, Table, or Shape.`
+    );
+  }
   const firstSlideOffset = source.search(/<(?:Slide|Scene)\b/);
   const documentHeader = firstSlideOffset >= 0 ? source.slice(0, firstSlideOffset) : source;
   const title = documentHeader.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? "Slider Preview";
@@ -10395,40 +10334,19 @@ function parseMotionDoc(source) {
       return {
         duration: typeof durationValue === "number" && Number.isFinite(durationValue) ? durationValue : 0,
         props,
-        blocks: parseSceneBlocks(removeSpeakerNotes(sceneSource)),
-        notes: parseSpeakerNotes(sceneSource)
+        blocks: parseSceneBlocks(sceneSource)
       };
     })
   };
 }
-function parseSpeakerNotes(sceneSource) {
-  const match = sceneSource.match(/<Notes\b[^>]*>([\s\S]*?)<\/Notes>/);
-  if (!match) return void 0;
-  const markdown = dedentSpeakerNotes(match[1] ?? "");
-  const plainText = parseMotionDocMarkdown(markdown).flatMap((block) => "text" in block ? [block.text] : []).join("\n").trim();
-  return { markdown, plainText };
-}
-function dedentSpeakerNotes(source) {
-  const lines = source.replace(/\r\n?/g, "\n").split("\n");
-  while (lines[0]?.trim() === "") lines.shift();
-  while (lines.at(-1)?.trim() === "") lines.pop();
-  const indent2 = Math.min(
-    ...lines.filter((line) => line.trim()).map((line) => line.match(/^[ \t]*/)?.[0].length ?? 0)
-  );
-  return lines.map((line) => line.slice(Number.isFinite(indent2) ? indent2 : 0)).join("\n").trimEnd();
-}
-function removeSpeakerNotes(sceneSource) {
-  return sceneSource.replace(/<Notes\b[^>]*>[\s\S]*?<\/Notes>/g, "\n");
-}
 function parseSceneBlocks(sceneSource) {
-  const normalizedSceneSource = expandGroupMarkup(sceneSource);
   const blocks = [];
-  const blockPattern = /<(Title|Text)\b([^>]*)>([\s\S]*?)<\/\1>|<(Card|Chart|ImageBlock|VideoBlock|Metric|Icon|Shape|Stack|Table)\b([\s\S]*?)\/>/g;
+  const blockPattern = /<(Text)\b([^>]*)>([\s\S]*?)<\/\1>|<(Chart|ImageBlock|VideoBlock|Shape|Table)\b([\s\S]*?)\/>/g;
   let cursor = 0;
-  for (const match of normalizedSceneSource.matchAll(blockPattern)) {
+  for (const match of sceneSource.matchAll(blockPattern)) {
     const matchStart = match.index ?? cursor;
     blocks.push(
-      ...parseMotionDocMarkdown(normalizedSceneSource.slice(cursor, matchStart))
+      ...parseMotionDocMarkdown(sceneSource.slice(cursor, matchStart))
     );
     const pairedType = match[1];
     const selfClosingType = match[4];
@@ -10453,23 +10371,8 @@ function parseSceneBlocks(sceneSource) {
       });
     }
   }
-  blocks.push(...parseMotionDocMarkdown(normalizedSceneSource.slice(cursor)));
+  blocks.push(...parseMotionDocMarkdown(sceneSource.slice(cursor)));
   return blocks;
-}
-function expandGroupMarkup(sceneSource) {
-  return sceneSource.replace(/<Group\b([^>]*)>([\s\S]*?)<\/Group>/g, (_match, rawProps, children, offset) => {
-    const props = parseProps(rawProps);
-    const groupId = String(props.id ?? props.groupId ?? `group-${offset}`);
-    const groupName = String(props.name ?? props.groupName ?? "Group");
-    const groupAttrs = ` groupId="${encodeInjectedAttribute(groupId)}" groupName="${encodeInjectedAttribute(groupName)}"`;
-    return children.replace(
-      /<(Title|Text|Card|Chart|ImageBlock|VideoBlock|Metric|Icon|Shape|Stack|Table)\b/g,
-      (opening) => `${opening}${groupAttrs}`
-    );
-  });
-}
-function encodeInjectedAttribute(value) {
-  return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 function parseProps(rawProps) {
   const props = {};
@@ -10598,24 +10501,20 @@ function materializeFreeformScene(scene) {
   };
 }
 function defaultBlockFrame(block) {
-  if (block.type === "Title") return { x: 8, y: 12, w: 62, h: 18 };
+  if (isTitleText(block)) return { x: 8, y: 12, w: 62, h: 18 };
   if (block.type === "Text") return { x: 8, y: 38, w: 52, h: 16 };
-  if (block.type === "Card") return { x: 8, y: 38, w: 40, h: 32 };
-  if (block.type === "Metric") return { x: 8, y: 38, w: 32, h: 36 };
-  if (block.type === "Icon") return { x: 42, y: 28, w: 16, h: 28 };
   if (block.type === "Shape") return { x: 34, y: 30, w: 28, h: 28 };
-  if (block.type === "Stack") return { x: 10, y: 64, w: 80, h: 20 };
   if (block.type === "ImageBlock" || block.type === "VideoBlock") return { x: 8, y: 16, w: 72, h: 52 };
   return { x: 8, y: 12, w: 42, h: 18 };
 }
 function layoutBlock(block, originalIndex, blocksWithProps, hasCenteredCopy) {
   const defaults = defaultBlockFrame(block);
   const propIndex = blocksWithProps.findIndex((item) => item === block);
-  const titleIndex = blocksWithProps.findIndex((item) => item.type === "Title");
+  const titleIndex = blocksWithProps.findIndex(isTitleText);
   const titleOffset = titleIndex >= 0 && propIndex > titleIndex ? 1 : 0;
   const contentIndex = Math.max(propIndex - titleOffset, 0);
-  const contentBlocks = blocksWithProps.filter((item) => item.type !== "Title");
-  if (block.type === "Title") {
+  const contentBlocks = blocksWithProps.filter((item) => !isTitleText(item));
+  if (isTitleText(block)) {
     return hasCenteredCopy ? { x: 18, y: contentBlocks.length > 0 ? 26 : 34, w: 64, h: 18 } : { x: 8, y: 12, w: 64, h: 18 };
   }
   if (hasCenteredCopy && block.type === "Text") {
@@ -10645,14 +10544,11 @@ function singleBlockFrame(block, defaults) {
   if (block.type === "ImageBlock" || block.type === "VideoBlock") {
     return { x: 10, y: 20, w: 80, h: 54 };
   }
-  if (block.type === "Metric") {
-    return { x: 10, y: 40, w: 34, h: 36 };
-  }
   return { ...defaults, x: 8, y: 38 };
 }
 function defaultFontSize(block) {
-  if (block.type === "Title" || block.type === "Text") {
-    return motionDocDefaultFontSize(block.type);
+  if (block.type === "Text") {
+    return isTitleText(block) ? MOTION_DOC_FONT_SIZES.display : motionDocDefaultFontSize(block.type);
   }
   return void 0;
 }
@@ -10683,10 +10579,13 @@ function migrateOverrideFontSizes(overrides, convert2) {
   );
 }
 function defaultRadius(block) {
-  if (block.type === "Card" || block.type === "Icon" || block.type === "ImageBlock" || block.type === "Metric" || block.type === "Shape" || block.type === "Stack" || block.type === "VideoBlock") {
+  if (block.type === "ImageBlock" || block.type === "Shape" || block.type === "VideoBlock") {
     return 16;
   }
   return 0;
+}
+function isTitleText(block) {
+  return block.type === "Text" && (block.props.role === "title" || Number(block.props.fontSize) >= MOTION_DOC_FONT_SIZES.slideTitle);
 }
 
 // core/motion-doc/domain/motionVocabulary.ts
@@ -10740,26 +10639,18 @@ var motionDocAddBlockTypes = [
   "Text",
   "Image",
   "Video",
-  "Icon",
   "Chart",
   "Table",
   "ShapeRectangle"
 ];
 var supportedComponentTags = /* @__PURE__ */ new Set([
-  "Card",
   "Chart",
-  "Group",
-  "Icon",
   "ImageBlock",
-  "Metric",
-  "Notes",
   "Scene",
   "Shape",
   "Slide",
-  "Stack",
   "Table",
   "Text",
-  "Title",
   "VideoBlock"
 ]);
 var nonCanonicalMotionDocPropAliases = {
@@ -10953,7 +10844,7 @@ function applyBlockOptions(block, options) {
     ...coerceMotionProps(options.props ?? {}),
     ...coerceMotionProps(options.position ?? {})
   };
-  if ((block.type === "Title" || block.type === "Text") && options.text !== void 0) {
+  if (block.type === "Text" && options.text !== void 0) {
     return {
       ...block,
       props: nextProps,
@@ -11018,33 +10909,6 @@ function validateMotionDocSource(source, document4) {
       message: `<${tag}> is not a supported SlideX MotionDoc component.`,
       severity: "error"
     });
-  }
-  for (const [sceneIndex, range] of motionDocSlideSourceRanges(source).entries()) {
-    const noteMatches = [...range.source.matchAll(/<Notes\b[^>]*>([\s\S]*?)<\/Notes>/g)];
-    if (noteMatches.length > 1) {
-      issues.push({
-        message: "A slide may contain at most one <Notes> block.",
-        path: `scenes[${sceneIndex}].notes`,
-        severity: "error"
-      });
-    }
-    if (/<Group\b[^>]*>[\s\S]*?<Notes\b/.test(range.source)) {
-      issues.push({
-        message: "<Notes> must be a direct child of <Slide>, not nested inside <Group>.",
-        path: `scenes[${sceneIndex}].notes`,
-        severity: "error"
-      });
-    }
-    for (const noteMatch of noteMatches) {
-      const noteSource = noteMatch[1] ?? "";
-      if (/<\/?[A-Z][A-Za-z0-9]*\b/.test(noteSource)) {
-        issues.push({
-          message: "<Notes> accepts CommonMark only; MotionDoc and JSX elements are not allowed.",
-          path: `scenes[${sceneIndex}].notes`,
-          severity: "error"
-        });
-      }
-    }
   }
   document4.scenes.forEach((scene, sceneIndex) => {
     const slideTransition = scene.props.slideTransition;
@@ -12291,8 +12155,10 @@ function getSlideXCatalog(input = {}) {
   const section = input.section ?? "all";
   const catalog = {
     blocks: {
-      addable: ["Text", "Image", "Video", "Icon", "Chart", "Table", "ShapeRectangle"],
-      nodeIdentity: "Every editable block has a stable id prop exposed as nodeId."
+      addable: ["Text", "Image", "Video", "Chart", "Table", "ShapeRectangle"],
+      authorableTags: ["Text", "ImageBlock", "VideoBlock", "Chart", "Table", "Shape"],
+      nodeIdentity: "Every editable block has a stable id prop exposed as nodeId.",
+      rule: "MCP authoring exactly matches the Workspace toolbar. Removed component tags are rejected during parsing."
     },
     designRules: {
       canvas: { height: 1080, unit: "percent", width: 1920 },
@@ -12313,19 +12179,13 @@ function getSlideXCatalog(input = {}) {
     schema: {
       document: "# Title followed by one or more <Slide> blocks.",
       slide: '<Slide duration={5} width={1920} height={1080} fontSizeUnit="pt" background="#fff" theme="light">...</Slide>',
-      supportedElements: [
+      authorableElements: [
         "Text",
-        "Title",
         "ImageBlock",
         "VideoBlock",
-        "Icon",
         "Chart",
         "Table",
-        "Shape",
-        "Card",
-        "Metric",
-        "Group",
-        "Stack"
+        "Shape"
       ]
     },
     shaders: paperShaderDefinitions.map((shader) => ({
@@ -27159,7 +27019,7 @@ function parseTemplatePackageV1(value) {
 
 // core/motion-doc/domain/officialTemplateDefinitions.ts
 var officialTemplatePackageVersion = "1.0.0";
-var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.4" };
+var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.5" };
 var officialTemplateDefinitions = [
   {
     id: "summer-time-report",
@@ -27861,160 +27721,6 @@ function colorWithAlpha(color2, opacity) {
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
 }
 
-// core/motion-doc/domain/lucideIconRegistry.ts
-var slidexIconNames = [
-  "Sparkles",
-  "Zap",
-  "Target",
-  "Image",
-  "Lightbulb",
-  "CheckCircle",
-  "BarChart3",
-  "ArrowUpRight",
-  "TrendingUp",
-  "Rocket",
-  "BriefcaseBusiness",
-  "Presentation",
-  "Megaphone",
-  "Palette",
-  "PenTool",
-  "Layers",
-  "LayoutTemplate",
-  "MousePointer2",
-  "ScanSearch",
-  "Search",
-  "ChartNoAxesCombined",
-  "PieChart",
-  "LineChart",
-  "BadgeCheck",
-  "CircleAlert",
-  "Info",
-  "Star",
-  "Heart",
-  "Gem",
-  "Trophy",
-  "Award",
-  "ShieldCheck",
-  "Clock",
-  "Calendar",
-  "MapPin",
-  "Globe",
-  "Users",
-  "UserCheck",
-  "MessageSquare",
-  "Mail",
-  "Link",
-  "Download",
-  "Upload",
-  "FileText",
-  "Code2",
-  "Terminal",
-  "Database",
-  "Cloud",
-  "Lock",
-  "KeyRound",
-  "Settings",
-  "SlidersHorizontal"
-];
-var lucideIconLabels = Object.fromEntries(
-  slidexIconNames.map((name) => [name, name.replace(/([a-z0-9])([A-Z])/g, "$1 $2")])
-);
-var lucideIconPaths = {
-  Sparkles: [
-    "m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z",
-    "M5 3v4",
-    "M19 17v4",
-    "M3 5h4",
-    "M17 19h4"
-  ],
-  Zap: ["M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46L12 10h8a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46L12 14Z"],
-  Target: ["circle 12 12 10", "circle 12 12 6", "circle 12 12 2"],
-  Image: ["rect 3 3 18 18 2 2", "circle 9 9 2", "M21 15l-3.1-3.1a2 2 0 0 0-2.8 0L6 21"],
-  Lightbulb: ["M15 14c.2-1 .7-1.7 1.5-2.5A5 5 0 1 0 8 11.5c.8.8 1.3 1.5 1.5 2.5", "M9 18h6", "M10 22h4"],
-  CheckCircle: ["M22 11.08V12a10 10 0 1 1-5.93-9.14", "M22 4 12 14.01l-3-3"],
-  BarChart3: ["M3 3v18h18", "M18 17V9", "M13 17V5", "M8 17v-3"],
-  ArrowUpRight: ["M7 7h10v10", "M7 17 17 7"],
-  TrendingUp: ["M16 7h6v6", "m22 7-8.5 8.5-5-5L2 17"],
-  Rocket: [
-    "M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5",
-    "M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09",
-    "M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z",
-    "M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05"
-  ],
-  BriefcaseBusiness: ["M12 12h.01", "M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2", "M22 13a18.15 18.15 0 0 1-20 0", "rect 2 6 20 14 2 2"],
-  Presentation: ["M2 3h20", "M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3", "M7 21l5-5 5 5"],
-  Megaphone: ["M11 6a13 13 0 0 0 8-3v18a13 13 0 0 0-8-3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z", "M6 18a7 7 0 0 0 2 4"],
-  Palette: ["M12 22a10 10 0 1 1 10-10 4 4 0 0 1-4 4h-1.5a2.5 2.5 0 0 0 0 5H12z", "circle 7.5 10.5 .5", "circle 12 7.5 .5", "circle 16.5 10.5 .5"],
-  PenTool: ["M15.7 2.3a1 1 0 0 1 1.4 0l4.6 4.6a1 1 0 0 1 0 1.4l-13 13H2v-6.7z", "M14 4 20 10"],
-  Layers: ["M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.84l8.57 3.9a2 2 0 0 0 1.66 0l8.57-3.9a1 1 0 0 0 0-1.84z", "M22 12 12.83 16.18a2 2 0 0 1-1.66 0L2 12", "M22 17 12.83 21.18a2 2 0 0 1-1.66 0L2 17"],
-  LayoutTemplate: ["rect 3 3 18 18 2 2", "M3 9h18", "M9 21V9"],
-  MousePointer2: ["M4 4l7.07 17 2.51-7.39L21 11.07z"],
-  ScanSearch: ["M7 3H5a2 2 0 0 0-2 2v2", "M17 3h2a2 2 0 0 1 2 2v2", "M7 21H5a2 2 0 0 1-2-2v-2", "M17 21h2a2 2 0 0 0 2-2v-2", "circle 12 12 3", "M16 16l-1.9-1.9"],
-  Search: ["circle 11 11 8", "M21 21l-4.35-4.35"],
-  ChartNoAxesCombined: ["M12 16v5", "M16 14v7", "M20 10v11", "M22 3l-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.708 0L2 15", "M4 18v3", "M8 14v7"],
-  PieChart: ["M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951C12.449 1.996 12 2.448 12 3v8a1 1 0 0 0 1 1z", "M21.21 15.89A10 10 0 1 1 8 2.83"],
-  LineChart: ["M3 3v18h18", "m19 9-5 5-4-4-3 3"],
-  BadgeCheck: ["path M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z", "M9 12l2 2 4-4"],
-  CircleAlert: ["circle 12 12 10", "M12 8v4", "M12 16h.01"],
-  Info: ["circle 12 12 10", "M12 16v-4", "M12 8h.01"],
-  Star: ["M11.5 2.3a.5.5 0 0 1 1 0l2.3 6.9a.5.5 0 0 0 .47.34h7.25a.5.5 0 0 1 .29.9l-5.86 4.25a.5.5 0 0 0-.18.56l2.24 6.9a.5.5 0 0 1-.77.56l-5.86-4.25a.5.5 0 0 0-.58 0l-5.86 4.25a.5.5 0 0 1-.77-.56l2.24-6.9a.5.5 0 0 0-.18-.56L1.2 10.44a.5.5 0 0 1 .29-.9h7.25a.5.5 0 0 0 .47-.34z"],
-  Heart: ["M2 9.5a5.5 5.5 0 0 1 9.6-3.65L12 6.25l.4-.4A5.5 5.5 0 1 1 22 9.5c0 4.2-6 8.6-10 11.1C8 18.1 2 13.7 2 9.5Z"],
-  Gem: ["M6 3h12l4 6-10 12L2 9z", "M11 3 8 9l4 12 4-12-3-6", "M2 9h20"],
-  Trophy: ["M6 9H4.5A2.5 2.5 0 0 1 2 6.5V4h4", "M18 9h1.5A2.5 2.5 0 0 0 22 6.5V4h-4", "M4 22h16", "M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22", "M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22", "M18 2H6v7a6 6 0 0 0 12 0z"],
-  Award: ["circle 12 8 6", "M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"],
-  ShieldCheck: ["M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z", "M9 12l2 2 4-4"],
-  Clock: ["circle 12 12 10", "M12 6v6l4 2"],
-  Calendar: ["rect 3 4 18 18 2 2", "M16 2v4", "M8 2v4", "M3 10h18"],
-  MapPin: ["M20 10c0 4.99-5.54 10.19-7.4 11.82a1 1 0 0 1-1.2 0C9.54 20.19 4 14.99 4 10a8 8 0 0 1 16 0", "circle 12 10 3"],
-  Globe: ["circle 12 12 10", "M2 12h20", "M12 2a15.3 15.3 0 0 1 0 20", "M12 2a15.3 15.3 0 0 0 0 20"],
-  Users: ["M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", "circle 9 7 4", "M22 21v-2a4 4 0 0 0-3-3.87", "M16 3.13a4 4 0 0 1 0 7.75"],
-  UserCheck: ["M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", "circle 9 7 4", "M16 11l2 2 4-4"],
-  MessageSquare: ["path M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"],
-  Mail: ["rect 2 4 20 16 2 2", "M22 7 12 13 2 7"],
-  Link: ["M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71", "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"],
-  Download: ["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", "M7 10l5 5 5-5", "M12 15V3"],
-  Upload: ["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", "M17 8l-5-5-5 5", "M12 3v12"],
-  FileText: ["M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z", "M14 2v4a2 2 0 0 0 2 2h4", "M10 9H8", "M16 13H8", "M16 17H8"],
-  Code2: ["M18 16l4-4-4-4", "M6 8l-4 4 4 4", "M14.5 4l-5 16"],
-  Terminal: ["M4 17l6-6-6-6", "M12 19h8"],
-  Database: ["ellipse 12 5 9 3", "M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5", "M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"],
-  Cloud: ["M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"],
-  Lock: ["rect 3 11 18 11 2 2", "M7 11V7a5 5 0 0 1 10 0v4"],
-  KeyRound: ["M2 18a6 6 0 1 0 6-6 6 6 0 0 0-6 6", "M14 14l8-8", "M18 6l2 2", "M16 8l2 2"],
-  Settings: ["circle 12 12 3", "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8.92 3a1.65 1.65 0 0 0 1-1.51V1a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15.08 3a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 8c.14.31.49.52.86.52H21a2 2 0 1 1 0 4h-.09A1.65 1.65 0 0 0 19.4 15Z"],
-  SlidersHorizontal: ["M21 4h-7", "M10 4H3", "M21 12h-9", "M8 12H3", "M21 20h-5", "M12 20H3", "circle 12 4 2", "circle 10 12 2", "circle 14 20 2"]
-};
-function isSlideXIconName(value) {
-  return slidexIconNames.includes(value);
-}
-
-// core/motion-doc/application/svgDataUri.ts
-function escapeSvgAttribute(value) {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
-}
-
-// core/motion-doc/application/lucideIconSvg.ts
-function renderLucideIconSvg(name, options = {}) {
-  if (!isSlideXIconName(name)) return "";
-  const color2 = options.color?.trim() || "currentColor";
-  const strokeWidth = Math.min(Math.max(options.strokeWidth ?? 2, 0), 24);
-  const children = lucideIconPaths[name].map(renderLucideIconPath).join("");
-  return `<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="none" preserveAspectRatio="xMidYMid meet" stroke="${escapeSvgAttribute(color2)}" stroke-linecap="round" stroke-linejoin="round" stroke-width="${strokeWidth}" viewBox="0 0 24 24">${children}</svg>`;
-}
-function renderLucideIconPath(path2) {
-  const [shape, ...parts] = path2.split(" ");
-  if (shape === "circle") {
-    return `<circle cx="${parts[0]}" cy="${parts[1]}" r="${parts[2]}" />`;
-  }
-  if (shape === "ellipse") {
-    return `<ellipse cx="${parts[0]}" cy="${parts[1]}" rx="${parts[2]}" ry="${parts[3]}" />`;
-  }
-  if (shape === "rect") {
-    return `<rect x="${parts[0]}" y="${parts[1]}" width="${parts[2]}" height="${parts[3]}" rx="${parts[4]}" ry="${parts[5]}" />`;
-  }
-  return `<path d="${escapeSvgAttribute(shape === "path" ? parts.join(" ") : path2)}" />`;
-}
-
 // core/motion-doc/application/chartSvg.ts
 var WIDTH = 800;
 var HEIGHT = 420;
@@ -28278,6 +27984,11 @@ function numberProp2(value, fallback) {
 }
 function clampImageCropScale(value) {
   return Math.round(Math.min(Math.max(value, 0.1), 8) * 1e3) / 1e3;
+}
+
+// core/motion-doc/application/svgDataUri.ts
+function escapeSvgAttribute(value) {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 }
 
 // core/motion-doc/application/shapeVectorSvg.ts
@@ -34498,7 +34209,6 @@ var motionDocExportStyles = `      :root {
       .motion-block:not(.motion-block--positioned):not(.motion-block--full) > * {
         height: auto;
       }
-      .motion-block .block-title,
       .motion-block .block-text {
         width: 100%;
         max-width: none;
@@ -34615,19 +34325,6 @@ var motionDocExportStyles = `      :root {
           transform: translate3d(0, 0, 0);
         }
       }
-      .block-title {
-        margin: 0;
-        max-width: 48rem;
-        border-radius: var(--motion-radius, 0);
-        font-size: calc(var(--motion-font-size, ${motionDocFontPointsToCanvasPixels(MOTION_DOC_FONT_SIZES.display)}px) * var(--frame-scale, 1));
-        font-weight: var(--motion-font-weight, 650);
-        letter-spacing: var(--motion-letter-spacing, 0px);
-        line-height: var(--motion-line-height, 1.02);
-        padding: var(--motion-text-padding, 0);
-        background: var(--motion-bg, transparent);
-        color: var(--motion-fg, var(--slide-fg));
-        text-align: var(--motion-text-align, inherit);
-      }
       .block-text {
         margin: 0;
         max-width: 46rem;
@@ -34656,8 +34353,7 @@ var motionDocExportStyles = `      :root {
       .block-markdown-heading {
         color: var(--motion-fg, var(--slide-fg));
       }
-      .block-text a,
-      .block-title a {
+      .block-text a {
         color: inherit;
         text-decoration-thickness: 0.07em;
         text-underline-offset: 0.12em;
@@ -34677,112 +34373,6 @@ var motionDocExportStyles = `      :root {
         font-size: calc(var(--motion-font-size, ${motionDocFontPointsToCanvasPixels(MOTION_DOC_FONT_SIZES.body * 0.86)}px) * var(--frame-scale, 1));
         line-height: 1.5;
         white-space: pre-wrap;
-      }
-      .block-card {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        margin: 0;
-        max-width: 42rem;
-        overflow: hidden;
-        padding: 20px;
-        border-radius: var(--motion-radius, 16px);
-        border: 1px solid var(--slide-border);
-        background: var(--motion-bg, var(--slide-card));
-        box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-        backdrop-filter: blur(16px);
-      }
-      .block-card--sm {
-        max-width: 24rem;
-      }
-      .block-card--lg {
-        max-width: 48rem;
-      }
-      .block-card--full {
-        width: 100%;
-        max-width: none;
-      }
-      .block-card--horizontal {
-        flex-direction: row;
-        align-items: flex-start;
-        gap: 18px;
-      }
-      .block-card__icon {
-        display: grid;
-        flex: 0 0 auto;
-        width: 36px;
-        height: 36px;
-        place-items: center;
-        margin-bottom: 16px;
-        border-radius: 8px;
-        border: 1px solid var(--slide-border);
-        background: rgba(255,255,255,0.06);
-        color: var(--motion-fg, var(--slide-fg));
-      }
-      .block-card--horizontal .block-card__icon {
-        margin-bottom: 0;
-      }
-      .block-card__content {
-        min-width: 0;
-      }
-      .block-card__icon svg {
-        width: 24px;
-        height: 24px;
-      }
-      .block-card h3 {
-        margin: 0;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(20)}px;
-        line-height: 1.4;
-        color: var(--motion-fg, var(--slide-fg));
-      }
-      .block-card p {
-        margin: 8px 0 0;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(16)}px;
-        line-height: 1.75;
-        color: var(--motion-muted, var(--slide-muted));
-      }
-      .block-metric {
-        margin: 0;
-        width: 100%;
-        max-width: calc(54rem * var(--frame-scale, 1));
-        padding: calc(20px * var(--frame-scale, 1));
-        border-radius: var(--motion-radius, 16px);
-        border: 1px solid var(--slide-border);
-        background: var(--motion-bg, rgba(255,255,255,0.06));
-        box-shadow: 0 calc(24px * var(--frame-scale, 1)) calc(72px * var(--frame-scale, 1)) rgba(0,0,0,0.24);
-      }
-      .block-metric {
-        max-width: 24rem;
-      }
-      .block-metric--md {
-        max-width: 28rem;
-      }
-      .block-metric--lg {
-        max-width: 42rem;
-      }
-      .block-metric--full {
-        max-width: none;
-      }
-      .block-metric__label {
-        margin: 0;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(12)}px;
-        font-weight: 700;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: var(--motion-muted, var(--slide-muted));
-      }
-      .block-metric__value {
-        margin: 12px 0 0;
-        font-size: ${motionDocFontPointsToCanvasPixels(MOTION_DOC_FONT_SIZES.heading)}px;
-        font-weight: 650;
-        line-height: 1;
-        color: var(--motion-fg, var(--slide-fg));
-      }
-      .block-metric__caption {
-        margin: 12px 0 0;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(14)}px;
-        line-height: 1.5rem;
-        color: var(--motion-muted, var(--slide-muted));
       }
       .block-image {
         margin: 0;
@@ -34937,37 +34527,6 @@ var motionDocExportStyles = `      :root {
       .shape-line-vector-endpoint { position:absolute; top:50%; overflow:visible; pointer-events:none; }
       .shape-line-vector-endpoint--start { left:0; transform:translate(-50%,-50%); }
       .shape-line-vector-endpoint--end { right:0; transform:translate(50%,-50%); }
-      .block-stack {
-        display: flex;
-        width: 100%;
-        height: 100%;
-        flex-direction: var(--stack-direction, row);
-        align-items: var(--stack-align, stretch);
-        gap: var(--stack-gap, 16px);
-        padding: var(--stack-padding, 20px);
-        border: 1px solid var(--stack-stroke, var(--slide-border));
-        border-radius: var(--motion-radius, 16px);
-        background: var(--motion-bg, var(--slide-card));
-        color: var(--motion-fg, var(--slide-fg));
-        box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-        backdrop-filter: blur(16px);
-      }
-      .block-stack__item {
-        display: grid;
-        min-width: 0;
-        min-height: 0;
-        flex: 1;
-        place-items: center;
-        overflow: hidden;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.08);
-        background: rgba(255,255,255,0.06);
-        padding: 8px 12px;
-        color: inherit;
-        font-size: ${legacyCssFontPixelsToCanvasPixels(12)}px;
-        font-weight: 650;
-        text-align: center;
-      }
       .block-table {
         display: grid;
         width: 100%;
@@ -35889,21 +35448,13 @@ function renderSplitSceneContent(contentBlocks, imageBlocks, layout, options) {
   return `<div class="slide-split-pane slide-split-pane--content" style="order:${textOrder}">${contentHtml}</div><div class="slide-split-pane slide-split-pane--media" style="order:${imageOrder}">${imageHtml}</div>`;
 }
 function renderBlock(block, blockIndex, options = {}) {
-  if (block.type === "Title") {
-    const depth = numberProp5(block.props.markdownDepth, 1);
-    const tag = depth > 1 ? `h${Math.min(Math.max(Math.round(depth), 2), 6)}` : "h1";
-    return renderMotionBlock(
-      block,
-      `<${tag} class="block-title block-markdown-heading">${renderTextLines(String(block.text ?? ""), block.props?.listType, block.props)}</${tag}>`
-    );
-  }
   if (block.type === "Text" || block.type === "heading") {
     const listType = "props" in block ? block.props?.listType : void 0;
     const props = "props" in block ? block.props : {};
     const markdownKind = stringProp5(props.markdownKind);
     const contents = renderTextLines(String(block.text ?? ""), listType, props);
-    if (markdownKind === "heading") {
-      const depth = Math.min(Math.max(Math.round(numberProp5(props.markdownDepth, 2)), 2), 6);
+    if (markdownKind === "heading" || props.role === "title") {
+      const depth = Math.min(Math.max(Math.round(numberProp5(props.markdownDepth, props.role === "title" ? 1 : 2)), 1), 6);
       return renderMotionBlock(block, `<h${depth} class="block-text block-markdown-heading">${contents}</h${depth}>`);
     }
     if (markdownKind === "blockquote") {
@@ -35913,15 +35464,6 @@ function renderBlock(block, blockIndex, options = {}) {
       return renderMotionBlock(block, `<pre class="block-text block-text--code"><code>${contents}</code></pre>`);
     }
     return renderMotionBlock(block, `<p class="block-text">${contents}</p>`);
-  }
-  if (block.type === "Card") {
-    const icon = String(block.props.icon ?? "");
-    const cardLayoutClass = block.props.layout === "horizontal" ? " block-card--horizontal" : "";
-    const cardWidthClass = cardWidthClassName(block.props.width);
-    return renderMotionBlock(
-      block,
-      `<article class="block-card${cardLayoutClass}${cardWidthClass}">${icon ? `<div class="block-card__icon">${renderLucideIconSvg(icon)}</div>` : ""}<div class="block-card__content"><h3>${escapeHtml(String(block.props.title ?? "Card"))}</h3><p>${escapeHtml(String(block.props.text ?? ""))}</p></div></article>`
-    );
   }
   if (block.type === "Chart") {
     return renderMotionBlock(
@@ -36059,40 +35601,10 @@ function renderBlock(block, blockIndex, options = {}) {
       `<figure class="block-image block-video"><video src="${escapeAttribute(src)}"${posterAttr}${controls}${loop}${muted} style="${escapeAttribute(inlineCss({ "object-fit": fit }))}"></video></figure>`
     );
   }
-  if (block.type === "Metric") {
-    const metricWidthClass = metricWidthClassName(block.props.width);
-    return renderMotionBlock(
-      block,
-      `<article class="block-metric${metricWidthClass}"><p class="block-metric__label">${escapeHtml(String(block.props.label ?? "Metric"))}</p><p class="block-metric__value">${escapeHtml(String(block.props.value ?? "0"))}</p><p class="block-metric__caption">${escapeHtml(String(block.props.caption ?? ""))}</p></article>`
-    );
-  }
-  if (block.type === "Icon") {
-    const strokeWidth = numberProp5(block.props.strokeWidth, 2);
-    return renderMotionBlock(
-      block,
-      `<div class="block-icon">${renderLucideIconSvg(String(block.props.icon ?? "Sparkles"), { strokeWidth })}</div>`
-    );
-  }
   if (block.type === "Shape") {
     return renderMotionBlock(
       block,
       `<div class="block-shape">${renderShapeHtmlFallback(block.props)}${renderShapeSvg(block.props, blockIndex)}</div>`
-    );
-  }
-  if (block.type === "Stack") {
-    const items = String(block.props.items ?? "Panel A|Panel B|Panel C").split("|").map((item) => item.trim()).filter(Boolean);
-    const direction = block.props.layout === "column" ? "column" : "row";
-    const align = block.props.align === "center" ? "center" : block.props.align === "end" ? "flex-end" : "stretch";
-    const stackItems = (items.length > 0 ? items : ["Item 1", "Item 2"]).map((item) => `<div class="block-stack__item">${escapeHtml(item)}</div>`).join("");
-    return renderMotionBlock(
-      block,
-      `<div class="block-stack" style="${escapeAttribute(inlineCss({
-        "--stack-align": align,
-        "--stack-direction": direction,
-        "--stack-gap": `${numberProp5(block.props.gap, 16)}px`,
-        "--stack-padding": `${numberProp5(block.props.padding, 20)}px`,
-        "--stack-stroke": stringProp5(block.props.stroke) ?? "var(--slide-border)"
-      }))}">${stackItems}</div>`
     );
   }
   if (block.type === "Table") {
@@ -36403,18 +35915,6 @@ function framePositionPercent(value, fallbackPercent) {
 }
 function roundValue(value) {
   return Math.round(value * 100) / 100;
-}
-function cardWidthClassName(value) {
-  if (value === "sm") return " block-card--sm";
-  if (value === "lg") return " block-card--lg";
-  if (value === "full") return " block-card--full";
-  return "";
-}
-function metricWidthClassName(value) {
-  if (value === "md") return " block-metric--md";
-  if (value === "lg") return " block-metric--lg";
-  if (value === "full") return " block-metric--full";
-  return "";
 }
 function fitProp(value) {
   if (value === "cover" || value === "contain" || value === "fill" || value === "scale-down") {

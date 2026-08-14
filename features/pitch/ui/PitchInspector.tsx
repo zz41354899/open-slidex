@@ -309,16 +309,14 @@ function ElementSettings({
     return <div className="p-4 text-center text-[11px] italic text-neutral-500">{tx("Element no longer exists.")}</div>;
   }
 
-  const isTextType = block.type === "Title" || block.type === "Text" || block.type === "heading";
+  const isTextType = block.type === "Text" || block.type === "heading";
+  const isTitleText = block.type === "Text" && block.props.role === "title";
   const textValue = isTextType ? ("text" in block ? block.text : "") : "";
   const slideTheme = stringValue(activeSlide?.props.theme) ?? "dark";
-  const slideBackground = stringValue(activeSlide?.props.background) ?? "#030303";
   const inheritedTextColor =
     stringValue(activeSlide?.props.textColor ?? activeSlide?.props.foreground ?? activeSlide?.props.color) ??
     (slideTheme === "light" || slideTheme === "paper" ? "#111827" : "#ffffff");
-	  const inheritedBackgroundColor = block.type === "Card" || block.type === "Metric" || block.type === "Stack"
-	    ? defaultCardBackground(slideTheme, slideBackground)
-	    : "transparent";
+	  const inheritedBackgroundColor = "transparent";
 	  const blockFieldEntry = getBlockFieldRegistryEntry(block.type);
 
 	  return (
@@ -373,7 +371,7 @@ function ElementSettings({
                 event.target.style.height = `${event.target.scrollHeight}px`;
               }}
               placeholder={tx("Enter text content...")}
-              style={{ minHeight: block.type === "Title" ? "64px" : "100px", overflow: "hidden" }}
+              style={{ minHeight: isTitleText ? "64px" : "100px", overflow: "hidden" }}
               value={textValue}
             />
           </InspectorSection>
@@ -410,28 +408,6 @@ function stringValue(value: string | number | undefined) {
   return undefined;
 }
 
-function defaultCardBackground(theme: string, background: string) {
-  if (theme === "light" || theme === "paper" || isLightBackground(background)) {
-    return "rgba(255,255,255,0.72)";
-  }
-
-  return "rgba(255,255,255,0.075)";
-}
-
-function isLightBackground(background: string) {
-  const hex = background.replace("#", "");
-
-  if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
-    return false;
-  }
-
-  const red = parseInt(hex.slice(0, 2), 16);
-  const green = parseInt(hex.slice(2, 4), 16);
-  const blue = parseInt(hex.slice(4, 6), 16);
-
-  return (0.299 * red + 0.587 * green + 0.114 * blue) / 255 > 0.62;
-}
-
 const textStyleOptions = [
   { description: "Large statement", label: "Display", lineHeight: 1, size: MOTION_DOC_FONT_SIZES.display, weight: 700, role: "title" },
   { description: "Section heading", label: "Heading", lineHeight: 1.08, size: MOTION_DOC_FONT_SIZES.heading, weight: 650, role: "title" },
@@ -452,7 +428,8 @@ function TextTypeFields({
   const { tx } = usePitchI18n();
   const props = "props" in block && block.props ? block.props : {};
   const text = "text" in block ? (block as { text: string }).text : "";
-  const currentRole = String(props.role || (block.type === "Title" ? "title" : "content"));
+  const currentRole = String(props.role || "content");
+  const isTitleText = currentRole === "title";
   const currentFontSize = Number(props.fontSize) || motionDocDefaultFontSize(block.type);
   const exactLineHeight = Number(props.lineHeightPt);
   const usesExactLineHeight = Number.isFinite(exactLineHeight) && exactLineHeight > 0;
@@ -524,7 +501,7 @@ function TextTypeFields({
                 text.length
               );
               updateBlock(selectedBlockIndex, nextProps, text);
-            }} placeholder={block.type === "Title" ? "700" : "400"} step="50" value={props.fontWeight ?? ""} />
+            }} placeholder={isTitleText ? "700" : "400"} step="50" value={props.fontWeight ?? ""} />
             <NumberInput commitOnBlur prefix={<span className="text-[9px] font-semibold text-neutral-500">{tx("Line height")}</span>} min={usesExactLineHeight ? "1" : "0.8"} max={usesExactLineHeight ? "1584" : "2.5"} onChange={(value) => {
               const nextProps = textFramePropsWithLineHeight(
                 props,
@@ -532,7 +509,7 @@ function TextTypeFields({
                 usesExactLineHeight ? "points" : "multiple"
               );
               updateBlock(selectedBlockIndex, nextProps, text);
-            }} placeholder={usesExactLineHeight ? String(Math.round(currentFontSize * (block.type === "Title" ? 1.02 : 1.45) * 10) / 10) : block.type === "Title" ? "1" : "1.45"} step={usesExactLineHeight ? "0.5" : "0.05"} suffix={usesExactLineHeight ? "pt" : undefined} value={usesExactLineHeight ? props.lineHeightPt ?? "" : props.lineHeight ?? ""} />
+            }} placeholder={usesExactLineHeight ? String(Math.round(currentFontSize * (isTitleText ? 1.02 : 1.45) * 10) / 10) : isTitleText ? "1" : "1.45"} step={usesExactLineHeight ? "0.5" : "0.05"} suffix={usesExactLineHeight ? "pt" : undefined} value={usesExactLineHeight ? props.lineHeightPt ?? "" : props.lineHeight ?? ""} />
             <NumberInput commitOnBlur prefix={<span className="text-[9px] font-semibold text-neutral-500">{tx("Letter spacing")}</span>} min="-20" max="100" onChange={(value) => {
               const nextProps = applyBlockTextStyle(props, {
                 letterSpacing: value === "" ? null : value

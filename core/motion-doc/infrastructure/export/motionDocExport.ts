@@ -14,7 +14,6 @@ import {
   normalizedRelativeCornerRadii
 } from "@/core/motion-doc/application/continuousRoundedRect";
 import { objectShadowCss } from "@/core/motion-doc/application/objectShadow";
-import { renderLucideIconSvg } from "@/core/motion-doc/application/lucideIconSvg";
 import { renderMotionDocChartSvg } from "@/core/motion-doc/application/chartSvg";
 import { normalizedImageScales } from "@/core/motion-doc/application/imageCrop";
 import { renderShapeVectorSvg, shapePolygonPath } from "@/core/motion-doc/application/shapeVectorSvg";
@@ -579,23 +578,14 @@ function renderSplitSceneContent(
 }
 
 function renderBlock(block: MotionDocBlock, blockIndex: number, options: RenderSceneHtmlOptions = {}) {
-  if (block.type === "Title") {
-    const depth = numberProp(block.props.markdownDepth, 1);
-    const tag = depth > 1 ? `h${Math.min(Math.max(Math.round(depth), 2), 6)}` : "h1";
-    return renderMotionBlock(
-      block,
-      `<${tag} class="block-title block-markdown-heading">${renderTextLines(String(block.text ?? ""), block.props?.listType, block.props)}</${tag}>`
-    );
-  }
-
   if (block.type === "Text" || block.type === "heading") {
     const listType = "props" in block ? block.props?.listType : undefined;
     const props = "props" in block ? block.props : {};
     const markdownKind = stringProp(props.markdownKind);
     const contents = renderTextLines(String(block.text ?? ""), listType, props);
 
-    if (markdownKind === "heading") {
-      const depth = Math.min(Math.max(Math.round(numberProp(props.markdownDepth, 2)), 2), 6);
+    if (markdownKind === "heading" || props.role === "title") {
+      const depth = Math.min(Math.max(Math.round(numberProp(props.markdownDepth, props.role === "title" ? 1 : 2)), 1), 6);
       return renderMotionBlock(block, `<h${depth} class="block-text block-markdown-heading">${contents}</h${depth}>`);
     }
     if (markdownKind === "blockquote") {
@@ -606,19 +596,6 @@ function renderBlock(block: MotionDocBlock, blockIndex: number, options: RenderS
     }
 
     return renderMotionBlock(block, `<p class="block-text">${contents}</p>`);
-  }
-
-  if (block.type === "Card") {
-    const icon = String(block.props.icon ?? "");
-    const cardLayoutClass = block.props.layout === "horizontal" ? " block-card--horizontal" : "";
-    const cardWidthClass = cardWidthClassName(block.props.width);
-
-    return renderMotionBlock(
-      block,
-      `<article class="block-card${cardLayoutClass}${cardWidthClass}">${
-        icon ? `<div class="block-card__icon">${renderLucideIconSvg(icon)}</div>` : ""
-      }<div class="block-card__content"><h3>${escapeHtml(String(block.props.title ?? "Card"))}</h3><p>${escapeHtml(String(block.props.text ?? ""))}</p></div></article>`
-    );
   }
 
   if (block.type === "Chart") {
@@ -780,50 +757,10 @@ function renderBlock(block: MotionDocBlock, blockIndex: number, options: RenderS
     );
   }
 
-  if (block.type === "Metric") {
-    const metricWidthClass = metricWidthClassName(block.props.width);
-
-    return renderMotionBlock(
-      block,
-      `<article class="block-metric${metricWidthClass}"><p class="block-metric__label">${escapeHtml(String(block.props.label ?? "Metric"))}</p><p class="block-metric__value">${escapeHtml(String(block.props.value ?? "0"))}</p><p class="block-metric__caption">${escapeHtml(String(block.props.caption ?? ""))}</p></article>`
-    );
-  }
-
-  if (block.type === "Icon") {
-    const strokeWidth = numberProp(block.props.strokeWidth, 2);
-    return renderMotionBlock(
-      block,
-      `<div class="block-icon">${renderLucideIconSvg(String(block.props.icon ?? "Sparkles"), { strokeWidth })}</div>`
-    );
-  }
-
   if (block.type === "Shape") {
     return renderMotionBlock(
       block,
       `<div class="block-shape">${renderShapeHtmlFallback(block.props)}${renderShapeSvg(block.props, blockIndex)}</div>`
-    );
-  }
-
-  if (block.type === "Stack") {
-    const items = String(block.props.items ?? "Panel A|Panel B|Panel C")
-      .split("|")
-      .map((item) => item.trim())
-      .filter(Boolean);
-    const direction = block.props.layout === "column" ? "column" : "row";
-    const align = block.props.align === "center" ? "center" : block.props.align === "end" ? "flex-end" : "stretch";
-    const stackItems = (items.length > 0 ? items : ["Item 1", "Item 2"])
-      .map((item) => `<div class="block-stack__item">${escapeHtml(item)}</div>`)
-      .join("");
-
-    return renderMotionBlock(
-      block,
-      `<div class="block-stack" style="${escapeAttribute(inlineCss({
-        "--stack-align": align,
-        "--stack-direction": direction,
-        "--stack-gap": `${numberProp(block.props.gap, 16)}px`,
-        "--stack-padding": `${numberProp(block.props.padding, 20)}px`,
-        "--stack-stroke": stringProp(block.props.stroke) ?? "var(--slide-border)"
-      }))}">${stackItems}</div>`
     );
   }
 
@@ -1241,22 +1178,6 @@ function framePositionPercent(value: string | number | undefined, fallbackPercen
 
 function roundValue(value: number) {
   return Math.round(value * 100) / 100;
-}
-
-function cardWidthClassName(value: string | number | undefined) {
-  if (value === "sm") return " block-card--sm";
-  if (value === "lg") return " block-card--lg";
-  if (value === "full") return " block-card--full";
-
-  return "";
-}
-
-function metricWidthClassName(value: string | number | undefined) {
-  if (value === "md") return " block-metric--md";
-  if (value === "lg") return " block-metric--lg";
-  if (value === "full") return " block-metric--full";
-
-  return "";
 }
 
 function fitProp(value: string | number | undefined) {

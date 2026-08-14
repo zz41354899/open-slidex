@@ -1,60 +1,43 @@
 ---
 name: slidex-mdx-authoring
-description: Create, rewrite, or repair editable OpenSlideX presentations as strict MotionDoc MDX. Use for any task that changes presentation.mdx, creates slides or layers, adds media, groups layers, or needs valid source for OpenSlideX render and export.
+description: Create, rewrite, or repair editable OpenSlideX MotionDoc MDX. Use for any presentation.mdx change, native layer authoring, media or data placement, structural repair, or revision-safe MCP edit.
 ---
 
 # OpenSlideX MDX Authoring
 
-Treat `presentation.mdx` as the only presentation source. Match the read and
-edit scope to the request instead of rewriting unrelated slides.
+Keep the selected inner deck's `presentation.mdx` as the only presentation
+source. Read the complete deck for whole-deck work or the complete target slide
+for a focused edit.
 
-## Source contract
+## Load only what the task needs
 
-- Start with one `# Deck title`.
-- Put every slide inside `<Slide>...</Slide>`.
-- Inside a slide, CommonMark supports headings, paragraphs, bold, italic,
-  links, blockquotes, inline or fenced code, and ordered or unordered lists.
-- Use built-in serializable JSX elements only: `Title`, `Text`, `ImageBlock`,
-  `VideoBlock`, `Icon`, `Table`, `Chart`, `Shape`, `Card`, `Metric`, `Stack`,
-  and `Group`.
-- `<Chart>` supports `bar`, `line`, `area`, `pie`, `donut`, and `scatter`.
-  Store rows as strict JSON in `data`; each row needs `label` and numeric
-  `value`, while scatter may add `x`, `size`, and hex `color`.
-- Use `<Group id="..." name="...">` only to organize native child layers.
-- `<Notes>...</Notes>` is presenter-only CommonMark. Use at most one direct
-  child per slide. Never place visual layers inside it.
-- Give editable layers stable, unique `id` props.
-- Use percentage coordinates for `x`, `y`, `w`, and `h`; use points for
-  `fontSize`.
-- Use canonical typography props only: `fontFamily`, `fontSize`, `fontWeight`,
-  `fontStyle`, `letterSpacing`, `lineHeight`, `textAlign`, and
-  `textVerticalAlign`. Never use the ignored aliases `weight`, `tracking`, or
-  `align`.
-- Give text frames enough `h` for every rendered line at the chosen
-  `fontSize` and `lineHeight`; declared coordinates do not guarantee glyph fit.
-- Attributes accept quoted strings or literal numbers and booleans only.
-- Never add imports, exports, scripts, handlers, unknown runtime components,
-  or executable JavaScript expressions.
+- Before emitting MDX, read [the MotionDoc contract](references/motiondoc-contract.md).
+- For images, video, charts, tables, or imported data, also read
+  [media and data](references/media-and-data.md).
+- For a full creation or redesign, activate `slidex-deck-design` before writing.
 
-## Media
+## Non-negotiable rules
 
-- Prefer files already supplied under `assets/`.
-- Store generated or uploaded media as replaceable relative asset paths.
-- Never invent URLs or save Base64, `blob:`, or absolute local paths.
-- Always provide meaningful `alt` text and a deliberate `fit`.
+- Author only `Text`, `ImageBlock`, `VideoBlock`, `Chart`, `Table`, and `Shape`.
+- Never emit `Card`, `Metric`, `Stack`, `Group`, `Title`, `Icon`, or `Notes`.
+- Never add imports, exports, scripts, handlers, raw HTML, visible Markdown,
+  arbitrary JSX, or executable JavaScript.
+- Give every visible layer a stable unique `id` and explicit percentage
+  `x`, `y`, `w`, and `h`. Use points for `fontSize`.
+- Keep media portable: use relative `assets/...` paths or verified HTTPS media.
+  Never persist Base64, blob URLs, invented URLs, or absolute local paths.
 
-## Workflow
+## Edit transaction
 
-1. For a selected slide or layer, call `open_slidex_inspect` and keep every
-   unrelated slide unchanged. Read the complete source only for whole-deck work.
-2. For a new deck or full redesign, read the selected template blueprint when
-   present, then decide narrative, visual system, and asset needs before writing.
-3. Apply one coherent batch with `open_slidex_edit` and the latest
-   `expectedRevision`. Never retry a stale revision.
-4. Treat the accepted `open_slidex_edit` result as the authoritative structural
-   validation, rendered QA, and preview proof for that candidate. Do not call
-   `open_slidex_validate`, `open_slidex_render`, or
-   `open_slidex_quality_check` again after the accepted edit.
-5. Use standalone validate, render, or quality tools only for an explicit
-   read-only review where no edit is being made. Report only tool-confirmed
-   edits and findings.
+1. In Workspace scope, list and explicitly select the intended deck.
+2. Call `open_slidex_read` for the latest source, revision, and guidance manifest.
+3. Read only the guidance resources required for this task.
+4. Plan complete frames and stable IDs before composing source.
+5. Submit one complete deck or one complete slide to `open_slidex_edit` with
+   the latest `expectedRevision`.
+6. If rejected, repair the same candidate from its node-specific findings.
+   Never retry a stale revision or regenerate blindly.
+7. Treat an accepted edit's validation, visual report, and preview as the result.
+
+If the current source contains a removed tag, report its exact slide and tag.
+Replace it only when the user asked to migrate that source.

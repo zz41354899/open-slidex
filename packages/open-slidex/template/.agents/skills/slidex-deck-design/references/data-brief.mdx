@@ -1,0 +1,40 @@
+# Data Brief Reference
+
+<Slide duration={6} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" theme="dark" background="#0B1015" accent="#67E8F9" textColor="#F8FAFC" mutedColor="#94A3B8" slideTransition="fade">
+  <Text id="brief-label" x={7} y={10} w={28} h={9} fontFamily="Inter" fontSize={12} fontWeight={700} letterSpacing={2.2} lineHeight={1.2} color="#67E8F9">OPERATING BRIEF · SAMPLE</Text>
+  <Text id="brief-title" role="title" x={7} y={25} w={62} h={38} fontFamily="Inter" fontSize={53} fontWeight={730} lineHeight={1} color="#F8FAFC">The signal is not the dashboard. It is the decision.</Text>
+  <Text id="brief-subtitle" x={7} y={69} w={48} h={13} fontFamily="Inter" fontSize={17} lineHeight={1.35} color="#94A3B8">Use hierarchy to separate observation, interpretation, and action.</Text>
+  <Shape id="brief-orbit" shape="circle" x={75} y={19} w={15} h={26.7} fill="transparent" stroke="#67E8F9" strokeWidth={2} opacity={0.8} />
+  <Shape id="brief-core" shape="circle" x={79.5} y={27} w={6} h={10.7} fill="#67E8F9" stroke="transparent" />
+  <Shape id="brief-tail" shape="line" x={82.5} y={45} w={0.5} h={35} stroke="#334155" strokeWidth={2} />
+</Slide>
+
+<Slide duration={6} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" theme="light" background="#F8FAFC" accent="#0F766E" textColor="#0F172A" mutedColor="#64748B" slideTransition="rise">
+  <Text id="table-title" role="title" x={7} y={8} w={54} h={15} fontFamily="Inter" fontSize={30} fontWeight={700} lineHeight={1.1} color="#0F172A">A compact table answers “where?”</Text>
+  <Text id="table-caption" x={68} y={10} w={24} h={7} fontFamily="Inter" fontSize={13} textAlign="right" color="#64748B">Illustrative values only</Text>
+  <Table id="decision-table" x={7} y={28} w={58} h={54} rows={4} columns={3} cells="Area|Signal|Action;Activation|Rising|Scale;Retention|Flat|Investigate;Expansion|Mixed|Segment" fontSize={13} fontWeight={520} color="#0F172A" background="#FFFFFF" cellBackground="#FFFFFF" stripeBackground="#F1F5F9" borderColor="#CBD5E1" borderWidth={1} enter="fadeUp" />
+  <Shape id="table-callout" shape="rectangle" x={71} y={28} w={21} h={54} fill="#0F766E" stroke="transparent" radius={18} />
+  <Text id="table-callout-label" x={75} y={34} w={13} h={6} fontFamily="Inter" fontSize={11} fontWeight={750} letterSpacing={1.8} color="#99F6E4">DECISION</Text>
+  <Text id="table-callout-title" x={75} y={45} w={13} h={20} fontFamily="Inter" fontSize={24} fontWeight={700} lineHeight={1.08} color="#FFFFFF">Investigate retention first.</Text>
+  <Text id="table-callout-copy" x={75} y={68} w={13} h={14} fontFamily="Inter" fontSize={10} lineHeight={1.3} color="#CCFBF1">One interpretation is stronger than four decorative summaries.</Text>
+</Slide>
+
+<Slide duration={6} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" theme="dark" background="#111827" accent="#FBBF24" textColor="#F9FAFB" mutedColor="#9CA3AF" slideTransition="pushLeft">
+  <Text id="chart-title" role="title" x={7} y={8} w={56} h={23} fontFamily="Inter" fontSize={34} fontWeight={700} lineHeight={1.08} color="#F9FAFB">A chart answers “how is it moving?”</Text>
+  <Chart id="trend-chart" type="line" x={7} y={34} w={63} h={49} data='[{"label":"W1","value":24},{"label":"W2","value":31},{"label":"W3","value":29},{"label":"W4","value":44},{"label":"W5","value":58}]' palette="sunset" showAxes="true" showLabels="true" ariaLabel="Illustrative five-week upward trend" chartMotion="draw" enter="fadeUp" />
+  <Text id="chart-number" x={76} y={30} w={16} h={20} fontFamily="Inter" fontSize={54} fontWeight={760} lineHeight={1} color="#FBBF24">+34</Text>
+  <Text id="chart-unit" x={76} y={48} w={16} h={6} fontFamily="Inter" fontSize={12} fontWeight={700} letterSpacing={1.6} color="#FDE68A">POINT CHANGE</Text>
+  <Shape id="chart-rule" shape="line" x={76} y={61} w={16} h={0.5} stroke="#374151" strokeWidth={2} />
+  <Text id="chart-reading" x={76} y={67} w={16} h={21} fontFamily="Inter" fontSize={13} lineHeight={1.35} color="#D1D5DB">Momentum accelerated after week three. Verify the cause before scaling.</Text>
+</Slide>
+
+<Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" theme="light" background="#ECFEFF" accent="#0E7490" textColor="#083344" mutedColor="#155E75" slideTransition="wipe">
+  <Text id="decision-kicker" x={7} y={10} w={28} h={6} fontFamily="Inter" fontSize={12} fontWeight={750} letterSpacing={2} color="#0E7490">CLOSE WITH OWNERSHIP</Text>
+  <Text id="decision-title" role="title" x={7} y={27} w={66} h={24} fontFamily="Inter" fontSize={48} fontWeight={730} lineHeight={1.02} color="#083344">One owner. One deadline. One test.</Text>
+  <Shape id="decision-one" shape="rectangle" x={7} y={62} w={24} h={20} fill="#CFFAFE" stroke="#67E8F9" strokeWidth={1} radius={14} />
+  <Shape id="decision-two" shape="rectangle" x={38} y={62} w={24} h={20} fill="#CFFAFE" stroke="#67E8F9" strokeWidth={1} radius={14} />
+  <Shape id="decision-three" shape="rectangle" x={69} y={62} w={24} h={20} fill="#0E7490" stroke="transparent" radius={14} />
+  <Text id="decision-owner" x={11} y={67} w={16} h={8} fontFamily="Inter" fontSize={17} fontWeight={700} textAlign="center" color="#083344">OWNER</Text>
+  <Text id="decision-date" x={42} y={67} w={16} h={8} fontFamily="Inter" fontSize={17} fontWeight={700} textAlign="center" color="#083344">DEADLINE</Text>
+  <Text id="decision-test" x={73} y={65} w={16} h={13} fontFamily="Inter" fontSize={16} fontWeight={700} lineHeight={1.15} textAlign="center" color="#FFFFFF">SUCCESS TEST</Text>
+</Slide>

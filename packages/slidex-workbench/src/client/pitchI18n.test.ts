@@ -3,7 +3,6 @@ import test from "node:test";
 
 import { paperImageFilterDefinitions } from "@/core/motion-doc/application/shaders/paperImageFilterCatalog";
 import { paperShaderDefinitions } from "@/core/motion-doc/application/shaders/paperShaderCatalog";
-import { lucideIconLabels } from "@/core/motion-doc/domain/lucideIconRegistry";
 import {
   inspectorCoreTranslationKeys,
   inspectorTechnicalLabelExemptions,
@@ -61,11 +60,7 @@ test("paper shader and image-filter catalog labels have inspector translations",
   );
 });
 
-test("icon picker labels are localized and technical labels are explicitly exempt", () => {
-  assert.deepEqual(
-    [...new Set(Object.values(lucideIconLabels))].filter((label) => !pitchHasTranslation(label)),
-    []
-  );
+test("technical labels are explicitly exempt", () => {
   assert.deepEqual(inspectorTechnicalLabelExemptions, [
     "HEX",
     "X",

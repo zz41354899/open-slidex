@@ -9,7 +9,7 @@ export const zhTwDictionary = {
     fallbackLabel: "範本",
     ariaLabel: (title: string) => `${title} 風格縮圖`,
     sceneLayers: "投影片圖層",
-    layers: ["文字", "圖示", "圖表"],
+    layers: ["文字", "形狀", "圖表"],
     motionReady: "動態就緒"
   },
   marketing: {

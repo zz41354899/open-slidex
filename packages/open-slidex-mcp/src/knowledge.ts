@@ -9,7 +9,7 @@ type KnowledgeChunk = {
   page?: number;
   path: string;
   section?: string;
-  source: "builtin" | "workspace";
+  source: "workspace";
   start: number;
 };
 
@@ -20,35 +20,6 @@ type KnowledgeIndex = {
 };
 
 const allowedExtensions = new Set([".csv", ".md", ".markdown", ".pdf", ".txt"]);
-const builtInKnowledgeVersion = "motiondoc-v1";
-const builtInKnowledge = [
-  {
-    path: `builtin://${builtInKnowledgeVersion}/components.md`,
-    section: "Serializable components",
-    content: "OpenSlideX MDX uses built-in serializable MotionDoc JSX blocks. Supported visual blocks include Title, Text, heading, ImageBlock, Icon, Shape, Table, VideoBlock, Group, and Chart. Do not add imports, scripts, JavaScript expressions, or unknown runtime components."
-  },
-  {
-    path: `builtin://${builtInKnowledgeVersion}/charts.md`,
-    section: "Chart V1",
-    content: "Chart V1 supports bar, line, area, pie, donut, and scatter. Chart data is strict JSON with label and value; scatter may add x, size, and color. Use chartMotion grow for bars, draw for line and area, sweep for pie and donut, and pop for scatter. Preview and HTML animate; PPTX is an editable static final state."
-  },
-  {
-    path: `builtin://${builtInKnowledgeVersion}/motion.md`,
-    section: "Motion",
-    content: "Use restrained entrance animation and chart motion to clarify hierarchy. Honor reduced-motion preferences. Final-state raster and PPTX export must never hide animated content."
-  },
-  {
-    path: `builtin://${builtInKnowledgeVersion}/layouts.md`,
-    section: "Layout",
-    content: "Keep every slide inside the 100 by 100 MotionDoc canvas, preserve safe margins, avoid overlap, and favor one clear visual hierarchy. Use Group only for readable layer organization."
-  },
-  {
-    path: `builtin://${builtInKnowledgeVersion}/qa.md`,
-    section: "Visual QA",
-    content: "Validate source, render a montage, inspect every materially changed slide at desktop size, then verify narrow Workbench layout. Check clipping, contrast, empty states, animation final state, asset portability, HTML, and editable PPTX."
-  }
-] as const;
-
 export async function searchOpenSlideXKnowledge(projectRoot: string, query: string, limit = 8) {
   const index = await buildOpenSlideXKnowledgeIndex(projectRoot);
   const terms = tokenize(query);
@@ -59,12 +30,50 @@ export async function searchOpenSlideXKnowledge(projectRoot: string, query: stri
     }))
     .filter((chunk) => terms.length === 0 || chunk.score > 0)
     .sort((left, right) => right.score - left.score || left.path.localeCompare(right.path))
-    .slice(0, Math.min(Math.max(limit, 1), 20));
+    .slice(0, Math.min(Math.max(limit, 1), 20))
+    .map(({ content, ...chunk }) => ({
+      ...chunk,
+      resourcePath: `knowledge/${chunk.path}`,
+      snippet: content.length > 600 ? `${content.slice(0, 597)}...` : content
+    }));
 
   return {
     generatedAt: index.generatedAt,
     query,
     results
+  };
+}
+
+export async function readOpenSlideXKnowledgeResource(
+  projectRoot: string,
+  resourcePath: string,
+  cursor = 0,
+  limit = 4
+) {
+  if (
+    resourcePath.includes("\\") ||
+    path.posix.normalize(resourcePath) !== resourcePath ||
+    !resourcePath.startsWith("knowledge/")
+  ) {
+    throw new Error("resourcePath must be an exact knowledge/... path returned by open_slidex_read.");
+  }
+  if (!Number.isInteger(cursor) || cursor < 0) throw new Error("resourceCursor must be a non-negative integer.");
+  const relativePath = resourcePath.slice("knowledge/".length);
+  if (!relativePath) throw new Error("resourcePath must name one knowledge file.");
+  const index = await buildOpenSlideXKnowledgeIndex(projectRoot);
+  const chunks = index.chunks.filter((chunk) => chunk.path === relativePath);
+  if (chunks.length === 0) {
+    throw new Error("The requested knowledge resource is unavailable or has no readable content.");
+  }
+  if (cursor >= chunks.length) throw new Error("resourceCursor is past the end of this knowledge resource.");
+  const selected = chunks.slice(cursor, cursor + Math.min(Math.max(limit, 1), 8));
+  const nextCursor = cursor + selected.length < chunks.length ? cursor + selected.length : undefined;
+  return {
+    chunks: selected,
+    mode: "resource" as const,
+    nextCursor,
+    resourcePath,
+    totalChunks: chunks.length
   };
 }
 
@@ -80,16 +89,7 @@ export async function buildOpenSlideXKnowledgeIndex(projectRoot: string) {
   const actualRoot = await realpath(knowledgeRoot);
   const actualStateRoot = await realpath(stateRoot);
   const files = await listKnowledgeFiles(actualRoot);
-  const chunks = [
-    ...builtInKnowledge.map((entry): KnowledgeChunk => ({
-      ...entry,
-      end: 1,
-      hash: createHash("sha256").update(entry.content).digest("hex"),
-      source: "builtin",
-      start: 1
-    })),
-    ...(await Promise.all(files.map((file) => fileChunks(actualRoot, file)))).flat()
-  ];
+  const chunks = (await Promise.all(files.map((file) => fileChunks(actualRoot, file)))).flat();
   const index: KnowledgeIndex = {
     chunks,
     generatedAt: new Date().toISOString(),

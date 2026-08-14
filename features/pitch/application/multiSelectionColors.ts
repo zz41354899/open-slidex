@@ -44,8 +44,8 @@ export function updateSelectedBlockColor(
 
 function primaryColorKey(block: MotionDocBlock): "background" | "color" | "fill" | "stroke" | null {
   if (block.type === "Shape") return block.props.shape === "line" ? "stroke" : "fill";
-  if (block.type === "Title" || block.type === "Text" || block.type === "heading" || block.type === "Icon" || block.type === "Chart") return "color";
-  if (block.type === "Card" || block.type === "Metric" || block.type === "Stack" || block.type === "Table") return "background";
+  if (block.type === "Text" || block.type === "heading" || block.type === "Chart") return "color";
+  if (block.type === "Table") return "background";
   return null;
 }
 
@@ -65,6 +65,6 @@ function inheritedColor(slide: MotionDocScene, block: MotionDocBlock, key: strin
   if (key === "background") return slide.props.background ?? "#111111";
   if (key === "fill") return "#a8b8ff";
   if (key === "stroke") return "#171717";
-  if (block.type === "Icon" || block.type === "Chart") return slide.props.accent ?? "#8ea5ff";
+  if (block.type === "Chart") return slide.props.accent ?? "#8ea5ff";
   return slide.props.textColor ?? slide.props.foreground ?? slide.props.color ?? "#ffffff";
 }

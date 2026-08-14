@@ -1,6 +1,6 @@
 import path from "node:path";
 
-export const openSlideXMcpNpxPackage = "open-slidex@0.3.4";
+export const openSlideXMcpNpxPackage = "open-slidex@latest";
 export const openSlideXMcpClients = ["codex", "claude-code", "claude-desktop"] as const;
 export type OpenSlideXMcpClient = (typeof openSlideXMcpClients)[number];
 export type OpenSlideXMcpPlatform = "macos" | "windows";
@@ -61,7 +61,7 @@ export function presentationMcpPrompt(client: OpenSlideXMcpClient, root: string,
     "",
     presentationMcpConfig(client, root, platform),
     "",
-    "After restarting the client, verify open_slidex_open and open_slidex_validate."
+    "After restarting the client, verify open_slidex_read, open_slidex_edit, and open_slidex_review."
   ].join("\n");
 }
 
@@ -75,7 +75,7 @@ export function workspaceMcpPrompt(client: OpenSlideXMcpClient, root: string, pl
     "",
     workspaceMcpConfig(client, root, platform),
     "",
-    "After restarting the client, call open_slidex_workspace_list, select one presentation, then verify open_slidex_open and open_slidex_validate."
+    "After restarting the client, use open_slidex_workspace to list and select one presentation, then verify open_slidex_read and open_slidex_review."
   ].join("\n");
 }
 

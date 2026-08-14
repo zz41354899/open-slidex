@@ -4,14 +4,19 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { searchOpenSlideXKnowledge } from "./knowledge";
+import { readOpenSlideXKnowledgeResource, searchOpenSlideXKnowledge } from "./knowledge";
 
-test("local knowledge search returns cited chunks and writes a hash index", async () => {
+test("local knowledge search returns compact citations and reads one resource on demand", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-knowledge-"));
   try {
     await mkdir(path.join(root, "knowledge"));
     await writeFile(path.join(root, "knowledge", "brand.md"), "# Brand\n\nUse cobalt for product charts and coral for warnings.\n", "utf8");
     await writeFile(path.join(root, "knowledge", "metrics.csv"), "quarter,revenue\nQ1,42\nQ2,58\n", "utf8");
+    await writeFile(
+      path.join(root, "knowledge", "research.txt"),
+      Array.from({ length: 200 }, (_, index) => `Research line ${index + 1}`).join("\n"),
+      "utf8"
+    );
 
     const result = await searchOpenSlideXKnowledge(root, "cobalt coral");
     assert.equal(result.results[0]?.path, "brand.md");
@@ -19,14 +24,28 @@ test("local knowledge search returns cited chunks and writes a hash index", asyn
     assert.equal(result.results[0]?.source, "workspace");
     assert.match(result.results[0]?.hash ?? "", /^[0-9a-f]{64}$/);
     assert.equal(result.results[0]?.start, 1);
+    assert.equal(result.results[0]?.resourcePath, "knowledge/brand.md");
+    assert.match(result.results[0]?.snippet ?? "", /cobalt/);
+    assert.equal("content" in result.results[0]!, false);
 
-    const builtIn = await searchOpenSlideXKnowledge(root, "donut sweep scatter");
-    assert.equal(builtIn.results[0]?.path, "builtin://motiondoc-v1/charts.md");
-    assert.equal(builtIn.results[0]?.source, "builtin");
+    const resource = await readOpenSlideXKnowledgeResource(root, "knowledge/brand.md");
+    assert.equal(resource.mode, "resource");
+    assert.equal(resource.totalChunks, 1);
+    assert.match(resource.chunks[0]?.content ?? "", /coral for warnings/);
+    await assert.rejects(
+      () => readOpenSlideXKnowledgeResource(root, "knowledge/../package.json"),
+      /exact knowledge/
+    );
+    const firstPage = await readOpenSlideXKnowledgeResource(root, "knowledge/research.txt");
+    assert.equal(firstPage.chunks.length, 4);
+    assert.equal(firstPage.nextCursor, 4);
+    const secondPage = await readOpenSlideXKnowledgeResource(root, "knowledge/research.txt", firstPage.nextCursor);
+    assert.equal(secondPage.chunks.length, 2);
+    assert.equal(secondPage.nextCursor, undefined);
 
     const index = JSON.parse(await readFile(path.join(root, ".open-slidex", "knowledge-index.json"), "utf8"));
     assert.equal(index.version, 1);
-    assert.equal(index.chunks.length, 7);
+    assert.equal(index.chunks.length, 8);
   } finally {
     await rm(root, { force: true, recursive: true });
   }

@@ -1,11 +1,12 @@
 import { spawn } from "node:child_process";
-import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { cp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { SlideXProject } from "./server/project";
+import { discoverOpenSlideXSkillTargets, syncOpenSlideXProjectSkills } from "./server/projectSkills";
 import { startWorkbenchServer } from "./server/http";
 import { OpenSlideXWorkspace } from "./server/workspace";
 import { startWorkspaceServer } from "./server/workspaceHttp";
@@ -80,6 +81,16 @@ async function main() {
       await vite.close();
       await running.close();
     }
+    return;
+  }
+
+  if (command === "sync:skills") {
+    const skillsRoot = fileURLToPath(new URL("../skills/", import.meta.url));
+    const targets = await discoverOpenSlideXSkillTargets(process.cwd());
+    const result = await syncOpenSlideXProjectSkills(skillsRoot, targets);
+    process.stdout.write(
+      `Synchronized ${result.skillCount} OpenSlideX skills to ${result.targetCount} project location${result.targetCount === 1 ? "" : "s"}.\n`
+    );
     return;
   }
 
@@ -163,22 +174,6 @@ async function main() {
     process.stdout.write(`OpenSlideX Preview: http://127.0.0.1:${port}\n`);
     await waitForSignal();
     server.close();
-    return;
-  }
-
-  if (command === "sync:skills") {
-    const skillsRoot = fileURLToPath(new URL("../skills/", import.meta.url));
-    const target = path.join(project.root, ".agents", "skills");
-    await mkdir(target, { recursive: true });
-    for (const entry of await readdir(skillsRoot, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
-        await cp(path.join(skillsRoot, entry.name), path.join(target, entry.name), {
-          force: true,
-          recursive: true
-        });
-      }
-    }
-    process.stdout.write("Synchronized OpenSlideX project skills.\n");
     return;
   }
 

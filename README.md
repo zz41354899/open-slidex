@@ -37,7 +37,7 @@ npm run dev -- ~/Presentations --port 4174
 The npm package creates a separate presentation project:
 
 ```bash
-npx open-slidex@0.3.4 init my-deck
+npx open-slidex@latest init my-deck
 cd my-deck
 npm run dev
 ```
@@ -45,7 +45,7 @@ npm run dev
 Or install the CLI globally:
 
 ```bash
-npm install --global open-slidex@0.3.4
+npm install --global open-slidex@latest
 open-slidex init my-deck
 ```
 
@@ -53,13 +53,13 @@ open-slidex init my-deck
 project's own ignored `open-slidex-workspace/` directory. A fresh install has
 an empty library; creating or importing a deck adds its own child folder there.
 Generated Workbench source and dependency cache stay in the ignored
-`.open-slidex/` directory. Production commands continue to use the bundled
-runtime:
+`.open-slidex/` directory. Each Workspace deck owns its own source, assets,
+and exports.
 
-```bash
-open-slidex build
-open-slidex preview
-```
+The starter includes four project-local Agent Skills. Detailed authoring rules,
+input-to-story guidance, motion patterns, QA checks, and five verified
+native-layer examples live inside each skill's `references/` directory. Agents
+load only the resources needed for the current task.
 
 ## What you can do locally
 
@@ -70,22 +70,27 @@ open-slidex preview
 - Configure optional, workspace-scoped MCP access for supported agent clients.
 
 Workspace Settings can generate a user-level MCP configuration for Codex,
-Claude Code, or Claude Desktop. When launched from a deck folder, it pins MCP to
-that exact folder's `presentation.mdx`; a general Workspace retains the
-multi-deck selection flow. It does not probe or launch those applications. The
-Workbench has no built-in AI Chat or CLI bridge.
+Claude Code, or Claude Desktop. An installed starter pins MCP to its internal
+`open-slidex-workspace/` directory, so the agent first selects a deck. It does
+not probe or launch those applications. The Workbench has no built-in AI Chat
+or CLI bridge.
+
+Generated MCP configuration uses `open-slidex@latest`, so a client restart
+loads the newest published server without editing the config. Workspace scope
+exposes five workflow tools: workspace selection, progressive source/resource
+read, edit, media, and review. Narrative and visual direction stay in the
+project skills; MCP remains the revision-safe file and validation boundary.
+User notes and research stay local under each deck's `knowledge/`; Markdown,
+text, CSV, and PDF sources are searched first and read one resource at a time.
 
 ## Repository commands
 
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Open the local Workspace. |
-| `npm run validate` | Validate the root presentation source. |
-| `npm run render` | Render the root presentation montage to `dist/montage.png`. |
-| `npm run export:html` | Export the root deck as HTML. |
-| `npm run export:mdx` | Export one portable MDX file with local images embedded. |
-| `npm run export:pptx` | Export the root deck as PowerPoint. |
+| `npm run mcp` | Start MCP for `open-slidex-workspace/`. |
 | `npm run build:runtime` | Rebuild the distributable runtime after SDK, Workbench, MCP, or CLI changes. |
+| `npm run test:source` | Run source-level SDK, Workbench, MCP, CLI, and Workspace tests. |
 
 ## Architecture
 

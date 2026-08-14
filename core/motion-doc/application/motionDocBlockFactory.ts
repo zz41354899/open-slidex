@@ -8,7 +8,6 @@ import { defaultMotionDocChartData } from "@/core/motion-doc/domain/chart";
 import { widthPercentForPhysicalAspectRatio } from "@/core/motion-doc/domain/frame";
 
 export type AddBlockType =
-  | "Title"
   | "Text"
   | "Text96"
   | "Text60"
@@ -16,11 +15,8 @@ export type AddBlockType =
   | "Text36"
   | "Text32"
   | "Text24"
-  | "Card"
   | "Image"
   | "Video"
-  | "Metric"
-  | "Icon"
   | "Chart"
   | "Table"
   | "ShapeRectangle"
@@ -59,8 +55,6 @@ function createMotionDocBlockWithoutId(type: AddBlockType): MotionDocBlock {
           y: 34
         }
       } as MotionDocBlock;
-    case "Title":
-      return { type: "Title", props: { enter: "none", fontSize: MOTION_DOC_FONT_SIZES.display, x: 9, y: 18, w: 52, h: 18 }, text: "New Title" } as MotionDocBlock;
     case "Text":
       return { type: "Text", props: { enter: "none", fontSize: MOTION_DOC_FONT_SIZES.body, x: 10, y: 45, w: 42, h: 9 }, text: "Add some descriptive text here." } as MotionDocBlock;
     case "Text96":
@@ -75,16 +69,10 @@ function createMotionDocBlockWithoutId(type: AddBlockType): MotionDocBlock {
       return createTextPresetBlock(MOTION_DOC_FONT_SIZES.supportingTitle, "Supporting title");
     case "Text24":
       return createTextPresetBlock(MOTION_DOC_FONT_SIZES.body, "Body copy");
-    case "Card":
-      return { type: "Card", props: { icon: "Sparkles", layout: "vertical", title: "Feature", text: "Feature description", width: "md", enter: "none", radius: 16, x: 8, y: 38, w: 40, h: 32 } } as MotionDocBlock;
-    case "Metric":
-      return { type: "Metric", props: { label: "Pipeline", value: "$2.4M", caption: "Qualified revenue influenced this quarter.", width: "sm", enter: "none", radius: 16, x: 8, y: 38, w: 32, h: 36 } } as MotionDocBlock;
     case "Image":
       return { type: "ImageBlock", props: { src: "", alt: "", fit: "cover", scaleX: 1, scaleY: 1, enter: "none", radius: 0, x: 10, y: 20, w: 80, h: 54 } } as MotionDocBlock;
     case "Video":
       return { type: "VideoBlock", props: { src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", fit: "cover", controls: "true", loop: "true", muted: "true", enter: "none", radius: 0, x: 10, y: 20, w: 80, h: 54 } } as MotionDocBlock;
-    case "Icon":
-      return { type: "Icon", props: { icon: "Sparkles", color: "#ffffff", strokeWidth: 2.2, size: 112, enter: "none", radius: 0, x: 47.0833, y: 44.8148, w: 5.8333, h: 10.3704 } } as MotionDocBlock;
     case "Chart":
       return {
         type: "Chart",

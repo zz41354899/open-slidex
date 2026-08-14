@@ -24,59 +24,12 @@ export function cloneBlock(block: MotionDocBlock): MotionDocBlock {
 export function generateSlideString(slide: MotionDocScene) {
   const identifiedSlide = ensureMotionDocSceneBlockIds(slide);
   const tag = formatSlideTag(identifiedSlide.props);
-  const blockStrings: string[] = [];
-
-  for (let index = 0; index < identifiedSlide.blocks.length;) {
-    const block = identifiedSlide.blocks[index];
-    const groupId = groupIdOf(block);
-    if (!groupId) {
-      blockStrings.push(`  ${generateBlockString(block)}`);
-      index += 1;
-      continue;
-    }
-
-    const groupedBlocks: MotionDocBlock[] = [];
-    while (index < identifiedSlide.blocks.length && groupIdOf(identifiedSlide.blocks[index]) === groupId) {
-      groupedBlocks.push(identifiedSlide.blocks[index]);
-      index += 1;
-    }
-    blockStrings.push(indentGroupString(generateGroupString(groupedBlocks, groupId)));
-  }
-  const notes = identifiedSlide.notes?.markdown.trim();
-  const notesString = notes
-    ? `\n  <Notes>\n${notes
-        .split("\n")
-        .map((line) => `    ${line}`)
-        .join("\n")}\n  </Notes>`
-    : "";
-  return `${tag}\n${blockStrings.join("\n")}${notesString}\n</Slide>`;
-}
-
-export function generateGroupString(blocks: MotionDocBlock[], groupId: string) {
-  const identifiedBlocks = ensureMotionDocBlockIds(blocks);
-  const namedBlock = identifiedBlocks.find((block): block is Extract<MotionDocBlock, { props: MotionDocProps }> => (
-    "props" in block && typeof block.props.groupName === "string"
-  ));
-  const groupName = namedBlock?.props.groupName;
-  const nameAttr = typeof groupName === "string" && groupName.trim() ? ` name="${escapeMdxAttribute(groupName)}"` : "";
-  const children = identifiedBlocks.map((block) => `  ${generateBlockStringWithProps(block, withoutGroupProps("props" in block ? block.props : undefined))}`);
-  return `<Group id="${escapeMdxAttribute(groupId)}"${nameAttr}>\n${children.join("\n")}\n</Group>`;
-}
-
-function indentGroupString(value: string) {
-  return value.split("\n").map((line) => `  ${line}`).join("\n");
+  const blockStrings = identifiedSlide.blocks.map((block) => `  ${generateBlockString(block)}`);
+  return `${tag}\n${blockStrings.join("\n")}\n</Slide>`;
 }
 
 function groupIdOf(block: MotionDocBlock) {
   return "props" in block && typeof block.props.groupId === "string" && block.props.groupId.trim() ? block.props.groupId : "";
-}
-
-function withoutGroupProps(props: MotionDocProps | undefined) {
-  if (!props) return props;
-  const { groupId, groupName, ...rest } = props;
-  void groupId;
-  void groupName;
-  return rest;
 }
 
 export function generateBlockString(block: MotionDocBlock) {
@@ -113,7 +66,7 @@ export function ensureMotionDocSourceBlockIds(source: string) {
 }
 
 function generateBlockStringWithProps(block: MotionDocBlock, overrideProps: MotionDocProps | undefined) {
-  if (block.type === "Title" || block.type === "Text") {
+  if (block.type === "Text") {
     const propsStr = formatTextProps(overrideProps ?? block.props);
     return `<${block.type}${propsStr ? " " + propsStr : ""}>${escapeMdxText(block.text)}</${block.type}>`;
   }
@@ -145,16 +98,11 @@ type SourceBlockIdentityCandidate = {
 };
 
 const sourceBlockTagNames = new Set([
-  "Card",
   "Chart",
-  "Icon",
   "ImageBlock",
-  "Metric",
   "Shape",
-  "Stack",
   "Table",
   "Text",
-  "Title",
   "VideoBlock"
 ]);
 
@@ -283,7 +231,7 @@ function sourceOpeningTagEnd(source: string, start: number) {
 
 function protectedSourceBlockRanges(slideSource: string) {
   const ranges: Array<{ end: number; start: number }> = [];
-  const pairedBlockPattern = /<((?!Slide\b|Scene\b|Group\b)[A-Z][A-Za-z0-9]*)\b[^>]*>[\s\S]*?<\/\1>/g;
+  const pairedBlockPattern = /<((?!Slide\b|Scene\b)[A-Z][A-Za-z0-9]*)\b[^>]*>[\s\S]*?<\/\1>/g;
   for (const match of slideSource.matchAll(pairedBlockPattern)) {
     const start = match.index ?? 0;
     ranges.push({ end: start + match[0].length, start });
@@ -317,7 +265,7 @@ export function getSelectionMdx(slide: MotionDocScene | undefined, selectedBlock
     const groupBlocks = slide.blocks.filter((candidate) => groupIdOf(candidate) === groupId);
     return {
       label: `${groupId}.mdx`,
-      source: generateGroupString(groupBlocks, groupId)
+      source: groupBlocks.map(generateBlockString).join("\n")
     };
   }
 
@@ -336,17 +284,16 @@ export function getSelectionMdx(slide: MotionDocScene | undefined, selectedBlock
 }
 
 export function getSlideTitle(blocks: MotionDocBlock[], fallbackIndex: number) {
-  const titleBlock = blocks.find((block) => block.type === "Title" && "text" in block);
+  const titleBlock = blocks.find((block) =>
+    "text" in block && (block.props.role === "title" || Number(block.props.fontSize) >= 32)
+  );
 
   if (titleBlock && "text" in titleBlock) {
     return titleBlock.text;
   }
 
-  const cardBlock = blocks.find((block) => "props" in block && (block.props.title || block.props.text));
-
-  if (cardBlock && "props" in cardBlock) {
-    return String(cardBlock.props.title ?? cardBlock.props.text);
-  }
+  const firstText = blocks.find((block) => "text" in block && block.text.trim());
+  if (firstText && "text" in firstText) return firstText.text;
 
   return `Slide ${fallbackIndex + 1}`;
 }

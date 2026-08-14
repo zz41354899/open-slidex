@@ -67,7 +67,7 @@ export function MotionFields({
   const selectedAnimation = normalizeEnterAnimation(block.props.enter);
   const supportsAspectRatioLock = block.type === "Shape"
     ? block.props.shape !== "line"
-    : block.type === "ImageBlock" || block.type === "VideoBlock" || block.type === "Icon" || block.type === "Chart";
+    : block.type === "ImageBlock" || block.type === "VideoBlock" || block.type === "Chart";
   const isAspectRatioLocked = supportsAspectRatioLock && blockAspectRatioLocked(block.props);
   const frame = motionDocBlockFrame(block);
   const shadowEnabled = Number(block.props.shadowOpacity) > 0
@@ -258,8 +258,6 @@ export function MotionFields({
 
 
 
-function defaultRadius(type: string) {
-  if (type === "Card" || type === "Metric") return 16;
-
+function defaultRadius(_type: string) {
   return 0;
 }

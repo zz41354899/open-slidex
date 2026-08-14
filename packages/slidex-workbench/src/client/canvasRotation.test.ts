@@ -4,7 +4,7 @@ import test from "node:test";
 import { isMovableBlock } from "../../../../features/pitch/application/previewCanvas";
 
 test("native media and graphic blocks receive canvas transform controls without explicit positions", () => {
-  const rotatingTypes = ["ImageBlock", "VideoBlock", "Chart", "Table", "Shape", "Icon"] as const;
+  const rotatingTypes = ["ImageBlock", "VideoBlock", "Chart", "Table", "Shape"] as const;
 
   for (const type of rotatingTypes) {
     assert.equal(
@@ -13,6 +13,4 @@ test("native media and graphic blocks receive canvas transform controls without 
       `${type} should have a selectable default frame for move, resize, and rotate`
     );
   }
-
-  assert.equal(isMovableBlock({ props: {}, type: "Card" } as never), false);
 });

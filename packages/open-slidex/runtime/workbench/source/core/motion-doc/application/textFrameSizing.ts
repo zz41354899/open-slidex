@@ -168,15 +168,15 @@ function defaultFontSize(type: string) {
 }
 
 function defaultLineHeight(type: string) {
-  return type === "Title" ? 1.02 : 1.45;
+  return type === "heading" ? 1.12 : 1.45;
 }
 
 function defaultFrameWidth(type: string) {
-  return type === "Title" ? 52 : 42;
+  return type === "heading" ? 52 : 42;
 }
 
 function defaultFrameHeight(type: string) {
-  return type === "Title" ? 18 : 9;
+  return type === "heading" ? 18 : 9;
 }
 
 function defaultFrameX() {
@@ -184,5 +184,5 @@ function defaultFrameX() {
 }
 
 function defaultFrameY(type: string) {
-  return type === "Title" ? 18 : 38;
+  return type === "heading" ? 18 : 38;
 }

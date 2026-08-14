@@ -19,9 +19,8 @@ import { SlideXProject } from "./project";
 const source = `# Workbench project
 
 <Slide id="opening">
-  <Title id="title">Local source</Title>
+  <Text id="title" role="title">Local source</Text>
   <ImageBlock id="hero" src="assets/hero.webp" alt="Hero" />
-  <Notes>Introduce the **local** workflow.</Notes>
 </Slide>`;
 
 test("Workbench project keeps document, context, and asset renames revision-safe", async () => {
@@ -128,7 +127,7 @@ test("Workbench project saves HTTPS image and video links", async () => {
       expectedRevision: opened.revision,
       source: source
         .replace("assets/hero.webp", "https://images.unsplash.com/remote.webp")
-        .replace("  <Notes>", "  <VideoBlock id=\"video\" src=\"https://cdn.example.com/launch.mp4\" poster=\"https://images.unsplash.com/poster.webp\" />\n  <Notes>"),
+        .replace("</Slide>", "  <VideoBlock id=\"video\" src=\"https://cdn.example.com/launch.mp4\" poster=\"https://images.unsplash.com/poster.webp\" />\n</Slide>"),
       title: "Remote media"
     });
     assert.match(saved.source, /https:\/\/images\.unsplash\.com\/remote\.webp/);
@@ -268,7 +267,7 @@ test("Workbench project switches its AI design system without changing presentat
     const opened = await project.open();
     await project.save({
       expectedRevision: opened.revision,
-      source: "# Started\n\n<Slide><Title>Content</Title></Slide>\n",
+      source: "# Started\n\n<Slide><Text role=\"title\">Content</Text></Slide>\n",
       title: "Started"
     });
     const beforeSwitch = await project.open();

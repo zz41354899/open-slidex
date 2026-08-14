@@ -68,18 +68,15 @@ function motionDocBlocksFromMarkdownNode(
       id
     );
 
-    if (node.depth === 1) {
-      return [{ props, text: content.text, type: "Title" }];
-    }
-
     return [{
       props: {
         ...props,
         fontSize: markdownHeadingFontSize(node.depth),
-        fontWeight: 700
+        fontWeight: 700,
+        ...(node.depth === 1 ? { role: "title" } : {})
       },
       text: content.text,
-      type: "heading"
+      type: node.depth === 1 ? "Text" : "heading"
     }];
   }
 

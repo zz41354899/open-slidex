@@ -2,7 +2,6 @@
 import * as Popover from "@radix-ui/react-popover";
 import { Check, Crop, Maximize, Minimize, Minus, PanelBottom, PanelBottomDashed, Plus, RefreshCcw, Shrink, Volume2, VolumeX } from "lucide-react";
 import type { MotionDocProps, MotionDocVisualBlock } from "@/core/motion-doc/domain/motionDocTypes";
-import { iconFrameForSize } from "@/core/motion-doc/domain/iconSizing";
 import {
   imagePropsAsShapeImageProps,
   shapeImageAsImageProps
@@ -30,13 +29,12 @@ const fitOptions = [
 
 export function VisualFrameEditor({ block, blockIndex, isImageCropActive = false, onSelectBlock, onToggleImageCrop, onUpdateBlock, placement = "above" }: VisualFrameEditorProps) {
   const { tx } = usePitchI18n();
-  const isIcon = block.type === "Icon";
   const isImage = block.type === "ImageBlock";
   const isVideo = block.type === "VideoBlock";
   const isShape = block.type === "Shape" && block.props.shape !== "line";
   const isShapeImage = block.type === "Shape" && Boolean(block.props.shapeImageSrc) && block.props.shape !== "line";
 
-  if (!isIcon && !isImage && !isVideo && !isShape) return null;
+  if (!isImage && !isVideo && !isShape) return null;
 
   function update(updates: MotionDocProps) {
     onUpdateBlock(blockIndex, { ...block.props, ...updates });
@@ -52,7 +50,6 @@ export function VisualFrameEditor({ block, blockIndex, isImageCropActive = false
       }}
       role="toolbar"
     >
-      {isIcon ? <IconQuickControls block={block} onUpdate={update} /> : null}
       {isShape ? <ShapeQuickControls block={block} onUpdate={update} /> : null}
       {isImage || isVideo ? (
         <MediaQuickControls
@@ -109,44 +106,6 @@ function ColorSwatch({ label, onChange, value }: { label: string; onChange: (val
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
-  );
-}
-
-function IconQuickControls({ block, onUpdate }: { block: MotionDocVisualBlock; onUpdate: (updates: MotionDocProps) => void }) {
-  const { tx } = usePitchI18n();
-  const size = numberProp(block.props.size, 112);
-  const strokeWidth = numberProp(block.props.strokeWidth, 2);
-  const color = String(block.props.color ?? "#ffffff");
-
-  return (
-    <>
-      <ToolbarValue label="Size" value={`${Math.round(size)}`}>
-        <ToolbarButton label="Decrease icon size" onClick={() => onUpdate(iconFrameForSize(block.props, Math.max(40, size - 8)))}><Minus size={12} /></ToolbarButton>
-        <ToolbarButton label="Increase icon size" onClick={() => onUpdate(iconFrameForSize(block.props, Math.min(640, size + 8)))}><Plus size={12} /></ToolbarButton>
-      </ToolbarValue>
-      <ToolbarDivider />
-      <ToolbarValue label="Stroke" value={strokeWidth.toFixed(strokeWidth % 1 ? 1 : 0)}>
-        <ToolbarButton label="Decrease stroke width" onClick={() => onUpdate({ strokeWidth: Math.max(0.5, strokeWidth - 0.25) })}><Minus size={12} /></ToolbarButton>
-        <ToolbarButton label="Increase stroke width" onClick={() => onUpdate({ strokeWidth: Math.min(6, strokeWidth + 0.25) })}><Plus size={12} /></ToolbarButton>
-      </ToolbarValue>
-      <ToolbarDivider />
-      <Popover.Root modal={false}>
-        <Popover.Trigger asChild>
-          <button aria-label={tx("Icon color")} className="relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition hover:bg-white/[0.07]" title={tx("Icon color")} type="button">
-            <span className="h-4 w-4 rounded-md border border-white/25 shadow-sm" style={{ backgroundColor: color }} />
-          </button>
-        </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content
-            align="end"
-            className="z-[130] w-[250px] rounded-xl border border-white/10 bg-[#17171a] p-3 shadow-[0_24px_70px_rgba(0,0,0,0.58)]"
-            sideOffset={8}
-          >
-            <CompactColorPanel label={tx("Icon color")} onChange={(nextColor) => onUpdate({ color: nextColor })} value={normalizeHexColor(color)} />
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
-    </>
   );
 }
 
@@ -225,11 +184,6 @@ function CropZoomControls({ block, onUpdate }: { block: MotionDocVisualBlock; on
   );
 }
 
-function ToolbarValue({ children, label, value }: { children: React.ReactNode; label: string; value: string }) {
-  const { tx } = usePitchI18n();
-  return <div className="flex items-center gap-0.5"><span className="px-1 text-[9px] font-semibold text-neutral-500">{tx(label)}</span><span className="min-w-6 text-center font-mono text-[10px] tabular-nums text-neutral-300">{value}</span>{children}</div>;
-}
-
 function ToolbarButton({ active = false, children, label, onClick }: { active?: boolean; children: React.ReactNode; label: string; onClick: () => void }) {
   const { tx } = usePitchI18n();
   return (
@@ -256,10 +210,6 @@ function normalizeBoolean(value: string | number | undefined, fallback: boolean)
   if (value === "false" || value === 0) return false;
   if (value === "true" || value === 1) return true;
   return fallback;
-}
-
-function normalizeHexColor(value: string) {
-  return /^#[0-9a-f]{6}$/i.test(value) ? value : "#ffffff";
 }
 
 function clampImagePosition(value: number) {

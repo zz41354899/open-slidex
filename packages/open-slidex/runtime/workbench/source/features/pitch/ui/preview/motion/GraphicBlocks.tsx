@@ -1,49 +1,15 @@
 
-import { useId, type CSSProperties } from "react";
+import { useId } from "react";
 import { normalizedImageScales } from "@/core/motion-doc/application/imageCrop";
 import {
   continuousRoundedRectPath,
   normalizedContinuousCornerRadii,
   normalizedRelativeCornerRadii
 } from "@/core/motion-doc/application/continuousRoundedRect";
-import { isSlideXIconName, lucideIconPaths } from "@/core/motion-doc/domain/lucideIconRegistry";
-import { legacyCssFontPixelsToCanvasPixels } from "@/core/motion-doc/domain/typography";
-import { MotionBlock, type AnimationProps, type ColorProps, type RadiusProps } from "@/features/pitch/ui/preview/motion/MotionBlock";
-import { cssColor, surfaceVars } from "@/features/pitch/ui/preview/motion/blockStyles";
+import { MotionBlock, type AnimationProps, type RadiusProps } from "@/features/pitch/ui/preview/motion/MotionBlock";
+import { cssColor } from "@/features/pitch/ui/preview/motion/blockStyles";
 import { usePreviewMediaSource } from "@/features/pitch/ui/preview/PreviewMediaPolicy";
 import { shapePolygonPath } from "@/core/motion-doc/application/shapeVectorSvg";
-
-export function IconBlock({
-  background,
-  backgroundColor,
-  color,
-  icon = "Sparkles",
-  mutedColor,
-  size = 96,
-  strokeWidth = 2,
-  textColor,
-  ...animation
-}: AnimationProps & {
-  icon?: string;
-  size?: number | string;
-  strokeWidth?: number | string;
-} & RadiusProps & ColorProps) {
-  const hasSurface = Boolean(cssColor(background ?? backgroundColor));
-
-  return (
-    <MotionBlock
-      className={`inline-flex h-full w-full items-center justify-center text-[var(--block-fg,var(--slide-fg))] ${
-        hasSurface
-          ? "border border-[var(--slide-border)] bg-[var(--slide-card)] p-4 shadow-xl shadow-black/20 backdrop-blur"
-          : "bg-transparent p-0"
-      }`}
-      style={{ ...surfaceVars({ background, backgroundColor, color, mutedColor, textColor }), "--icon-declared-size": size } as CSSProperties}
-      {...animation}
-    >
-      <LucideSvg name={icon} strokeWidth={normalizePixelValue(strokeWidth, 2)} />
-    </MotionBlock>
-  );
-}
 
 export function ShapeBlock({
   arrowEnd = "none",
@@ -217,59 +183,6 @@ function normalizeNumber(value: number | string | undefined, fallback: number) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-export function StackBlock({
-  align = "stretch",
-  background,
-  backgroundColor,
-  color,
-  gap = 16,
-  items = "Panel A|Panel B|Panel C",
-  layout = "row",
-  mutedColor,
-  padding = 20,
-  stroke = "rgba(255,255,255,0.16)",
-  textColor,
-  ...animation
-}: AnimationProps & {
-  align?: string;
-  gap?: number | string;
-  items?: string;
-  layout?: string;
-  padding?: number | string;
-  stroke?: string;
-} & RadiusProps & ColorProps) {
-  const stackItems = parseStackItems(items);
-  const direction = layout === "column" ? "column" : "row";
-  const normalizedGap = normalizePixelValue(gap, 16);
-  const normalizedPadding = normalizePixelValue(padding, 20);
-  const justifyItems = align === "center" ? "center" : align === "end" ? "flex-end" : "stretch";
-
-  return (
-    <MotionBlock
-      className="flex h-full w-full border bg-[var(--slide-card)] shadow-xl shadow-black/20 backdrop-blur"
-      style={{
-        ...surfaceVars({ background, backgroundColor, color, mutedColor, textColor }),
-        alignItems: justifyItems,
-        borderColor: cssColor(stroke) ?? "var(--slide-border)",
-        flexDirection: direction,
-        gap: normalizedGap,
-        padding: normalizedPadding
-      } as CSSProperties}
-      {...animation}
-    >
-      {stackItems.map((item, index) => (
-        <div
-          className="flex min-h-0 min-w-0 flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.06] px-3 py-2 text-center font-semibold text-[var(--slide-fg)]"
-          key={`${item}-${index}`}
-          style={{ color: "var(--block-fg, var(--slide-fg))", fontSize: legacyCssFontPixelsToCanvasPixels(12) }}
-        >
-          <span className="truncate">{item}</span>
-        </div>
-      ))}
-    </MotionBlock>
-  );
-}
-
 function generateStarPath(numPoints: number, cx = 50, cy = 50, outerR = 48, innerR?: number) {
   const resolvedInnerR = innerR ?? outerR * 0.42;
   const angleOffset = -Math.PI / 2;
@@ -381,54 +294,6 @@ function LineEndpoint({ color, endpoint, side, size }: { color: string; endpoint
       {endpoint === "arrow" ? <path d={side === "start" ? "M19 1L1 10 19 19Z" : "M1 1L19 10 1 19Z"} fill={color} /> : null}
     </svg>
   );
-}
-
-function LucideSvg({ name, strokeWidth }: { name: string; strokeWidth: number }) {
-  if (!isSlideXIconName(name)) {
-    return null;
-  }
-
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      className="h-full w-full"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={strokeWidth}
-      viewBox="0 0 24 24"
-    >
-      {lucideIconPaths[name].map((path, index) => renderIconPath(path, `${name}-${index}`))}
-    </svg>
-  );
-}
-
-function renderIconPath(path: string, key: string) {
-  const [shape, ...parts] = path.split(" ");
-
-  if (shape === "circle") {
-    return <circle cx={parts[0]} cy={parts[1]} key={key} r={parts[2]} />;
-  }
-
-  if (shape === "ellipse") {
-    return <ellipse cx={parts[0]} cy={parts[1]} key={key} rx={parts[2]} ry={parts[3]} />;
-  }
-
-  if (shape === "rect") {
-    return <rect height={parts[3]} key={key} rx={parts[4]} ry={parts[5]} width={parts[2]} x={parts[0]} y={parts[1]} />;
-  }
-
-  return <path d={shape === "path" ? parts.join(" ") : path} key={key} />;
-}
-
-function parseStackItems(value: string) {
-  const items = value
-    .split("|")
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-  return items.length > 0 ? items : ["Item 1", "Item 2"];
 }
 
 function normalizePixelValue(value: number | string | undefined, fallback: number) {

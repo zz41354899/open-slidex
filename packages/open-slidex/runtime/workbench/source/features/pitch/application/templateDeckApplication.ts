@@ -104,7 +104,6 @@ function applyTemplateSceneToSlide(
   return {
     ...slide,
     blocks: transferSlideContent(slide.blocks, templateSlide.blocks, mode),
-    notes: slide.notes,
     props: {
       ...slide.props,
       ...templateSlide.props,
@@ -184,7 +183,7 @@ function contentRolesAreCompatible(current: MotionDocBlock, target: MotionDocBlo
 function isTransferableCurrentContent(block: MotionDocBlock, mode: TransferMode) {
   if (block.props.obsidianGenerated === 1 &&
     typeof block.props.obsidianBlockId !== "string" &&
-    block.type !== "Title") {
+    !(block.type === "Text" && block.props.role === "title")) {
     return false;
   }
   if (mode === "keep-template-media" && isMediaBlock(block)) return false;
@@ -197,19 +196,15 @@ function isTransferableTargetSlot(block: MotionDocBlock, mode: TransferMode) {
 }
 
 function isMediaBlock(block: MotionDocBlock) {
-  return block.type === "ImageBlock" || block.type === "VideoBlock" || block.type === "Icon";
+  return block.type === "ImageBlock" || block.type === "VideoBlock";
 }
 
 function isContentBlock(block: MotionDocBlock) {
-  return block.type === "Title" ||
-    block.type === "heading" ||
+  return block.type === "heading" ||
     block.type === "Text" ||
     block.type === "ImageBlock" ||
     block.type === "VideoBlock" ||
-    block.type === "Table" ||
-    block.type === "Metric" ||
-    block.type === "Card" ||
-    block.type === "Icon";
+    block.type === "Table";
 }
 
 const preservedContentPropNames = new Set([
@@ -338,7 +333,7 @@ function semanticContentRole(block: MotionDocBlock): SemanticContentRole {
   if (/(?:^|[-_.])bullet-content(?:[-_.]|$)/.test(id) || /(?:^|[-_.])bullet-\d+$/.test(id)) {
     return "bullet";
   }
-  if (/(?:^|\.)title(?:\.|$)/.test(slotId) || block.type === "Title" || block.type === "heading") {
+  if (/(?:^|\.)title(?:\.|$)/.test(slotId) || block.type === "heading" || block.props.role === "title") {
     return "title";
   }
   if (/(?:^|\.)eyebrow(?:\.|$)/.test(slotId)) return "eyebrow";
@@ -354,7 +349,6 @@ function semanticContentRole(block: MotionDocBlock): SemanticContentRole {
   if (block.type === "ImageBlock") return "image";
   if (block.type === "VideoBlock") return "video";
   if (block.type === "Table") return "table";
-  if (block.type === "Icon" || block.type === "Card" || block.type === "Metric") return "visual";
   if (block.type === "Text" && block.props.listType === "bullet") return "bullet";
   if (block.type === "Text" && Number(block.props.fontSize) >= 32) return "title";
   return "generic-text";

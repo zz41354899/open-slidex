@@ -18,8 +18,7 @@ import {
   createSlideXHelp,
   installCommand,
   parseCreateSlideXArguments,
-  runScriptCommand,
-  type PackageManager
+  runScriptCommand
 } from "./cliOptions";
 
 void main().catch((error: unknown) => {
@@ -50,7 +49,7 @@ async function main() {
 
   await assertTargetIsAvailable(targetDir);
   if (options.installDependencies) {
-    await assertPackageManagerAvailable(options.packageManager);
+    await assertNpmAvailable();
   }
 
   await mkdir(targetDir, { recursive: true });
@@ -59,20 +58,20 @@ async function main() {
     path.join(targetDir, "gitignore"),
     path.join(targetDir, ".gitignore")
   );
+  await mkdir(path.join(targetDir, "open-slidex-workspace"), { recursive: true });
   await replaceProjectName(targetDir, path.basename(targetDir));
   if (options.template) {
-    await applyOfficialTemplate(targetDir, options.template);
+    await createInitialTemplateDeck(targetDir, templateDir, options.template);
   }
 
   if (options.installDependencies) {
-    const install = installCommand(options.packageManager);
+    const install = installCommand();
     await run(install.command, install.args, targetDir, "inherit");
   }
 
   process.stdout.write(
     completionMessage({
       installDependencies: options.installDependencies,
-      packageManager: options.packageManager,
       targetDir,
       templateId: options.template?.id
     })
@@ -81,32 +80,28 @@ async function main() {
 
 function completionMessage({
   installDependencies,
-  packageManager,
   targetDir,
   templateId
 }: {
   installDependencies: boolean;
-  packageManager: PackageManager;
   targetDir: string;
   templateId?: string;
 }) {
-  const install = installCommand(packageManager);
+  const install = installCommand();
   return [
     "",
     `Created OpenSlideX MDX-first Local Workbench in ${targetDir}`,
-    `Package manager: ${packageManager}`,
     ...(templateId ? [`Official template: ${templateId}`] : []),
     "",
     `  cd ${path.relative(process.cwd(), targetDir) || "."}`,
     ...(installDependencies
       ? []
       : [`  ${install.command} ${install.args.join(" ")}`]),
-    `  ${runScriptCommand(packageManager, "dev")}`,
+    `  ${runScriptCommand("dev")}`,
     "",
-    "CLI checks and exports:",
-    `  ${runScriptCommand(packageManager, "validate")}`,
-    `  ${runScriptCommand(packageManager, "render")}`,
-    "",
+    ...(templateId
+      ? [`The ${templateId} deck is ready in open-slidex-workspace/.`, ""]
+      : ["Create or import your first deck in Workspace.", ""]),
     "Project-local OpenSlideX skills are ready in .agents/skills:",
     "  slidex-mdx-authoring",
     "  slidex-deck-design",
@@ -144,6 +139,19 @@ async function applyOfficialTemplate(
   );
 }
 
+async function createInitialTemplateDeck(
+  workspaceRoot: string,
+  templateDir: string,
+  reference: { id: string; locale: "en" | "zh-TW" }
+) {
+  const deckRoot = path.join(workspaceRoot, "open-slidex-workspace", reference.id);
+  await mkdir(path.dirname(deckRoot), { recursive: true });
+  await cp(templateDir, deckRoot, { recursive: true });
+  await rename(path.join(deckRoot, "gitignore"), path.join(deckRoot, ".gitignore"));
+  await replaceProjectName(deckRoot, reference.id);
+  await applyOfficialTemplate(deckRoot, reference);
+}
+
 async function assertTargetIsAvailable(target: string) {
   const exists = await access(target).then(
     () => true,
@@ -156,13 +164,11 @@ async function assertTargetIsAvailable(target: string) {
   }
 }
 
-async function assertPackageManagerAvailable(packageManager: PackageManager) {
+async function assertNpmAvailable() {
   try {
-    await run(packageManager, ["--version"], process.cwd(), "ignore");
+    await run("npm", ["--version"], process.cwd(), "ignore");
   } catch {
-    throw new Error(
-      `${packageManager} is not available. Install it, select another package manager, or pass --no-install.`
-    );
+    throw new Error("npm is not available. Install npm or pass --no-install.");
   }
 }
 

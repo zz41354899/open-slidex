@@ -8,8 +8,8 @@ test("presentation titles normalize unsafe multiline input", () => {
 });
 
 test("renaming changes only the MotionDoc document heading", () => {
-  const source = "# Original\n\n<Slide>\n  <Title>Original slide title</Title>\n</Slide>\n";
+  const source = "# Original\n\n<Slide>\n  <Text role=\"title\">Original slide title</Text>\n</Slide>\n";
   const renamed = renamePresentationSource(source, "New deck name");
   assert.match(renamed, /^# New deck name$/m);
-  assert.match(renamed, /<Title>Original slide title<\/Title>/);
+  assert.match(renamed, /<Text role="title">Original slide title<\/Text>/);
 });

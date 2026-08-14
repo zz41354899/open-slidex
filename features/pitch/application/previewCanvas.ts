@@ -170,8 +170,7 @@ export function isMovableBlock(block: MotionDocScene["blocks"][number]): block i
     block.type === "VideoBlock" ||
     block.type === "Chart" ||
     block.type === "Table" ||
-    block.type === "Shape" ||
-    block.type === "Icon"
+    block.type === "Shape"
   ) {
     return true;
   }
@@ -180,7 +179,7 @@ export function isMovableBlock(block: MotionDocScene["blocks"][number]): block i
 }
 
 export function isEditableTextBlock(block: MotionDocScene["blocks"][number]): block is MotionDocTextBlock {
-  return (block.type === "Title" || block.type === "Text") && "props" in block && "text" in block;
+  return block.type === "Text" && "props" in block && "text" in block;
 }
 
 export function isEditableTableBlock(block: MotionDocScene["blocks"][number]): block is MotionDocTableBlock {

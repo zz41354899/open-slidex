@@ -1,22 +1,15 @@
 {
   "name": "__PROJECT_NAME__",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "private": true,
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
     "dev": "open-slidex workspace",
-    "build": "open-slidex build",
-    "preview": "open-slidex preview",
-    "sync:skills": "open-slidex sync:skills",
-    "validate": "open-slidex validate presentation.mdx",
-    "render": "open-slidex render presentation.mdx --montage --out dist/montage.png",
-    "export:html": "open-slidex export presentation.mdx --format html --out dist/presentation.html --overwrite",
-    "export:mdx": "open-slidex export presentation.mdx --format mdx --out dist/presentation.mdx --overwrite",
-    "export:pptx": "open-slidex export presentation.mdx --format pptx --out dist/presentation.pptx --overwrite"
+    "sync:skills": "open-slidex sync:skills"
   },
   "devDependencies": {
-    "open-slidex": "0.3.4"
+    "open-slidex": "0.3.5"
   }
 }

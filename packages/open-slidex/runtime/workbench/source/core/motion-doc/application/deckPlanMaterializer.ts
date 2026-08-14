@@ -6,7 +6,6 @@ import {
   type DeckPlanKind,
   type DeckPlanMetric,
   type DeckPlanSlideV1,
-  type DeckPlanSourceRef,
   type DeckPlanV1
 } from "@/core/motion-doc/domain/deckPlanV1";
 import {
@@ -306,15 +305,9 @@ function renderBlueprint(context: RenderContext): MotionDocScene {
         return renderClosing(context);
     }
   })();
-  const notes = sourceNotes(context.slide.sourceRefs, context.assetBindings);
-
   return {
     blocks,
     duration: 6,
-    notes: {
-      markdown: notes.markdown,
-      plainText: notes.plainText
-    },
     props: {
       accent: context.tone.accent,
       background: context.tone.background,
@@ -354,7 +347,7 @@ function renderCover(context: RenderContext): MotionDocBlock[] {
       x: 5,
       y: 13
     }),
-    textBlock(context, "Title", "title", slide.title, {
+    textBlock(context, "Text", "title", slide.title, {
       color: tone.text,
       fontFamily: composition.style.fontFamily,
       fontSize: fitTitleSize(slide.title, hasImage ? 49.5 : 57),
@@ -792,7 +785,7 @@ function renderClosing(context: RenderContext): MotionDocBlock[] {
       x: editorial ? 7 : 25,
       y: editorial ? 12 : 18
     }),
-    textBlock(context, "Title", "title", slide.title, {
+    textBlock(context, "Text", "title", slide.title, {
       color: tone.text,
       fontFamily: composition.style.fontFamily,
       fontSize: fitTitleSize(slide.title, editorial ? 51 : 51),
@@ -846,7 +839,7 @@ function commonHeader(context: RenderContext, width: number): MotionDocBlock[] {
       x: 6,
       y: 6
     }),
-    textBlock(context, "Title", "title", slide.title, {
+    textBlock(context, "Text", "title", slide.title, {
       color: tone.text,
       fontFamily: composition.style.fontFamily,
       fontSize: fitTitleSize(slide.title, 31.5),
@@ -982,7 +975,7 @@ function renderCornerImage(context: RenderContext): MotionDocBlock[] {
 
 function textBlock(
   context: RenderContext,
-  type: Extract<MotionDocTextBlock["type"], "Text" | "Title">,
+  type: Extract<MotionDocTextBlock["type"], "Text">,
   slotKind: DeckPlanTemplateSlotKind,
   text: string,
   props: MotionDocProps,
@@ -996,6 +989,7 @@ function textBlock(
         ? context.composition.motion.titleEnter
         : context.composition.motion.contentEnter,
       id: blockId(context, instance ? `${slotKind}-${instance}` : slotKind, itemIndex),
+      ...(slotKind === "title" ? { role: "title" } : {}),
       slotId: slotId(context.blueprint, slotKind, itemIndex),
       ...props
     },
@@ -1196,80 +1190,6 @@ function toneForBlueprint(
     text: composition.style.text,
     theme: "light"
   };
-}
-
-function sourceNotes(
-  sourceRefs: DeckPlanSourceRef[],
-  assetBindings: DeckPlanAssetBinding[]
-) {
-  const credits = assetBindings.flatMap((binding) => {
-    const credit = binding.asset?.credit;
-    if (!credit) return [];
-    const profileUrl = safeUnsplashProfileUrl(credit.profileUrl);
-    const name = escapeNotesText(singleLineNotesText(credit.name));
-    return [{
-      markdown: `Image: ${name} · ${credit.provider}${profileUrl ? ` · ${escapeNotesText(profileUrl)}` : ""}`,
-      plainText: `Image: ${singleLineNotesText(credit.name)} · ${credit.provider}${profileUrl ? ` · ${profileUrl}` : ""}`
-    }];
-  });
-  const creditMarkdown = credits.length > 0
-    ? `\n\n## Image credits\n\n${credits.map((credit) => credit.markdown).join("\n")}`
-    : "";
-  const creditPlainText = credits.length > 0
-    ? `\nImage credits\n${credits.map((credit) => credit.plainText).join("\n")}`
-    : "";
-
-  if (sourceRefs.length === 0) {
-    return {
-      markdown: `## Sources\n\n- No source reference supplied.${creditMarkdown}`,
-      plainText: `Sources\nNo source reference supplied.${creditPlainText}`
-    };
-  }
-
-  const markdownLines = sourceRefs.map((sourceRef) => {
-    const details = [
-      sourceRef.heading ? `heading: ${escapeNotesText(sourceRef.heading)}` : "",
-      sourceRef.blockId ? `block: ^${escapeNotesText(sourceRef.blockId)}` : ""
-    ].filter(Boolean);
-    return `- ${escapeNotesText(sourceRef.path)}${details.length > 0 ? ` — ${details.join("; ")}` : ""}`;
-  });
-  const plainLines = sourceRefs.map((sourceRef) => [
-    sourceRef.path,
-    sourceRef.heading ? `heading: ${sourceRef.heading}` : "",
-    sourceRef.blockId ? `block: ^${sourceRef.blockId}` : ""
-  ].filter(Boolean).join(" — "));
-
-  return {
-    markdown: `## Sources\n\n${markdownLines.join("\n")}${creditMarkdown}`,
-    plainText: `Sources\n${plainLines.join("\n")}${creditPlainText}`
-  };
-}
-
-function singleLineNotesText(value: string) {
-  return value.replace(/[\r\n]+/g, " ").trim();
-}
-
-function safeUnsplashProfileUrl(value: string) {
-  try {
-    const url = new URL(singleLineNotesText(value));
-    const hostname = url.hostname.toLowerCase();
-    if (
-      url.protocol !== "https:" ||
-      (hostname !== "unsplash.com" && !hostname.endsWith(".unsplash.com"))
-    ) {
-      return "";
-    }
-    return url.toString();
-  } catch {
-    return "";
-  }
-}
-
-function escapeNotesText(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
 }
 
 function safeDeckTitle(value: string) {

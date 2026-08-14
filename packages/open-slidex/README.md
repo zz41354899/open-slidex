@@ -1,4 +1,4 @@
-# OpenSlideX 0.3.4
+# OpenSlideX 0.3.5
 
 OpenSlideX is a local-first, MDX presentation workspace with a visual Workbench,
 deterministic HTML/PPTX export, local image optimization, and a project-scoped
@@ -13,7 +13,7 @@ Base64 image storage, or a second canvas document.
 Open the original SlideX-style Workspace shell for a directory of local decks:
 
 ```bash
-npx open-slidex@0.3.4 workspace ~/Presentations
+npx open-slidex@latest workspace ~/Presentations
 ```
 
 The Workspace can create a blank deck or start a new deck from a bundled public
@@ -28,7 +28,7 @@ source-specific templates are not part of the local catalog.
 Node.js **22.12.0 or later** is required.
 
 ```bash
-npx open-slidex@0.3.4 init my-deck
+npx open-slidex@latest init my-deck
 cd my-deck
 npm run dev
 ```
@@ -36,30 +36,23 @@ npm run dev
 Start a new project with an immutable official template blueprint and locale:
 
 ```bash
-npx open-slidex@0.3.4 init my-deck --template summer-time-report --locale zh-TW
+npx open-slidex@latest init my-deck --template summer-time-report --locale zh-TW
 ```
 
-The selected `{ id, version, locale }` is recorded in
-`.open-slidex/template-lock.json`. The Workbench and AI chat read this
-validated blueprint as design guidance; selecting a template never replaces an
-existing non-empty presentation.
+With `--template`, the selected `{ id, version, locale }` is recorded inside
+`open-slidex-workspace/<template-id>/.open-slidex/template-lock.json`. The
+template becomes the first Workspace deck and never creates an outer source
+file.
 
-`init` creates the deck and installs `open-slidex` as its only development
+`init` creates the Workspace container and installs `open-slidex` as its only development
 dependency. Installation attempts to download the Chromium runtime used for
 local rendering and exports; an offline download never blocks installation.
-
-Alternative launchers:
-
-```bash
-pnpm dlx open-slidex@0.3.4 init my-deck
-bunx open-slidex@0.3.4 init my-deck
-```
 
 Use `--no-install` when you want to inspect the generated files before
 installing dependencies:
 
 ```bash
-npx open-slidex@0.3.4 init my-deck --no-install
+npx open-slidex@latest init my-deck --no-install
 cd my-deck
 npm install
 ```
@@ -68,30 +61,21 @@ npm install
 
 ```text
 my-deck/
-├── presentation.mdx       # the only persisted presentation source
-├── assets/                # optimized, content-addressed WebP images
-├── knowledge/             # private Markdown, text, PDF, and CSV references
-├── .agents/skills/        # deck authoring and QA skills
+├── .agents/skills/        # skills plus on-demand references and examples
+├── open-slidex-workspace/ # created on first launch; one folder per deck
+│   └── <deck>/presentation.mdx
 └── package.json
 ```
 
-OpenSlideX keeps all visible slide content in `presentation.mdx`. Images are
-stored as relative `assets/*.webp` references; no image data is sent to
-Supabase or embedded as Base64/data URLs.
+OpenSlideX keeps visible slide content and local `assets/*.webp` inside the
+selected deck folder. No image data is sent to Supabase.
 
-## Workbench and export commands
+## Workbench
 
 Run these from the generated deck folder:
 
 ```bash
 npm run dev          # open this project's open-slidex-workspace/ library
-npm run build        # build a static HTML presentation in dist/site/
-npm run preview      # preview dist/site/
-npm run validate     # validate presentation.mdx
-npm run render       # render a montage PNG
-npm run export:html  # write dist/presentation.html
-npm run export:mdx   # write dist/presentation.mdx
-npm run export:pptx  # write dist/presentation.pptx
 ```
 
 MDX exports are portable: local project images are embedded into the exported
@@ -112,19 +96,22 @@ continue to use the optimized client bundle.
 ## Workspace MCP for Codex and Claude
 
 OpenSlideX has no built-in AI Chat and does not detect or launch local CLI
-programs. When `npm run dev` starts from a generated deck, Workspace Settings
-detects that deck's actual installation folder and generates a user-level MCP
-configuration with `--project <that-folder>`. The agent is restricted to that
-one `presentation.mdx`. A general Workspace started outside a deck keeps the
-multi-deck `--workspace` configuration, where an agent lists and selects a
-presentation first.
+programs. Workspace Settings generates a user-level MCP configuration with
+`--workspace <my-deck/open-slidex-workspace>`. The agent lists and selects one
+inner deck before using the presentation tools.
 
 The server is restricted to that deck's `presentation.mdx`, `assets/`,
 `knowledge/`, approved `.agents/skills/`, `.open-slidex/`, and `dist/`
 directories. Writes require an `expectedRevision`, validate the complete
 MotionDoc first, and return a revision conflict instead of overwriting newer
-work. AI can read only the four bundled skills and the selected official
-Template Blueprint; arbitrary skill names and filesystem paths are rejected.
+work. Its first read returns only skill metadata; the agent then loads one
+approved `SKILL.md`, reference, or knowledge resource at a time. Arbitrary skill
+names and filesystem paths are rejected.
+
+Place source notes or research in the selected deck's `knowledge/` directory.
+Markdown, text, CSV, and PDF files are indexed locally. Search returns compact
+cited matches; a second read loads one exact source resource with pagination for
+long reports.
 
 Optional trusted image search uses the server-side `UNSPLASH_ACCESS_KEY`.
 Search returns attribution and candidate IDs without downloading. Import
@@ -132,22 +119,13 @@ requires a separate explicit user confirmation naming the candidate ID, then
 stores a content-addressed `assets/*.webp` file and provenance under
 `.open-slidex/`. Remote URLs never enter `presentation.mdx`.
 
-To print the direct configuration for an installed deck from a terminal:
+To print the configuration for an installed Workspace from a terminal:
 
 ```bash
 cd my-deck
-open-slidex mcp --project "$PWD" --print-config codex
-open-slidex mcp --project "$PWD" --print-config claude-code
-open-slidex mcp --project "$PWD" --print-config claude-desktop
-```
-
-Use the multi-deck Workspace configuration only when the agent needs access to
-several sibling deck folders:
-
-```bash
-open-slidex mcp --workspace "$HOME/Presentations" --print-config codex
-open-slidex mcp --workspace "$HOME/Presentations" --print-config claude-code
-open-slidex mcp --workspace "$HOME/Presentations" --print-config claude-desktop
+open-slidex mcp --workspace "$PWD/open-slidex-workspace" --print-config codex
+open-slidex mcp --workspace "$PWD/open-slidex-workspace" --print-config claude-code
+open-slidex mcp --workspace "$PWD/open-slidex-workspace" --print-config claude-desktop
 ```
 
 Generate a guarded prompt that asks the desktop agent to preserve unrelated MCP entries and show the proposed change before writing global configuration:
@@ -167,11 +145,14 @@ reads, merges, or writes those files automatically.
 
 After restarting a direct project MCP client:
 
-1. Call `open_slidex_open` and keep the returned `revision`.
-2. Call `open_slidex_edit`, render, and quality-check as usual.
+1. Call `open_slidex_read` and keep the returned source and `revision`.
+2. Submit one complete deck or slide to `open_slidex_edit`.
+3. Use `open_slidex_review` only for read-only checks.
 
-For a multi-deck Workspace MCP, call `open_slidex_workspace_list`, select a
-presentation, then use the same direct presentation tools.
+For a multi-deck Workspace MCP, use `open_slidex_workspace` to list and select
+a presentation. Workspace scope loads five tools total: workspace, read, edit,
+media, and review. Generated config uses `open-slidex@latest`, so restarting the
+client loads the newest published server without rewriting configuration.
 
 ## Troubleshooting
 

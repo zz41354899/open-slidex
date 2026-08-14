@@ -51,7 +51,7 @@ export function minimumCanvasFrameSize(block: MotionDocScene["blocks"][number], 
       fontSizePoints,
       block.props.lineHeight,
       block.props.lineHeightPt,
-      block.type === "Title" ? 1.02 : 1.45
+      block.props.role === "title" ? 1.02 : 1.45
     );
 
     return {
