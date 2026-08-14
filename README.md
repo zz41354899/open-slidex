@@ -37,7 +37,7 @@ npm run dev -- ~/Presentations --port 4174
 The npm package creates a separate presentation project:
 
 ```bash
-npx open-slidex@0.3.1 init my-deck
+npx open-slidex@0.3.2 init my-deck
 cd my-deck
 npm run dev
 ```
@@ -45,7 +45,7 @@ npm run dev
 Or install the CLI globally:
 
 ```bash
-npm install --global open-slidex@0.3.1
+npm install --global open-slidex@0.3.2
 open-slidex init my-deck
 ```
 
@@ -69,8 +69,10 @@ open-slidex preview
 - Configure optional, workspace-scoped MCP access for supported agent clients.
 
 Workspace Settings can generate a user-level MCP configuration for Codex,
-Claude Code, or Claude Desktop. It does not probe or launch those applications.
-The Workbench has no built-in AI Chat or CLI bridge.
+Claude Code, or Claude Desktop. When launched from a deck folder, it pins MCP to
+that exact folder's `presentation.mdx`; a general Workspace retains the
+multi-deck selection flow. It does not probe or launch those applications. The
+Workbench has no built-in AI Chat or CLI bridge.
 
 ## Repository commands
 

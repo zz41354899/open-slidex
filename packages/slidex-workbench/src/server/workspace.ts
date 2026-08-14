@@ -1,5 +1,6 @@
 import {
   cp,
+  lstat,
   mkdir,
   readFile,
   readdir,
@@ -16,6 +17,7 @@ import {
   blankPresentationMdx,
   buildMotionDocPngSvg,
   getOfficialTemplatePackage,
+  isOpenSlideXLocalAssetSource,
   listSlideXAssetReferences,
   officialTemplatePackages,
   parseMotionDoc,
@@ -74,12 +76,14 @@ export type DeleteWorkspacePresentationInput = {
 };
 
 export class OpenSlideXWorkspace {
+  readonly mcpPresentationRoot?: string;
   readonly root: string;
   readonly stateRoot: string;
   readonly templateRoot: string;
   readonly workspaceUrl?: string;
 
-  constructor(input: { root: string; templateRoot: string; workspaceUrl?: string }) {
+  constructor(input: { mcpPresentationRoot?: string; root: string; templateRoot: string; workspaceUrl?: string }) {
+    this.mcpPresentationRoot = input.mcpPresentationRoot ? path.resolve(input.mcpPresentationRoot) : undefined;
     this.root = path.resolve(input.root);
     this.stateRoot = path.join(this.root, ".open-slidex-workspace");
     this.templateRoot = path.resolve(input.templateRoot);
@@ -164,7 +168,8 @@ export class OpenSlideXWorkspace {
   async importMdx(file: File) {
     const imported = await readWorkspaceImport(
       file,
-      (source) => listSlideXAssetReferences(source).map((reference) => reference.source)
+      (source) => listSlideXAssetReferences(source).map((reference) => reference.source),
+      (source) => this.recoverWorkspaceImageAsset(source)
     );
     const source = imported.source;
 
@@ -321,6 +326,41 @@ export class OpenSlideXWorkspace {
     return path.join(this.root, id);
   }
 
+  /**
+   * Standalone MDX exports retain local asset paths. If they came from this
+   * Workspace, safely reuse an available or recoverable WebP instead of
+   * forcing the user to build a ZIP merely to round-trip their own deck.
+   */
+  private async recoverWorkspaceImageAsset(source: string) {
+    if (!isOpenSlideXLocalAssetSource(source) || !source.toLowerCase().endsWith(".webp")) return undefined;
+    const fileName = path.posix.basename(source);
+    for (const projectRoot of await this.workspaceProjectRoots()) {
+      const candidate = path.join(projectRoot, "assets", fileName);
+      const [canonicalProjectRoot, canonicalAssetPath] = await Promise.all([
+        realpath(projectRoot).catch(() => ""),
+        realpath(candidate).catch(() => "")
+      ]);
+      if (!canonicalProjectRoot || !canonicalAssetPath.startsWith(`${canonicalProjectRoot}${path.sep}`)) continue;
+      const assetStats = await lstat(canonicalAssetPath).catch(() => null);
+      if (!assetStats?.isFile() || assetStats.size > 25 * 1024 * 1024) continue;
+      return {
+        bytes: new Uint8Array(await readFile(canonicalAssetPath)),
+        fileName,
+        mediaType: "image/webp",
+        source
+      };
+    }
+    return undefined;
+  }
+
+  private async workspaceProjectRoots() {
+    const [activeProjects, recoverableProjects] = await Promise.all([
+      directChildDirectories(this.root),
+      directChildDirectories(path.join(this.stateRoot, "trash"))
+    ]);
+    return [...activeProjects, ...recoverableProjects];
+  }
+
   private async availableProjectId(title: string) {
     const base = projectSlug(title);
     for (let index = 0; index < 1_000; index += 1) {
@@ -330,6 +370,13 @@ export class OpenSlideXWorkspace {
     throw new Error("Could not allocate a local presentation folder.");
   }
 
+}
+
+async function directChildDirectories(root: string) {
+  const entries = await readdir(root, { withFileTypes: true }).catch(() => []);
+  return entries
+    .filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
+    .map((entry) => path.join(root, entry.name));
 }
 
 function parseLocale(value: unknown): TemplatePackageLocale {

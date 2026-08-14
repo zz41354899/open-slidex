@@ -1,4 +1,4 @@
-# OpenSlideX 0.3.1
+# OpenSlideX 0.3.2
 
 OpenSlideX is a local-first, MDX presentation workspace with a visual Workbench,
 deterministic HTML/PPTX export, local image optimization, and a project-scoped
@@ -13,7 +13,7 @@ Base64 image storage, or a second canvas document.
 Open the original SlideX-style Workspace shell for a directory of local decks:
 
 ```bash
-npx open-slidex@0.3.1 workspace ~/Presentations
+npx open-slidex@0.3.2 workspace ~/Presentations
 ```
 
 The Workspace can create a blank deck or start a new deck from a bundled public
@@ -28,7 +28,7 @@ source-specific templates are not part of the local catalog.
 Node.js **22.12.0 or later** is required.
 
 ```bash
-npx open-slidex@0.3.1 init my-deck
+npx open-slidex@0.3.2 init my-deck
 cd my-deck
 npm run dev
 ```
@@ -36,7 +36,7 @@ npm run dev
 Start a new project with an immutable official template blueprint and locale:
 
 ```bash
-npx open-slidex@0.3.1 init my-deck --template summer-time-report --locale zh-TW
+npx open-slidex@0.3.2 init my-deck --template summer-time-report --locale zh-TW
 ```
 
 The selected `{ id, version, locale }` is recorded in
@@ -51,15 +51,15 @@ local rendering and exports; an offline download never blocks installation.
 Alternative launchers:
 
 ```bash
-pnpm dlx open-slidex@0.3.1 init my-deck
-bunx open-slidex@0.3.1 init my-deck
+pnpm dlx open-slidex@0.3.2 init my-deck
+bunx open-slidex@0.3.2 init my-deck
 ```
 
 Use `--no-install` when you want to inspect the generated files before
 installing dependencies:
 
 ```bash
-npx open-slidex@0.3.1 init my-deck --no-install
+npx open-slidex@0.3.2 init my-deck --no-install
 cd my-deck
 npm install
 ```
@@ -106,10 +106,12 @@ continue to use the optimized client bundle.
 ## Workspace MCP for Codex and Claude
 
 OpenSlideX has no built-in AI Chat and does not detect or launch local CLI
-programs. Open Workspace Settings to generate one user-level MCP configuration
-for Codex, Claude Code, or Claude Desktop. The configuration pins one workspace
-root; agents call `open_slidex_workspace_list`, select a presentation, and then
-work directly with its `presentation.mdx`.
+programs. When `npm run dev` starts from a generated deck, Workspace Settings
+detects that deck's actual installation folder and generates a user-level MCP
+configuration with `--project <that-folder>`. The agent is restricted to that
+one `presentation.mdx`. A general Workspace started outside a deck keeps the
+multi-deck `--workspace` configuration, where an agent lists and selects a
+presentation first.
 
 The server is restricted to that deck's `presentation.mdx`, `assets/`,
 `knowledge/`, approved `.agents/skills/`, `.open-slidex/`, and `dist/`
@@ -124,7 +126,17 @@ requires a separate explicit user confirmation naming the candidate ID, then
 stores a content-addressed `assets/*.webp` file and provenance under
 `.open-slidex/`. Remote URLs never enter `presentation.mdx`.
 
-To print the same workspace-global configuration from a terminal:
+To print the direct configuration for an installed deck from a terminal:
+
+```bash
+cd my-deck
+open-slidex mcp --project "$PWD" --print-config codex
+open-slidex mcp --project "$PWD" --print-config claude-code
+open-slidex mcp --project "$PWD" --print-config claude-desktop
+```
+
+Use the multi-deck Workspace configuration only when the agent needs access to
+several sibling deck folders:
 
 ```bash
 open-slidex mcp --workspace "$HOME/Presentations" --print-config codex
@@ -147,12 +159,13 @@ reads, merges, or writes those files automatically.
 
 ## MCP smoke test
 
-After restarting your MCP client:
+After restarting a direct project MCP client:
 
-1. Call `open_slidex_workspace_list`.
-2. Call `open_slidex_workspace_select` with one returned presentation ID.
-3. Call `open_slidex_open` and keep the returned `revision`.
-4. Call `open_slidex_edit`, render, and quality-check as usual.
+1. Call `open_slidex_open` and keep the returned `revision`.
+2. Call `open_slidex_edit`, render, and quality-check as usual.
+
+For a multi-deck Workspace MCP, call `open_slidex_workspace_list`, select a
+presentation, then use the same direct presentation tools.
 
 ## Troubleshooting
 

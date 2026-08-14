@@ -4,8 +4,7 @@ import path from "node:path";
 import JSZip, { type JSZipObject } from "jszip";
 
 const MAX_WORKSPACE_MDX_BYTES = 2 * 1024 * 1024;
-const MAX_WORKSPACE_MDX_IMPORT_BYTES = 50 * 1024 * 1024;
-const MAX_WORKSPACE_BUNDLE_BYTES = 50 * 1024 * 1024;
+export const MAX_WORKSPACE_IMPORT_FILE_BYTES = 50 * 1024 * 1024;
 const MAX_WORKSPACE_BUNDLE_ENTRIES = 512;
 const MAX_WORKSPACE_BUNDLE_UNCOMPRESSED_BYTES = 100 * 1024 * 1024;
 
@@ -22,9 +21,12 @@ export type WorkspaceImportPayload = {
   source: string;
 };
 
+export type ResolveWorkspaceImportAsset = (source: string) => Promise<WorkspaceImportAsset | undefined>;
+
 export async function readWorkspaceImport(
   file: File,
-  referencedSources: (source: string) => string[]
+  referencedSources: (source: string) => string[],
+  resolveWorkspaceAsset?: ResolveWorkspaceImportAsset
 ): Promise<WorkspaceImportPayload> {
   const extension = path.extname(file.name).toLowerCase();
   if (extension === ".mdx") {
@@ -33,18 +35,24 @@ export async function readWorkspaceImport(
     const embeddedSources = new Set(embedded.assets.map((asset) => asset.source));
     const missingReferences = unique(referencedSources(embedded.source))
       .filter((source) => !embeddedSources.has(source));
-    if (missingReferences.length > 0) {
+    const recoveredAssets = await Promise.all(missingReferences.map((source) => resolveWorkspaceAsset?.(source)));
+    const unresolvedReferences = missingReferences.filter((_, index) => !recoveredAssets[index]);
+    if (unresolvedReferences.length > 0) {
       throw badRequest(
-        `This MDX references ${missingReferences.length} local asset${missingReferences.length === 1 ? "" : "s"}. Import a .zip or .slidex bundle containing presentation.mdx and its assets folder.`
+        `This MDX references ${unresolvedReferences.length} local asset${unresolvedReferences.length === 1 ? "" : "s"}. Import a .zip or .slidex bundle containing presentation.mdx and its assets folder.`
       );
     }
-    return { assets: embedded.assets, kind: "mdx", source: embedded.source };
+    return {
+      assets: [...embedded.assets, ...recoveredAssets.filter((asset): asset is WorkspaceImportAsset => Boolean(asset))],
+      kind: "mdx",
+      source: embedded.source
+    };
   }
 
   if (extension !== ".zip" && extension !== ".slidex") {
     throw badRequest("Import a .mdx file or a .zip/.slidex OpenSlideX project bundle.");
   }
-  if (!file.size || file.size > MAX_WORKSPACE_BUNDLE_BYTES) {
+  if (!file.size || file.size > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
     throw badRequest("The OpenSlideX project bundle must be between 1 byte and 50 MB.");
   }
 
@@ -73,7 +81,7 @@ export async function readWorkspaceImport(
     throw badRequest("The OpenSlideX project bundle must contain exactly one presentation.mdx file.");
   }
   const presentationEntry = presentationEntries[0]!;
-  if (uncompressedSize(presentationEntry) > MAX_WORKSPACE_MDX_IMPORT_BYTES) {
+  if (uncompressedSize(presentationEntry) > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
     throw badRequest("The bundled presentation.mdx must not exceed 50 MB before embedded images are extracted.");
   }
   const rawSource = await presentationEntry.async("string");
@@ -113,11 +121,11 @@ export async function readWorkspaceImport(
 }
 
 async function readMdxFile(file: File) {
-  if (!file.size || file.size > MAX_WORKSPACE_MDX_IMPORT_BYTES) {
+  if (!file.size || file.size > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
     throw badRequest("The MDX import must be between 1 byte and 50 MB. Embedded Base64 images are extracted during import.");
   }
   const source = await file.text();
-  if (!source || Buffer.byteLength(source, "utf8") > MAX_WORKSPACE_MDX_IMPORT_BYTES) {
+  if (!source || Buffer.byteLength(source, "utf8") > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
     throw badRequest("The MDX import must be between 1 byte and 50 MB. Embedded Base64 images are extracted during import.");
   }
   return source;

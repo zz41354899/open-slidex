@@ -2903,8 +2903,8 @@ var require_utils = __commonJS({
       var result = transform[inputType][outputType](input);
       return result;
     };
-    exports.resolve = function(path8) {
-      var parts = path8.split("/");
+    exports.resolve = function(path9) {
+      var parts = path9.split("/");
       var result = [];
       for (var index = 0; index < parts.length; index++) {
         var part = parts[index];
@@ -8757,18 +8757,18 @@ var require_object = __commonJS({
       var object = new ZipObject(name, zipObjectContent, o);
       this.files[name] = object;
     };
-    var parentFolder = function(path8) {
-      if (path8.slice(-1) === "/") {
-        path8 = path8.substring(0, path8.length - 1);
+    var parentFolder = function(path9) {
+      if (path9.slice(-1) === "/") {
+        path9 = path9.substring(0, path9.length - 1);
       }
-      var lastSlash = path8.lastIndexOf("/");
-      return lastSlash > 0 ? path8.substring(0, lastSlash) : "";
+      var lastSlash = path9.lastIndexOf("/");
+      return lastSlash > 0 ? path9.substring(0, lastSlash) : "";
     };
-    var forceTrailingSlash = function(path8) {
-      if (path8.slice(-1) !== "/") {
-        path8 += "/";
+    var forceTrailingSlash = function(path9) {
+      if (path9.slice(-1) !== "/") {
+        path9 += "/";
       }
-      return path8;
+      return path9;
     };
     var folderAdd = function(name, createFolders) {
       createFolders = typeof createFolders !== "undefined" ? createFolders : defaults.createFolders;
@@ -9772,7 +9772,7 @@ import { spawn } from "node:child_process";
 import { cp as cp2, mkdir as mkdir3, readFile as readFile3, readdir as readdir3, rm as rm3, stat as stat4, writeFile as writeFile3 } from "node:fs/promises";
 import { createServer as createServer3 } from "node:http";
 import { createRequire } from "node:module";
-import path7 from "node:path";
+import path8 from "node:path";
 import { fileURLToPath } from "node:url";
 
 // packages/slidex-workbench/src/server/project.ts
@@ -9820,28 +9820,33 @@ var import_jszip = __toESM(require_lib3(), 1);
 import { createHash } from "node:crypto";
 import path from "node:path";
 var MAX_WORKSPACE_MDX_BYTES = 2 * 1024 * 1024;
-var MAX_WORKSPACE_MDX_IMPORT_BYTES = 50 * 1024 * 1024;
-var MAX_WORKSPACE_BUNDLE_BYTES = 50 * 1024 * 1024;
+var MAX_WORKSPACE_IMPORT_FILE_BYTES = 50 * 1024 * 1024;
 var MAX_WORKSPACE_BUNDLE_ENTRIES = 512;
 var MAX_WORKSPACE_BUNDLE_UNCOMPRESSED_BYTES = 100 * 1024 * 1024;
-async function readWorkspaceImport(file, referencedSources) {
+async function readWorkspaceImport(file, referencedSources, resolveWorkspaceAsset) {
   const extension = path.extname(file.name).toLowerCase();
   if (extension === ".mdx") {
     const embedded2 = extractEmbeddedImageAssets(await readMdxFile(file));
     assertCanonicalMdxSize(embedded2.source);
     const embeddedSources2 = new Set(embedded2.assets.map((asset) => asset.source));
     const missingReferences = unique(referencedSources(embedded2.source)).filter((source2) => !embeddedSources2.has(source2));
-    if (missingReferences.length > 0) {
+    const recoveredAssets = await Promise.all(missingReferences.map((source2) => resolveWorkspaceAsset?.(source2)));
+    const unresolvedReferences = missingReferences.filter((_, index) => !recoveredAssets[index]);
+    if (unresolvedReferences.length > 0) {
       throw badRequest(
-        `This MDX references ${missingReferences.length} local asset${missingReferences.length === 1 ? "" : "s"}. Import a .zip or .slidex bundle containing presentation.mdx and its assets folder.`
+        `This MDX references ${unresolvedReferences.length} local asset${unresolvedReferences.length === 1 ? "" : "s"}. Import a .zip or .slidex bundle containing presentation.mdx and its assets folder.`
       );
     }
-    return { assets: embedded2.assets, kind: "mdx", source: embedded2.source };
+    return {
+      assets: [...embedded2.assets, ...recoveredAssets.filter((asset) => Boolean(asset))],
+      kind: "mdx",
+      source: embedded2.source
+    };
   }
   if (extension !== ".zip" && extension !== ".slidex") {
     throw badRequest("Import a .mdx file or a .zip/.slidex OpenSlideX project bundle.");
   }
-  if (!file.size || file.size > MAX_WORKSPACE_BUNDLE_BYTES) {
+  if (!file.size || file.size > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
     throw badRequest("The OpenSlideX project bundle must be between 1 byte and 50 MB.");
   }
   let archive;
@@ -9867,7 +9872,7 @@ async function readWorkspaceImport(file, referencedSources) {
     throw badRequest("The OpenSlideX project bundle must contain exactly one presentation.mdx file.");
   }
   const presentationEntry = presentationEntries[0];
-  if (uncompressedSize(presentationEntry) > MAX_WORKSPACE_MDX_IMPORT_BYTES) {
+  if (uncompressedSize(presentationEntry) > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
     throw badRequest("The bundled presentation.mdx must not exceed 50 MB before embedded images are extracted.");
   }
   const rawSource = await presentationEntry.async("string");
@@ -9904,11 +9909,11 @@ async function readWorkspaceImport(file, referencedSources) {
   return { assets, kind: "bundle", source };
 }
 async function readMdxFile(file) {
-  if (!file.size || file.size > MAX_WORKSPACE_MDX_IMPORT_BYTES) {
+  if (!file.size || file.size > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
     throw badRequest("The MDX import must be between 1 byte and 50 MB. Embedded Base64 images are extracted during import.");
   }
   const source = await file.text();
-  if (!source || Buffer.byteLength(source, "utf8") > MAX_WORKSPACE_MDX_IMPORT_BYTES) {
+  if (!source || Buffer.byteLength(source, "utf8") > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
     throw badRequest("The MDX import must be between 1 byte and 50 MB. Embedded Base64 images are extracted during import.");
   }
   return source;
@@ -10660,6 +10665,7 @@ function mimeType2(filePath) {
 // packages/slidex-workbench/src/server/workspace.ts
 import {
   cp,
+  lstat,
   mkdir as mkdir2,
   readFile as readFile2,
   readdir as readdir2,
@@ -10675,6 +10681,7 @@ import {
   blankPresentationMdx,
   buildMotionDocPngSvg as buildMotionDocPngSvg2,
   getOfficialTemplatePackage as getOfficialTemplatePackage2,
+  isOpenSlideXLocalAssetSource,
   listSlideXAssetReferences as listSlideXAssetReferences2,
   officialTemplatePackages as officialTemplatePackages2,
   parseMotionDoc as parseMotionDoc2,
@@ -10683,11 +10690,13 @@ import {
 } from "../sdk/index.js";
 import { importOpenSlideXImageAsset as importOpenSlideXImageAsset2 } from "../sdk/node.js";
 var OpenSlideXWorkspace = class {
+  mcpPresentationRoot;
   root;
   stateRoot;
   templateRoot;
   workspaceUrl;
   constructor(input) {
+    this.mcpPresentationRoot = input.mcpPresentationRoot ? path5.resolve(input.mcpPresentationRoot) : void 0;
     this.root = path5.resolve(input.root);
     this.stateRoot = path5.join(this.root, ".open-slidex-workspace");
     this.templateRoot = path5.resolve(input.templateRoot);
@@ -10763,7 +10772,8 @@ var OpenSlideXWorkspace = class {
   async importMdx(file) {
     const imported = await readWorkspaceImport(
       file,
-      (source2) => listSlideXAssetReferences2(source2).map((reference) => reference.source)
+      (source2) => listSlideXAssetReferences2(source2).map((reference) => reference.source),
+      (source2) => this.recoverWorkspaceImageAsset(source2)
     );
     const source = imported.source;
     let document;
@@ -10903,6 +10913,39 @@ var OpenSlideXWorkspace = class {
     assertProjectId(id);
     return path5.join(this.root, id);
   }
+  /**
+   * Standalone MDX exports retain local asset paths. If they came from this
+   * Workspace, safely reuse an available or recoverable WebP instead of
+   * forcing the user to build a ZIP merely to round-trip their own deck.
+   */
+  async recoverWorkspaceImageAsset(source) {
+    if (!isOpenSlideXLocalAssetSource(source) || !source.toLowerCase().endsWith(".webp")) return void 0;
+    const fileName = path5.posix.basename(source);
+    for (const projectRoot of await this.workspaceProjectRoots()) {
+      const candidate = path5.join(projectRoot, "assets", fileName);
+      const [canonicalProjectRoot, canonicalAssetPath] = await Promise.all([
+        realpath(projectRoot).catch(() => ""),
+        realpath(candidate).catch(() => "")
+      ]);
+      if (!canonicalProjectRoot || !canonicalAssetPath.startsWith(`${canonicalProjectRoot}${path5.sep}`)) continue;
+      const assetStats = await lstat(canonicalAssetPath).catch(() => null);
+      if (!assetStats?.isFile() || assetStats.size > 25 * 1024 * 1024) continue;
+      return {
+        bytes: new Uint8Array(await readFile2(canonicalAssetPath)),
+        fileName,
+        mediaType: "image/webp",
+        source
+      };
+    }
+    return void 0;
+  }
+  async workspaceProjectRoots() {
+    const [activeProjects, recoverableProjects] = await Promise.all([
+      directChildDirectories(this.root),
+      directChildDirectories(path5.join(this.stateRoot, "trash"))
+    ]);
+    return [...activeProjects, ...recoverableProjects];
+  }
   async availableProjectId(title) {
     const base = projectSlug(title);
     for (let index = 0; index < 1e3; index += 1) {
@@ -10912,6 +10955,10 @@ var OpenSlideXWorkspace = class {
     throw new Error("Could not allocate a local presentation folder.");
   }
 };
+async function directChildDirectories(root) {
+  const entries = await readdir2(root, { withFileTypes: true }).catch(() => []);
+  return entries.filter((entry) => entry.isDirectory() && !entry.name.startsWith(".")).map((entry) => path5.join(root, entry.name));
+}
 function parseLocale(value) {
   return value === "zh-TW" ? "zh-TW" : "en";
 }
@@ -10971,32 +11018,61 @@ async function writeJson(filePath, value) {
 
 // packages/slidex-workbench/src/server/workspaceHttp.ts
 import { createServer as createServer2 } from "node:http";
+import path7 from "node:path";
 import { Readable as Readable2 } from "node:stream";
 
 // packages/slidex-workbench/src/server/mcpConfig.ts
 import path6 from "node:path";
-var openSlideXMcpNpxPackage = "open-slidex@0.3.1";
+var openSlideXMcpNpxPackage = "open-slidex@0.3.2";
 var openSlideXMcpClients = ["codex", "claude-code", "claude-desktop"];
-function workspaceMcpConfig(client, root, platform) {
-  const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? path6.win32.resolve(root) : path6.resolve(root);
+function resolveMcpRoot(root, platform) {
+  return platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? path6.win32.resolve(root) : path6.resolve(root);
+}
+function presentationPath(root, platform) {
+  const absoluteRoot = resolveMcpRoot(root, platform);
+  return platform === "windows" && /^[A-Za-z]:[\\/]/.test(absoluteRoot) ? path6.win32.join(absoluteRoot, "presentation.mdx") : path6.join(absoluteRoot, "presentation.mdx");
+}
+function mcpConfig(client, root, platform, target) {
+  const absoluteRoot = resolveMcpRoot(root, platform);
   const command = platform === "windows" ? "cmd" : "npx";
-  const args = platform === "windows" ? ["/c", "npx", "-y", openSlideXMcpNpxPackage, "mcp", "--workspace", absoluteRoot] : ["-y", openSlideXMcpNpxPackage, "mcp", "--workspace", absoluteRoot];
+  const args = platform === "windows" ? ["/c", "npx", "-y", openSlideXMcpNpxPackage, "mcp", target.option, absoluteRoot] : ["-y", openSlideXMcpNpxPackage, "mcp", target.option, absoluteRoot];
   if (client === "codex") {
-    return `[mcp_servers.open_slidex_workspace]
+    return `[mcp_servers.${target.configKey}]
 command = ${JSON.stringify(command)}
 args = ${JSON.stringify(args)}`;
   }
   if (client === "claude-desktop") {
-    return JSON.stringify({ mcpServers: { open_slidex_workspace: { args, command, type: "stdio" } } }, null, 2);
+    return JSON.stringify({ mcpServers: { [target.configKey]: { args, command, type: "stdio" } } }, null, 2);
   }
-  const launch = platform === "windows" ? `cmd /c npx -y ${openSlideXMcpNpxPackage} mcp --workspace "${absoluteRoot.replaceAll('"', '\\"')}"` : `npx -y ${openSlideXMcpNpxPackage} mcp --workspace '${absoluteRoot.replaceAll("'", `'"'"'`)}'`;
-  return `claude mcp add --scope user open-slidex-workspace -- ${launch}`;
+  const launch = platform === "windows" ? `cmd /c npx -y ${openSlideXMcpNpxPackage} mcp ${target.option} "${absoluteRoot.replaceAll('"', '\\"')}"` : `npx -y ${openSlideXMcpNpxPackage} mcp ${target.option} '${absoluteRoot.replaceAll("'", `"'"'`)}'`;
+  return `claude mcp add --scope user ${target.configKey.replaceAll("_", "-")} -- ${launch}`;
+}
+function presentationMcpConfig(client, root, platform) {
+  return mcpConfig(client, root, platform, { configKey: "open_slidex", option: "--project" });
+}
+function workspaceMcpConfig(client, root, platform) {
+  return mcpConfig(client, root, platform, { configKey: "open_slidex_workspace", option: "--workspace" });
+}
+function presentationMcpPrompt(client, root, platform) {
+  const label = client === "codex" ? "Codex" : client === "claude-code" ? "Claude Code" : "Claude Desktop";
+  const absoluteRoot = resolveMcpRoot(root, platform);
+  return [
+    `Configure one user-level OpenSlideX presentation MCP server for ${label} on ${platform}.`,
+    `Restrict it to this exact deck root: ${absoluteRoot}`,
+    `The only editable presentation is: ${presentationPath(absoluteRoot, platform)}`,
+    "Replace an older open_slidex_workspace entry only when it targets this same deck; preserve every unrelated MCP entry and show the exact proposed change before writing any global config.",
+    "Use this generated configuration:",
+    "",
+    presentationMcpConfig(client, root, platform),
+    "",
+    "After restarting the client, verify open_slidex_open and open_slidex_validate."
+  ].join("\n");
 }
 function workspaceMcpPrompt(client, root, platform) {
   const label = client === "codex" ? "Codex" : client === "claude-code" ? "Claude Code" : "Claude Desktop";
   return [
     `Configure one user-level OpenSlideX Workspace MCP server for ${label} on ${platform}.`,
-    `Restrict it to this exact workspace root: ${path6.resolve(root)}`,
+    `Restrict it to this exact workspace root: ${resolveMcpRoot(root, platform)}`,
     "Preserve every unrelated MCP entry and show the exact proposed change before writing any global config.",
     "Use this generated configuration:",
     "",
@@ -11058,16 +11134,20 @@ async function routeWorkspaceRequest(incoming, outgoing, input, editorRouters) {
   if (url.pathname === "/api/v1/workspace/mcp/setup" && request.method === "GET") {
     const client = parseWorkspaceMcpClient(url.searchParams.get("client"));
     const platform = parseWorkspaceMcpPlatform(url.searchParams.get("platform"));
-    const root = input.workspace.root;
+    const presentationRoot = input.workspace.mcpPresentationRoot;
+    const root = presentationRoot ?? input.workspace.root;
     const configPath = client === "codex" ? platform === "windows" ? "%USERPROFILE%\\.codex\\config.toml" : "~/.codex/config.toml" : client === "claude-desktop" ? platform === "windows" ? "%APPDATA%\\Claude\\claude_desktop_config.json" : "~/Library/Application Support/Claude/claude_desktop_config.json" : "Claude Code user scope";
     sendJson2(outgoing, {
       client,
-      config: workspaceMcpConfig(client, root, platform),
+      config: presentationRoot ? presentationMcpConfig(client, root, platform) : workspaceMcpConfig(client, root, platform),
       configPath,
       platform,
-      prompt: workspaceMcpPrompt(client, root, platform),
+      presentationPath: presentationRoot ? path7.join(presentationRoot, "presentation.mdx") : void 0,
+      prompt: presentationRoot ? presentationMcpPrompt(client, root, platform) : workspaceMcpPrompt(client, root, platform),
       scope: "user",
-      workspaceRoot: root
+      scopeRoot: root,
+      scopeType: presentationRoot ? "presentation" : "workspace",
+      workspaceRoot: input.workspace.root
     });
     return;
   }
@@ -11185,9 +11265,11 @@ async function jsonBody2(request) {
 }
 async function multipartBody(request) {
   const length = Number(request.headers.get("content-length") ?? 0);
-  if (length > 2.25 * 1024 * 1024) throw Object.assign(new Error("The MDX upload is too large."), { status: 413 });
+  if (length > MAX_WORKSPACE_IMPORT_FILE_BYTES + 64 * 1024) {
+    throw Object.assign(new Error("The OpenSlideX import upload is too large."), { status: 413 });
+  }
   return request.formData().catch(() => {
-    throw Object.assign(new Error("The MDX upload could not be read."), { status: 400 });
+    throw Object.assign(new Error("The OpenSlideX import upload could not be read."), { status: 400 });
   });
 }
 function sendJson2(response, value, status = 200) {
@@ -11240,12 +11322,16 @@ async function main() {
     if (!await canListen(port)) {
       throw new Error(`Workspace port ${port} is already in use. Stop the existing server or choose --port <number>.`);
     }
-    const workspaceRoot = path7.resolve(process.cwd(), positionalOption(args) ?? "open-slidex-workspace");
+    const invocationRoot = path8.resolve(process.cwd());
+    const workspaceRoot = path8.resolve(invocationRoot, positionalOption(args) ?? "open-slidex-workspace");
+    const invocationPresentation = await stat4(path8.join(invocationRoot, "presentation.mdx")).catch(() => void 0);
+    const mcpPresentationRoot = invocationPresentation?.isFile() ? invocationRoot : void 0;
     const packagedSourceRoot = fileURLToPath(new URL("./source/", import.meta.url));
-    const checkoutRoot = path7.resolve(fileURLToPath(new URL("../../../", import.meta.url)));
+    const checkoutRoot = path8.resolve(fileURLToPath(new URL("../../../", import.meta.url)));
     const configPath = new URL("./vite.config.mjs", import.meta.url);
     const workspaceUrl = `http://127.0.0.1:${port}/workspace`;
     const workspace = new OpenSlideXWorkspace({
+      mcpPresentationRoot,
       root: workspaceRoot,
       templateRoot: await resolveTemplateRoot(),
       workspaceUrl
@@ -11257,7 +11343,7 @@ async function main() {
     const { createSlideXWorkbenchViteConfig } = await import(configPath.href);
     const vite = await createViteServer(createSlideXWorkbenchViteConfig({
       apiPort: running.port,
-      cacheDir: path7.join(workspace.stateRoot, "vite-cache"),
+      cacheDir: path8.join(workspace.stateRoot, "vite-cache"),
       port,
       sourceRoot,
       workspaceUrl
@@ -11297,7 +11383,7 @@ async function main() {
     const { createSlideXWorkbenchViteConfig } = await import(configPath.href);
     const vite = await createViteServer(createSlideXWorkbenchViteConfig({
       apiPort: running.port,
-      cacheDir: path7.join(project.stateRoot, "vite-cache"),
+      cacheDir: path8.join(project.stateRoot, "vite-cache"),
       port,
       sourceRoot,
       workspaceUrl: process.env.OPEN_SLIDEX_WORKSPACE_URL
@@ -11323,14 +11409,14 @@ async function main() {
     return;
   }
   if (command === "preview") {
-    const root = path7.join(project.distRoot, "site");
+    const root = path8.join(project.distRoot, "site");
     if (!await isDirectory(root)) throw new Error("Run open-slidex-workbench build first.");
     const requestedPort = numberOption(args, "--port") ?? 4174;
     const port = await availablePort(requestedPort);
     const server = createServer3(async (request, response) => {
       const requested = request.url === "/" ? "index.html" : (request.url ?? "").slice(1);
-      const filePath = path7.resolve(root, requested);
-      if (!filePath.startsWith(`${root}${path7.sep}`) && filePath !== path7.join(root, "index.html")) {
+      const filePath = path8.resolve(root, requested);
+      if (!filePath.startsWith(`${root}${path8.sep}`) && filePath !== path8.join(root, "index.html")) {
         response.writeHead(404).end();
         return;
       }
@@ -11354,11 +11440,11 @@ async function main() {
   }
   if (command === "sync:skills") {
     const skillsRoot = fileURLToPath(new URL("../skills/", import.meta.url));
-    const target = path7.join(project.root, ".agents", "skills");
+    const target = path8.join(project.root, ".agents", "skills");
     await mkdir3(target, { recursive: true });
     for (const entry of await readdir3(skillsRoot, { withFileTypes: true })) {
       if (entry.isDirectory()) {
-        await cp2(path7.join(skillsRoot, entry.name), path7.join(target, entry.name), {
+        await cp2(path8.join(skillsRoot, entry.name), path8.join(target, entry.name), {
           force: true,
           recursive: true
         });
@@ -11425,18 +11511,18 @@ async function isDirectory(filePath) {
   return stat4(filePath).then((value) => value.isDirectory(), () => false);
 }
 async function prepareWorkbenchSource(project, packagedSourceRoot) {
-  const checkoutClient = path7.join(project.root, "packages/slidex-workbench/src/client");
+  const checkoutClient = path8.join(project.root, "packages/slidex-workbench/src/client");
   if (await isDirectory(checkoutClient)) return project.root;
-  const target = path7.join(project.stateRoot, "workbench-source");
+  const target = path8.join(project.stateRoot, "workbench-source");
   await rm3(target, { force: true, recursive: true });
   await cp2(packagedSourceRoot, target, { recursive: true });
   await rewritePackagedTailwindImport(target);
   return target;
 }
 async function rewritePackagedTailwindImport(sourceRoot) {
-  const cssPath = path7.join(sourceRoot, "packages/editor-ui/src/editor.css");
+  const cssPath = path8.join(sourceRoot, "packages/editor-ui/src/editor.css");
   const source = await readFile3(cssPath, "utf8");
-  const tailwindCssPath = runtimeRequire.resolve("tailwindcss/index.css").replaceAll(path7.sep, "/");
+  const tailwindCssPath = runtimeRequire.resolve("tailwindcss/index.css").replaceAll(path8.sep, "/");
   const rewritten = source.replace(
     '@import "tailwindcss" source(none);',
     `@import "${tailwindCssPath}" source(none);`
@@ -11447,7 +11533,7 @@ async function rewritePackagedTailwindImport(sourceRoot) {
 async function prepareWorkspaceSource(_workspace, packagedSourceRoot, checkoutRoot) {
   const checkoutCandidates = [process.cwd(), checkoutRoot];
   for (const candidate of checkoutCandidates) {
-    if (await isDirectory(path7.join(candidate, "packages/slidex-workbench/src/client"))) return candidate;
+    if (await isDirectory(path8.join(candidate, "packages/slidex-workbench/src/client"))) return candidate;
   }
   if (!await isDirectory(packagedSourceRoot)) {
     throw new Error("The Workspace UI sources are missing. Reinstall or rebuild open-slidex.");
@@ -11458,7 +11544,7 @@ async function resolveTemplateRoot() {
   const candidates = [
     process.env.OPEN_SLIDEX_TEMPLATE_ROOT,
     fileURLToPath(new URL("../../open-slidex/template/", import.meta.url)),
-    path7.join(process.cwd(), "packages/open-slidex/template")
+    path8.join(process.cwd(), "packages/open-slidex/template")
   ].filter((value) => Boolean(value));
   for (const candidate of candidates) {
     if (await isDirectory(candidate)) return candidate;

@@ -1,35 +1,75 @@
 import path from "node:path";
 
-export const openSlideXMcpNpxPackage = "open-slidex@0.3.1";
+export const openSlideXMcpNpxPackage = "open-slidex@0.3.2";
 export const openSlideXMcpClients = ["codex", "claude-code", "claude-desktop"] as const;
 export type OpenSlideXMcpClient = (typeof openSlideXMcpClients)[number];
 export type OpenSlideXMcpPlatform = "macos" | "windows";
 
-export function workspaceMcpConfig(client: OpenSlideXMcpClient, root: string, platform: OpenSlideXMcpPlatform) {
-  const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root)
+type McpTarget = {
+  configKey: "open_slidex" | "open_slidex_workspace";
+  option: "--project" | "--workspace";
+};
+
+function resolveMcpRoot(root: string, platform: OpenSlideXMcpPlatform) {
+  return platform === "windows" && /^[A-Za-z]:[\\/]/.test(root)
     ? path.win32.resolve(root)
     : path.resolve(root);
+}
+
+function presentationPath(root: string, platform: OpenSlideXMcpPlatform) {
+  const absoluteRoot = resolveMcpRoot(root, platform);
+  return platform === "windows" && /^[A-Za-z]:[\\/]/.test(absoluteRoot)
+    ? path.win32.join(absoluteRoot, "presentation.mdx")
+    : path.join(absoluteRoot, "presentation.mdx");
+}
+
+function mcpConfig(client: OpenSlideXMcpClient, root: string, platform: OpenSlideXMcpPlatform, target: McpTarget) {
+  const absoluteRoot = resolveMcpRoot(root, platform);
   const command = platform === "windows" ? "cmd" : "npx";
   const args = platform === "windows"
-    ? ["/c", "npx", "-y", openSlideXMcpNpxPackage, "mcp", "--workspace", absoluteRoot]
-    : ["-y", openSlideXMcpNpxPackage, "mcp", "--workspace", absoluteRoot];
+    ? ["/c", "npx", "-y", openSlideXMcpNpxPackage, "mcp", target.option, absoluteRoot]
+    : ["-y", openSlideXMcpNpxPackage, "mcp", target.option, absoluteRoot];
   if (client === "codex") {
-    return `[mcp_servers.open_slidex_workspace]\ncommand = ${JSON.stringify(command)}\nargs = ${JSON.stringify(args)}`;
+    return `[mcp_servers.${target.configKey}]\ncommand = ${JSON.stringify(command)}\nargs = ${JSON.stringify(args)}`;
   }
   if (client === "claude-desktop") {
-    return JSON.stringify({ mcpServers: { open_slidex_workspace: { args, command, type: "stdio" } } }, null, 2);
+    return JSON.stringify({ mcpServers: { [target.configKey]: { args, command, type: "stdio" } } }, null, 2);
   }
   const launch = platform === "windows"
-    ? `cmd /c npx -y ${openSlideXMcpNpxPackage} mcp --workspace "${absoluteRoot.replaceAll('"', '\\"')}"`
-    : `npx -y ${openSlideXMcpNpxPackage} mcp --workspace '${absoluteRoot.replaceAll("'", `'"'"'`)}'`;
-  return `claude mcp add --scope user open-slidex-workspace -- ${launch}`;
+    ? `cmd /c npx -y ${openSlideXMcpNpxPackage} mcp ${target.option} "${absoluteRoot.replaceAll('"', '\\"')}"`
+    : `npx -y ${openSlideXMcpNpxPackage} mcp ${target.option} '${absoluteRoot.replaceAll("'", `"'"'`)}'`;
+  return `claude mcp add --scope user ${target.configKey.replaceAll("_", "-")} -- ${launch}`;
+}
+
+export function presentationMcpConfig(client: OpenSlideXMcpClient, root: string, platform: OpenSlideXMcpPlatform) {
+  return mcpConfig(client, root, platform, { configKey: "open_slidex", option: "--project" });
+}
+
+export function workspaceMcpConfig(client: OpenSlideXMcpClient, root: string, platform: OpenSlideXMcpPlatform) {
+  return mcpConfig(client, root, platform, { configKey: "open_slidex_workspace", option: "--workspace" });
+}
+
+export function presentationMcpPrompt(client: OpenSlideXMcpClient, root: string, platform: OpenSlideXMcpPlatform) {
+  const label = client === "codex" ? "Codex" : client === "claude-code" ? "Claude Code" : "Claude Desktop";
+  const absoluteRoot = resolveMcpRoot(root, platform);
+  return [
+    `Configure one user-level OpenSlideX presentation MCP server for ${label} on ${platform}.`,
+    `Restrict it to this exact deck root: ${absoluteRoot}`,
+    `The only editable presentation is: ${presentationPath(absoluteRoot, platform)}`,
+    "Replace an older open_slidex_workspace entry only when it targets this same deck; preserve every unrelated MCP entry and show the exact proposed change before writing any global config.",
+    "Use this generated configuration:",
+    "",
+    presentationMcpConfig(client, root, platform),
+    "",
+    "After restarting the client, verify open_slidex_open and open_slidex_validate."
+  ].join("\n");
 }
 
 export function workspaceMcpPrompt(client: OpenSlideXMcpClient, root: string, platform: OpenSlideXMcpPlatform) {
   const label = client === "codex" ? "Codex" : client === "claude-code" ? "Claude Code" : "Claude Desktop";
   return [
     `Configure one user-level OpenSlideX Workspace MCP server for ${label} on ${platform}.`,
-    `Restrict it to this exact workspace root: ${path.resolve(root)}`,
+    `Restrict it to this exact workspace root: ${resolveMcpRoot(root, platform)}`,
     "Preserve every unrelated MCP entry and show the exact proposed change before writing any global config.",
     "Use this generated configuration:",
     "",

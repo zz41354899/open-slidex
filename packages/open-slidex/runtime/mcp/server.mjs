@@ -43503,7 +43503,7 @@ function parseTemplateRef(value) {
 
 // core/motion-doc/domain/officialTemplateDefinitions.ts
 var officialTemplatePackageVersion = "1.0.0";
-var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.1" };
+var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.2" };
 var officialTemplateDefinitions = [
   {
     id: "summer-time-report",
@@ -54208,7 +54208,7 @@ function createOpenSlideXMcpServer(root = projectRoot) {
       root: resolvedRoot
     };
   };
-  const server = new McpServer({ name: "open-slidex-local", version: "0.3.1" });
+  const server = new McpServer({ name: "open-slidex-local", version: "0.3.2" });
   const rejectedCandidates = /* @__PURE__ */ new Map();
   if (workspace) {
     server.registerTool("open_slidex_workspace_list", {
@@ -54607,7 +54607,7 @@ async function main() {
   process.stderr.write(`OpenSlideX MCP connected to ${workspaceRoot ? `workspace ${workspaceRoot}` : projectRoot}
 `);
 }
-var openSlideXMcpNpxPackage = "open-slidex@0.3.1";
+var openSlideXMcpNpxPackage = "open-slidex@0.3.2";
 function openSlideXMcpConfig(client, root, platform = process.platform === "win32" ? "windows" : "macos") {
   const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? win32.resolve(root) : resolve(root);
   const command = platform === "windows" ? "cmd" : "npx";
@@ -54652,7 +54652,7 @@ function openSlideXMcpSetupPrompt(client, root, platform = process.platform === 
   return [
     `Configure the local OpenSlideX MCP server for ${target} on ${platform}.`,
     `The only allowed deck root is: ${absoluteRoot}`,
-    "Preserve every unrelated MCP entry. Do not widen the project path and do not copy credentials.",
+    "Replace an older open_slidex_workspace entry only when it targets this same deck. Preserve every unrelated MCP entry, do not widen the project path, and do not copy credentials.",
     "Show me the exact proposed change before writing any global configuration file.",
     "Use this generated configuration:",
     "",
@@ -54689,12 +54689,17 @@ function platformFromArgs(args) {
 function projectRootFromArgs(args) {
   const index2 = args.indexOf("--project");
   const value = index2 >= 0 ? args[index2 + 1] : void 0;
+  if (index2 >= 0 && (!value || value.startsWith("--"))) {
+    throw new Error("--project must be followed by a directory.");
+  }
   return resolve(value || process.cwd());
 }
 function workspaceRootFromArgs(args) {
   const index2 = args.indexOf("--workspace");
   const value = index2 >= 0 ? args[index2 + 1] : void 0;
-  if (index2 >= 0 && !value) throw new Error("--workspace must be followed by a directory.");
+  if (index2 >= 0 && (!value || value.startsWith("--"))) {
+    throw new Error("--workspace must be followed by a directory.");
+  }
   return value ? resolve(value) : void 0;
 }
 function imageMediaType(extension2) {
@@ -54789,5 +54794,7 @@ export {
   openSlideXMcpNpxPackage,
   openSlideXMcpSetupPrompt,
   openSlideXWorkspaceMcpConfig,
-  openSlideXWorkspaceMcpSetupPrompt
+  openSlideXWorkspaceMcpSetupPrompt,
+  projectRootFromArgs,
+  workspaceRootFromArgs
 };

@@ -100,7 +100,9 @@ Usage:
   open-slidex dev [--port 4173] [--no-open]
   open-slidex build
   open-slidex preview [--port 4174]
+  open-slidex mcp --project <directory> [--print-config <codex|claude-code|claude-desktop>]
   open-slidex mcp --workspace <directory> [--print-config <codex|claude-code|claude-desktop>]
+  open-slidex mcp --project <directory> [--print-setup-prompt <codex|claude-code|claude-desktop>]
   open-slidex mcp --workspace <directory> [--print-setup-prompt <codex|claude-code|claude-desktop>]
   open-slidex validate [presentation.mdx]
   open-slidex render [presentation.mdx] --montage --out <file.png>
@@ -108,9 +110,10 @@ Usage:
 
 Examples:
   open-slidex workspace ~/Presentations
-  npx open-slidex@0.3.1 init my-deck
+  npx open-slidex@0.3.2 init my-deck
   open-slidex init my-deck --template summer-time-report --locale zh-TW
   cd my-deck && npm run dev
+  open-slidex mcp --project ./my-deck --print-config codex
   open-slidex mcp --workspace ~/Presentations --print-config codex
 `;
 }

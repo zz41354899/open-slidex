@@ -102,7 +102,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       root: resolvedRoot
     };
   };
-  const server = new McpServer({ name: "open-slidex-local", version: "0.3.1" });
+  const server = new McpServer({ name: "open-slidex-local", version: "0.3.2" });
   const rejectedCandidates = new Map<string, {
     attempts: number;
     expectedRevision: string;
@@ -557,7 +557,7 @@ async function main() {
 
 export type OpenSlideXMcpClient = "claude" | "claude-code" | "claude-desktop" | "codex";
 export type OpenSlideXPlatform = "macos" | "windows";
-export const openSlideXMcpNpxPackage = "open-slidex@0.3.1";
+export const openSlideXMcpNpxPackage = "open-slidex@0.3.2";
 
 export function openSlideXMcpConfig(
   client: OpenSlideXMcpClient,
@@ -631,7 +631,7 @@ export function openSlideXMcpSetupPrompt(
   return [
     `Configure the local OpenSlideX MCP server for ${target} on ${platform}.`,
     `The only allowed deck root is: ${absoluteRoot}`,
-    "Preserve every unrelated MCP entry. Do not widen the project path and do not copy credentials.",
+    "Replace an older open_slidex_workspace entry only when it targets this same deck. Preserve every unrelated MCP entry, do not widen the project path, and do not copy credentials.",
     "Show me the exact proposed change before writing any global configuration file.",
     "Use this generated configuration:",
     "",
@@ -675,16 +675,21 @@ function platformFromArgs(args: string[]): OpenSlideXPlatform {
   return process.platform === "win32" ? "windows" : "macos";
 }
 
-function projectRootFromArgs(args: string[]) {
+export function projectRootFromArgs(args: string[]) {
   const index = args.indexOf("--project");
   const value = index >= 0 ? args[index + 1] : undefined;
+  if (index >= 0 && (!value || value.startsWith("--"))) {
+    throw new Error("--project must be followed by a directory.");
+  }
   return resolve(value || process.cwd());
 }
 
-function workspaceRootFromArgs(args: string[]) {
+export function workspaceRootFromArgs(args: string[]) {
   const index = args.indexOf("--workspace");
   const value = index >= 0 ? args[index + 1] : undefined;
-  if (index >= 0 && !value) throw new Error("--workspace must be followed by a directory.");
+  if (index >= 0 && (!value || value.startsWith("--"))) {
+    throw new Error("--workspace must be followed by a directory.");
+  }
   return value ? resolve(value) : undefined;
 }
 

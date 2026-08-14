@@ -50,7 +50,7 @@ test("starter contains the local Workbench and SDK without project-scoped MCP", 
   };
 
   assert.deepEqual(packageJson.devDependencies, {
-    "open-slidex": "0.3.1"
+    "open-slidex": "0.3.2"
   });
   assert.equal(packageJson.scripts?.dev, "open-slidex workspace ..");
   assert.equal(packageJson.scripts?.["dev:workbench"], undefined);
@@ -105,7 +105,7 @@ test("starter contains the local Workbench and SDK without project-scoped MCP", 
 test("published README documents single-package install and workspace-global MCP setup", async () => {
   const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 
-  assert.match(readme, /npx open-slidex@0\.3\.1 init my-deck/);
+  assert.match(readme, /npx open-slidex@0\.3\.2 init my-deck/);
   assert.match(readme, /only development\s+dependency/);
   assert.match(readme, /open-slidex mcp --workspace/);
   assert.match(readme, /Workspace Settings/);
@@ -120,7 +120,7 @@ test("published package and generated starter both include the Workspace path", 
     await readFile(new URL("../template/package.json", import.meta.url), "utf8")
   ) as { devDependencies?: Record<string, string>; scripts?: Record<string, string> };
 
-  assert.equal(packageJson.version, "0.3.1");
+  assert.equal(packageJson.version, "0.3.2");
   assert.ok(packageJson.files?.includes("runtime"));
   assert.ok(packageJson.files?.includes("template"));
   assert.equal(starterPackageJson.devDependencies?.["open-slidex"], packageJson.version);

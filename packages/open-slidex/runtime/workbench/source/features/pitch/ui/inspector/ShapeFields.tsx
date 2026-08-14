@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, ImagePlus, Trash2, Upload } from "lucide-rea
 import type { MotionDocProps } from "@/core/motion-doc/domain/motionDocTypes";
 import { ColorControl, Field, NativeSelect, NumberInput, type BlockFieldProps } from "@/features/pitch/ui/inspector/InspectorControls";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
+import { usePreviewMediaSource } from "@/features/pitch/ui/preview/PreviewMediaPolicy";
 import {
   Button,
   Tooltip,
@@ -58,6 +59,7 @@ export function ShapeFields({
   const showPoints = currentShape === "star";
   const sides = normalizeInt(block.props.sides, 3);
   const points = normalizeInt(block.props.points, 5);
+  const shapeImagePreviewSource = usePreviewMediaSource(String(block.props.shapeImageSrc ?? ""));
 
   function adjustSides(delta: number) {
     const next = Math.min(Math.max(sides + delta, 3), 12);
@@ -117,7 +119,7 @@ export function ShapeFields({
           <div className="flex flex-col gap-2 rounded-xl border border-white/[0.06] bg-black/25 p-2.5">
             {block.props.shapeImageSrc ? (
               <div className="relative h-24 overflow-hidden rounded-lg border border-white/[0.08] bg-black/30">
-                <img alt="" className="h-full w-full object-cover" src={String(block.props.shapeImageSrc)} />
+                <img alt="" className="h-full w-full object-cover" src={shapeImagePreviewSource} />
                 <div className="absolute right-1.5 top-1.5 flex gap-1 rounded-lg bg-black/65 p-1 backdrop-blur">
                   <Tooltip>
                     <TooltipTrigger asChild>

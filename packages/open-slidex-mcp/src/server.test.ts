@@ -16,8 +16,21 @@ import {
   openSlideXMcpConfig,
   openSlideXMcpSetupPrompt,
   openSlideXWorkspaceMcpConfig,
-  openSlideXWorkspaceMcpSetupPrompt
+  openSlideXWorkspaceMcpSetupPrompt,
+  projectRootFromArgs,
+  workspaceRootFromArgs
 } from "./server";
+
+test("MCP rejects a flag where a project or workspace directory is required", () => {
+  assert.throws(
+    () => projectRootFromArgs(["--project", "--print-config"]),
+    /--project must be followed by a directory/
+  );
+  assert.throws(
+    () => workspaceRootFromArgs(["--workspace", "--print-config"]),
+    /--workspace must be followed by a directory/
+  );
+});
 
 test("MCP prints copyable Codex and Claude Code configuration", () => {
   const root = "/tmp/OpenSlideX demo";
@@ -25,7 +38,7 @@ test("MCP prints copyable Codex and Claude Code configuration", () => {
   assert.match(openSlideXMcpConfig("codex", root), /OpenSlideX demo/);
   assert.equal(
     openSlideXMcpConfig("claude", root),
-    "claude mcp add open-slidex -- npx -y open-slidex@0.3.1 mcp --project '/tmp/OpenSlideX demo'"
+    "claude mcp add open-slidex -- npx -y open-slidex@0.3.2 mcp --project '/tmp/OpenSlideX demo'"
   );
   const desktop = JSON.parse(openSlideXMcpConfig("claude-desktop", root));
   assert.equal(desktop.mcpServers.open_slidex.command, "npx");
@@ -34,6 +47,7 @@ test("MCP prints copyable Codex and Claude Code configuration", () => {
   assert.equal(windows.mcpServers.open_slidex.command, "cmd");
   assert.deepEqual(windows.mcpServers.open_slidex.args.slice(0, 3), ["/c", "npx", "-y"]);
   assert.match(openSlideXMcpSetupPrompt("codex", root), /Show me the exact proposed change/);
+  assert.match(openSlideXMcpSetupPrompt("codex", root), /Replace an older open_slidex_workspace entry/);
 });
 
 test("Workspace MCP prints user-level configuration and selects a presentation", async () => {
@@ -61,7 +75,7 @@ test("Workspace MCP prints user-level configuration and selects a presentation",
     assert.equal(opened.title, "beta");
 
     assert.match(openSlideXWorkspaceMcpConfig("codex", root), /\[mcp_servers\.open_slidex_workspace\]/);
-    assert.match(openSlideXWorkspaceMcpConfig("codex", root), /open-slidex@0\.3\.1/);
+    assert.match(openSlideXWorkspaceMcpConfig("codex", root), /open-slidex@0\.3\.2/);
     assert.match(openSlideXWorkspaceMcpConfig("codex", root), /--workspace/);
     assert.match(openSlideXWorkspaceMcpConfig("claude-code", root), /--scope user/);
     assert.match(openSlideXWorkspaceMcpSetupPrompt("codex", root), /open_slidex_workspace_list/);

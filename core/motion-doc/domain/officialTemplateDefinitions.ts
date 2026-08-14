@@ -1,7 +1,7 @@
 import type { TemplateBlueprintV1, TemplatePackageV1 } from "@/core/motion-doc/domain/templatePackageV1";
 
 export const officialTemplatePackageVersion = "1.0.0";
-export const officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.1" } as const;
+export const officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.2" } as const;
 
 export type OfficialTemplateDefinition = {
   blueprint: TemplateBlueprintV1;

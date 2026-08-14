@@ -43,3 +43,5 @@ serializable MotionDoc source. Put private reference material in `knowledge/`;
 agent context stays under ignored `.open-slidex/` and is never synced. Configure
 the user-level Workspace MCP once from OpenSlideX Workspace Settings; it lets a
 desktop agent select this folder and work directly with `presentation.mdx`.
+When started with `npm run dev`, the generated MCP configuration automatically
+uses this installed project folder as its direct presentation scope.

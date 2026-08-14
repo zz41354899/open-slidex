@@ -12,6 +12,7 @@ import {
 } from "@/features/pitch/ui/inspector/InspectorControls";
 import { ImageFilterSection } from "@/features/pitch/ui/inspector/image/ImageFilterSection";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
+import { usePreviewMediaSource } from "@/features/pitch/ui/preview/PreviewMediaPolicy";
 import {
   Button,
   Dialog,
@@ -45,6 +46,7 @@ export function ImageFields({
 }) {
   const { tx } = usePitchI18n();
   const hasImage = Boolean(block.props.src);
+  const previewImageSource = usePreviewMediaSource(String(block.props.src ?? ""));
   const [isRemoveConfirmationOpen, setIsRemoveConfirmationOpen] = useState(false);
   const externalImageSource = externalSource(block.props.sourceUrl ?? block.props.src);
 
@@ -79,7 +81,7 @@ export function ImageFields({
                 className="absolute inset-0 h-full w-full object-cover opacity-75 transition-[opacity,transform] duration-300 group-hover:scale-[1.015] group-hover:opacity-60"
                 decoding="async"
                 loading="lazy"
-                src={String(block.props.src)}
+                src={previewImageSource}
               />
               <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/45" />
               <div className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-[10px] border border-white/10 bg-black/55 p-1 shadow-lg backdrop-blur-md">

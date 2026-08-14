@@ -196,6 +196,30 @@ test("local workspace extracts Base64 shape images from JSX literal expressions"
   assert.equal(stored.match(new RegExp(`shapeImageSrc="assets/${assets[0]}"`, "g"))?.length, 2);
 });
 
+test("local workspace imports an MDX that reuses a recoverable local image asset", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const original = await workspace.create({ locale: "en", title: "Cached image source" });
+  const originalRoot = path.join(workspaceRoot, original.id);
+  await writeFile(path.join(originalRoot, "assets", "carry-over.webp"), await tinyWebp());
+  await workspace.deletePresentation(original.id, { confirmationTitle: "Cached image source" });
+
+  const source = `# Recovered image
+
+<Slide>
+  <ImageBlock src="assets/carry-over.webp" alt="Recovered image" x={10} y={10} w={80} h={80} />
+</Slide>
+`;
+  const imported = await workspace.importMdx(new File([source], "recovered.mdx", { type: "text/mdx" }));
+  const importedRoot = path.join(workspaceRoot, imported.id);
+  const stored = await readFile(path.join(importedRoot, "presentation.mdx"), "utf8");
+  const assets = (await readdir(path.join(importedRoot, "assets"))).filter((name) => name.endsWith(".webp"));
+
+  assert.equal(assets.length, 1);
+  assert.match(stored, new RegExp(`src="assets/${assets[0]}"`));
+});
+
 test("local workspace rejects image references that are not carried by the import", async (context) => {
   const { root, workspace } = await fixture();
   context.after(async () => rm(root, { force: true, recursive: true }));
@@ -318,7 +342,7 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   assert.equal(mcpPayload.configPath, "~/.codex/config.toml");
   assert.equal(mcpPayload.workspaceRoot, workspaceRoot);
   assert.match(mcpPayload.config, /\[mcp_servers\.open_slidex_workspace\]/);
-  assert.match(mcpPayload.config, /open-slidex@0\.3\.1/);
+  assert.match(mcpPayload.config, /open-slidex@0\.3\.2/);
   assert.match(mcpPayload.config, /--workspace/);
 
   const windowsMcpSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=codex&platform=windows`);
@@ -339,6 +363,18 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   const importedPayload = await imported.json();
   assert.equal(importedPayload.presentation.title, "Imported through API");
   assert.equal(await readFile(path.join(workspaceRoot, importedPayload.presentation.id, "presentation.mdx"), "utf8"), importedSource);
+
+  const embeddedImage = Buffer.concat([await tinyPng(), Buffer.alloc(2.5 * 1024 * 1024)]);
+  const largeMdxForm = new FormData();
+  largeMdxForm.set("file", new File([
+    `# Large embedded image\n\n<Slide><ImageBlock src="data:image/png;base64,${embeddedImage.toString("base64")}" alt="Large image" /></Slide>\n`
+  ], "large-embedded.mdx", { type: "text/mdx" }));
+  const largeMdxImport = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/presentations/import`, {
+    body: largeMdxForm,
+    headers: { origin: `http://127.0.0.1:${uiPort}` },
+    method: "POST"
+  });
+  assert.equal(largeMdxImport.status, 201);
 
   const created = await workspace.create({ locale: "en", title: "API title" });
   const editorDocument = await fetch(
@@ -365,6 +401,38 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   assert.equal((await deleted.json()).deleted, true);
 });
 
+test("starter Workspace MCP setup uses the exact installed presentation path", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  const projectRoot = path.join(root, "my-deck");
+  await mkdir(projectRoot, { recursive: true });
+  await writeFile(path.join(projectRoot, "presentation.mdx"), blankPresentationMdx, "utf8");
+  const projectScopedWorkspace = new OpenSlideXWorkspace({
+    mcpPresentationRoot: projectRoot,
+    root: workspaceRoot,
+    templateRoot: workspace.templateRoot,
+    workspaceUrl: "http://127.0.0.1:4172/workspace"
+  });
+  await projectScopedWorkspace.prepare();
+  const running = await startWorkspaceServer({ port: 0, uiPort: 4172, workspace: projectScopedWorkspace });
+  context.after(async () => {
+    await running.close();
+    await rm(root, { force: true, recursive: true });
+  });
+
+  const response = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=codex&platform=macos`);
+  assert.equal(response.status, 200);
+  const setup = await response.json();
+  assert.equal(setup.scopeType, "presentation");
+  assert.equal(setup.scopeRoot, projectRoot);
+  assert.equal(setup.presentationPath, path.join(projectRoot, "presentation.mdx"));
+  assert.equal(setup.workspaceRoot, workspaceRoot);
+  assert.match(setup.config, /\[mcp_servers\.open_slidex\]/);
+  assert.match(setup.config, /--project/);
+  assert.match(setup.config, new RegExp(projectRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.doesNotMatch(setup.config, /open_slidex_workspace/);
+  assert.match(setup.prompt, /Replace an older open_slidex_workspace entry/);
+});
+
 function tinyPng() {
   return sharp({
     create: {
@@ -374,4 +442,15 @@ function tinyPng() {
       width: 32
     }
   }).png().toBuffer();
+}
+
+function tinyWebp() {
+  return sharp({
+    create: {
+      background: { alpha: 1, b: 180, g: 120, r: 50 },
+      channels: 4,
+      height: 32,
+      width: 32
+    }
+  }).webp().toBuffer();
 }

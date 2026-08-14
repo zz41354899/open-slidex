@@ -30,6 +30,14 @@ export function PreviewMediaPolicyProvider({ assetUrl = (source) => source, anim
 /** Resolves local assets through the workbench and retains safe direct HTTPS media. */
 export function usePreviewMediaSource(source: string | undefined) {
   const { assetUrl, localAssetsOnly } = useContext(PreviewMediaPolicyContext);
+  return resolvePreviewMediaSource(source, assetUrl, localAssetsOnly);
+}
+
+export function resolvePreviewMediaSource(
+  source: string | undefined,
+  assetUrl: (source: string) => string,
+  localAssetsOnly: boolean
+) {
   const value = source?.trim() ?? "";
   if (!localAssetsOnly || !value) return value;
   if (isOpenSlideXLocalAssetSource(value)) return assetUrl(value);

@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import path from "node:path";
 import { Readable } from "node:stream";
 
 import type { TemplatePackageLocale } from "@open-slidex/sdk";
@@ -17,9 +18,12 @@ import {
 import {
   parseWorkspaceMcpClient,
   parseWorkspaceMcpPlatform,
+  presentationMcpConfig,
+  presentationMcpPrompt,
   workspaceMcpConfig,
   workspaceMcpPrompt
 } from "./mcpConfig";
+import { MAX_WORKSPACE_IMPORT_FILE_BYTES } from "./workspaceImport";
 
 type StartWorkspaceServerInput = {
   port: number;
@@ -80,7 +84,8 @@ async function routeWorkspaceRequest(
   if (url.pathname === "/api/v1/workspace/mcp/setup" && request.method === "GET") {
     const client = parseWorkspaceMcpClient(url.searchParams.get("client"));
     const platform = parseWorkspaceMcpPlatform(url.searchParams.get("platform"));
-    const root = input.workspace.root;
+    const presentationRoot = input.workspace.mcpPresentationRoot;
+    const root = presentationRoot ?? input.workspace.root;
     const configPath = client === "codex"
       ? platform === "windows" ? "%USERPROFILE%\\.codex\\config.toml" : "~/.codex/config.toml"
       : client === "claude-desktop"
@@ -90,12 +95,19 @@ async function routeWorkspaceRequest(
         : "Claude Code user scope";
     sendJson(outgoing, {
       client,
-      config: workspaceMcpConfig(client, root, platform),
+      config: presentationRoot
+        ? presentationMcpConfig(client, root, platform)
+        : workspaceMcpConfig(client, root, platform),
       configPath,
       platform,
-      prompt: workspaceMcpPrompt(client, root, platform),
+      presentationPath: presentationRoot ? path.join(presentationRoot, "presentation.mdx") : undefined,
+      prompt: presentationRoot
+        ? presentationMcpPrompt(client, root, platform)
+        : workspaceMcpPrompt(client, root, platform),
       scope: "user",
-      workspaceRoot: root
+      scopeRoot: root,
+      scopeType: presentationRoot ? "presentation" : "workspace",
+      workspaceRoot: input.workspace.root
     });
     return;
   }
@@ -227,9 +239,13 @@ async function jsonBody<T>(request: Request) {
 
 async function multipartBody(request: Request) {
   const length = Number(request.headers.get("content-length") ?? 0);
-  if (length > 2.25 * 1024 * 1024) throw Object.assign(new Error("The MDX upload is too large."), { status: 413 });
+  // The client accepts a 50 MB file. Reserve a small amount for multipart boundaries
+  // so a file at that limit reaches the import validator instead of failing early.
+  if (length > MAX_WORKSPACE_IMPORT_FILE_BYTES + 64 * 1024) {
+    throw Object.assign(new Error("The OpenSlideX import upload is too large."), { status: 413 });
+  }
   return request.formData().catch(() => {
-    throw Object.assign(new Error("The MDX upload could not be read."), { status: 400 });
+    throw Object.assign(new Error("The OpenSlideX import upload could not be read."), { status: 400 });
   });
 }
 

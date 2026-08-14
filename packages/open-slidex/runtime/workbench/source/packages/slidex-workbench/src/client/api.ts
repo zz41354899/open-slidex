@@ -49,8 +49,11 @@ export type WorkspaceMcpSetup = {
   config: string;
   configPath: string;
   platform: WorkspaceMcpPlatform;
+  presentationPath?: string;
   prompt: string;
   scope: "user";
+  scopeRoot: string;
+  scopeType: "presentation" | "workspace";
   workspaceRoot: string;
 };
 

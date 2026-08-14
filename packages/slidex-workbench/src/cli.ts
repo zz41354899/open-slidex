@@ -34,12 +34,16 @@ async function main() {
     if (!(await canListen(port))) {
       throw new Error(`Workspace port ${port} is already in use. Stop the existing server or choose --port <number>.`);
     }
-    const workspaceRoot = path.resolve(process.cwd(), positionalOption(args) ?? "open-slidex-workspace");
+    const invocationRoot = path.resolve(process.cwd());
+    const workspaceRoot = path.resolve(invocationRoot, positionalOption(args) ?? "open-slidex-workspace");
+    const invocationPresentation = await stat(path.join(invocationRoot, "presentation.mdx")).catch(() => undefined);
+    const mcpPresentationRoot = invocationPresentation?.isFile() ? invocationRoot : undefined;
     const packagedSourceRoot = fileURLToPath(new URL("./source/", import.meta.url));
     const checkoutRoot = path.resolve(fileURLToPath(new URL("../../../", import.meta.url)));
     const configPath = new URL("./vite.config.mjs", import.meta.url);
     const workspaceUrl = `http://127.0.0.1:${port}/workspace`;
     const workspace = new OpenSlideXWorkspace({
+      mcpPresentationRoot,
       root: workspaceRoot,
       templateRoot: await resolveTemplateRoot(),
       workspaceUrl
