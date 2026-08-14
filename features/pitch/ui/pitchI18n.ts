@@ -692,6 +692,7 @@ const zhTw = {
   "URLs and existing paths are used directly on Enter or blur.": "按 Enter 或移開焦點後，會直接使用網址或現有路徑。",
   "Presentation file action": "簡報檔案操作",
   "Close MDX editor": "關閉 MDX 編輯器",
+  "Opening MDX editor…": "正在開啟 MDX 編輯器…",
   "Search icons": "搜尋圖示",
   "Search by name or idea…": "依名稱或概念搜尋…",
   "Clear search": "清除搜尋",

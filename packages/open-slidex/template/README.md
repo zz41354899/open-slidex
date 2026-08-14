@@ -19,7 +19,9 @@ folder there. The initial browser route is always `/workspace`.
 
 The command starts the local Node API and a Vite HMR client, then prints the
 Workspace URL. Generated HMR files stay under the ignored `.open-slidex/`
-directory. The editor preview is canvas-first, Source provides
+directory. The starter does not need a project-level `vite.config.mjs`;
+`open-slidex` ships the tested Vite configuration inside its Workbench runtime
+and updates it with the installed package. The editor preview is canvas-first, Source provides
 CodeMirror and live rendering, Assets manages local media, and Inspector writes
 validated SDK source commands. Only valid source is autosaved with revision
 protection; invalid work remains a recoverable browser draft.

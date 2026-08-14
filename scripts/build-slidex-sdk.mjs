@@ -1,5 +1,5 @@
 import { existsSync, statSync } from "node:fs";
-import { chmod, mkdir } from "node:fs/promises";
+import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
@@ -16,6 +16,7 @@ await build({
   entryPoints: [path.join(packageDir, "src/index.ts")],
   format: "esm",
   logLevel: "info",
+  minify: true,
   outfile: path.join(outdir, "index.js"),
   platform: "browser",
   target: "es2020",
@@ -29,6 +30,7 @@ await build({
   entryPoints: [path.join(packageDir, "src/pptxBrowserEntry.ts")],
   format: "iife",
   logLevel: "info",
+  minify: true,
   outfile: path.join(outdir, "pptx-browser.js"),
   platform: "browser",
   target: "es2020",
@@ -43,6 +45,7 @@ await build({
   external: ["playwright-core", "sharp"],
   format: "esm",
   logLevel: "info",
+  minify: true,
   outfile: path.join(outdir, "node.js"),
   platform: "node",
   target: "node18",
@@ -58,15 +61,38 @@ await build({
   external: ["playwright-core", "sharp"],
   format: "esm",
   logLevel: "info",
+  minify: true,
   outfile: path.join(outdir, "cli.js"),
   platform: "node",
   target: "node18",
   treeShaking: true,
-  plugins: [rootAliasPlugin()]
+  plugins: [sharedSdkCliRuntimePlugin(), rootAliasPlugin()]
 });
 
+await Promise.all(
+  ["index.js", "pptx-browser.js", "node.js", "cli.js"]
+    .map((fileName) => normalizeGeneratedText(path.join(outdir, fileName)))
+);
 await chmod(path.join(outdir, "node.js"), 0o644);
 await chmod(path.join(outdir, "cli.js"), 0o755);
+
+async function normalizeGeneratedText(filePath) {
+  const source = await readFile(filePath, "utf8");
+  const normalized = source.replace(/[ \t]+$/gm, "");
+  if (normalized !== source) await writeFile(filePath, normalized, "utf8");
+}
+
+function sharedSdkCliRuntimePlugin() {
+  return {
+    name: "shared-sdk-cli-runtime",
+    setup(buildContext) {
+      buildContext.onResolve({ filter: /^\.\/(?:index|node)$/ }, (args) => ({
+        external: true,
+        path: `${args.path}.js`
+      }));
+    }
+  };
+}
 
 function rootAliasPlugin() {
   return {

@@ -1,4 +1,4 @@
-import { chmod, mkdir } from "node:fs/promises";
+import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,13 +17,21 @@ await build({
   external: ["pdf-parse", "playwright-core", "sharp"],
   format: "esm",
   logLevel: "info",
+  minify: true,
   outfile,
   platform: "node",
   target: "node22",
   plugins: [sourceAliases()]
 });
 
+await normalizeGeneratedText(outfile);
 await chmod(outfile, 0o755);
+
+async function normalizeGeneratedText(filePath) {
+  const source = await readFile(filePath, "utf8");
+  const normalized = source.replace(/[ \t]+$/gm, "");
+  if (normalized !== source) await writeFile(filePath, normalized, "utf8");
+}
 
 function sourceAliases() {
   return {

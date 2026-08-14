@@ -1,12 +1,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { ShadcnTooltipProvider } from "@open-slidex/editor-ui";
 
 import { I18nProvider } from "@/common/lib/I18nProvider";
+import { TooltipProvider as ShadcnTooltipProvider } from "@/packages/editor-ui/src/components/ui/tooltip";
 import { Workbench } from "./Workbench";
-import "@fontsource/roboto/400.css";
-import "@fontsource/roboto/500.css";
-import "@fontsource/roboto/700.css";
+import "@fontsource/roboto/latin-400.css";
+import "@fontsource/roboto/latin-500.css";
+import "@fontsource/roboto/latin-700.css";
 import "@open-slidex/editor-ui/styles.css";
 import "./styles.css";
 

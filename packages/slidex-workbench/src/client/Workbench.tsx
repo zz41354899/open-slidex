@@ -1,33 +1,21 @@
-import { RefreshCw } from "lucide-react";
+import { lazy, Suspense } from "react";
 
-import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
-import { LocalMotionDocEditor } from "./LocalMotionDocEditor";
-import { WorkspaceHome } from "./WorkspaceHome";
-import { useLocalDocument } from "./useLocalDocument";
+const EditorWorkbench = lazy(() => import("./EditorWorkbench"));
+const WorkspaceHome = lazy(() => import("./WorkspaceHome").then(({ WorkspaceHome: component }) => ({ default: component })));
 
 export function Workbench() {
-  if (window.location.pathname === "/workspace" || window.location.pathname === "/workspace/") {
-    return <WorkspaceHome />;
-  }
-  return <EditorWorkbench />;
+  const workspaceRoute = window.location.pathname === "/workspace" || window.location.pathname === "/workspace/";
+  return (
+    <Suspense fallback={<WorkbenchLoading workspaceRoute={workspaceRoute} />}>
+      {workspaceRoute ? <WorkspaceHome /> : <EditorWorkbench />}
+    </Suspense>
+  );
 }
 
-function EditorWorkbench() {
-  const documentState = useLocalDocument();
-  const { tx } = usePitchI18n();
-
-  if (!documentState.snapshot && documentState.saveState === "loading") {
-    return <main className="flex h-[100dvh] items-center justify-center bg-black text-sm text-neutral-500">{tx("Opening presentation.mdx…")}</main>;
-  }
-
-  if (!documentState.snapshot) {
-    return (
-      <main className="flex h-[100dvh] flex-col items-center justify-center gap-4 bg-black px-6 text-center text-neutral-300">
-        <p>{documentState.message || tx("Could not open presentation.mdx.")}</p>
-        <button className="secondary-button" onClick={() => void documentState.reload()} type="button"><RefreshCw size={14} /> {tx("Try again")}</button>
-      </main>
-    );
-  }
-
-  return <LocalMotionDocEditor documentState={documentState} />;
+function WorkbenchLoading({ workspaceRoute }: { workspaceRoute: boolean }) {
+  return (
+    <main className="flex h-[100dvh] items-center justify-center bg-black text-sm text-neutral-500">
+      {workspaceRoute ? "Opening Workspace…" : "Opening presentation.mdx…"}
+    </main>
+  );
 }

@@ -23,6 +23,7 @@ await build({
   entryPoints: [path.join(packageDir, "src/cli.ts")],
   format: "esm",
   logLevel: "info",
+  minify: true,
   outfile: path.join(distDir, "create.mjs"),
   platform: "node",
   target: "node20",
@@ -50,6 +51,7 @@ await build({
   entryPoints: [path.join(packageDir, "src/openSlideXCli.ts")],
   format: "esm",
   logLevel: "info",
+  minify: true,
   outfile: path.join(distDir, "cli.mjs"),
   platform: "node",
   target: "node20"

@@ -58,6 +58,29 @@ const workbenchBrowserDependencyAliases = workbenchBrowserDependencies
     replacement: path.join(resolvePackageRoot(specifier), specifier.slice(packageName(specifier).length))
   }));
 
+const workbenchVendorChunks = [
+  ["vendor-codemirror-view", ["/@codemirror/view/", "/@codemirror/state/", "/@uiw/", "/style-mod/", "/w3c-keyname/", "/crelt/", "/@marijn/"]],
+  ["vendor-codemirror-language", ["/@codemirror/language/", "/@codemirror/lang-", "/@lezer/"]],
+  ["vendor-codemirror-tools", ["/@codemirror/"]],
+  ["vendor-shaders", ["/@paper-design/", "/three/"]],
+  ["vendor-motion", ["/framer-motion/", "/motion-dom/", "/motion-utils/"]],
+  ["vendor-react", ["/react/", "/react-dom/", "/scheduler/"]],
+  ["vendor-ui", ["/@radix-ui/", "/radix-ui/", "/lucide-react/"]],
+  ["vendor-mdx", ["/mdast-util-", "/micromark", "/zod/"]]
+];
+const workbenchEditorChunks = [
+  ["editor-preview", ["/features/pitch/ui/preview/", "/features/pitch/ui/PreviewCanvas.tsx"]],
+  ["editor-inspector", ["/features/pitch/ui/inspector/", "/features/pitch/ui/PitchInspector.tsx", "/packages/slidex-workbench/src/client/ChartInspector.tsx"]],
+  ["editor-templates", ["/core/motion-doc/presets/"]],
+  ["editor-export", ["/core/motion-doc/infrastructure/export/", "/features/pitch/infrastructure/"]]
+];
+const workbenchInitialPreloadPrefixes = [
+  "I18nProvider-",
+  "rolldown-runtime-",
+  "vendor-react-",
+  "vendor-ui-"
+];
+
 export function createSlideXWorkbenchViteConfig(options = {}) {
   const sourceRoot = options.sourceRoot ?? slideXWorkbenchSourceRoot;
   const clientRoot = path.join(sourceRoot, "packages/slidex-workbench/src/client");
@@ -75,6 +98,34 @@ export function createSlideXWorkbenchViteConfig(options = {}) {
     css: {
       postcss: path.join(configRoot, "postcss.config.mjs")
     },
+    build: {
+      modulePreload: {
+        resolveDependencies: workbenchModulePreloadDependencies
+      },
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: [
+              ...workbenchVendorChunks.map(([name], index) => ({
+                includeDependenciesRecursively: false,
+                name,
+                priority: 100 + workbenchVendorChunks.length - index,
+                test: (id) => workbenchVendorChunk(id) === name
+              })),
+              ...workbenchEditorChunks.map(([name], index) => ({
+                includeDependenciesRecursively: false,
+                name,
+                priority: workbenchEditorChunks.length - index,
+                test: (id) => workbenchEditorChunk(id) === name
+              }))
+            ],
+            includeDependenciesRecursively: false,
+            maxSize: 450_000,
+            minSize: 20_000
+          }
+        }
+      }
+    },
     optimizeDeps: {
       include: workbenchBrowserDependencies,
       noDiscovery: true
@@ -82,7 +133,7 @@ export function createSlideXWorkbenchViteConfig(options = {}) {
     plugins: [...react()],
     resolve: {
       alias: [
-        ...["400.css", "500.css", "700.css"].map((fileName) => ({
+        ...["latin-400.css", "latin-500.css", "latin-700.css"].map((fileName) => ({
           find: `@fontsource/roboto/${fileName}`,
           replacement: path.join(robotoPackageRoot, fileName)
         })),
@@ -126,6 +177,26 @@ export function createSlideXWorkbenchViteConfig(options = {}) {
         }
       : {})
   };
+}
+
+export function workbenchVendorChunk(id) {
+  const normalized = id.replaceAll("\\", "/");
+  if (!normalized.includes("/node_modules/")) return undefined;
+  return workbenchVendorChunks.find(([, fragments]) => fragments.some((fragment) => normalized.includes(fragment)))?.[0];
+}
+
+export function workbenchEditorChunk(id) {
+  const normalized = id.replaceAll("\\", "/");
+  if (normalized.includes("/node_modules/")) return undefined;
+  return workbenchEditorChunks.find(([, fragments]) => fragments.some((fragment) => normalized.includes(fragment)))?.[0];
+}
+
+export function workbenchModulePreloadDependencies(_filename, dependencies, context) {
+  if (context.hostType !== "html") return dependencies;
+  return dependencies.filter((dependency) => {
+    const fileName = dependency.split("/").at(-1) ?? dependency;
+    return workbenchInitialPreloadPrefixes.some((prefix) => fileName.startsWith(prefix));
+  });
 }
 
 function escapeRegExp(value) {

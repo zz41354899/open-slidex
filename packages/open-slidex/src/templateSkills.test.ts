@@ -73,7 +73,7 @@ test("starter contains the local Workbench and SDK without project-scoped MCP", 
   };
 
   assert.deepEqual(packageJson.devDependencies, {
-    "open-slidex": "0.3.5"
+    "open-slidex": "latest"
   });
   assert.equal(packageJson.scripts?.dev, "open-slidex workspace");
   assert.equal(packageJson.scripts?.["dev:workbench"], undefined);
@@ -110,10 +110,13 @@ test("starter contains the local Workbench and SDK without project-scoped MCP", 
   }
 
   const packageSource = await readFile(new URL("package.json", templateUrl), "utf8");
+  const starterReadme = await readFile(new URL("README.md", templateUrl), "utf8");
   assert.doesNotMatch(
     packageSource,
     /slidex-local-mcp|slidex-editor|next|react|supabase/i
   );
+  assert.match(starterReadme, /does not need a project-level `vite\.config\.mjs`/);
+  assert.match(starterReadme, /ships the tested Vite configuration/);
 });
 
 async function relativeFiles(root: URL, prefix = ""): Promise<string[]> {
@@ -151,10 +154,11 @@ test("published package and generated starter both include the Workspace path", 
   assert.equal(packageJson.version, "0.3.5");
   assert.ok(packageJson.files?.includes("runtime"));
   assert.ok(packageJson.files?.includes("template"));
-  assert.equal(starterPackageJson.devDependencies?.["open-slidex"], packageJson.version);
+  assert.equal(starterPackageJson.devDependencies?.["open-slidex"], "latest");
   assert.equal(starterPackageJson.scripts?.dev, "open-slidex workspace");
   await access(new URL("../runtime/workbench/cli.mjs", import.meta.url));
   await access(new URL("../runtime/workbench/client/index.html", import.meta.url));
+  await access(new URL("../runtime/workbench/vite.config.mjs", import.meta.url));
   await access(
     new URL(
       "../runtime/workbench/source/packages/slidex-workbench/src/client/WorkspaceHome.tsx",

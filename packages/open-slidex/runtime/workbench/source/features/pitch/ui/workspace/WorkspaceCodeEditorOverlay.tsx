@@ -1,8 +1,10 @@
 
+import { lazy, Suspense } from "react";
 import { Code2, X } from "lucide-react";
-import { MdxEditorPane } from "@/features/pitch/ui/MdxEditorPane";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import type { PitchWorkspaceProps } from "@/features/pitch/ui/workspace/PitchWorkspaceTypes";
+
+const MdxEditorPane = lazy(() => import("@/features/pitch/ui/MdxEditorPane").then(({ MdxEditorPane: component }) => ({ default: component })));
 
 type WorkspaceCodeEditorOverlayProps = Pick<PitchWorkspaceProps, "commands" | "document" | "selection" | "view"> & {
   sceneCount: number;
@@ -32,18 +34,20 @@ export function WorkspaceCodeEditorOverlay({ commands, document, sceneCount, sel
             <X size={14} />
           </button>
         </div>
-        <MdxEditorPane
-          copySource={commands.copySource}
-          onSelectionSourceChange={commands.updateSelectionMdx}
-          onSourceChange={(value) => {
-            commands.pushUndoSnapshot();
-            commands.commitMdxSource(value);
-          }}
-          sceneCount={sceneCount}
-          selectionLabel={selection.selectionMdx.label}
-          selectionSource={selection.selectionMdx.source}
-          source={document.source}
-        />
+        <Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center text-sm text-neutral-500">{tx("Opening MDX editor…")}</div>}>
+          <MdxEditorPane
+            copySource={commands.copySource}
+            onSelectionSourceChange={commands.updateSelectionMdx}
+            onSourceChange={(value) => {
+              commands.pushUndoSnapshot();
+              commands.commitMdxSource(value);
+            }}
+            sceneCount={sceneCount}
+            selectionLabel={selection.selectionMdx.label}
+            selectionSource={selection.selectionMdx.source}
+            source={document.source}
+          />
+        </Suspense>
       </div>
     </div>
   );

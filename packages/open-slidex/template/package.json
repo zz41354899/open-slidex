@@ -10,6 +10,6 @@
     "sync:skills": "open-slidex sync:skills"
   },
   "devDependencies": {
-    "open-slidex": "0.3.5"
+    "open-slidex": "latest"
   }
 }

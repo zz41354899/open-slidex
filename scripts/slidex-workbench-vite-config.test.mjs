@@ -5,7 +5,10 @@ import test from "node:test";
 
 import {
   createSlideXWorkbenchViteConfig,
-  slideXWorkbenchSourceRoot
+  slideXWorkbenchSourceRoot,
+  workbenchEditorChunk,
+  workbenchModulePreloadDependencies,
+  workbenchVendorChunk
 } from "../vite.config.mjs";
 
 test("Workbench Tailwind scans only explicit editor source paths", async () => {
@@ -66,8 +69,43 @@ test("Workbench production and HMR builds share the same Vite client configurati
   assert.ok(development.optimizeDeps.include.includes("react-dom/client"));
   const reactAlias = development.resolve.alias.find(({ find }) => String(find) === "/^react$/");
   assert.match(reactAlias?.replacement ?? "", /node_modules\/react$/);
-  const robotoAlias = development.resolve.alias.find(({ find }) => String(find) === "@fontsource/roboto/400.css");
-  assert.match(robotoAlias?.replacement ?? "", /node_modules\/@fontsource\/roboto\/400\.css$/);
+  const robotoAlias = development.resolve.alias.find(({ find }) => String(find) === "@fontsource/roboto/latin-400.css");
+  assert.match(robotoAlias?.replacement ?? "", /node_modules\/@fontsource\/roboto\/latin-400\.css$/);
+});
+
+test("Workbench defers editor routes and groups large browser modules below the entry boundary", async () => {
+  const [workbenchSource, mainSource, overlaySource, buildSource] = await Promise.all([
+    readFile(new URL("../packages/slidex-workbench/src/client/Workbench.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../packages/slidex-workbench/src/client/main.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../features/pitch/ui/workspace/WorkspaceCodeEditorOverlay.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../scripts/build-slidex-workbench.mjs", import.meta.url), "utf8")
+  ]);
+
+  assert.match(workbenchSource, /lazy\(\(\) => import\("\.\/EditorWorkbench"\)\)/);
+  assert.match(workbenchSource, /lazy\(\(\) => import\("\.\/WorkspaceHome"\)/);
+  assert.doesNotMatch(mainSource, /from "@open-slidex\/editor-ui"/);
+  assert.match(overlaySource, /lazy\(\(\) => import\("@\/features\/pitch\/ui\/MdxEditorPane"\)/);
+  assert.match(buildSource, /\.\.\.workbenchViteConfig\.build/);
+
+  assert.equal(workbenchVendorChunk("/repo/node_modules/@codemirror/view/dist/index.js"), "vendor-codemirror-view");
+  assert.equal(workbenchVendorChunk("/repo/node_modules/@paper-design/shaders/dist/index.js"), "vendor-shaders");
+  assert.equal(workbenchEditorChunk("/repo/features/pitch/ui/preview/PreviewBlock.tsx"), "editor-preview");
+  assert.equal(workbenchEditorChunk("/repo/features/pitch/ui/inspector/ImageFields.tsx"), "editor-inspector");
+
+  const dependencies = [
+    "_workbench/EditorWorkbench-abc.js",
+    "_workbench/I18nProvider-abc.js",
+    "_workbench/vendor-react-abc.js",
+    "_workbench/vendor-shaders-abc.js"
+  ];
+  assert.deepEqual(
+    workbenchModulePreloadDependencies("index.js", dependencies, { hostId: "index.html", hostType: "html" }),
+    ["_workbench/I18nProvider-abc.js", "_workbench/vendor-react-abc.js"]
+  );
+  assert.deepEqual(
+    workbenchModulePreloadDependencies("EditorWorkbench.js", dependencies, { hostId: "index.js", hostType: "js" }),
+    dependencies
+  );
 });
 
 test("Workbench HMR proxy preserves the local origin boundary and brand assets", () => {

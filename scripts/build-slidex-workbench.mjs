@@ -16,9 +16,11 @@ const distDir = path.join(packageDir, "dist");
 
 await mkdir(distDir, { recursive: true });
 
+const workbenchViteConfig = createSlideXWorkbenchViteConfig();
 await viteBuild({
-  ...createSlideXWorkbenchViteConfig(),
+  ...workbenchViteConfig,
   build: {
+    ...workbenchViteConfig.build,
     assetsDir: "_workbench",
     emptyOutDir: true,
     outDir: path.join(distDir, "client"),
@@ -42,6 +44,7 @@ await esbuild({
   ],
   format: "esm",
   logLevel: "info",
+  minify: true,
   outfile: path.join(distDir, "cli.mjs"),
   platform: "node",
   target: "node22",
