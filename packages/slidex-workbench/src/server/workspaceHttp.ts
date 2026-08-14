@@ -122,7 +122,7 @@ async function routeWorkspaceRequest(
   if (url.pathname === "/api/v1/workspace/presentations/import" && request.method === "POST") {
     const form = await multipartBody(request);
     const file = form.get("file");
-    if (!(file instanceof File)) {
+    if (!isWorkspaceImportFile(file)) {
       throw Object.assign(new Error("Choose one .mdx file or .zip/.slidex OpenSlideX project bundle."), { status: 400 });
     }
     const presentation = await input.workspace.importMdx(file);
@@ -247,6 +247,16 @@ async function multipartBody(request: Request) {
   return request.formData().catch(() => {
     throw Object.assign(new Error("The OpenSlideX import upload could not be read."), { status: 400 });
   });
+}
+
+/** Node's multipart parser can return a File from a different runtime realm. */
+function isWorkspaceImportFile(value: FormDataEntryValue | null): value is File {
+  return Boolean(value) &&
+    typeof value === "object" &&
+    typeof (value as File).arrayBuffer === "function" &&
+    typeof (value as File).name === "string" &&
+    typeof (value as File).size === "number" &&
+    typeof (value as File).text === "function";
 }
 
 function sendJson(response: ServerResponse, value: unknown, status = 200) {

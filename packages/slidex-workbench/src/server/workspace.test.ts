@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { blankPresentationMdx, parseMotionDoc, validateOpenSlideXLocalMedia } from "@open-slidex/sdk";
+import { exportSlideXDocument } from "@open-slidex/sdk/node";
 import JSZip from "jszip";
 import sharp from "sharp";
 
@@ -47,6 +48,26 @@ test("local workspace creates isolated blank presentations without inherited run
   await assert.rejects(access(path.join(projectRoot, ".open-slidex", "current.json")));
   await assert.rejects(access(path.join(projectRoot, ".open-slidex", "template-lock.json")));
   assert.equal(JSON.parse(await readFile(path.join(projectRoot, "package.json"), "utf8")).name, created.id);
+});
+
+test("local workspace still creates and imports decks when the starter folder is unavailable", async (context) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-workspace-no-template-"));
+  const workspaceRoot = path.join(root, "presentations");
+  const workspace = new OpenSlideXWorkspace({
+    root: workspaceRoot,
+    templateRoot: path.join(root, "missing-starter")
+  });
+  context.after(async () => rm(root, { force: true, recursive: true }));
+  await workspace.prepare();
+
+  const first = await workspace.create({ locale: "en", title: "First local deck" });
+  await workspace.deletePresentation(first.id, { confirmationTitle: "First local deck" });
+  const created = await workspace.create({ locale: "en", title: "Recreated local deck" });
+  const imported = await workspace.importMdx(new File([blankPresentationMdx], "imported.mdx", { type: "text/mdx" }));
+
+  await access(path.join(workspaceRoot, created.id, "presentation.mdx"));
+  await access(path.join(workspaceRoot, created.id, "package.json"));
+  await access(path.join(workspaceRoot, imported.id, "presentation.mdx"));
 });
 
 test("local workspace opens each deck through its stable same-origin route", async (context) => {
@@ -172,6 +193,35 @@ test("local workspace extracts Base64 images from a standalone MDX import", asyn
   assert.match(stored, new RegExp(`src="assets/${assets[0]}"`));
 });
 
+test("portable MDX export carries project images through Workspace import", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const original = await workspace.create({ locale: "en", title: "Portable source" });
+  const originalRoot = path.join(workspaceRoot, original.id);
+  const originalAsset = path.join(originalRoot, "assets", "portable.webp");
+  await writeFile(originalAsset, await tinyWebp());
+  const originalSource = `# Portable source\n\n<Slide><ImageBlock src="assets/portable.webp" alt="Portable" /></Slide>\n`;
+  await writeFile(path.join(originalRoot, "presentation.mdx"), originalSource, "utf8");
+
+  const exportPath = path.join(root, "portable.mdx");
+  await exportSlideXDocument({
+    format: "mdx",
+    outputPath: exportPath,
+    projectRoot: originalRoot,
+    source: originalSource
+  });
+  const portableSource = await readFile(exportPath, "utf8");
+  assert.match(portableSource, /data:image\/webp;base64,/);
+
+  const imported = await workspace.importMdx(new File([portableSource], "portable.mdx", { type: "text/mdx" }));
+  const importedRoot = path.join(workspaceRoot, imported.id);
+  const storedSource = await readFile(path.join(importedRoot, "presentation.mdx"), "utf8");
+  const storedAssets = (await readdir(path.join(importedRoot, "assets"))).filter((name) => name.endsWith(".webp"));
+  assert.equal(storedAssets.length, 1);
+  assert.match(storedSource, new RegExp(`src="assets/${storedAssets[0]}"`));
+});
+
 test("local workspace extracts Base64 shape images from JSX literal expressions", async (context) => {
   const { root, workspace, workspaceRoot } = await fixture();
   context.after(async () => rm(root, { force: true, recursive: true }));
@@ -220,28 +270,31 @@ test("local workspace imports an MDX that reuses a recoverable local image asset
   assert.match(stored, new RegExp(`src="assets/${assets[0]}"`));
 });
 
-test("local workspace rejects image references that are not carried by the import", async (context) => {
+test("local workspace imports MDX with unavailable local assets as editable placeholders", async (context) => {
   const { root, workspace } = await fixture();
   context.after(async () => rm(root, { force: true, recursive: true }));
 
   const source = `# Missing image
 
-<Slide>
+<Slide backgroundImage="assets/background.jpg">
   <ImageBlock src="assets/missing.png" alt="Missing" />
+  <VideoBlock src="assets/missing.mp4" poster="assets/poster.png" />
+  <Shape shapeImageSrc={"assets/shape.png"} />
 </Slide>
 `;
-  await assert.rejects(
-    workspace.importMdx(new File([source], "missing.mdx", { type: "text/mdx" })),
-    /references 1 local asset.*\.zip.*\.slidex/i
-  );
+  const importedMdx = await workspace.importMdx(new File([source], "missing.mdx", { type: "text/mdx" }));
+  const standaloneSource = await readFile(path.join(workspace.root, importedMdx.id, "presentation.mdx"), "utf8");
+  assert.doesNotMatch(standaloneSource, /assets\/(?:background|missing|poster|shape)\./);
+  assert.match(standaloneSource, /<ImageBlock\s+alt="Missing"\s*\/>/);
+  assert.match(standaloneSource, /<VideoBlock\s*\/>/);
+  assert.match(standaloneSource, /<Shape\s*\/>/);
 
   const archive = new JSZip();
   archive.file("presentation.mdx", source);
   const bytes = await archive.generateAsync({ type: "uint8array" });
-  await assert.rejects(
-    workspace.importMdx(new File([Buffer.from(bytes)], "missing.zip", { type: "application/zip" })),
-    /missing referenced asset: assets\/missing\.png/i
-  );
+  const importedBundle = await workspace.importMdx(new File([Buffer.from(bytes)], "missing.zip", { type: "application/zip" }));
+  const bundleSource = await readFile(path.join(workspace.root, importedBundle.id, "presentation.mdx"), "utf8");
+  assert.doesNotMatch(bundleSource, /assets\/(?:background|missing|poster|shape)\./);
 });
 
 test("local workspace rejects unsafe project bundle paths", async (context) => {
@@ -342,7 +395,7 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   assert.equal(mcpPayload.configPath, "~/.codex/config.toml");
   assert.equal(mcpPayload.workspaceRoot, workspaceRoot);
   assert.match(mcpPayload.config, /\[mcp_servers\.open_slidex_workspace\]/);
-  assert.match(mcpPayload.config, /open-slidex@0\.3\.2/);
+  assert.match(mcpPayload.config, /open-slidex@0\.3\.3/);
   assert.match(mcpPayload.config, /--workspace/);
 
   const windowsMcpSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=codex&platform=windows`);
@@ -363,6 +416,28 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   const importedPayload = await imported.json();
   assert.equal(importedPayload.presentation.title, "Imported through API");
   assert.equal(await readFile(path.join(workspaceRoot, importedPayload.presentation.id, "presentation.mdx"), "utf8"), importedSource);
+
+  const relaxedImportForm = new FormData();
+  relaxedImportForm.set("file", new File([
+    `# API import with unavailable image\n\n<Slide><ImageBlock src="assets/unavailable.png" alt="Unavailable" /></Slide>\n`
+  ], "unavailable-assets.mdx", { type: "text/mdx" }));
+  const relaxedImport = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/presentations/import`, {
+    body: relaxedImportForm,
+    headers: { origin: `http://127.0.0.1:${uiPort}` },
+    method: "POST"
+  });
+  assert.equal(relaxedImport.status, 201);
+
+  const missingImport = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/presentations/import`, {
+    body: new FormData(),
+    headers: { origin: `http://127.0.0.1:${uiPort}` },
+    method: "POST"
+  });
+  assert.equal(missingImport.status, 400);
+  assert.deepEqual(await missingImport.json(), {
+    code: "invalid_request",
+    message: "Choose one .mdx file or .zip/.slidex OpenSlideX project bundle."
+  });
 
   const embeddedImage = Buffer.concat([await tinyPng(), Buffer.alloc(2.5 * 1024 * 1024)]);
   const largeMdxForm = new FormData();

@@ -1,6 +1,0 @@
-[mcp_servers.open_slidex]
-command = "npm"
-args = ["--silent", "run", "mcp"]
-cwd = "."
-required = false
-default_tools_approval_mode = "writes"

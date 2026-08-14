@@ -26198,7 +26198,7 @@ var templatePackageV1Schema = external_exports.strictObject({
 
 // core/motion-doc/domain/officialTemplateDefinitions.ts
 var officialTemplatePackageVersion = "1.0.0";
-var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.2" };
+var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.3" };
 var officialTemplateDefinitions = [
   {
     id: "summer-time-report",
@@ -35549,7 +35549,7 @@ function scheduleIdleClose() {
 // packages/slidex-sdk/src/nodeMedia.ts
 import { readFile as readFile2, realpath } from "node:fs/promises";
 import path4 from "node:path";
-async function embedSlideXProjectMedia(source, projectRoot) {
+async function embedSlideXProjectMedia(source, projectRoot, options = {}) {
   const resolvedRoot = await realpath(path4.resolve(projectRoot)).catch(() => {
     throw new Error("The projectRoot directory does not exist.");
   });
@@ -35562,8 +35562,9 @@ async function embedSlideXProjectMedia(source, projectRoot) {
       throw new Error(`Referenced project media does not exist: ${mediaSource}`);
     });
     resolveInsideRoot(resolvedRoot, absolutePath);
-    const buffer = await readFile2(absolutePath);
     const mimeType = mediaMimeType2(absolutePath);
+    if (options.includeVideo === false && mimeType.startsWith("video/")) continue;
+    const buffer = await readFile2(absolutePath);
     const start = (match.index ?? 0) + match[0].lastIndexOf(mediaSource);
     replacements.push({
       end: start + mediaSource.length,
@@ -35707,7 +35708,12 @@ async function exportSlideXDocument(input) {
     throw new Error("The output file already exists. Pass overwrite=true to replace it.");
   }
   await mkdir(path5.dirname(outputPath), { recursive: true });
-  const portableSource = input.format !== "mdx" && input.projectRoot ? await embedSlideXProjectMedia(input.source, input.projectRoot) : input.source;
+  const portableSource = input.projectRoot ? await embedSlideXProjectMedia(input.source, input.projectRoot, {
+    // Standalone MDX imports currently materialize embedded images. Keep
+    // video paths as editable placeholders unless a project bundle carries
+    // the video bytes.
+    includeVideo: input.format !== "mdx"
+  }) : input.source;
   if (input.format === "pptx") {
     return exportMotionDocPptx({
       outputPath,
@@ -35716,7 +35722,7 @@ async function exportSlideXDocument(input) {
       title: input.title
     });
   }
-  const contents = input.format === "html" ? buildMotionDocHtml(portableSource, input.title) : input.source;
+  const contents = input.format === "html" ? buildMotionDocHtml(portableSource, input.title) : portableSource;
   await writeFile(outputPath, contents, "utf8");
   return {
     format: input.format,

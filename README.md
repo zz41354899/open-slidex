@@ -37,7 +37,7 @@ npm run dev -- ~/Presentations --port 4174
 The npm package creates a separate presentation project:
 
 ```bash
-npx open-slidex@0.3.2 init my-deck
+npx open-slidex@0.3.3 init my-deck
 cd my-deck
 npm run dev
 ```
@@ -45,7 +45,7 @@ npm run dev
 Or install the CLI globally:
 
 ```bash
-npm install --global open-slidex@0.3.2
+npm install --global open-slidex@0.3.3
 open-slidex init my-deck
 ```
 
@@ -82,6 +82,7 @@ Workbench has no built-in AI Chat or CLI bridge.
 | `npm run validate` | Validate the root presentation source. |
 | `npm run render` | Render the root presentation montage to `dist/montage.png`. |
 | `npm run export:html` | Export the root deck as HTML. |
+| `npm run export:mdx` | Export one portable MDX file with local images embedded. |
 | `npm run export:pptx` | Export the root deck as PowerPoint. |
 | `npm run build:runtime` | Rebuild the distributable runtime after SDK, Workbench, MCP, or CLI changes. |
 

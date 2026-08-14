@@ -43332,7 +43332,11 @@ function repathProjectAsset(source, from, to) {
     `(\\b(?:src|poster|backgroundImage|shapeImageSrc)\\s*=\\s*["'])${escaped}(["'])`,
     "g"
   );
-  const nextSource = source.replace(pattern, `$1${to}$2`);
+  const expressionPattern = new RegExp(
+    `(\\b(?:src|poster|backgroundImage|shapeImageSrc)\\s*=\\s*\\{\\s*["'])${escaped}(["']\\s*\\})`,
+    "g"
+  );
+  const nextSource = source.replace(pattern, `$1${to}$2`).replace(expressionPattern, `$1${to}$2`);
   if (nextSource === source) {
     throw new Error(`Asset ${from} is not referenced by presentation.mdx.`);
   }
@@ -43503,7 +43507,7 @@ function parseTemplateRef(value) {
 
 // core/motion-doc/domain/officialTemplateDefinitions.ts
 var officialTemplatePackageVersion = "1.0.0";
-var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.2" };
+var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.3" };
 var officialTemplateDefinitions = [
   {
     id: "summer-time-report",
@@ -53034,7 +53038,7 @@ function scheduleIdleClose() {
 // packages/slidex-sdk/src/nodeMedia.ts
 import { readFile as readFile2, realpath as realpath2 } from "node:fs/promises";
 import path4 from "node:path";
-async function embedSlideXProjectMedia(source, projectRoot2) {
+async function embedSlideXProjectMedia(source, projectRoot2, options = {}) {
   const resolvedRoot = await realpath2(path4.resolve(projectRoot2)).catch(() => {
     throw new Error("The projectRoot directory does not exist.");
   });
@@ -53047,8 +53051,9 @@ async function embedSlideXProjectMedia(source, projectRoot2) {
       throw new Error(`Referenced project media does not exist: ${mediaSource}`);
     });
     resolveInsideRoot(resolvedRoot, absolutePath);
-    const buffer = await readFile2(absolutePath);
     const mimeType = mediaMimeType(absolutePath);
+    if (options.includeVideo === false && mimeType.startsWith("video/")) continue;
+    const buffer = await readFile2(absolutePath);
     const start = (match.index ?? 0) + match[0].lastIndexOf(mediaSource);
     replacements.push({
       end: start + mediaSource.length,
@@ -54208,7 +54213,7 @@ function createOpenSlideXMcpServer(root = projectRoot) {
       root: resolvedRoot
     };
   };
-  const server = new McpServer({ name: "open-slidex-local", version: "0.3.2" });
+  const server = new McpServer({ name: "open-slidex-local", version: "0.3.3" });
   const rejectedCandidates = /* @__PURE__ */ new Map();
   if (workspace) {
     server.registerTool("open_slidex_workspace_list", {
@@ -54607,7 +54612,7 @@ async function main() {
   process.stderr.write(`OpenSlideX MCP connected to ${workspaceRoot ? `workspace ${workspaceRoot}` : projectRoot}
 `);
 }
-var openSlideXMcpNpxPackage = "open-slidex@0.3.2";
+var openSlideXMcpNpxPackage = "open-slidex@0.3.3";
 function openSlideXMcpConfig(client, root, platform = process.platform === "win32" ? "windows" : "macos") {
   const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? win32.resolve(root) : resolve(root);
   const command = platform === "windows" ? "cmd" : "npx";

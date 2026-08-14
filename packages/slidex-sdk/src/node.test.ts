@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import {
+  mkdir,
   mkdtemp,
   readFile,
   rm,
@@ -199,6 +200,34 @@ test("export preparation embeds an absolute project image path", async () => {
     const html = await readFile(outputPath, "utf8");
     assert.match(html, /data:image\/png;base64,/);
     assert.doesNotMatch(html, new RegExp(imagePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("MDX export embeds project images into one portable source file", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-portable-mdx-"));
+  const assetsRoot = path.join(root, "assets");
+  const imagePath = path.join(assetsRoot, "portable.webp");
+  const outputPath = path.join(root, "portable.mdx");
+  try {
+    await mkdir(assetsRoot, { recursive: true });
+    await sharp({
+      create: { background: "#224924", channels: 3, height: 8, width: 8 }
+    })
+      .webp()
+      .toFile(imagePath);
+
+    await exportSlideXDocument({
+      format: "mdx",
+      outputPath,
+      projectRoot: root,
+      source: `# Portable MDX\n\n<Slide><ImageBlock src="assets/portable.webp" alt="Portable image" /></Slide>\n`
+    });
+
+    const portableMdx = await readFile(outputPath, "utf8");
+    assert.match(portableMdx, /src="data:image\/webp;base64,/);
+    assert.doesNotMatch(portableMdx, /assets\/portable\.webp/);
   } finally {
     await rm(root, { force: true, recursive: true });
   }

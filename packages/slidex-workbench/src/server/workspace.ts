@@ -93,10 +93,6 @@ export class OpenSlideXWorkspace {
   async prepare() {
     await mkdir(this.root, { recursive: true });
     await mkdir(this.stateRoot, { recursive: true });
-    const templateStats = await stat(this.templateRoot).catch(() => null);
-    if (!templateStats?.isDirectory()) {
-      throw new Error(`OpenSlideX starter template was not found at ${this.templateRoot}.`);
-    }
   }
 
   async snapshot(locale: TemplatePackageLocale): Promise<LocalWorkspaceSnapshot> {
@@ -139,7 +135,7 @@ export class OpenSlideXWorkspace {
     const id = await this.availableProjectId(title);
     const target = this.projectPath(id);
 
-    await cp(this.templateRoot, target, { errorOnExist: true, force: false, recursive: true });
+    await this.seedProject(target);
     try {
       await resetGeneratedProjectState(target);
       await replaceProjectName(target, id);
@@ -189,7 +185,7 @@ export class OpenSlideXWorkspace {
     const id = await this.availableProjectId(title);
     const target = this.projectPath(id);
 
-    await cp(this.templateRoot, target, { errorOnExist: true, force: false, recursive: true });
+    await this.seedProject(target);
     try {
       await resetGeneratedProjectState(target);
       await replaceProjectName(target, id);
@@ -327,6 +323,20 @@ export class OpenSlideXWorkspace {
   }
 
   /**
+   * A Workspace deck must remain creatable after npm installation even if a
+   * packaged starter folder was moved or omitted. The template adds optional
+   * project conveniences; the MotionDoc and local state are created below.
+   */
+  private async seedProject(target: string) {
+    const templateStats = await stat(this.templateRoot).catch(() => null);
+    if (templateStats?.isDirectory()) {
+      await cp(this.templateRoot, target, { errorOnExist: true, force: false, recursive: true });
+      return;
+    }
+    await mkdir(target, { recursive: false });
+  }
+
+  /**
    * Standalone MDX exports retain local asset paths. If they came from this
    * Workspace, safely reuse an available or recoverable WebP instead of
    * forcing the user to build a ZIP merely to round-trip their own deck.
@@ -429,8 +439,9 @@ async function resetGeneratedProjectState(root: string) {
 
 async function replaceProjectName(root: string, projectName: string) {
   const packagePath = path.join(root, "package.json");
-  const parsed = JSON.parse(await readFile(packagePath, "utf8")) as Record<string, unknown>;
+  const parsed = JSON.parse(await readFile(packagePath, "utf8").catch(() => "{}")) as Record<string, unknown>;
   parsed.name = projectName;
+  parsed.private = true;
   await writeFile(packagePath, `${JSON.stringify(parsed, null, 2)}\n`, "utf8");
 }
 

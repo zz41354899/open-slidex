@@ -12272,15 +12272,15 @@ function listSlideXAssetReferences(source) {
   const document4 = parseMotionDoc(source);
   const references = [];
   document4.scenes.forEach((scene, slideIndex) => {
-    const backgroundImage = scene.props.backgroundImage;
-    if (typeof backgroundImage === "string" && isProjectAssetPath(backgroundImage)) {
+    const backgroundImage = projectAssetPath(scene.props.backgroundImage);
+    if (backgroundImage) {
       references.push({ prop: "backgroundImage", slideIndex, source: backgroundImage });
     }
     scene.blocks.forEach((block, blockIndex) => {
       for (const prop of ["src", "poster", "shapeImageSrc"]) {
-        const value = block.props[prop];
-        if (typeof value === "string" && isProjectAssetPath(value)) {
-          references.push({ blockIndex, prop, slideIndex, source: value });
+        const assetPath = projectAssetPath(block.props[prop]);
+        if (assetPath) {
+          references.push({ blockIndex, prop, slideIndex, source: assetPath });
         }
       }
     });
@@ -12410,7 +12410,11 @@ function repathProjectAsset(source, from, to) {
     `(\\b(?:src|poster|backgroundImage|shapeImageSrc)\\s*=\\s*["'])${escaped}(["'])`,
     "g"
   );
-  const nextSource = source.replace(pattern, `$1${to}$2`);
+  const expressionPattern = new RegExp(
+    `(\\b(?:src|poster|backgroundImage|shapeImageSrc)\\s*=\\s*\\{\\s*["'])${escaped}(["']\\s*\\})`,
+    "g"
+  );
+  const nextSource = source.replace(pattern, `$1${to}$2`).replace(expressionPattern, `$1${to}$2`);
   if (nextSource === source) {
     throw new Error(`Asset ${from} is not referenced by presentation.mdx.`);
   }
@@ -12421,6 +12425,12 @@ function isProjectAssetPath(value) {
     return false;
   }
   return value.slice("assets/".length).split("/").every((part) => part.length > 0 && part !== "." && part !== "..");
+}
+function projectAssetPath(value) {
+  if (typeof value !== "string") return void 0;
+  const trimmed = value.trim();
+  const unwrapped = trimmed.length >= 2 && (trimmed.startsWith('"') && trimmed.endsWith('"') || trimmed.startsWith("'") && trimmed.endsWith("'")) ? trimmed.slice(1, -1) : trimmed;
+  return isProjectAssetPath(unwrapped) ? unwrapped : void 0;
 }
 function addSlide(source, command) {
   if (command.slideSource) {
@@ -27149,7 +27159,7 @@ function parseTemplatePackageV1(value) {
 
 // core/motion-doc/domain/officialTemplateDefinitions.ts
 var officialTemplatePackageVersion = "1.0.0";
-var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.2" };
+var officialTemplateCompatibility = { motionDoc: "1.0.0", openSlideX: "0.3.3" };
 var officialTemplateDefinitions = [
   {
     id: "summer-time-report",

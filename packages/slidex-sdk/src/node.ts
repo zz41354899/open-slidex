@@ -213,10 +213,14 @@ export async function exportSlideXDocument(input: ExportSlideXDocumentInput) {
   }
   await mkdir(path.dirname(outputPath), { recursive: true });
 
-  const portableSource =
-    input.format !== "mdx" && input.projectRoot
-      ? await embedSlideXProjectMedia(input.source, input.projectRoot)
-      : input.source;
+  const portableSource = input.projectRoot
+    ? await embedSlideXProjectMedia(input.source, input.projectRoot, {
+        // Standalone MDX imports currently materialize embedded images. Keep
+        // video paths as editable placeholders unless a project bundle carries
+        // the video bytes.
+        includeVideo: input.format !== "mdx"
+      })
+    : input.source;
 
   if (input.format === "pptx") {
     return exportMotionDocPptx({
@@ -230,7 +234,7 @@ export async function exportSlideXDocument(input: ExportSlideXDocumentInput) {
   const contents =
     input.format === "html"
       ? buildMotionDocHtml(portableSource, input.title)
-      : input.source;
+      : portableSource;
   await writeFile(outputPath, contents, "utf8");
   return {
     format: input.format,

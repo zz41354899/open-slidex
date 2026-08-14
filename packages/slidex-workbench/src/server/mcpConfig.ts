@@ -1,6 +1,6 @@
 import path from "node:path";
 
-export const openSlideXMcpNpxPackage = "open-slidex@0.3.2";
+export const openSlideXMcpNpxPackage = "open-slidex@0.3.3";
 export const openSlideXMcpClients = ["codex", "claude-code", "claude-desktop"] as const;
 export type OpenSlideXMcpClient = (typeof openSlideXMcpClients)[number];
 export type OpenSlideXMcpPlatform = "macos" | "windows";

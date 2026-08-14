@@ -1,6 +1,6 @@
 {
   "name": "open-slidex",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Create a local-first MDX presentation workspace.",
   "type": "module",
   "bin": {

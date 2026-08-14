@@ -63,8 +63,10 @@ async function copyWorkbenchSources(sourceRoot) {
     "packages/slidex-workbench/src/shared"
   ];
   for (const sourceDirectory of sourceDirectories) {
+    const sourcePath = path.join(rootDir, sourceDirectory);
+    if (!existsSync(sourcePath)) continue;
     await cp(
-      path.join(rootDir, sourceDirectory),
+      sourcePath,
       path.join(sourceRoot, sourceDirectory),
       {
         filter: (candidate) => !/\.test\.[cm]?[jt]sx?$/.test(candidate),

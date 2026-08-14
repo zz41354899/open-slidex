@@ -37,15 +37,10 @@ export async function readWorkspaceImport(
       .filter((source) => !embeddedSources.has(source));
     const recoveredAssets = await Promise.all(missingReferences.map((source) => resolveWorkspaceAsset?.(source)));
     const unresolvedReferences = missingReferences.filter((_, index) => !recoveredAssets[index]);
-    if (unresolvedReferences.length > 0) {
-      throw badRequest(
-        `This MDX references ${unresolvedReferences.length} local asset${unresolvedReferences.length === 1 ? "" : "s"}. Import a .zip or .slidex bundle containing presentation.mdx and its assets folder.`
-      );
-    }
     return {
       assets: [...embedded.assets, ...recoveredAssets.filter((asset): asset is WorkspaceImportAsset => Boolean(asset))],
       kind: "mdx",
-      source: embedded.source
+      source: stripUnavailableAssetReferences(embedded.source, unresolvedReferences)
     };
   }
 
@@ -96,12 +91,14 @@ export async function readWorkspaceImport(
   const references = unique(referencedSources(source));
   const assets: WorkspaceImportAsset[] = [...embedded.assets];
   const embeddedSources = new Set(embedded.assets.map((asset) => asset.source));
+  const unavailableReferences: string[] = [];
   for (const sourcePath of references) {
     if (embeddedSources.has(sourcePath)) continue;
     const entryPath = `${prefix}${sourcePath}`;
     const entry = archive.file(entryPath);
     if (!entry || entry.dir) {
-      throw badRequest(`The project bundle is missing referenced asset: ${sourcePath}`);
+      unavailableReferences.push(sourcePath);
+      continue;
     }
     if (uncompressedSize(entry) > 25 * 1024 * 1024) {
       throw badRequest(`The referenced asset exceeds 25 MB: ${sourcePath}`);
@@ -117,7 +114,11 @@ export async function readWorkspaceImport(
     });
   }
 
-  return { assets, kind: "bundle", source };
+  return {
+    assets,
+    kind: "bundle",
+    source: stripUnavailableAssetReferences(source, unavailableReferences)
+  };
 }
 
 async function readMdxFile(file: File) {
@@ -212,6 +213,23 @@ function uncompressedSize(entry: JSZipObject) {
 
 function unique(values: string[]) {
   return [...new Set(values)];
+}
+
+/**
+ * Browsers do not expose files beside a selected standalone MDX. Preserve the
+ * slide and media frame, but remove only unavailable local media attributes so
+ * the deck can still be imported and the existing editor placeholder is shown.
+ */
+function stripUnavailableAssetReferences(source: string, references: string[]) {
+  let nextSource = source;
+  for (const reference of unique(references)) {
+    const escaped = reference.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const prop = "(?:src|poster|backgroundImage|shapeImageSrc)";
+    const expression = new RegExp(`\\s+\\b${prop}\\s*=\\s*\\{\\s*([\"'])${escaped}\\1\\s*\\}`, "g");
+    const literal = new RegExp(`\\s+\\b${prop}\\s*=\\s*([\"'])${escaped}\\1`, "g");
+    nextSource = nextSource.replace(expression, "").replace(literal, "");
+  }
+  return nextSource;
 }
 
 function badRequest(message: string) {

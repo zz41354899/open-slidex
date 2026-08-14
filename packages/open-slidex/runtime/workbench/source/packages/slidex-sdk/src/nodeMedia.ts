@@ -3,7 +3,11 @@ import path from "node:path";
 
 import { resolveInsideRoot } from "./nodePath";
 
-export async function embedSlideXProjectMedia(source: string, projectRoot: string) {
+export async function embedSlideXProjectMedia(
+  source: string,
+  projectRoot: string,
+  options: { includeVideo?: boolean } = {}
+) {
   const resolvedRoot = await realpath(path.resolve(projectRoot)).catch(() => {
     throw new Error("The projectRoot directory does not exist.");
   });
@@ -20,8 +24,9 @@ export async function embedSlideXProjectMedia(source: string, projectRoot: strin
       throw new Error(`Referenced project media does not exist: ${mediaSource}`);
     });
     resolveInsideRoot(resolvedRoot, absolutePath);
-    const buffer = await readFile(absolutePath);
     const mimeType = mediaMimeType(absolutePath);
+    if (options.includeVideo === false && mimeType.startsWith("video/")) continue;
+    const buffer = await readFile(absolutePath);
     const start = (match.index ?? 0) + match[0].lastIndexOf(mediaSource);
     replacements.push({
       end: start + mediaSource.length,

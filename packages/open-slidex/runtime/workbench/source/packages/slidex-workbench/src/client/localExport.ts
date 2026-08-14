@@ -3,7 +3,7 @@ import type { ExportFormat } from "./api";
 export const localExportOptions = [
   { description: "Interactive presentation", id: "html", label: "HTML" },
   { description: "Editable PowerPoint", id: "pptx", label: "PowerPoint" },
-  { description: "Canonical source", id: "mdx", label: "MDX" }
+  { description: "Portable source with images", id: "mdx", label: "MDX" }
 ] as const satisfies readonly { description: string; id: ExportFormat; label: string }[];
 
 export function localExportFileName(value: string) {

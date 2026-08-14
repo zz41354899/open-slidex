@@ -208,7 +208,7 @@ export function WorkspaceHome() {
     const extension = file.name.toLowerCase().match(/\.(mdx|slidex|zip)$/)?.[1];
     if (!extension) {
       setImportFile(undefined);
-      setImportError(zh ? "只支援 .mdx、.zip 或 .slidex；含圖片的簡報請匯入包含 assets 資料夾的封裝。" : "Use .mdx, .zip, or .slidex. Presentations with images need a bundle containing the assets folder.");
+      setImportError(zh ? "只支援 .mdx、.zip 或 .slidex。" : "Use an .mdx, .zip, or .slidex file.");
       return;
     }
     const maximumBytes = 50 * 1024 * 1024;
@@ -478,7 +478,7 @@ export function WorkspaceHome() {
             <span className="osx-import-dialog-icon"><Upload size={20} /></span>
             <small>{zh ? "本機簡報匯入" : "Local presentation import"}</small>
             <h2>{zh ? "匯入 OpenSlideX 簡報" : "Import an OpenSlideX presentation"}</h2>
-            <p>{zh ? "可直接匯入含 Base64 圖片的 MDX，系統會自動轉存至 assets/；外部圖片檔則使用 ZIP 或 .slidex 封裝。" : "MDX with Base64 images is converted into local assets automatically. Use ZIP/.slidex when images are separate files."}</p>
+            <p>{zh ? "OpenSlideX 匯出的 MDX 會直接帶入圖片；舊 MDX 若只有本機路徑，找不到的圖片會保留為可重新加入圖片的空框。" : "OpenSlideX MDX exports carry their images. For older MDX files containing only local paths, unavailable images remain editable empty frames."}</p>
             <input
               accept=".mdx,.slidex,.zip,text/mdx,text/markdown,application/zip"
               className="sr-only"
@@ -764,7 +764,7 @@ function SettingsView(props: { locale: "en" | "zh-TW"; onImport(): void; onLocal
       </section>
       <section className="osx-settings-card is-import">
         <span className="osx-settings-icon"><Upload size={20} /></span>
-        <div className="osx-settings-copy"><small>{zh ? "簡報匯入" : "Presentation import"}</small><strong>{zh ? "MotionDoc MDX 或專案封裝" : "MotionDoc MDX or project bundle"}</strong><p>{zh ? "MDX 內嵌的 Base64 圖片會自動轉成 assets/*.webp；分離圖片請使用 .zip 或 .slidex。" : "Base64 images embedded in MDX become assets/*.webp automatically; use .zip or .slidex for separate image files."}</p></div>
+        <div className="osx-settings-copy"><small>{zh ? "簡報匯入" : "Presentation import"}</small><strong>{zh ? "可攜式 MotionDoc MDX" : "Portable MotionDoc MDX"}</strong><p>{zh ? "新匯出的 MDX 會把圖片一起帶走，匯入時自動還原成 assets/*.webp；舊格式缺圖也不會阻止匯入。" : "New MDX exports carry images and restore them to assets/*.webp on import. Missing images in older files no longer block import."}</p></div>
         <button onClick={props.onImport} type="button"><Upload size={15} />{zh ? "選擇匯入檔" : "Choose import file"}</button>
       </section>
     </div>

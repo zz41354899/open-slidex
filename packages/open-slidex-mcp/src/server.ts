@@ -102,7 +102,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       root: resolvedRoot
     };
   };
-  const server = new McpServer({ name: "open-slidex-local", version: "0.3.2" });
+  const server = new McpServer({ name: "open-slidex-local", version: "0.3.3" });
   const rejectedCandidates = new Map<string, {
     attempts: number;
     expectedRevision: string;
@@ -557,7 +557,7 @@ async function main() {
 
 export type OpenSlideXMcpClient = "claude" | "claude-code" | "claude-desktop" | "codex";
 export type OpenSlideXPlatform = "macos" | "windows";
-export const openSlideXMcpNpxPackage = "open-slidex@0.3.2";
+export const openSlideXMcpNpxPackage = "open-slidex@0.3.3";
 
 export function openSlideXMcpConfig(
   client: OpenSlideXMcpClient,

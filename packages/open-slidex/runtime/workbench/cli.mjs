@@ -9832,15 +9832,10 @@ async function readWorkspaceImport(file, referencedSources, resolveWorkspaceAsse
     const missingReferences = unique(referencedSources(embedded2.source)).filter((source2) => !embeddedSources2.has(source2));
     const recoveredAssets = await Promise.all(missingReferences.map((source2) => resolveWorkspaceAsset?.(source2)));
     const unresolvedReferences = missingReferences.filter((_, index) => !recoveredAssets[index]);
-    if (unresolvedReferences.length > 0) {
-      throw badRequest(
-        `This MDX references ${unresolvedReferences.length} local asset${unresolvedReferences.length === 1 ? "" : "s"}. Import a .zip or .slidex bundle containing presentation.mdx and its assets folder.`
-      );
-    }
     return {
       assets: [...embedded2.assets, ...recoveredAssets.filter((asset) => Boolean(asset))],
       kind: "mdx",
-      source: embedded2.source
+      source: stripUnavailableAssetReferences(embedded2.source, unresolvedReferences)
     };
   }
   if (extension !== ".zip" && extension !== ".slidex") {
@@ -9886,12 +9881,14 @@ async function readWorkspaceImport(file, referencedSources, resolveWorkspaceAsse
   const references = unique(referencedSources(source));
   const assets = [...embedded.assets];
   const embeddedSources = new Set(embedded.assets.map((asset) => asset.source));
+  const unavailableReferences = [];
   for (const sourcePath of references) {
     if (embeddedSources.has(sourcePath)) continue;
     const entryPath = `${prefix}${sourcePath}`;
     const entry = archive.file(entryPath);
     if (!entry || entry.dir) {
-      throw badRequest(`The project bundle is missing referenced asset: ${sourcePath}`);
+      unavailableReferences.push(sourcePath);
+      continue;
     }
     if (uncompressedSize(entry) > 25 * 1024 * 1024) {
       throw badRequest(`The referenced asset exceeds 25 MB: ${sourcePath}`);
@@ -9906,7 +9903,11 @@ async function readWorkspaceImport(file, referencedSources, resolveWorkspaceAsse
       source: sourcePath
     });
   }
-  return { assets, kind: "bundle", source };
+  return {
+    assets,
+    kind: "bundle",
+    source: stripUnavailableAssetReferences(source, unavailableReferences)
+  };
 }
 async function readMdxFile(file) {
   if (!file.size || file.size > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
@@ -9978,6 +9979,17 @@ function uncompressedSize(entry) {
 }
 function unique(values) {
   return [...new Set(values)];
+}
+function stripUnavailableAssetReferences(source, references) {
+  let nextSource = source;
+  for (const reference of unique(references)) {
+    const escaped = reference.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const prop = "(?:src|poster|backgroundImage|shapeImageSrc)";
+    const expression = new RegExp(`\\s+\\b${prop}\\s*=\\s*\\{\\s*(["'])${escaped}\\1\\s*\\}`, "g");
+    const literal = new RegExp(`\\s+\\b${prop}\\s*=\\s*(["'])${escaped}\\1`, "g");
+    nextSource = nextSource.replace(expression, "").replace(literal, "");
+  }
+  return nextSource;
 }
 function badRequest(message) {
   return Object.assign(new Error(message), { status: 400 });
@@ -10705,10 +10717,6 @@ var OpenSlideXWorkspace = class {
   async prepare() {
     await mkdir2(this.root, { recursive: true });
     await mkdir2(this.stateRoot, { recursive: true });
-    const templateStats = await stat3(this.templateRoot).catch(() => null);
-    if (!templateStats?.isDirectory()) {
-      throw new Error(`OpenSlideX starter template was not found at ${this.templateRoot}.`);
-    }
   }
   async snapshot(locale) {
     return {
@@ -10745,7 +10753,7 @@ var OpenSlideXWorkspace = class {
     const template = parseTemplate(value.templateId, value.templateVersion);
     const id = await this.availableProjectId(title);
     const target = this.projectPath(id);
-    await cp(this.templateRoot, target, { errorOnExist: true, force: false, recursive: true });
+    await this.seedProject(target);
     try {
       await resetGeneratedProjectState(target);
       await replaceProjectName(target, id);
@@ -10790,7 +10798,7 @@ var OpenSlideXWorkspace = class {
     const normalizedSource = document.title ? source : withDocumentTitle(source, title);
     const id = await this.availableProjectId(title);
     const target = this.projectPath(id);
-    await cp(this.templateRoot, target, { errorOnExist: true, force: false, recursive: true });
+    await this.seedProject(target);
     try {
       await resetGeneratedProjectState(target);
       await replaceProjectName(target, id);
@@ -10914,6 +10922,19 @@ var OpenSlideXWorkspace = class {
     return path5.join(this.root, id);
   }
   /**
+   * A Workspace deck must remain creatable after npm installation even if a
+   * packaged starter folder was moved or omitted. The template adds optional
+   * project conveniences; the MotionDoc and local state are created below.
+   */
+  async seedProject(target) {
+    const templateStats = await stat3(this.templateRoot).catch(() => null);
+    if (templateStats?.isDirectory()) {
+      await cp(this.templateRoot, target, { errorOnExist: true, force: false, recursive: true });
+      return;
+    }
+    await mkdir2(target, { recursive: false });
+  }
+  /**
    * Standalone MDX exports retain local asset paths. If they came from this
    * Workspace, safely reuse an available or recoverable WebP instead of
    * forcing the user to build a ZIP merely to round-trip their own deck.
@@ -11004,8 +11025,9 @@ async function resetGeneratedProjectState(root) {
 }
 async function replaceProjectName(root, projectName) {
   const packagePath = path5.join(root, "package.json");
-  const parsed = JSON.parse(await readFile2(packagePath, "utf8"));
+  const parsed = JSON.parse(await readFile2(packagePath, "utf8").catch(() => "{}"));
   parsed.name = projectName;
+  parsed.private = true;
   await writeFile2(packagePath, `${JSON.stringify(parsed, null, 2)}
 `, "utf8");
 }
@@ -11023,7 +11045,7 @@ import { Readable as Readable2 } from "node:stream";
 
 // packages/slidex-workbench/src/server/mcpConfig.ts
 import path6 from "node:path";
-var openSlideXMcpNpxPackage = "open-slidex@0.3.2";
+var openSlideXMcpNpxPackage = "open-slidex@0.3.3";
 var openSlideXMcpClients = ["codex", "claude-code", "claude-desktop"];
 function resolveMcpRoot(root, platform) {
   return platform === "windows" && /^[A-Za-z]:[\\/]/.test(root) ? path6.win32.resolve(root) : path6.resolve(root);
@@ -11160,7 +11182,7 @@ async function routeWorkspaceRequest(incoming, outgoing, input, editorRouters) {
   if (url.pathname === "/api/v1/workspace/presentations/import" && request.method === "POST") {
     const form = await multipartBody(request);
     const file = form.get("file");
-    if (!(file instanceof File)) {
+    if (!isWorkspaceImportFile(file)) {
       throw Object.assign(new Error("Choose one .mdx file or .zip/.slidex OpenSlideX project bundle."), { status: 400 });
     }
     const presentation = await input.workspace.importMdx(file);
@@ -11271,6 +11293,9 @@ async function multipartBody(request) {
   return request.formData().catch(() => {
     throw Object.assign(new Error("The OpenSlideX import upload could not be read."), { status: 400 });
   });
+}
+function isWorkspaceImportFile(value) {
+  return Boolean(value) && typeof value === "object" && typeof value.arrayBuffer === "function" && typeof value.name === "string" && typeof value.size === "number" && typeof value.text === "function";
 }
 function sendJson2(response, value, status = 200) {
   response.writeHead(status, {
@@ -11543,6 +11568,9 @@ async function prepareWorkspaceSource(_workspace, packagedSourceRoot, checkoutRo
 async function resolveTemplateRoot() {
   const candidates = [
     process.env.OPEN_SLIDEX_TEMPLATE_ROOT,
+    // Packaged runtime: runtime/workbench/cli.mjs -> package root/template.
+    fileURLToPath(new URL("../../template/", import.meta.url)),
+    // Source checkout: packages/slidex-workbench/src/cli.ts -> packages/open-slidex/template.
     fileURLToPath(new URL("../../open-slidex/template/", import.meta.url)),
     path8.join(process.cwd(), "packages/open-slidex/template")
   ].filter((value) => Boolean(value));

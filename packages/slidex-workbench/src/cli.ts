@@ -294,6 +294,9 @@ async function prepareWorkspaceSource(
 async function resolveTemplateRoot() {
   const candidates = [
     process.env.OPEN_SLIDEX_TEMPLATE_ROOT,
+    // Packaged runtime: runtime/workbench/cli.mjs -> package root/template.
+    fileURLToPath(new URL("../../template/", import.meta.url)),
+    // Source checkout: packages/slidex-workbench/src/cli.ts -> packages/open-slidex/template.
     fileURLToPath(new URL("../../open-slidex/template/", import.meta.url)),
     path.join(process.cwd(), "packages/open-slidex/template")
   ].filter((value): value is string => Boolean(value));

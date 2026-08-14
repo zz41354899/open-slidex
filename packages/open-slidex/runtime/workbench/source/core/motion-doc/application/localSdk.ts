@@ -234,15 +234,15 @@ export function listSlideXAssetReferences(source: string) {
   const references: SlideXAssetReference[] = [];
 
   document.scenes.forEach((scene, slideIndex) => {
-    const backgroundImage = scene.props.backgroundImage;
-    if (typeof backgroundImage === "string" && isProjectAssetPath(backgroundImage)) {
+    const backgroundImage = projectAssetPath(scene.props.backgroundImage);
+    if (backgroundImage) {
       references.push({ prop: "backgroundImage", slideIndex, source: backgroundImage });
     }
     scene.blocks.forEach((block, blockIndex) => {
       for (const prop of ["src", "poster", "shapeImageSrc"] as const) {
-        const value = block.props[prop];
-        if (typeof value === "string" && isProjectAssetPath(value)) {
-          references.push({ blockIndex, prop, slideIndex, source: value });
+        const assetPath = projectAssetPath(block.props[prop]);
+        if (assetPath) {
+          references.push({ blockIndex, prop, slideIndex, source: assetPath });
         }
       }
     });
@@ -384,7 +384,11 @@ function repathProjectAsset(source: string, from: string, to: string) {
     `(\\b(?:src|poster|backgroundImage|shapeImageSrc)\\s*=\\s*["'])${escaped}(["'])`,
     "g"
   );
-  const nextSource = source.replace(pattern, `$1${to}$2`);
+  const expressionPattern = new RegExp(
+    `(\\b(?:src|poster|backgroundImage|shapeImageSrc)\\s*=\\s*\\{\\s*["'])${escaped}(["']\\s*\\})`,
+    "g"
+  );
+  const nextSource = source.replace(pattern, `$1${to}$2`).replace(expressionPattern, `$1${to}$2`);
   if (nextSource === source) {
     throw new Error(`Asset ${from} is not referenced by presentation.mdx.`);
   }
@@ -399,6 +403,16 @@ function isProjectAssetPath(value: string) {
     .slice("assets/".length)
     .split("/")
     .every((part) => part.length > 0 && part !== "." && part !== "..");
+}
+
+function projectAssetPath(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  const unwrapped = trimmed.length >= 2 && (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) ? trimmed.slice(1, -1) : trimmed;
+  return isProjectAssetPath(unwrapped) ? unwrapped : undefined;
 }
 
 function addSlide(
