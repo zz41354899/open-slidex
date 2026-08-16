@@ -123,7 +123,7 @@ async function applyOfficialTemplate(
   }
   await writeFile(
     path.join(root, "presentation.mdx"),
-    template.starterSources[reference.locale],
+    template.sources[reference.locale],
     "utf8"
   );
   const stateRoot = path.join(root, ".open-slidex");

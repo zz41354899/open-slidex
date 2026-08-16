@@ -1,10 +1,19 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import {
   access,
+  mkdtemp,
   readFile,
-  readdir
+  readdir,
+  rm
 } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 const skillNames = [
   "slidex-mdx-authoring",
@@ -165,6 +174,44 @@ test("published package and generated starter both include the Workspace path", 
       import.meta.url
     )
   );
+});
+
+test("init with an official template creates the complete localized deck", async () => {
+  const tempRoot = await mkdtemp(path.join(os.tmpdir(), "open-slidex-init-template-"));
+  try {
+    const tsxLoaderPath = fileURLToPath(import.meta.resolve("tsx"));
+    const projectRoot = path.join(tempRoot, "project");
+    await execFileAsync(
+      process.execPath,
+      [
+        "--import",
+        tsxLoaderPath,
+        fileURLToPath(new URL("./cli.ts", import.meta.url)),
+        projectRoot,
+        "--template",
+        "summer-time-report",
+        "--locale",
+        "zh-TW",
+        "--no-install"
+      ],
+      { cwd: process.cwd() }
+    );
+
+    const deckRoot = path.join(
+      tempRoot,
+      "project",
+      "open-slidex-workspace",
+      "summer-time-report"
+    );
+    const source = await readFile(path.join(deckRoot, "presentation.mdx"), "utf8");
+    assert.equal(source.match(/<Slide\b/g)?.length, 7);
+    assert.deepEqual(
+      JSON.parse(await readFile(path.join(deckRoot, ".open-slidex", "template-lock.json"), "utf8")),
+      { id: "summer-time-report", locale: "zh-TW", version: "1.0.0" }
+    );
+  } finally {
+    await rm(tempRoot, { recursive: true, force: true });
+  }
 });
 
 test("repository root launches its bundled CLI without a workspace bin link", async () => {

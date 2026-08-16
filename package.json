@@ -15,7 +15,7 @@
     "mcp": "node packages/open-slidex/dist/cli.mjs mcp --workspace open-slidex-workspace",
     "sync:skills": "node packages/open-slidex/dist/cli.mjs sync:skills",
     "build:runtime": "node scripts/build-open-slidex-package.mjs",
-    "test:source": "npm run test --workspace @open-slidex/mcp && node --test scripts/*.test.mjs && node --import tsx --test packages/slidex-workbench/src/client/*.test.ts packages/slidex-workbench/src/server/*.test.ts packages/slidex-sdk/src/*.test.ts packages/open-slidex/src/*.test.ts",
+    "test:source": "npm run test --workspace @open-slidex/mcp && node --test scripts/*.test.mjs && node --import tsx --test --test-concurrency=1 packages/slidex-workbench/src/client/*.test.ts packages/slidex-workbench/src/server/*.test.ts packages/slidex-sdk/src/*.test.ts packages/open-slidex/src/*.test.ts",
     "check:cloud-boundary": "node scripts/check-open-source-boundary.mjs",
     "check:open-source-boundary": "node scripts/check-open-source-boundary.mjs",
     "open-slidex": "node packages/open-slidex/dist/cli.mjs"

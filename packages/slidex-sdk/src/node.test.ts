@@ -18,6 +18,7 @@ import sharp from "sharp";
 import { blankPresentationMdx } from "./index";
 import {
   analyzeSlideXDocumentQuality,
+  closeSlideXChromiumPool,
   exportSlideXDocument,
   importSlideXImageAsset,
   importSlideXVideoAsset,
@@ -28,6 +29,12 @@ import {
 } from "./node";
 
 const execFileAsync = promisify(execFile);
+
+test.after(async () => {
+  await closeSlideXChromiumPool();
+  const packagedRuntime = await import("../../open-slidex/runtime/sdk/node.js");
+  await packagedRuntime.closeSlideXChromiumPool();
+});
 
 test("Paper shader rendering freezes a real frame instead of a flat fallback", async (context) => {
   if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
