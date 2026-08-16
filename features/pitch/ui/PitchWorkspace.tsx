@@ -111,6 +111,7 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
             activeSlideIndex={document.activeSlideIndex}
             canPasteBlock={selection.hasCopiedBlock}
             isGridVisible={view.isCanvasGridVisible}
+            isSafeAreaVisible={view.isCanvasSafeAreaVisible}
             interactionDisabled={view.interactionDisabled === true}
             isSnapEnabled={view.isCanvasSnapEnabled}
             onAddBlock={commands.addBlockToActiveSlide}
@@ -159,7 +160,6 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
             selectedBlocksLocked={selection.selectedBlocksLocked}
             showDesktopBlockDock={view.localAssetsOnly !== true}
             slideRows={document.slideRows}
-            source={document.canvasSource}
             zoomLevel={zoomLevel}
           />
           {view.commentsEnabled ? <DesktopSlideNoteFab

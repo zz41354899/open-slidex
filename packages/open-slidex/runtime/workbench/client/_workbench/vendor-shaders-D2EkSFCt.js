@@ -1,4 +1,4 @@
-import{a as e}from"./rolldown-runtime-B0Z9INg1.js";import{a as t,t as n}from"./vendor-react-BGxzYYTE.js";var r=`#version 300 es
+import{a as e}from"./rolldown-runtime-B0Z9INg1.js";import{a as t,t as n}from"./vendor-react-CmjK2vcN.js";var r=`#version 300 es
 precision mediump float;
 
 layout(location = 0) in vec4 a_position;

@@ -2,12 +2,18 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent } from "react";
 import { InteractiveDotField } from "@/common/ui/InteractiveDotField";
 import { applyImageCropRect, fullImageCropRect, type ImageCropRect } from "@/core/motion-doc/application/imageCrop";
+import { autoSizeTextFrameProps } from "@/core/motion-doc/application/textFrameSizing";
 import { applyShapeImageCropRect } from "@/core/motion-doc/application/shapeImage";
 import { blockAspectRatioLocked, blockRotation } from "@/core/motion-doc/domain/blockTransform";
 import type { MotionDocFrame } from "@/core/motion-doc/domain/frame";
 import type { MotionDocProps, MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
 import { motionDocBlockKey } from "@/core/motion-doc/application/motionDocBlockIdentity";
 import type { CanvasTool } from "@/features/pitch/application/canvasTools";
+import {
+  MAIN_CANVAS_INACTIVE_SHADER_MAX_PIXEL_COUNT,
+  MAIN_CANVAS_PRELOAD_MARGIN,
+  mainCanvasShaderMaxPixelCount
+} from "@/features/pitch/application/canvasPerformance";
 import { initialCanvasScrollPositions, type CanvasViewMode } from "@/features/pitch/application/canvasViewMode";
 import type { CanvasShapeTool } from "@/features/pitch/application/shapeDrawing";
 import type { BlockFramePatch } from "@/features/pitch/application/pitchGeometry";
@@ -23,6 +29,7 @@ import {
   marqueeRect,
   nextStackedBlockIndex,
   selectedMovableBlockIndices,
+  visiblePreviewFrameOverrides,
   resolveSnapFrameUpdates,
   rotationForPointer,
   shouldClearActiveSlideFrameSelection,
@@ -37,7 +44,9 @@ import { CanvasBlockDock, CanvasSlideAddControls, CanvasSlideNav } from "@/featu
 import { MobileEdgePanelHandles } from "@/features/pitch/ui/preview/MobileCanvasChrome";
 import { CanvasContextMenu } from "@/features/pitch/ui/preview/CanvasContextMenu";
 import { CanvasSelectionLayer } from "@/features/pitch/ui/preview/CanvasSelectionLayer";
+import { CanvasSafeAreaOverlay } from "@/features/pitch/ui/preview/CanvasSafeAreaOverlay";
 import { CanvasGridView } from "@/features/pitch/ui/preview/CanvasGridView";
+import { ViewportDeferredPreview } from "@/features/pitch/ui/preview/ViewportDeferredPreview";
 import { RemoteMcpActivityOverlay } from "@/features/pitch/ui/preview/RemoteMcpActivityOverlay";
 import { AssistantCanvasActivityOverlay } from "@/features/pitch/ui/preview/AssistantCanvasActivityOverlay";
 import { RemoteMcpCanvasCursor } from "@/features/pitch/ui/preview/RemoteMcpCanvasCursor";
@@ -71,6 +80,7 @@ type PreviewCanvasProps = {
   activeSlideIndex: number;
   canPasteBlock: boolean;
   isGridVisible: boolean;
+  isSafeAreaVisible: boolean;
   interactionDisabled: boolean;
   isSnapEnabled: boolean;
   onAddBlock: (type: AddBlockType, options?: AddBlockOptions) => void;
@@ -112,7 +122,6 @@ type PreviewCanvasProps = {
   selectedBlocksLocked: boolean;
   showDesktopBlockDock?: boolean;
   slideRows: SlideRow[];
-  source: string;
 };
 
 export function PreviewCanvas({
@@ -129,6 +138,7 @@ export function PreviewCanvas({
   activeSlideIndex,
   canPasteBlock,
   isGridVisible,
+  isSafeAreaVisible,
   interactionDisabled,
   isSnapEnabled,
   onAddBlock,
@@ -169,8 +179,7 @@ export function PreviewCanvas({
   selectedBlockIndices,
   selectedBlocksLocked,
   showDesktopBlockDock = true,
-  slideRows,
-  source
+  slideRows
 }: PreviewCanvasProps) {
   const { locale } = usePitchI18n();
   const canvasRef = useRef<HTMLDivElement | null>(null);
@@ -247,14 +256,21 @@ export function PreviewCanvas({
   const viewportCursorClass = activeCanvasTool === "hand"
     ? isPanningCanvas ? "cursor-grabbing" : "cursor-grab"
     : activeCanvasTool === "zoom" ? zoomDirection === "out" ? "cursor-zoom-out" : "cursor-zoom-in" : "";
-  const isDotFieldInteractive = (
-    (canvasInteraction.mode === "idle" || canvasInteraction.mode === "selected") &&
-    !isPanningCanvas &&
-    imageCropBlockIndex === null
+  const activeShaderMaxPixelCount = mainCanvasShaderMaxPixelCount(
+    actualScale,
+    typeof window === "undefined" ? 1 : window.devicePixelRatio
   );
   const hiddenPreviewBlockIndices = useMemo(
     () => hiddenEditablePreviewBlockIndices(activeSlide?.blocks ?? [], selectedBlockIndex, selectedBlockIndices),
     [activeSlide?.blocks, selectedBlockIndex, selectedBlockIndices]
+  );
+  const previewFrameOverrides = useMemo(
+    () => visiblePreviewFrameOverrides(
+      activeSlide?.blocks ?? [],
+      hiddenPreviewBlockIndices,
+      transientFramePreview.frameOverrides
+    ),
+    [activeSlide?.blocks, hiddenPreviewBlockIndices, transientFramePreview.frameOverrides]
   );
   const canGroupSelection = activeSlide ? canGroupBlocks(activeSlide, selectedBlockIndices) : false;
   const canUngroupSelection = selectedBlockIndices.some((index) => {
@@ -368,8 +384,11 @@ export function PreviewCanvas({
     };
   }, [canvasViewMode]);
 
-  function getCanvasPosition(event: { clientX: number; clientY: number }) {
-    return canvasPointFromRect(event, canvasRef.current?.getBoundingClientRect());
+  function getCanvasPosition(
+    event: { clientX: number; clientY: number },
+    options?: { allowOverflow?: boolean }
+  ) {
+    return canvasPointFromRect(event, canvasRef.current?.getBoundingClientRect(), options);
   }
 
   function handleCanvasDoubleClick(event: MouseEvent<HTMLDivElement>) {
@@ -468,7 +487,7 @@ export function PreviewCanvas({
         blockIndex: index,
         frame: blockFrame(activeSlide?.blocks[index])
       })),
-      startPointer: getCanvasPosition(event)
+      startPointer: getCanvasPosition(event, { allowOverflow: true })
     };
     canvasInteraction.beginDragging(interaction);
     onBeginBlockTransform();
@@ -525,7 +544,7 @@ export function PreviewCanvas({
         blockIndex: index,
         frame: blockFrame(activeSlide?.blocks[index])
       })),
-      startPointer: getCanvasPosition(event)
+      startPointer: getCanvasPosition(event, { allowOverflow: true })
     };
     canvasInteraction.beginResizing(interaction);
     onBeginBlockTransform();
@@ -552,7 +571,7 @@ export function PreviewCanvas({
       rotationCenter: { x: frame.x + frame.w / 2, y: frame.y + frame.h / 2 },
       startFrame: frame,
       startFrames: [{ blockId, blockIndex, frame }],
-      startPointer: getCanvasPosition(event)
+      startPointer: getCanvasPosition(event, { allowOverflow: true })
     };
     canvasInteraction.beginRotating(interaction);
     onBeginBlockTransform();
@@ -592,7 +611,7 @@ export function PreviewCanvas({
           transform.startFrame,
           transform.rotation ?? 0,
           transform.handle === "w" ? "start" : "end",
-          getCanvasPosition(event)
+          getCanvasPosition(event, { allowOverflow: true })
         );
         onUpdateBlock(
           transform.blockIndex,
@@ -609,7 +628,7 @@ export function PreviewCanvas({
       if (block) {
         onUpdateBlock(
           transform.blockIndex,
-          { ...block.props, rotation: rotationForPointer(transform, getCanvasPosition(event), event.shiftKey) },
+          { ...block.props, rotation: rotationForPointer(transform, getCanvasPosition(event, { allowOverflow: true }), event.shiftKey) },
           "text" in block ? block.text : undefined,
           { transient: true }
         );
@@ -617,7 +636,7 @@ export function PreviewCanvas({
       return;
     }
 
-    const rawUpdates = canvasInteraction.frameUpdatesForPointer(getCanvasPosition(event), {
+    const rawUpdates = canvasInteraction.frameUpdatesForPointer(getCanvasPosition(event, { allowOverflow: true }), {
       preserveAspectRatio: Boolean(transform?.lockAspectRatio) !== event.shiftKey
     });
 
@@ -721,6 +740,18 @@ export function PreviewCanvas({
     openContextMenu(event, blockIndex);
   }
 
+  function fitTextBlock(blockIndex: number | null) {
+    if (blockIndex === null) return;
+    const block = activeSlide?.blocks[blockIndex];
+    if (!block || (block.type !== "Text" && block.type !== "heading")) return;
+
+    onUpdateBlock(
+      blockIndex,
+      autoSizeTextFrameProps(block, block.text, { mode: "fit", props: block.props }),
+      block.text
+    );
+  }
+
   function handleSlideFramePointerDown(event: PointerEvent<HTMLDivElement>, slideIndex: number) {
     if (event.button !== 0 || activeCanvasTool !== "select") {
       return;
@@ -820,7 +851,7 @@ export function PreviewCanvas({
     >
       <InteractiveDotField
         className="z-0 opacity-25"
-        interactive={isDotFieldInteractive}
+        interactive={false}
       />
       <CanvasSlideNav
         activeSlideIndex={activeSlideIndex}
@@ -877,7 +908,6 @@ export function PreviewCanvas({
             replayNonce={replayNonce}
             scenes={scenes}
             slideRows={renderedSlideRows}
-            source={source}
           /> : renderedSlideRows.map((slide) => {
             const isActiveSlideFrame = slide.index === activeSlideIndex;
             const slideScene = scenes[slide.index];
@@ -929,18 +959,29 @@ export function PreviewCanvas({
                         width: CANVAS_WIDTH
                       }}
                     >
-                      <PreviewPane
-                        activeSlideIndex={slide.index}
-                        allowOverflow={isActiveSlideFrame}
-                        hiddenBlockIndices={isActiveSlideFrame ? hiddenPreviewBlockIndices : emptyBlockIndices}
-                        frameOverrides={isActiveSlideFrame ? transientFramePreview.frameOverrides : undefined}
-                        imageFetchPriority={isActiveSlideFrame ? "high" : "low"}
-                        imageLoading={isActiveSlideFrame ? "eager" : "lazy"}
-                        onShaderFrameCapture={isActiveSlideFrame ? onShaderFrameCapture : undefined}
-                        replayNonce={replayNonce}
-                        scene={slideScene}
-                        source={source}
-                      />
+                      <ViewportDeferredPreview
+                        eager={isActiveSlideFrame}
+                        rootMargin={MAIN_CANVAS_PRELOAD_MARGIN}
+                        rootRef={scrollAreaRef}
+                      >
+                        <PreviewPane
+                          activeSlideIndex={slide.index}
+                          allowOverflow={isActiveSlideFrame}
+                          hiddenBlockIndices={isActiveSlideFrame ? hiddenPreviewBlockIndices : emptyBlockIndices}
+                          frameOverrides={isActiveSlideFrame ? previewFrameOverrides : undefined}
+                          imageFetchPriority={isActiveSlideFrame ? "high" : "low"}
+                          imageLoading={isActiveSlideFrame ? "eager" : "lazy"}
+                          onShaderFrameCapture={isActiveSlideFrame ? onShaderFrameCapture : undefined}
+                          replayNonce={replayNonce}
+                          scene={slideScene}
+                          shaderMaxPixelCount={isActiveSlideFrame
+                            ? canvasInteraction.mode === "idle"
+                              ? activeShaderMaxPixelCount
+                              : MAIN_CANVAS_INACTIVE_SHADER_MAX_PIXEL_COUNT
+                            : MAIN_CANVAS_INACTIVE_SHADER_MAX_PIXEL_COUNT}
+                          shaderPlaybackActive={isActiveSlideFrame && canvasInteraction.mode === "idle"}
+                        />
+                      </ViewportDeferredPreview>
                     </div>
                     {isActiveSlideFrame && isGridVisible ? (
                       <div
@@ -952,6 +993,7 @@ export function PreviewCanvas({
                         }}
                       />
                     ) : null}
+                    {isActiveSlideFrame ? <CanvasSafeAreaOverlay visible={isSafeAreaVisible} /> : null}
                     {isActiveSlideFrame && !interactionDisabled ? (
                       <CanvasSelectionLayer
                         activeSlide={activeSlide}
@@ -1027,6 +1069,7 @@ export function PreviewCanvas({
                         onCopy={onCopySelectedBlock}
                         onDelete={onDeleteSelectedBlocks}
                         onDuplicate={onDuplicateSelectedBlock}
+                        onFitTextBox={() => fitTextBlock(contextMenu.blockIndex)}
                         onGroup={onGroupSelectedBlocks}
                         onMoveToBack={() => onMoveSelectedBlocksToEdge("back")}
                         onMoveToFront={() => onMoveSelectedBlocksToEdge("front")}

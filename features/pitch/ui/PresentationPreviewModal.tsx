@@ -197,7 +197,6 @@ export function PresentationPreviewModal({
               activeSlideIndex={slideIndex}
               onSelectSlide={goToSlide}
               scenes={scenes}
-              source={source}
             />
           ) : null}
           <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center px-3 py-3 sm:px-6 sm:py-5 lg:px-8 lg:py-6" ref={viewportRef}>
@@ -218,7 +217,7 @@ export function PresentationPreviewModal({
                   width: CANVAS_WIDTH
                 }}
               >
-                <PreviewPane activeSlideIndex={slideIndex} replayNonce={replayNonce} scene={activeScene} source={source} />
+                <PreviewPane activeSlideIndex={slideIndex} replayNonce={replayNonce} scene={activeScene} />
               </div>
             </div>
           </div>

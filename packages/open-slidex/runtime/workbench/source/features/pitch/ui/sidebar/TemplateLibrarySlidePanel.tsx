@@ -143,7 +143,6 @@ export function TemplateLibrarySlidePanel({
                           eager
                           replayNonce={replayNonce}
                           scene={firstSlide.scene}
-                          source={templateDeck.source}
                         />
                       ) : null}
                       {isCurrentTemplate ? (
@@ -197,7 +196,6 @@ export function TemplateLibrarySlidePanel({
                   onSelect={() => onAddTemplateSlide(selectedTemplateId, slide.source)}
                   replayNonce={replayNonce}
                   slide={slide}
-                  source={deck.source}
                 />
               ))}
             </div>
@@ -229,15 +227,13 @@ function TemplateSlideCard({
   locale,
   onSelect,
   replayNonce,
-  slide,
-  source
+  slide
 }: {
   copy: TemplatePanelCopy;
   locale: TemplateLibraryLocale;
   onSelect: () => void;
   replayNonce: number;
   slide: BundledTemplateLibrarySlide;
-  source: string;
 }) {
   return (
     <article className="group overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.018] transition hover:border-white/30 hover:bg-white/[0.04]">
@@ -253,7 +249,6 @@ function TemplateSlideCard({
           eager={slide.index < 3}
           replayNonce={replayNonce}
           scene={slide.scene}
-          source={source}
         />
         </div>
       </button>

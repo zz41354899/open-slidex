@@ -16,7 +16,15 @@ import { PreviewMediaPolicyProvider } from "@/features/pitch/ui/preview/PreviewM
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import type { SlideXEditorAssetAdapter } from "@/features/pitch/domain/localEditor";
 
-import { deleteAsset, exportDocument, localWorkbenchAssetUrl, renderMontage, updateContext, uploadAsset } from "./api";
+import {
+  deleteAsset,
+  exportDocument,
+  localWorkbenchAssetUrl,
+  prepareExportDestination,
+  renderMontage,
+  updateContext,
+  uploadAsset
+} from "./api";
 import slidexWordmark from "./assets/slidex-wordmark.png";
 import { ChartInspector } from "./ChartInspector";
 import { LocalWorkbenchToolbar, type LocalToolMenuId } from "./LocalWorkbenchToolbar";
@@ -51,6 +59,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     canvasShapeTool,
     exportMenuRef,
     isCanvasGridVisible,
+    isCanvasSafeAreaVisible,
     isCanvasSnapEnabled,
     isCodeEditorOpen,
     isExportMenuOpen,
@@ -63,6 +72,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     setCanvasViewMode,
     setCanvasShapeTool,
     setIsCanvasGridVisible,
+    setIsCanvasSafeAreaVisible,
     setIsCanvasSnapEnabled,
     setIsCodeEditorOpen,
     setIsExportMenuOpen,
@@ -159,13 +169,20 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     const label = format === "pptx" ? "PowerPoint" : format.toUpperCase();
     setNotice(tx(`Exporting ${label}…`));
     try {
+      const fileName = localExportFileName(projectName);
+      const destination = await prepareExportDestination(fileName, format);
+      if (!destination) {
+        setNotice(tx("Export cancelled"));
+        return;
+      }
+      setNotice(tx(`Exporting ${label}…`));
       const result = await exportDocument({
-        fileName: localExportFileName(projectName),
+        fileName,
         format,
         overwrite: false,
         source,
         target: "download"
-      });
+      }, destination);
       setNotice(`${label} ${tx("downloaded")} · ${result.output}`);
     } catch (error) {
       setNotice(error instanceof Error ? `${tx("Export failed")} · ${error.message}` : tx("Export failed"));
@@ -470,6 +487,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           localChartAnimationsActive,
           interactionDisabled: false,
           isCanvasGridVisible,
+          isCanvasSafeAreaVisible,
           isCanvasSnapEnabled,
           isCodeEditorOpen,
           isExportMenuOpen,
@@ -482,6 +500,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           setCanvasViewMode,
           setCanvasShapeTool,
           setIsCanvasGridVisible,
+          setIsCanvasSafeAreaVisible,
           setIsCanvasSnapEnabled,
           setIsCodeEditorOpen,
           setIsExportMenuOpen,

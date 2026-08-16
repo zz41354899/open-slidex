@@ -9,9 +9,11 @@ type SlideSettingsProps = {
   background: string;
   duration: number;
   isGridVisible: boolean;
+  isSafeAreaVisible: boolean;
   isSnapEnabled: boolean;
   mutedColor: string;
   setIsGridVisible: (value: boolean) => void;
+  setIsSafeAreaVisible: (value: boolean) => void;
   setIsSnapEnabled: (value: boolean) => void;
   shader: string;
   shaderAngle: number;
@@ -41,9 +43,11 @@ export function SlideSettings({
   background,
   duration,
   isGridVisible,
+  isSafeAreaVisible,
   isSnapEnabled,
   mutedColor,
   setIsGridVisible,
+  setIsSafeAreaVisible,
   setIsSnapEnabled,
   shader,
   shaderAngle,
@@ -96,8 +100,10 @@ export function SlideSettings({
 
       <SlideLayoutSection
         isGridVisible={isGridVisible}
+        isSafeAreaVisible={isSafeAreaVisible}
         isSnapEnabled={isSnapEnabled}
         setIsGridVisible={setIsGridVisible}
+        setIsSafeAreaVisible={setIsSafeAreaVisible}
         setIsSnapEnabled={setIsSnapEnabled}
       />
 

@@ -12,7 +12,6 @@ type CanvasGridViewProps = {
   replayNonce: number;
   scenes: MotionDocScene[];
   slideRows: readonly SlideRow[];
-  source: string;
 };
 
 /**
@@ -26,8 +25,7 @@ export function CanvasGridView({
   onReorderSlide,
   replayNonce,
   scenes,
-  slideRows,
-  source
+  slideRows
 }: CanvasGridViewProps) {
   const { locale } = usePitchI18n();
   const [draggedSlideIndex, setDraggedSlideIndex] = useState<number | null>(null);
@@ -92,7 +90,6 @@ export function CanvasGridView({
                 eager={isActive}
                 replayNonce={replayNonce}
                 scene={scenes[slide.index]}
-                source={source}
               />
               <span className="pointer-events-none absolute left-2 top-2 rounded-md bg-black/75 px-1.5 py-0.5 font-mono text-[14px] font-semibold text-white shadow-sm">
                 {slide.index + 1}

@@ -70,7 +70,7 @@ export function PreviewBlockList({
   );
 }
 
-function PositionedPreviewBlock({
+const PositionedPreviewBlock = memo(function PositionedPreviewBlock({
   block,
   blockKey,
   frameOverride,
@@ -99,6 +99,20 @@ function PositionedPreviewBlock({
         imageLoading={imageLoading}
       />
     </div>
+  );
+}, positionedPreviewBlockPropsEqual);
+
+function positionedPreviewBlockPropsEqual(
+  previous: PreviewBlockItem & { frameOverride?: MotionDocFrame; imageFetchPriority?: "auto" | "high" | "low"; imageLoading?: "eager" | "lazy" },
+  next: PreviewBlockItem & { frameOverride?: MotionDocFrame; imageFetchPriority?: "auto" | "high" | "low"; imageLoading?: "eager" | "lazy" }
+) {
+  return (
+    previous.blockKey === next.blockKey
+    && previous.originalIndex === next.originalIndex
+    && previous.imageFetchPriority === next.imageFetchPriority
+    && previous.imageLoading === next.imageLoading
+    && framesEqual(previous.frameOverride, next.frameOverride)
+    && motionDocBlocksEqual(previous.block, next.block)
   );
 }
 
@@ -311,8 +325,8 @@ function positionedBlockStyle(block: MotionDocBlock, index: number, frameOverrid
     left: `${frame.x}%`,
     position: "absolute",
     rotate: `${blockRotation(block.props)}deg`,
-    transformOrigin: "center",
     top: `${frame.y}%`,
+    transformOrigin: "center",
     width: `${frame.w}%`,
     ...(h === undefined ? {} : { height: `${frame.h}%` }),
     ...objectShadowCss(block.props),

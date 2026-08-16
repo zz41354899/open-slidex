@@ -2,12 +2,15 @@ import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium } from "playwright-core";
-
 import { materializeFreeformSource } from "@/core/motion-doc/application/motionDocFreeform";
 import { summarizeMotionDoc } from "@/core/motion-doc/application/motionDocAutomation";
+import {
+  closeSlideXChromiumPool,
+  withSlideXChromiumPage
+} from "@/packages/slidex-sdk/src/nodeBrowser";
 
 export type ExportMotionDocPptxInput = {
+  keepBrowserWarm?: boolean;
   outputPath: string;
   overwrite?: boolean;
   source: string;
@@ -17,6 +20,7 @@ export type ExportMotionDocPptxInput = {
 const MAX_MEDIA_BYTES = 80 * 1024 * 1024;
 
 export async function exportMotionDocPptx({
+  keepBrowserWarm = false,
   outputPath,
   overwrite = false,
   source,
@@ -32,41 +36,40 @@ export async function exportMotionDocPptx({
   }
 
   const portableSource = await prepareNodePptxSource(normalizedSource);
-  const browser = await launchChromium();
-
   try {
-    const page = await browser.newPage({ acceptDownloads: true });
-    await page.setContent("<!doctype html><html><head><meta charset=\"utf-8\"></head><body></body></html>");
-    await page.evaluate(() => {
-      if (!globalThis.crypto.randomUUID) {
-        Object.defineProperty(globalThis.crypto, "randomUUID", {
-          value: () => "10000000-1000-4000-8000-100000000000"
-        });
-      }
+    return await withSlideXChromiumPage({ acceptDownloads: true }, async (page) => {
+      await page.setContent("<!doctype html><html><head><meta charset=\"utf-8\"></head><body></body></html>");
+      await page.evaluate(() => {
+        if (!globalThis.crypto.randomUUID) {
+          Object.defineProperty(globalThis.crypto, "randomUUID", {
+            value: () => "10000000-1000-4000-8000-100000000000"
+          });
+        }
+      });
+      await page.addScriptTag({ path: browserBundlePath() });
+
+      const downloadPromise = page.waitForEvent("download");
+      const exportPromise = page.evaluate(
+        ({ deckSource, deckTitle }) => window.__slidexExportPptx({
+          source: deckSource,
+          title: deckTitle
+        }),
+        {
+          deckSource: portableSource,
+          deckTitle: title?.trim() || summary.document.title || "SlideX Deck"
+        }
+      );
+      const [download, result] = await Promise.all([downloadPromise, exportPromise]);
+      await download.saveAs(resolvedPath);
+
+      return {
+        outputPath: resolvedPath,
+        rasterizedSlideIndices: result.rasterizedSlideIndices,
+        summary
+      };
     });
-    await page.addScriptTag({ path: browserBundlePath() });
-
-    const downloadPromise = page.waitForEvent("download");
-    const exportPromise = page.evaluate(
-      ({ deckSource, deckTitle }) => window.__slidexExportPptx({
-        source: deckSource,
-        title: deckTitle
-      }),
-      {
-        deckSource: portableSource,
-        deckTitle: title?.trim() || summary.document.title || "SlideX Deck"
-      }
-    );
-    const [download, result] = await Promise.all([downloadPromise, exportPromise]);
-    await download.saveAs(resolvedPath);
-
-    return {
-      outputPath: resolvedPath,
-      rasterizedSlideIndices: result.rasterizedSlideIndices,
-      summary
-    };
   } finally {
-    await browser.close();
+    if (!keepBrowserWarm) await closeSlideXChromiumPool();
   }
 }
 
@@ -91,20 +94,6 @@ async function assertOutputIsWritable(outputPath: string, overwrite: boolean) {
     },
     () => undefined
   );
-}
-
-async function launchChromium() {
-  const executablePath = process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE?.trim();
-  try {
-    return await chromium.launch({
-      headless: true,
-      ...(executablePath ? { executablePath } : {})
-    });
-  } catch {
-    throw new Error(
-      "OpenSlideX PowerPoint export needs Chromium. Install Chrome or Chromium and set OPEN_SLIDEX_CHROMIUM_EXECUTABLE to its executable path, or install Playwright Chromium explicitly."
-    );
-  }
 }
 
 function browserBundlePath() {

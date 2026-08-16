@@ -1,7 +1,7 @@
 {
   "name": "@open-slidex/sdk",
   "private": true,
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "MotionDoc authoring, revision, inspection, rendering, and export primitives for OpenSlideX.",
   "type": "module",
   "bin": {

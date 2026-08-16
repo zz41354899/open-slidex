@@ -151,7 +151,7 @@ test("published package and generated starter both include the Workspace path", 
     await readFile(new URL("../template/package.json", import.meta.url), "utf8")
   ) as { devDependencies?: Record<string, string>; scripts?: Record<string, string> };
 
-  assert.equal(packageJson.version, "0.3.5");
+  assert.equal(packageJson.version, "0.3.6");
   assert.ok(packageJson.files?.includes("runtime"));
   assert.ok(packageJson.files?.includes("template"));
   assert.equal(starterPackageJson.devDependencies?.["open-slidex"], "latest");

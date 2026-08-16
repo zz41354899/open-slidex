@@ -189,13 +189,65 @@ export function deleteAsset(source: string, expectedRevision: string) {
 
 export type ExportFormat = "html" | "mdx" | "pptx";
 
+type LocalWritableFile = {
+  abort?: () => Promise<void>;
+  close: () => Promise<void>;
+  write: (data: Blob) => Promise<void>;
+};
+
+type LocalSaveFileHandle = {
+  createWritable: () => Promise<LocalWritableFile>;
+  name: string;
+};
+
+export type PreparedExportDestination = {
+  handle?: LocalSaveFileHandle;
+  output: string;
+};
+
+export async function prepareExportDestination(
+  fileName: string,
+  format: ExportFormat
+): Promise<PreparedExportDestination | null> {
+  const output = `${fileName}.${format}`;
+  if (format !== "pptx" || typeof window === "undefined" || !window.isSecureContext) {
+    return { output };
+  }
+
+  const picker = (window as Window & {
+    showSaveFilePicker?: (options: {
+      excludeAcceptAllOption?: boolean;
+      suggestedName?: string;
+      types?: Array<{ accept: Record<string, string[]>; description: string }>;
+    }) => Promise<LocalSaveFileHandle>;
+  }).showSaveFilePicker;
+  if (!picker) return { output };
+
+  try {
+    const handle = await picker.call(window, {
+      excludeAcceptAllOption: true,
+      suggestedName: output,
+      types: [{
+        accept: {
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"]
+        },
+        description: "PowerPoint presentation"
+      }]
+    });
+    return { handle, output: handle.name || output };
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") return null;
+    throw error;
+  }
+}
+
 export async function exportDocument(input: {
   fileName: string;
   format: ExportFormat;
   overwrite: boolean;
   source: string;
   target: "download" | "dist";
-}) {
+}, destination?: PreparedExportDestination) {
   const response = await fetch(localWorkbenchApiPath("/api/v1/export"), {
     body: JSON.stringify(input),
     headers: { "content-type": "application/json" },
@@ -209,6 +261,17 @@ export async function exportDocument(input: {
   const downloadName =
     disposition.match(/filename="([^"]+)"/)?.[1] ??
     `${input.fileName}.${input.format}`;
+  if (destination?.handle) {
+    const writable = await destination.handle.createWritable();
+    try {
+      await writable.write(blob);
+      await writable.close();
+    } catch (error) {
+      await writable.abort?.().catch(() => undefined);
+      throw error;
+    }
+    return { output: destination.output };
+  }
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;

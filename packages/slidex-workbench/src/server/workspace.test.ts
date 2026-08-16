@@ -5,7 +5,10 @@ import path from "node:path";
 import test from "node:test";
 
 import { blankPresentationMdx, parseMotionDoc, validateOpenSlideXLocalMedia } from "@open-slidex/sdk";
-import { exportSlideXDocument } from "@open-slidex/sdk/node";
+import {
+  closeSlideXChromiumPool,
+  exportSlideXDocument
+} from "@open-slidex/sdk/node";
 import JSZip from "jszip";
 import sharp from "sharp";
 
@@ -125,16 +128,75 @@ test("local workspace renders each official template slide for the preview galle
   const { root, workspace } = await fixture();
   context.after(async () => rm(root, { force: true, recursive: true }));
 
-  const cover = workspace.templateCover({ id: "moodboard", locale: "en", slideIndex: 0, version: "1.0.0" });
-  const laterSlide = workspace.templateCover({ id: "moodboard", locale: "en", slideIndex: 1, version: "1.0.0" });
+  const cover = await workspace.templateCover({ id: "moodboard", locale: "en", slideIndex: 0, version: "1.0.0" });
+  const laterSlide = await workspace.templateCover({ id: "moodboard", locale: "en", slideIndex: 1, version: "1.0.0" });
 
   assert.match(cover, /^<svg/);
   assert.match(laterSlide, /^<svg/);
   assert.notEqual(laterSlide, cover);
-  assert.throws(
+  await assert.rejects(
     () => workspace.templateCover({ id: "moodboard", locale: "en", slideIndex: 99, version: "1.0.0" }),
     /template slide was not found/i
   );
+});
+
+test("local workspace renders and caches the official template's real shader cover", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+  const { root, workspace } = await fixture();
+  context.after(async () => {
+    await closeSlideXChromiumPool();
+    await rm(root, { force: true, recursive: true });
+  });
+
+  const cover = await workspace.templateCover({
+    id: "summer-time-report",
+    locale: "en",
+    slideIndex: 0,
+    version: "1.0.0"
+  });
+  const encodedPng = cover.match(/href="data:image\/png;base64,([^"]+)"/)?.[1];
+  assert.ok(encodedPng);
+  const png = Buffer.from(encodedPng, "base64");
+  const metadata = await sharp(png).metadata();
+  const stats = await sharp(png).stats();
+
+  assert.equal(metadata.width, 1920);
+  assert.equal(metadata.height, 1080);
+  assert.ok(stats.channels.some((channel) => channel.stdev > 8));
+  assert.equal(await workspace.templateCover({ id: "summer-time-report", locale: "en", slideIndex: 0, version: "1.0.0" }), cover);
+  assert.ok((await readdir(path.join(workspace.stateRoot, "template-covers"))).some((name) => name.endsWith(".png")));
+});
+
+test("local workspace renders and caches the presentation's real shader cover", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+  const { root, workspace } = await fixture();
+  context.after(async () => {
+    await closeSlideXChromiumPool();
+    await rm(root, { force: true, recursive: true });
+  });
+  const source = `# Shader cover
+
+<Slide duration={5} theme="light" background="#38BDF8" shader="mesh-gradient" shaderEngine="three" shaderPreset="Beach" shaderFrame={18897} shaderSpeed={0} shaderScale={1} shaderIntensity={0.8} shaderSoftness={0.35} shaderColor1="#BCECF6" shaderColor2="#00AAFF" shaderColor3="#00F7FF" shaderColor4="#FFD447" shaderColor5="#BCECF6" shaderColor6="#FFFFFF"></Slide>`;
+  const presentation = await workspace.importMdx(new File([source], "shader-cover.mdx", { type: "text/mdx" }));
+
+  const cover = await workspace.presentationCover(presentation.id);
+  const encodedPng = cover.match(/href="data:image\/png;base64,([^"]+)"/)?.[1];
+  assert.ok(encodedPng);
+  const png = Buffer.from(encodedPng, "base64");
+  const metadata = await sharp(png).metadata();
+  const stats = await sharp(png).stats();
+
+  assert.equal(metadata.width, 1920);
+  assert.equal(metadata.height, 1080);
+  assert.ok(stats.channels.some((channel) => channel.stdev > 8));
+  assert.equal(await workspace.presentationCover(presentation.id), cover);
+  await access(path.join(workspace.stateRoot, "covers", `${presentation.id}.png`));
 });
 
 test("local workspace imports only valid MotionDoc MDX into an isolated project", async (context) => {

@@ -1,4 +1,4 @@
-# OpenSlideX 0.3.5
+# OpenSlideX 0.3.6
 
 OpenSlideX is a local-first, MDX presentation workspace with a visual Workbench,
 deterministic HTML/PPTX export, local image optimization, and a project-scoped

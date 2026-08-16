@@ -17,3 +17,5 @@ export type ResolvedBlockFrameUpdate = {
 };
 
 export type BlockFrameOverrides = ReadonlyMap<string, MotionDocFrame>;
+
+export const EMPTY_BLOCK_FRAME_OVERRIDES: BlockFrameOverrides = new Map();

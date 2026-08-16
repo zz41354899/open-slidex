@@ -60,7 +60,7 @@ export async function documentRoutes(context: WorkbenchRouteContext) {
     const locale = url.searchParams.get("locale") === "zh-TW" ? "zh-TW" : "en";
     const version = url.searchParams.get("version");
     if (!version) return sendJson(outgoing, { code: "invalid_request", message: "Template version is required." }, 400);
-    const svg = project.templatePreview({ id: templateCoverMatch[1], locale, version });
+    const svg = await project.templatePreview({ id: templateCoverMatch[1], locale, version });
     outgoing.writeHead(200, {
       "cache-control": "public, max-age=31536000, immutable",
       "content-security-policy": "default-src 'none'; img-src data:; style-src 'unsafe-inline'",

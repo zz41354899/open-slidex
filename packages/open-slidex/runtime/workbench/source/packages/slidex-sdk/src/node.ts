@@ -198,6 +198,7 @@ export function createSlideXDocument(source: string): SlideXDocument {
 
 export type ExportSlideXDocumentInput = {
   format: "html" | "mdx" | "pptx";
+  keepBrowserWarm?: boolean;
   outputPath: string;
   overwrite?: boolean;
   projectRoot?: string;
@@ -224,6 +225,7 @@ export async function exportSlideXDocument(input: ExportSlideXDocumentInput) {
 
   if (input.format === "pptx") {
     return exportMotionDocPptx({
+      keepBrowserWarm: input.keepBrowserWarm,
       outputPath,
       overwrite: input.overwrite,
       source: portableSource,

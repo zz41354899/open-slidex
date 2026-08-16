@@ -380,6 +380,7 @@ export function makeMotionDocExportRuntime() {
         const FULLSCREEN_POSITIONS = new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]);
         const DEFAULT_MAX_PIXEL_COUNT = 1920 * 1080 * 4;
         const DEFAULT_MIN_PIXEL_RATIO = 1;
+        let staticExportRasterScale = 1;
 
         function hexToVec3(hex) {
           const c = hex.replace('#','');
@@ -545,8 +546,25 @@ export function makeMotionDocExportRuntime() {
           const src = canvas.dataset.shaderImage;
           state.imageAspectRatio = 1;
           state.hasImage = 0;
+          state.imageLoadFailed = false;
 
-          if (!src) return Promise.resolve();
+          function fallBackToSourceImage() {
+            state.imageLoadFailed = true;
+            canvas.dataset.shaderImageFallback = "true";
+            // Image filters are rendered above the unfiltered <img>. If WebGL
+            // cannot obtain the source texture (for example, a local-file or
+            // CORS restriction), hide only the canvas so the original image
+            // remains visible instead of a black rectangle.
+            canvas.style.display = "none";
+          }
+
+          if (!src) {
+            if (canvas.classList.contains("image-filter-canvas")) fallBackToSourceImage();
+            return Promise.resolve(false);
+          }
+
+          canvas.style.removeProperty("display");
+          delete canvas.dataset.shaderImageFallback;
 
           return new Promise((resolve) => {
             const img = new Image();
@@ -555,7 +573,8 @@ export function makeMotionDocExportRuntime() {
             }
             img.onload = () => {
               if (!shaderStates.has(canvas) || img.naturalWidth === 0 || img.naturalHeight === 0) {
-                resolve();
+                if (canvas.classList.contains("image-filter-canvas")) fallBackToSourceImage();
+                resolve(false);
                 return;
               }
               state.gl.activeTexture(state.gl.TEXTURE0);
@@ -565,9 +584,12 @@ export function makeMotionDocExportRuntime() {
               state.imageAspectRatio = img.naturalWidth / img.naturalHeight;
               state.hasImage = 1;
               requestShaderFrame(state);
-              resolve();
+              resolve(true);
             };
-            img.onerror = () => resolve();
+            img.onerror = () => {
+              if (canvas.classList.contains("image-filter-canvas")) fallBackToSourceImage();
+              resolve(false);
+            };
             img.src = src;
           });
         }
@@ -624,7 +646,16 @@ export function makeMotionDocExportRuntime() {
           gl.activeTexture(gl.TEXTURE0);
           gl.bindTexture(gl.TEXTURE_2D, texture);
           configureTexture(gl);
-          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+          // PaperTexture blends the input image whenever its alpha is non-zero.
+          // A background shader has no image, so an opaque black placeholder
+          // becomes a large black slab in the frozen HTML/PPTX canvas. Keep
+          // the placeholder transparent for that one no-image background;
+          // image filters retain their opaque texture until the real image
+          // completes loading.
+          const emptyTexturePixel = !isImageFilter && id === "paper-texture"
+            ? new Uint8Array([0, 0, 0, 0])
+            : new Uint8Array([0, 0, 0, 255]);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, emptyTexturePixel);
           const noiseTexture = createNoiseTexture(gl);
           const c1 = hexToVec3(canvas.dataset.shaderColor1 || '${DEFAULT_DARK_SHADER_PALETTE.color1}');
           const c2 = hexToVec3(canvas.dataset.shaderColor2 || '${DEFAULT_DARK_SHADER_PALETTE.color2}');
@@ -777,7 +808,10 @@ export function makeMotionDocExportRuntime() {
             const cssH = Math.max(canvas.clientHeight, 1);
             const dpr = Math.min(Math.max(devicePixelRatio || 1, DEFAULT_MIN_PIXEL_RATIO), 2);
             const maxScale = Math.sqrt(DEFAULT_MAX_PIXEL_COUNT / Math.max(cssW * cssH, 1));
-            const renderScale = Math.max(1, Math.min(dpr, maxScale));
+            const isStaticExport = document.documentElement.classList.contains('motion-doc-static-export');
+            const renderScale = isStaticExport
+              ? Math.max(0.25, Math.min(staticExportRasterScale, dpr, maxScale))
+              : Math.max(DEFAULT_MIN_PIXEL_RATIO, Math.min(dpr, maxScale));
             const w = Math.max(1, Math.round(cssW * renderScale));
             const h = Math.max(1, Math.round(cssH * renderScale));
 
@@ -1192,6 +1226,16 @@ export function makeMotionDocExportRuntime() {
         async function freezeCanvas(canvas) {
           if (!(canvas instanceof HTMLCanvasElement)) return;
 
+          const state = shaderStates.get(canvas);
+          if (canvas.classList.contains('image-filter-canvas') && (!state || state.hasImage !== 1 || state.imageLoadFailed)) {
+            // Preserve the source <img> already rendered below the filter
+            // canvas. Capturing an unavailable WebGL texture yields opaque
+            // black pixels in HTML/PPTX exports.
+            stopShader(canvas);
+            canvas.remove();
+            return;
+          }
+
           let dataUrl = '';
 
           try {
@@ -1240,13 +1284,20 @@ export function makeMotionDocExportRuntime() {
           }
         }
 
-        async function prepareStaticExport() {
+        async function prepareStaticExport(options = {}) {
           stop();
+          const requestedRasterScale = Number(options.rasterScale);
+          staticExportRasterScale = Number.isFinite(requestedRasterScale)
+            ? Math.max(0.25, Math.min(requestedRasterScale, 2))
+            : 1;
           document.documentElement.classList.add('motion-doc-static-export');
           document.body.dataset.motionExportPrepared = 'false';
           slides.forEach((slide) => slide.classList.add('is-active'));
           updateFrameScale();
 
+          if (document.fonts && document.fonts.ready) {
+            await document.fonts.ready;
+          }
           await waitForImages(document);
           layoutCroppedImages(document);
 

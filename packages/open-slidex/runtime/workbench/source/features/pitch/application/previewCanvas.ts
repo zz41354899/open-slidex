@@ -13,9 +13,14 @@ import type {
   MotionDocTextBlock
 } from "@/core/motion-doc/domain/motionDocTypes";
 import { motionDocBlockKey } from "@/core/motion-doc/application/motionDocBlockIdentity";
+import { resolveSlideThemeColors } from "@/core/motion-doc/application/slideTheme";
 import { MOTION_DOC_CANVAS_HEIGHT, MOTION_DOC_CANVAS_WIDTH } from "@/core/motion-doc/domain/viewport";
 import { blockRotation, normalizeBlockRotation } from "@/core/motion-doc/domain/blockTransform";
-import type { ResolvedBlockFrameUpdate } from "@/features/pitch/application/pitchGeometry";
+import {
+  EMPTY_BLOCK_FRAME_OVERRIDES,
+  type BlockFrameOverrides,
+  type ResolvedBlockFrameUpdate
+} from "@/features/pitch/application/pitchGeometry";
 
 export const CANVAS_WIDTH = MOTION_DOC_CANVAS_WIDTH;
 export const CANVAS_HEIGHT = MOTION_DOC_CANVAS_HEIGHT;
@@ -79,18 +84,26 @@ export const resizeHandles = ["nw", "n", "ne", "e", "se", "s", "sw", "w"] as con
 
 export function canvasPointFromRect(
   event: { clientX: number; clientY: number },
-  rect: { height: number; left: number; top: number; width: number } | undefined
+  rect: { height: number; left: number; top: number; width: number } | undefined,
+  options: { allowOverflow?: boolean } = {}
 ): CanvasPoint {
   if (!rect) {
     return { x: 0, y: 0 };
   }
 
-  const x = ((event.clientX - rect.left) / rect.width) * 100;
-  const y = ((event.clientY - rect.top) / rect.height) * 100;
+  const rawX = ((event.clientX - rect.left) / rect.width) * 100;
+  const rawY = ((event.clientY - rect.top) / rect.height) * 100;
+
+  if (options.allowOverflow) {
+    return {
+      x: Math.round(Math.min(Math.max(rawX, -100), 200) * 10) / 10,
+      y: Math.round(Math.min(Math.max(rawY, -100), 200) * 10) / 10
+    };
+  }
 
   return {
-    x: clampPercent(Math.min(Math.max(x, 0), 100)),
-    y: clampPercent(Math.min(Math.max(y, 0), 100))
+    x: clampPercent(Math.min(Math.max(rawX, 0), 100)),
+    y: clampPercent(Math.min(Math.max(rawY, 0), 100))
   };
 }
 
@@ -121,6 +134,29 @@ export function hiddenEditablePreviewBlockIndices(
       (isEditableTextBlock(block) || (!groupId && isEditableTableBlock(block)))
     ))
     .map(({ blockIndex }) => blockIndex);
+}
+
+/**
+ * Editable text/table layers are rendered by CanvasSelectionLayer while
+ * selected. Do not wake the entire scene preview for frame updates that only
+ * move those already-hidden layers.
+ */
+export function visiblePreviewFrameOverrides(
+  blocks: MotionDocScene["blocks"],
+  hiddenBlockIndices: readonly number[],
+  frameOverrides: BlockFrameOverrides
+): BlockFrameOverrides {
+  if (frameOverrides.size === 0) return EMPTY_BLOCK_FRAME_OVERRIDES;
+
+  const hiddenBlockKeys = new Set(hiddenBlockIndices.flatMap((blockIndex) => {
+    const block = blocks[blockIndex];
+    return block ? [motionDocBlockKey(block, blockIndex)] : [];
+  }));
+  const visibleOverrides = [...frameOverrides].filter(([blockId]) => !hiddenBlockKeys.has(blockId));
+
+  return visibleOverrides.length === 0
+    ? EMPTY_BLOCK_FRAME_OVERRIDES
+    : new Map(visibleOverrides);
 }
 
 export function selectedGroupId(
@@ -545,11 +581,13 @@ export function resolveSnapFrameUpdates(
 }
 
 export function gridLineColor(slide: MotionDocScene | undefined) {
-  const background = typeof slide?.props.background === "string" ? slide.props.background : "";
-  const theme = typeof slide?.props.theme === "string" ? slide.props.theme : "dark";
-  const isLight = isLightBackground(background) ?? (theme === "light" || theme === "paper");
+  const isLight = isLightCanvasBackground(slide);
 
   return isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.1)";
+}
+
+export function isLightCanvasBackground(slide: MotionDocScene | undefined) {
+  return slide ? resolveSlideThemeColors(slide.props).isLight : false;
 }
 
 export function stringValue(value: string | number | undefined, fallback: string) {
@@ -690,18 +728,4 @@ function uniqueGuides(guides: readonly AlignmentGuide[]) {
     seen.add(key);
     return true;
   });
-}
-
-function isLightBackground(background: string) {
-  const hex = background.trim().replace("#", "");
-
-  if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
-    return null;
-  }
-
-  const red = parseInt(hex.slice(0, 2), 16);
-  const green = parseInt(hex.slice(2, 4), 16);
-  const blue = parseInt(hex.slice(4, 6), 16);
-
-  return (0.299 * red + 0.587 * green + 0.114 * blue) / 255 > 0.62;
 }

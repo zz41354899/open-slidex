@@ -233,7 +233,6 @@ export function LayerSidebar({
                           eager={isActive}
                           replayNonce={replayNonce}
                           scene={currentSlide}
-                          source={source}
                         />
                         {mcpActivity ? (
                           <div className={`pointer-events-none absolute inset-0 z-10 rounded-lg border-2 border-[#8b5cf6] shadow-[inset_0_0_0_1px_rgba(139,92,246,0.22),0_0_18px_rgba(139,92,246,0.2)] ${mcpActivity.status === "running" ? "motion-safe:animate-pulse" : "motion-safe:animate-[mcp-activity-settle_6s_ease-out_forwards]"} ${mcpActivity.status === "failed" ? "border-dashed" : "border-solid"}`}>

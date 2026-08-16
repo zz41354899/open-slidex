@@ -83,6 +83,7 @@ export function PitchInspector({
   localAssetsOnly = false,
   importImageUrlForBlock,
   isGridVisible,
+  isSafeAreaVisible,
   isSnapEnabled,
   moveSelectedBlocksToEdge,
   onOpenMdxEditor,
@@ -93,6 +94,7 @@ export function PitchInspector({
   selectedBlockIndex,
   selectedBlockIndices = [],
   setIsGridVisible,
+  setIsSafeAreaVisible,
   setIsSnapEnabled,
   snapSelectedBlocksToGrid,
   updateAllSlidesStyle,
@@ -131,6 +133,7 @@ export function PitchInspector({
   localAssetsOnly?: boolean;
   importImageUrlForBlock: (blockIndex: number, source: string) => boolean;
   isGridVisible: boolean;
+  isSafeAreaVisible: boolean;
   isSnapEnabled: boolean;
   moveSelectedBlocksToEdge: (edge: "back" | "front") => void;
   onOpenMdxEditor: () => void;
@@ -141,6 +144,7 @@ export function PitchInspector({
   selectedBlockIndex: number | null;
   selectedBlockIndices?: number[];
   setIsGridVisible: (value: boolean) => void;
+  setIsSafeAreaVisible: (value: boolean) => void;
   setIsSnapEnabled: (value: boolean) => void;
   snapSelectedBlocksToGrid: () => void;
   updateAllSlidesStyle: (updates: MotionDocProps) => void;
@@ -205,9 +209,11 @@ export function PitchInspector({
                 background={activeSlideBackground}
                 duration={activeSlide?.duration ?? 5}
                 isGridVisible={isGridVisible}
+                isSafeAreaVisible={isSafeAreaVisible}
                 isSnapEnabled={isSnapEnabled}
                 mutedColor={activeSlideMutedColor}
                 setIsGridVisible={setIsGridVisible}
+                setIsSafeAreaVisible={setIsSafeAreaVisible}
                 setIsSnapEnabled={setIsSnapEnabled}
                 shader={activeSlideShader}
                 shaderAngle={activeSlideShaderAngle}

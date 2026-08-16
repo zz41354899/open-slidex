@@ -7,7 +7,7 @@ import {
   motionDocEnterAnimations,
   motionDocSlideTransitions
 } from "@/core/motion-doc/domain/motionVocabulary";
-import { textStyleLines } from "@/core/motion-doc/domain/textStyleRanges";
+import { textStyleLines, textStyleRangesFromProps } from "@/core/motion-doc/domain/textStyleRanges";
 import {
   continuousRoundedRectPath,
   normalizedContinuousCornerRadii,
@@ -65,6 +65,7 @@ export function buildMotionDocHtml(source: string, customTitle?: string) {
   const slidesHtml = document.scenes
     .map((scene, slideIndex) => renderSceneHtml(scene, { slideIndex }))
     .join("\n");
+  const fontStylesheetLinks = motionDocFontStylesheetLinks(document);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -73,6 +74,7 @@ export function buildMotionDocHtml(source: string, customTitle?: string) {
     <meta http-equiv="Content-Security-Policy" content="${security.policy}" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${escapeHtml(displayTitle)}</title>
+    ${fontStylesheetLinks}
     <style>${motionDocExportStyles}</style>
   </head>
   <body>
@@ -300,7 +302,7 @@ function exportRuntimeSecurity(source: string) {
     "media-src https: blob: data: 'self'",
     "object-src 'none'",
     `script-src 'nonce-${nonce}'`,
-    "style-src 'unsafe-inline'"
+    "style-src 'unsafe-inline' https://fonts.googleapis.com"
   ].join("; ");
 
   return { nonce, policy };
@@ -313,6 +315,49 @@ function stableNonce(value: string) {
     hash = Math.imul(hash, 0x01000193);
   }
   return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function motionDocFontStylesheetLinks(document: ReturnType<typeof parseMotionDoc>) {
+  const fontFamilies = new Set<string>();
+  const addFontFamily = (value: unknown) => {
+    if (typeof value !== "string") return;
+    const fontFamily = value.trim();
+    if (
+      !fontFamily ||
+      fontFamily === "inherit" ||
+      fontFamily === "Default" ||
+      fontFamily === "Default Font" ||
+      fontFamily.length > 120
+    ) return;
+    fontFamilies.add(fontFamily);
+  };
+
+  document.scenes.forEach((scene) => {
+    scene.blocks.forEach((block) => {
+      addFontFamily(block.props.fontFamily);
+      if (block.type === "Text" || block.type === "heading") {
+        textStyleRangesFromProps(block.props, block.text.length)
+          .forEach((range) => addFontFamily(range.fontFamily));
+      }
+      if (block.type === "Table") {
+        const { columns, rows } = tableSizeFromProps(block.props);
+        for (let row = 0; row < rows; row += 1) {
+          for (let column = 0; column < columns; column += 1) {
+            addFontFamily(tableCellStyleOverride(block.props, row, column).fontFamily);
+          }
+        }
+      }
+    });
+  });
+
+  return [...fontFamilies]
+    .sort((left, right) => left.localeCompare(right))
+    .map((fontFamily) => {
+      const family = encodeURIComponent(fontFamily).replaceAll("%20", "+");
+      const href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700;800;900&display=swap`;
+      return `<link rel="stylesheet" href="${escapeAttribute(href)}" />`;
+    })
+    .join("\n    ");
 }
 
 export function buildMotionDocRasterHtml(
@@ -331,6 +376,7 @@ export function buildMotionDocRasterHtml(
   const slidesHtml = scenes
     .map((scene, slideIndex) => renderSceneHtml(scene, { active: true, slideIndex }))
     .join("\n");
+  const fontStylesheetLinks = motionDocFontStylesheetLinks(document);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -339,6 +385,7 @@ export function buildMotionDocRasterHtml(
     <meta http-equiv="Content-Security-Policy" content="${security.policy}" />
     <meta name="viewport" content="width=${MOTION_DOC_CANVAS_WIDTH}, initial-scale=1" />
     <title>${escapeHtml(displayTitle)}</title>
+    ${fontStylesheetLinks}
     <style>${motionDocExportStyles}</style>
     <style>
       html, body {

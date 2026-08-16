@@ -28,46 +28,18 @@ export function FrameInteractionHalo({ isTextBlock }: { isTextBlock: boolean }) 
 }
 
 export function AlignmentGuideLine({ guide, index }: { guide: AlignmentGuide; index: number }) {
-  const { locale } = usePitchI18n();
   const isVertical = guide.orientation === "vertical";
-  const isCenter = Math.abs(guide.position - 50) < 0.01;
-  const isCanvasEdge = guide.position < 0.01 || guide.position > 99.99;
-  const labelPositionClass = alignmentGuideLabelPositionClass(guide);
-  const label = isCenter
-    ? locale === "zh-TW"
-      ? isVertical ? "水平置中" : "垂直置中"
-      : isVertical ? "Centered horizontally" : "Centered vertically"
-    : isCanvasEdge
-      ? locale === "zh-TW" ? "貼齊畫布邊緣" : "Canvas edge"
-      : locale === "zh-TW" ? "已與圖層對齊" : "Aligned with layer";
 
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute z-50 bg-[#8ea5ff] shadow-[0_0_0_1px_rgba(79,70,229,0.28),0_0_14px_rgba(142,165,255,0.7)]"
+      className="pointer-events-none absolute z-50 bg-[#ff4fd8] shadow-[0_0_0_1px_rgba(255,255,255,0.7),0_0_12px_rgba(255,79,216,0.9)]"
       key={`${guide.orientation}-${guide.position}-${index}`}
       style={isVertical
-        ? { bottom: 0, left: `${guide.position}%`, top: 0, width: 1 }
-        : { height: 1, left: 0, right: 0, top: `${guide.position}%` }}
-    >
-      <span className={`absolute flex items-center gap-1.5 whitespace-nowrap rounded-md border border-[#8ea5ff]/35 bg-[#11131a]/94 px-2 py-1 text-[9px] font-semibold text-[#dce2ff] shadow-[0_8px_24px_rgba(3,5,14,0.35)] backdrop-blur-md ${labelPositionClass}`}>
-        <i className="h-1.5 w-1.5 rounded-full bg-[#8ea5ff] shadow-[0_0_8px_rgba(142,165,255,0.9)]" />
-        {label}
-      </span>
-    </div>
+        ? { bottom: 0, left: `${guide.position}%`, top: 0, width: 1.5 }
+        : { height: 1.5, left: 0, right: 0, top: `${guide.position}%` }}
+    />
   );
-}
-
-function alignmentGuideLabelPositionClass(guide: AlignmentGuide) {
-  if (guide.orientation === "vertical") {
-    if (guide.position < 50) return "left-2 top-2";
-    if (guide.position > 50) return "right-2 top-2";
-    return "left-1/2 top-2 -translate-x-1/2";
-  }
-
-  if (guide.position < 50) return "left-2 top-2";
-  if (guide.position > 50) return "bottom-2 left-2";
-  return "left-2 top-1/2 -translate-y-1/2";
 }
 
 export function MarqueeOverlay({ marqueeSelection }: { marqueeSelection: MarqueeSelection }) {
@@ -291,14 +263,9 @@ function resizeHandleLabel(handle: ResizeHandle) {
 
 function SelectionSpacingOverlay({ frame, guides }: { frame: MotionDocFrame; guides: readonly SelectionSpacingGuide[] }) {
   if (guides.length === 0) return null;
-  const summary = spacingSummary(guides);
-  const needsAttention = guides.some((guide) => guide.status === "overlap" || guide.status === "tight" || guide.status === "uneven");
 
   return (
-    <>
-      <span className={`pointer-events-none absolute left-1/2 top-1 z-20 -translate-x-1/2 rounded-md border px-2 py-0.5 text-[9px] font-semibold shadow-sm backdrop-blur-md ${needsAttention ? "border-amber-300/30 bg-amber-950/85 text-amber-100" : "border-emerald-300/25 bg-emerald-950/80 text-emerald-100"}`}>{summary}</span>
-      {guides.map((guide, index) => <SpacingGuide frame={frame} guide={guide} key={`${guide.axis}-${guide.start}-${guide.end}-${index}`} />)}
-    </>
+    <>{guides.map((guide, index) => <SpacingGuide frame={frame} guide={guide} key={`${guide.axis}-${guide.start}-${guide.end}-${index}`} />)}</>
   );
 }
 
@@ -306,8 +273,9 @@ function SpacingGuide({ frame, guide }: { frame: MotionDocFrame; guide: Selectio
   const warning = guide.status === "overlap" || guide.status === "tight" || guide.status === "uneven";
   const start = Math.min(guide.start, guide.end);
   const end = Math.max(guide.start, guide.end);
-  const label = guide.gapPx < 0 ? `Overlap ${Math.abs(guide.gapPx)} px` : guide.gapPx === 0 ? "No spacing" : `${guide.gapPx} px`;
-  const colorClass = warning ? "bg-amber-400 text-amber-100" : "bg-emerald-400 text-emerald-100";
+  const colorClass = warning
+    ? "bg-amber-300 text-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.85)]"
+    : "bg-emerald-300 text-emerald-300 shadow-[0_0_8px_rgba(110,231,183,0.85)]";
 
   if (guide.axis === "horizontal") {
     const left = (start - frame.x) / frame.w * 100;
@@ -316,7 +284,6 @@ function SpacingGuide({ frame, guide }: { frame: MotionDocFrame; guide: Selectio
     return (
       <span className={`pointer-events-none absolute z-10 h-px ${colorClass}`} style={{ left: `${left}%`, minWidth: 1, top: `${top}%`, width: `${width}%` }}>
         <i className="absolute -left-px -top-1 h-2 w-px bg-current" /><i className="absolute -right-px -top-1 h-2 w-px bg-current" />
-        <b className="absolute left-1/2 top-1 -translate-x-1/2 whitespace-nowrap rounded bg-[#17131f]/92 px-1.5 py-0.5 font-mono text-[8px] font-medium not-italic shadow-sm">{label}</b>
       </span>
     );
   }
@@ -327,15 +294,6 @@ function SpacingGuide({ frame, guide }: { frame: MotionDocFrame; guide: Selectio
   return (
     <span className={`pointer-events-none absolute z-10 w-px ${colorClass}`} style={{ height: `${height}%`, left: `${left}%`, minHeight: 1, top: `${top}%` }}>
       <i className="absolute -left-1 -top-px h-px w-2 bg-current" /><i className="absolute -bottom-px -left-1 h-px w-2 bg-current" />
-      <b className="absolute left-1 top-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-[#17131f]/92 px-1.5 py-0.5 font-mono text-[8px] font-medium not-italic shadow-sm">{label}</b>
     </span>
   );
-}
-
-function spacingSummary(guides: readonly SelectionSpacingGuide[]) {
-  if (guides.some((guide) => guide.status === "overlap")) return "Spacing alert · overlap";
-  if (guides.some((guide) => guide.status === "uneven")) return "Spacing alert · uneven";
-  if (guides.some((guide) => guide.status === "tight")) return "Spacing alert · too tight";
-  const gap = guides[0]?.gapPx ?? 0;
-  return guides.length > 1 ? `Auto spacing · ${gap} px even` : `Spacing · ${gap} px`;
 }

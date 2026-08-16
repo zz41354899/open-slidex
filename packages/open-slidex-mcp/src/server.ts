@@ -86,7 +86,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     };
   };
   const server = new McpServer(
-    { name: "open-slidex-local", version: "0.3.5" },
+    { name: "open-slidex-local", version: "0.3.6" },
     {
       instructions: [
         "For Workspace scope, use open_slidex_workspace to list and explicitly select the intended presentation.",

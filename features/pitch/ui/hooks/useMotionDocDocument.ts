@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { stringValue } from "@/common/util/valueUtils";
 import { getMotionDocStats } from "@/core/motion-doc/application/mdxStats";
 import { materializeFreeformSource } from "@/core/motion-doc/application/motionDocFreeform";
@@ -6,6 +6,11 @@ import { defaultSlideBackground } from "@/core/motion-doc/application/slideTheme
 import { numberValue } from "@/core/motion-doc/domain/frame";
 import { parseMotionDoc } from "@/core/motion-doc/domain/motionDocParser";
 import { buildSlideRows } from "@/features/pitch/application/slideRows";
+import {
+  motionDocSceneSourceSignatures,
+  stabilizeMotionDocScenes,
+  type MotionDocSceneCache
+} from "@/features/pitch/application/motionDocSceneStability";
 
 export function useMotionDocDocument({
   activeSlideIndex,
@@ -14,9 +19,21 @@ export function useMotionDocDocument({
   activeSlideIndex: number;
   source: string;
 }) {
+  const sceneCacheRef = useRef<MotionDocSceneCache | undefined>(undefined);
   const canvasSource = useMemo(() => materializeFreeformSource(source), [source]);
   const stats = useMemo(() => getMotionDocStats(canvasSource), [canvasSource]);
-  const sliderDocument = useMemo(() => parseMotionDoc(canvasSource), [canvasSource]);
+  const sliderDocument = useMemo(() => {
+    const parsedDocument = parseMotionDoc(canvasSource);
+    const sceneCache = stabilizeMotionDocScenes(
+      parsedDocument.scenes,
+      motionDocSceneSourceSignatures(canvasSource),
+      sceneCacheRef.current
+    );
+    sceneCacheRef.current = sceneCache;
+    return sceneCache.scenes === parsedDocument.scenes
+      ? parsedDocument
+      : { ...parsedDocument, scenes: sceneCache.scenes };
+  }, [canvasSource]);
   const activeSlide = sliderDocument.scenes[activeSlideIndex] ?? sliderDocument.scenes[0];
   const activeSlideTheme = stringValue(activeSlide?.props.theme) ?? "dark";
   const activeSlideBackground = stringValue(activeSlide?.props.background) ?? defaultSlideBackground(activeSlideTheme);

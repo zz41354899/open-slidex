@@ -7,9 +7,11 @@ import {
   rm,
   writeFile
 } from "node:fs/promises";
+import { execFile } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { promisify } from "node:util";
 
 import sharp from "sharp";
 
@@ -24,6 +26,8 @@ import {
   SlideXImageAssetError,
   SlideXRevisionConflictError
 } from "./node";
+
+const execFileAsync = promisify(execFile);
 
 test("Paper shader rendering freezes a real frame instead of a flat fallback", async (context) => {
   if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
@@ -46,6 +50,101 @@ test("Paper shader rendering freezes a real frame instead of a flat fallback", a
     assert.ok(
       stats.channels.slice(0, 3).some((channel) => channel.stdev > 8),
       "expected the frozen shader frame to contain visible color variation"
+    );
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("PowerPoint shader backgrounds are stored as real PNG media", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-pptx-shader-"));
+  const outputPath = path.join(root, "shader.pptx");
+  try {
+    // PPTX uses the generated browser bundle, so exercise the packaged runtime
+    // that users receive after the release build.
+    const { exportSlideXDocument: exportPackagedSlideXDocument } = await import(
+      "../../open-slidex/runtime/sdk/node.js"
+    );
+    await exportPackagedSlideXDocument({
+      format: "pptx",
+      outputPath,
+      source: `# Shader PowerPoint
+
+<Slide theme="light" background="#38BDF8" shader="mesh-gradient" shaderPreset="Beach" shaderFrame={1200} shaderSpeed={0.1} shaderScale={1} shaderIntensity={0.8} shaderSoftness={0.35} shaderDetail={0} shaderColor1="#BCECF6" shaderColor2="#00AAFF" shaderColor3="#00F7FF" shaderColor4="#FFD447">
+</Slide>`
+    });
+    const { stdout: archiveEntries } = await execFileAsync("unzip", ["-Z1", outputPath]);
+    const backgroundEntry = archiveEntries
+      .split("\n")
+      .find((entry) => /^ppt\/media\/.*\.png$/.test(entry));
+    assert.ok(backgroundEntry, "expected the shader background image in the PPTX archive");
+    const { stdout: image } = await execFileAsync(
+      "unzip",
+      ["-p", outputPath, backgroundEntry],
+      { encoding: "buffer", maxBuffer: 32 * 1024 * 1024 }
+    );
+    assert.deepEqual(Buffer.from(image).subarray(0, 8), Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("PowerPoint paper-texture backgrounds do not freeze an opaque black placeholder", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-pptx-paper-texture-"));
+  const outputPath = path.join(root, "paper-texture.pptx");
+  try {
+    const { exportSlideXDocument: exportPackagedSlideXDocument } = await import(
+      "../../open-slidex/runtime/sdk/node.js"
+    );
+    await exportPackagedSlideXDocument({
+      format: "pptx",
+      outputPath,
+      source: `# Paper texture PowerPoint
+
+<Slide theme="light" background="#DCE5F2" shader="paper-texture" shaderPreset="Default" shaderFrame={0} shaderSpeed={0} shaderScale={1} shaderIntensity={0.5} shaderSoftness={0.5} shaderDetail={0.5} shaderColor1="#DCE5F2" shaderColor2="#AAB8CC" shaderColor3="#DCE5F2" shaderColor4="#DCE5F2" shaderColor5="#DCE5F2" shaderColor6="#DCE5F2">
+  <Text x={5} y={28} w={64} h={16} fontSize={56} fontFamily="Dancing Script" color="#FFF9F2">Welcome</Text>
+</Slide>`
+    });
+    const { stdout: archiveEntries } = await execFileAsync("unzip", ["-Z1", outputPath]);
+    const backgroundEntry = archiveEntries
+      .split("\n")
+      .find((entry) => /^ppt\/media\/.*\.png$/.test(entry));
+    assert.ok(backgroundEntry, "expected the paper-texture background image in the PPTX archive");
+    const { stdout: image } = await execFileAsync(
+      "unzip",
+      ["-p", outputPath, backgroundEntry],
+      { encoding: "buffer", maxBuffer: 32 * 1024 * 1024 }
+    );
+    const { data, info } = await sharp(Buffer.from(image)).raw().toBuffer({ resolveWithObject: true });
+    assert.equal(info.width, 1280, "expected the performance-optimized PPTX raster width");
+    assert.equal(info.height, 720, "expected the performance-optimized PPTX raster height");
+    let opaqueBlackPixels = 0;
+    for (let index = 0; index < data.length; index += info.channels) {
+      if (data[index] < 8 && data[index + 1] < 8 && data[index + 2] < 8 && data[index + 3] > 250) {
+        opaqueBlackPixels += 1;
+      }
+    }
+    assert.ok(
+      opaqueBlackPixels / (info.width * info.height) < 0.01,
+      "expected the paper-texture background to avoid a large opaque black rectangle"
+    );
+    const { stdout: slideXml } = await execFileAsync(
+      "unzip",
+      ["-p", outputPath, "ppt/slides/slide1.xml"],
+      { encoding: "utf8", maxBuffer: 4 * 1024 * 1024 }
+    );
+    assert.match(
+      slideXml,
+      /<a:t>Welcome<\/a:t>/,
+      "expected text above the rasterized paper texture to remain a native editable PowerPoint shape"
     );
   } finally {
     await rm(root, { force: true, recursive: true });

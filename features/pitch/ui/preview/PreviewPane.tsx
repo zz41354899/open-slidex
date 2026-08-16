@@ -29,7 +29,10 @@ type PreviewPaneProps = {
   onShaderFrameCapture?: (frame: number) => void;
   replayNonce: number;
   scene?: MotionDocScene;
-  source: string;
+  shaderMaxPixelCount?: number;
+  shaderMinPixelRatio?: number;
+  shaderPlaybackActive?: boolean;
+  source?: string;
 };
 
 export const PreviewPane = memo(function PreviewPane({
@@ -43,10 +46,13 @@ export const PreviewPane = memo(function PreviewPane({
   onShaderFrameCapture,
   replayNonce,
   scene,
+  shaderMaxPixelCount,
+  shaderMinPixelRatio,
+  shaderPlaybackActive = true,
   source
 }: PreviewPaneProps) {
   const { tx } = usePitchI18n();
-  const document = useMemo(() => scene ? null : parseMotionDoc(source), [scene, source]);
+  const document = useMemo(() => scene ? null : parseMotionDoc(source ?? ""), [scene, source]);
   const hiddenBlockIndexSet = useMemo(() => new Set(hiddenBlockIndices), [hiddenBlockIndices]);
   const activeSlide = scene ?? document?.scenes[activeSlideIndex] ?? document?.scenes[0];
   const hasSlides = Boolean(scene) || Boolean(document?.scenes.length);
@@ -101,6 +107,9 @@ export const PreviewPane = memo(function PreviewPane({
         shaderEngine={stringProp(activeSlide.props.shaderEngine)}
         shaderFrame={numberProp(activeSlide.props.shaderFrame)}
         shaderIntensity={numberProp(activeSlide.props.shaderIntensity)}
+        shaderMaxPixelCount={shaderMaxPixelCount}
+        shaderMinPixelRatio={shaderMinPixelRatio}
+        shaderPlaybackActive={shaderPlaybackActive}
         shaderPreset={stringProp(activeSlide.props.shaderPreset)}
         shaderScale={numberProp(activeSlide.props.shaderScale)}
         shaderSoftness={numberProp(activeSlide.props.shaderSoftness)}

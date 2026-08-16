@@ -18,13 +18,11 @@ import path from "node:path";
 
 import {
   applySlideXBatch,
-  buildMotionDocPngSvg,
   getOfficialTemplatePackage,
   listSlideXAssetReferences,
   officialTemplatePackages,
   parseMotionDoc,
   parseTemplateRef,
-  stripNonLocalMotionDocMedia,
   summarizeMotionDoc,
   type TemplatePackageLocale,
   type TemplateRef,
@@ -42,6 +40,7 @@ import {
 } from "@open-slidex/sdk/node";
 
 import { extractEmbeddedImageAssets } from "./workspaceImport";
+import { renderOfficialTemplateCover } from "./templateCover";
 
 export type ProjectSnapshot = ReturnType<SlideXProject["snapshot"]>;
 
@@ -124,17 +123,14 @@ export class SlideXProject {
     return reference;
   }
 
-  templatePreview(value: unknown) {
+  async templatePreview(value: unknown) {
     const reference = parseTemplateRef(value);
-    const template = getOfficialTemplatePackage(reference.id, reference.version);
-    if (!template) {
-      throw Object.assign(new Error(`Official template package is unavailable: ${reference.id}@${reference.version}`), { status: 404 });
-    }
-    return buildMotionDocPngSvg(
-      stripNonLocalMotionDocMedia(template.sources[reference.locale]),
-      0,
-      template.locales[reference.locale].name
-    );
+    return renderOfficialTemplateCover({
+      cacheRoot: path.join(this.stateRoot, "template-covers"),
+      projectRoot: this.root,
+      slideIndex: 0,
+      ...reference
+    });
   }
 
   private async readTemplateLock(): Promise<TemplateRef> {
@@ -260,9 +256,10 @@ export class SlideXProject {
     slideIndex: number;
   }) {
     const document = await this.adapter.open();
-    if (document.revision !== input.revision) {
-      throw new SlideXRevisionConflictError(document.revision);
-    }
+    // Selection is advisory metadata, not a document mutation. A save can
+    // advance the revision between React scheduling this request and the
+    // server receiving it; resolve against the newest document instead of
+    // returning a false conflict to the editor console.
     const slide = parseMotionDoc(document.source).scenes[input.slideIndex];
     if (!slide) throw new Error("The selected slide no longer exists.");
     const block = input.nodeId
@@ -316,6 +313,7 @@ export class SlideXProject {
     try {
       await exportSlideXDocument({
         format: input.format,
+        keepBrowserWarm: input.format === "pptx",
         outputPath,
         overwrite: input.target === "download" || input.overwrite,
         projectRoot: this.root,

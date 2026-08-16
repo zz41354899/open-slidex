@@ -49,7 +49,10 @@ window.__slidexExportPptx = async ({ source, title }) => {
   );
 
   await pptx.writeFile({
-    compression: true,
+    // Shader and filtered-image fallbacks are already PNG-compressed. ZIP
+    // recompression adds substantial CPU time for multi-slide decks while
+    // yielding almost no size reduction, so keep the download responsive.
+    compression: false,
     fileName: `${slugifyFilename(title || "open-slidex-deck")}.pptx`
   });
 

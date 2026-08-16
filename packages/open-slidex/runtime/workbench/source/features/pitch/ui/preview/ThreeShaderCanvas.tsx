@@ -3,6 +3,7 @@ import { memo, useEffect, useMemo, useRef } from "react";
 import type { CSSProperties } from "react";
 import type { PaperShaderElement } from "@paper-design/shaders";
 import { didPauseShader, normalizeShaderFrame } from "@/core/motion-doc/application/shaderFrame";
+import { effectiveCanvasShaderSpeed } from "@/features/pitch/application/canvasPerformance";
 import { DEFAULT_DARK_SHADER_PALETTE, DEFAULT_SHADER_CONTROLS } from "@/core/motion-doc/application/shaders/shaderDefaults";
 import {
   getPaperShaderPresetParams,
@@ -30,7 +31,10 @@ type ThreeShaderCanvasProps = {
   frame?: number;
   image?: string;
   intensity?: number;
+  maxPixelCount?: number;
+  minPixelRatio?: number;
   onFrameCapture?: (frame: number) => void;
+  playbackActive?: boolean;
   presetId: string;
   scale?: number;
   shaderPreset?: string;
@@ -52,7 +56,10 @@ function ThreeShaderCanvasImpl({
   frame = DEFAULT_SHADER_CONTROLS.frame,
   image,
   intensity = DEFAULT_SHADER_CONTROLS.intensity,
+  maxPixelCount = PAPER_SHADER_PREVIEW_MAX_PIXEL_COUNT,
+  minPixelRatio = PAPER_SHADER_PREVIEW_MIN_PIXEL_RATIO,
   onFrameCapture,
+  playbackActive = true,
   presetId,
   scale = DEFAULT_SHADER_CONTROLS.scale,
   shaderPreset,
@@ -101,15 +108,15 @@ function ThreeShaderCanvasImpl({
     className,
     fit: shaderFitParam(presetParams, "fit", "contain"),
     frame,
-    maxPixelCount: PAPER_SHADER_PREVIEW_MAX_PIXEL_COUNT,
-    minPixelRatio: PAPER_SHADER_PREVIEW_MIN_PIXEL_RATIO,
+    maxPixelCount,
+    minPixelRatio,
     offsetX: numberParam(presetParams, "offsetX", 0),
     offsetY: numberParam(presetParams, "offsetY", 0),
     originX: numberParam(presetParams, "originX", 0.5),
     originY: numberParam(presetParams, "originY", 0.5),
     rotation: angle,
     scale: Math.max(0.01, scale),
-    speed,
+    speed: effectiveCanvasShaderSpeed(speed, playbackActive),
     style: {
       backfaceVisibility: "hidden" as const,
       contain: "strict" as const,
@@ -126,7 +133,7 @@ function ThreeShaderCanvasImpl({
     webGlContextAttributes: paperShaderPreviewWebGlContextAttributes,
     worldHeight: numberParam(presetParams, "worldHeight", 0),
     worldWidth: numberParam(presetParams, "worldWidth", 0)
-  }), [angle, className, frame, presetParams, scale, speed, style]);
+  }), [angle, className, frame, maxPixelCount, minPixelRatio, playbackActive, presetParams, scale, speed, style]);
 
   useEffect(() => {
     const previousSpeed = previousSpeedRef.current;
@@ -177,6 +184,9 @@ function areThreeShaderCanvasPropsEqual(previous: ThreeShaderCanvasProps, next: 
     previous.frame === next.frame &&
     previous.image === next.image &&
     previous.intensity === next.intensity &&
+    previous.maxPixelCount === next.maxPixelCount &&
+    previous.minPixelRatio === next.minPixelRatio &&
+    previous.playbackActive === next.playbackActive &&
     previous.presetId === next.presetId &&
     previous.scale === next.scale &&
     previous.shaderPreset === next.shaderPreset &&

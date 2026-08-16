@@ -8,10 +8,11 @@ let idleTimer: ReturnType<typeof setTimeout> | undefined;
 
 export async function launchSlideXChromium() {
   const executablePath = process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE?.trim();
-  return chromium.launch({
+  const launch = executablePath ? chromium.launch({
     headless: true,
-    ...(executablePath ? { executablePath } : {})
-  }).catch(() => {
+    executablePath
+  }) : chromium.launch({ channel: "chrome", headless: true }).catch(() => chromium.launch({ headless: true }));
+  return launch.catch(() => {
     throw new Error(
       "OpenSlideX render needs Chromium. Install Chrome or Chromium and set OPEN_SLIDEX_CHROMIUM_EXECUTABLE to its executable path, or install Playwright Chromium explicitly."
     );
@@ -53,7 +54,7 @@ export async function prepareSlideXPageForStaticExport(page: Page, signal?: Abor
     await document.fonts.ready;
     const exportWindow = window as Window & {
       __motionDocExport?: {
-        prepareStaticExport: () => Promise<{ slideCount: number }>;
+        prepareStaticExport: (options?: { rasterScale?: number }) => Promise<{ slideCount: number }>;
       };
     };
     if (!exportWindow.__motionDocExport) {

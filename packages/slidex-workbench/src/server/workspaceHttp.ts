@@ -168,7 +168,7 @@ async function routeWorkspaceRequest(
   if (templateCoverMatch?.[1] && request.method === "GET") {
     const version = url.searchParams.get("version");
     if (!version) throw Object.assign(new Error("Template version is required."), { status: 400 });
-    sendSvg(outgoing, input.workspace.templateCover({
+    sendSvg(outgoing, await input.workspace.templateCover({
       id: templateCoverMatch[1],
       locale: parseLocale(url.searchParams.get("locale")),
       slideIndex: parseSlideIndex(url.searchParams.get("slide")),

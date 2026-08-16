@@ -2,6 +2,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
 import {
+  THUMBNAIL_SHADER_MAX_PIXEL_COUNT,
+  THUMBNAIL_SHADER_MIN_PIXEL_RATIO
+} from "@/features/pitch/application/canvasPerformance";
+import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH
 } from "@/features/pitch/application/previewCanvas";
@@ -12,8 +16,7 @@ type MotionDocSlidePreviewProps = {
   eager?: boolean;
   interactive?: boolean;
   replayNonce: number;
-  scene?: MotionDocScene;
-  source: string;
+  scene: MotionDocScene;
 };
 
 export function MotionDocSlidePreview({
@@ -21,8 +24,7 @@ export function MotionDocSlidePreview({
   eager = false,
   interactive = false,
   replayNonce,
-  scene,
-  source
+  scene
 }: MotionDocSlidePreviewProps) {
   const frameRef = useRef<HTMLDivElement | null>(null);
   const [shouldRender, setShouldRender] = useState(eager);
@@ -35,7 +37,7 @@ export function MotionDocSlidePreview({
     }
 
     const frame = frameRef.current;
-    if (!frame || shouldRender) return;
+    if (!frame) return;
 
     if (!("IntersectionObserver" in window)) {
       setShouldRender(true);
@@ -44,15 +46,13 @@ export function MotionDocSlidePreview({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry?.isIntersecting) return;
-        setShouldRender(true);
-        observer.disconnect();
+        setShouldRender(Boolean(entry?.isIntersecting));
       },
       { rootMargin: "240px 0px" }
     );
     observer.observe(frame);
     return () => observer.disconnect();
-  }, [eager, shouldRender]);
+  }, [eager]);
 
   useLayoutEffect(() => {
     const frame = frameRef.current;
@@ -78,6 +78,7 @@ export function MotionDocSlidePreview({
       className="absolute inset-0 overflow-hidden"
       data-interactive={interactive ? "true" : "false"}
       data-motion-doc-slide-preview
+      data-motion-doc-thumbnail-mode="static"
       data-motion-doc-slide-preview-height={CANVAS_HEIGHT}
       data-motion-doc-slide-preview-width={CANVAS_WIDTH}
       ref={frameRef}
@@ -102,7 +103,9 @@ export function MotionDocSlidePreview({
             imageLoading={eager ? "eager" : "lazy"}
             replayNonce={replayNonce}
             scene={scene}
-            source={source}
+            shaderMaxPixelCount={THUMBNAIL_SHADER_MAX_PIXEL_COUNT}
+            shaderMinPixelRatio={THUMBNAIL_SHADER_MIN_PIXEL_RATIO}
+            shaderPlaybackActive={false}
           />
         ) : null}
       </div>

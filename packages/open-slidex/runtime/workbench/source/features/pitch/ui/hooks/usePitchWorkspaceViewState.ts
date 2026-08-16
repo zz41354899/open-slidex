@@ -12,6 +12,7 @@ export function usePitchWorkspaceViewState(initialResumeIntent?: "export" | "pre
   const [canvasViewMode, setCanvasViewMode] = useState<CanvasViewMode>("slide");
   const [fileModalMode, setFileModalMode] = useState<PitchFileModalMode>("export");
   const [isCanvasGridVisible, setIsCanvasGridVisible] = useState(false);
+  const [isCanvasSafeAreaVisible, setIsCanvasSafeAreaVisible] = useState(true);
   const [isCanvasSnapEnabled, setIsCanvasSnapEnabled] = useState(true);
   const [isCodeEditorOpen, setIsCodeEditorOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -30,6 +31,7 @@ export function usePitchWorkspaceViewState(initialResumeIntent?: "export" | "pre
     exportMenuRef,
     fileModalMode,
     isCanvasGridVisible,
+    isCanvasSafeAreaVisible,
     isCanvasSnapEnabled,
     isCodeEditorOpen,
     isExporting,
@@ -44,6 +46,7 @@ export function usePitchWorkspaceViewState(initialResumeIntent?: "export" | "pre
     setCanvasShapeTool,
     setFileModalMode,
     setIsCanvasGridVisible,
+    setIsCanvasSafeAreaVisible,
     setIsCanvasSnapEnabled,
     setIsCodeEditorOpen,
     setIsExporting,

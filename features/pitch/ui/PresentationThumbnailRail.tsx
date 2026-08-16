@@ -8,14 +8,12 @@ type PresentationThumbnailRailProps = {
   activeSlideIndex: number;
   onSelectSlide: (slideIndex: number) => void;
   scenes: MotionDocScene[];
-  source: string;
 };
 
 export function PresentationThumbnailRail({
   activeSlideIndex,
   onSelectSlide,
-  scenes,
-  source
+  scenes
 }: PresentationThumbnailRailProps) {
   const { locale, tx } = usePitchI18n();
   const railRef = useRef<HTMLDivElement | null>(null);
@@ -58,7 +56,6 @@ export function PresentationThumbnailRail({
                   eager={isActive}
                   replayNonce={0}
                   scene={scene}
-                  source={source}
                 />
               </span>
             </button>

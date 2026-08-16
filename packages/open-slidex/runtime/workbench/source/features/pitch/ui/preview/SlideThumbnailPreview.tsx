@@ -5,16 +5,14 @@ type SlideThumbnailPreviewProps = {
   activeSlideIndex: number;
   eager?: boolean;
   replayNonce: number;
-  scene?: MotionDocScene;
-  source: string;
+  scene: MotionDocScene;
 };
 
 export function SlideThumbnailPreview({
   activeSlideIndex,
   eager = false,
   replayNonce,
-  scene,
-  source
+  scene
 }: SlideThumbnailPreviewProps) {
   return (
     <MotionDocSlidePreview
@@ -22,7 +20,6 @@ export function SlideThumbnailPreview({
       eager={eager}
       replayNonce={replayNonce}
       scene={scene}
-      source={source}
     />
   );
 }

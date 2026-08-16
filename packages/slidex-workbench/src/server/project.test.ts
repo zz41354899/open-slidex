@@ -64,6 +64,16 @@ test("Workbench project keeps document, context, and asset renames revision-safe
       to: "assets/renamed.webp"
     });
     assert.match(renamed.source, /assets\/renamed\.webp/);
+    await project.writeCurrent({
+      nodeId: "title",
+      revision: opened.revision,
+      slideIndex: 0
+    });
+    const postSaveSelection = JSON.parse(
+      await readFile(path.join(project.stateRoot, "current.json"), "utf8")
+    );
+    assert.equal(postSaveSelection.blockId, "title");
+    assert.equal(postSaveSelection.revision, renamed.revision);
     await assert.rejects(
       () => access(path.join(project.assetsRoot, "hero.webp")),
       { code: "ENOENT" }
@@ -257,8 +267,8 @@ test("Workbench project switches its AI design system without changing presentat
     assert.ok(summerTemplate);
     assert.equal(summerTemplate.slideCount, 7);
     assert.match(summerTemplate.cover, /^\/api\/v1\/templates\/.+\/cover\.svg\?/);
-    assert.match(project.templatePreview({ id: "summer-time-report", locale: "en", version: "1.0.0" }), /^<svg/);
-    assert.match(project.templatePreview({ id: "moodboard", locale: "en", version: "1.0.0" }), /^<svg/);
+    assert.match(await project.templatePreview({ id: "summer-time-report", locale: "en", version: "1.0.0" }), /^<svg/);
+    assert.match(await project.templatePreview({ id: "moodboard", locale: "en", version: "1.0.0" }), /^<svg/);
 
     const selected = await project.selectTemplate({ id: "moodboard", locale: "en", version: "1.0.0" });
     assert.equal(selected.id, "moodboard");

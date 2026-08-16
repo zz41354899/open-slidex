@@ -149,6 +149,7 @@ export type PitchWorkspaceView = {
   exportMenuRef: RefObject<HTMLDivElement | null>;
   homeHref: string;
   isCanvasGridVisible: boolean;
+  isCanvasSafeAreaVisible: boolean;
   isCanvasSnapEnabled: boolean;
   isCodeEditorOpen: boolean;
   isExportMenuOpen: boolean;
@@ -170,6 +171,7 @@ export type PitchWorkspaceView = {
   setCanvasViewMode: Dispatch<SetStateAction<CanvasViewMode>>;
   setCanvasShapeTool: Dispatch<SetStateAction<CanvasShapeTool | null>>;
   setIsCanvasGridVisible: Dispatch<SetStateAction<boolean>>;
+  setIsCanvasSafeAreaVisible: Dispatch<SetStateAction<boolean>>;
   setIsCanvasSnapEnabled: Dispatch<SetStateAction<boolean>>;
   setIsCodeEditorOpen: Dispatch<SetStateAction<boolean>>;
   setIsExportMenuOpen: Dispatch<SetStateAction<boolean>>;

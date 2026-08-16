@@ -137,6 +137,19 @@ test("fixed point line height contributes directly to automatic text height", ()
   assert.ok(Number(spacious.h) > Number(compact.h));
 });
 
+test("fit text box preserves its chosen width while fitting its height to wrapped words", () => {
+  const props = { fontSize: 20, h: 90, w: 24, x: 5, y: 5 };
+  const fitted = autoSizeTextFrameProps(
+    { props, type: "Text" },
+    "A western word should move as one unit when the text box fits its content.",
+    { mode: "fit" }
+  );
+
+  assert.equal(fitted.w, 24);
+  assert.ok(Number(fitted.h) < 90);
+  assert.ok(Number(fitted.h) > 6);
+});
+
 test("HTML export emits block and inline rich text styles", () => {
   const textStyleRanges = JSON.stringify([{ end: 6, fontSize: 30, italic: false, letterSpacing: 1.2, start: 0 }]);
   const html = buildMotionDocHtml(`<Slide background="#ffffff">

@@ -20,8 +20,13 @@ export type PptxRasterAssets = {
 
 const DESIGN_HEIGHT = MOTION_DOC_CANVAS_HEIGHT;
 const DESIGN_WIDTH = MOTION_DOC_CANVAS_WIDTH;
-const EXPORT_SCALE = 1920 / DESIGN_WIDTH;
-const PPTX_BACKGROUND_JPEG_QUALITY = 0.82;
+// Keep expensive shader/filter fallbacks presentation-ready while avoiding a
+// full-HD canvas encode for every slide. Native PowerPoint text, tables, and
+// ordinary images remain editable and retain their own fidelity.
+export const PPTX_RASTER_SCALE = 1280 / DESIGN_WIDTH;
+// PptxGenJS writes background data as a `.png` media part. A JPEG payload
+// under that extension is invalid OOXML media and can render as black in Office.
+export const PPTX_BACKGROUND_IMAGE_TYPE = "image/png";
 
 export async function renderPptxRasterAssets(
   rasterHtml: string,
@@ -39,7 +44,7 @@ export async function renderPptxRasterAssets(
     const frameWindow = iframe.contentWindow as MotionDocExportWindow | null;
     if (!frameWindow?.document) throw new Error("Export renderer failed to load");
 
-    await preparePitchExportWindow(frameWindow);
+    await preparePitchExportWindow(frameWindow, { rasterScale: PPTX_RASTER_SCALE });
     const slides = Array.from(frameWindow.document.querySelectorAll<HTMLElement>(".slide"));
     if (slides.length === 0) throw new Error("No slides to export");
 
@@ -68,7 +73,7 @@ export async function renderPptxRasterAssets(
           backgroundColor: null,
           height: DESIGN_HEIGHT,
           logging: false,
-          scale: EXPORT_SCALE,
+          scale: PPTX_RASTER_SCALE,
           useCORS: true,
           width: DESIGN_WIDTH,
           windowHeight: DESIGN_HEIGHT,
@@ -77,8 +82,7 @@ export async function renderPptxRasterAssets(
         try {
           slideBackgrounds[sourceSlideIndex] = await canvasToDataUrl(
             canvas,
-            "image/jpeg",
-            PPTX_BACKGROUND_JPEG_QUALITY
+            PPTX_BACKGROUND_IMAGE_TYPE
           );
         } finally {
           releaseCanvas(canvas);
@@ -112,7 +116,7 @@ async function captureMotionBlocks(
       backgroundColor: null,
       height: Math.max(1, Math.ceil(rect.height)),
       logging: false,
-      scale: EXPORT_SCALE,
+      scale: PPTX_RASTER_SCALE,
       useCORS: true,
       width: Math.max(1, Math.ceil(rect.width)),
       windowHeight: DESIGN_HEIGHT,

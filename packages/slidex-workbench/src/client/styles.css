@@ -230,7 +230,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .osx-template-preview-image { display: grid; min-height: 430px; place-items: center; padding: 24px 24px 14px; background: #090909; }
 .osx-template-preview-image img { display: block; width: 100%; border: 1px solid rgb(255 255 255 / .08); border-radius: 10px; }
 .osx-template-preview-thumbnails { display: flex; gap: 8px; overflow-x: auto; padding: 0 24px 20px; scrollbar-color: #8f83ff transparent; scrollbar-width: thin; }
-.osx-template-preview-thumbnails button { position: relative; display: block; width: 92px; min-width: 92px; overflow: hidden; border: 1px solid rgb(255 255 255 / .1); border-radius: 7px; padding: 0; background: #141414; color: #c8c6c0; cursor: pointer; }
+.osx-template-preview-thumbnails button { position: relative; display: block; flex: 1 1 92px; width: 92px; min-width: 72px; max-width: 92px; overflow: hidden; border: 1px solid rgb(255 255 255 / .1); border-radius: 7px; padding: 0; background: #141414; color: #c8c6c0; cursor: pointer; }
 .osx-template-preview-thumbnails button:hover { border-color: rgb(255 255 255 / .36); }
 .osx-template-preview-thumbnails button.is-active { border-color: #f0eee8; box-shadow: 0 0 0 1px rgb(240 238 232 / .25); }
 .osx-template-preview-thumbnails img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }

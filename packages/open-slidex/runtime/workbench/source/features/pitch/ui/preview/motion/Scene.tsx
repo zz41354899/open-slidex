@@ -35,6 +35,9 @@ type SceneProps = {
   shaderEngine?: string;
   shaderFrame?: number;
   shaderIntensity?: number;
+  shaderMaxPixelCount?: number;
+  shaderMinPixelRatio?: number;
+  shaderPlaybackActive?: boolean;
   shaderPreset?: string;
   shaderScale?: number;
   shaderSoftness?: number;
@@ -73,6 +76,9 @@ export function Scene({
   shaderEngine,
   shaderFrame,
   shaderIntensity,
+  shaderMaxPixelCount,
+  shaderMinPixelRatio,
+  shaderPlaybackActive = true,
   shaderPreset,
   shaderScale,
   shaderSoftness,
@@ -162,7 +168,10 @@ export function Scene({
           detail={shaderDetail ?? 0.5}
           frame={shaderFrame ?? 0}
           intensity={shaderIntensity ?? 0.5}
+          maxPixelCount={shaderMaxPixelCount}
+          minPixelRatio={shaderMinPixelRatio}
           onFrameCapture={onShaderFrameCapture}
+          playbackActive={shaderPlaybackActive}
           presetId={shader}
           shaderPreset={shaderPreset}
           scale={shaderScale ?? 0.5}

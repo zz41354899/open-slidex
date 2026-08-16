@@ -11,20 +11,19 @@ import type {
   BlockFramePatch,
   ResolvedBlockFrameUpdate
 } from "@/features/pitch/application/pitchGeometry";
+import { EMPTY_BLOCK_FRAME_OVERRIDES } from "@/features/pitch/application/pitchGeometry";
 
 type UseTransientFramePreviewArgs = {
   blocks: MotionDocScene["blocks"];
   onCommit: (updates: BlockFramePatch[]) => void;
 };
 
-const emptyFrameOverrides: BlockFrameOverrides = new Map();
-
 export function useTransientFramePreview({ blocks, onCommit }: UseTransientFramePreviewArgs) {
   const rafRef = useRef<number | null>(null);
   const blocksRef = useRef(blocks);
   const pendingUpdatesRef = useRef<ResolvedBlockFrameUpdate[] | null>(null);
   const [alignmentGuides, setAlignmentGuides] = useState<AlignmentGuide[]>([]);
-  const [frameOverrides, setFrameOverrides] = useState<BlockFrameOverrides>(emptyFrameOverrides);
+  const [frameOverrides, setFrameOverrides] = useState<BlockFrameOverrides>(EMPTY_BLOCK_FRAME_OVERRIDES);
 
   useLayoutEffect(() => {
     blocksRef.current = blocks;
@@ -43,7 +42,7 @@ export function useTransientFramePreview({ blocks, onCommit }: UseTransientFrame
   const reset = useCallback(() => {
     cancelScheduledPreview();
     setAlignmentGuides([]);
-    setFrameOverrides(emptyFrameOverrides);
+    setFrameOverrides(EMPTY_BLOCK_FRAME_OVERRIDES);
   }, [cancelScheduledPreview]);
 
   const preview = useCallback((updates: ResolvedBlockFrameUpdate[]) => {
@@ -64,7 +63,7 @@ export function useTransientFramePreview({ blocks, onCommit }: UseTransientFrame
   const commit = useCallback((updates: ResolvedBlockFrameUpdate[]) => {
     cancelScheduledPreview();
     setAlignmentGuides([]);
-    setFrameOverrides(emptyFrameOverrides);
+    setFrameOverrides(EMPTY_BLOCK_FRAME_OVERRIDES);
     onCommit(resolveCurrentBlockIndices(updates).map(({ blockIndex, frame }) => ({ blockIndex, frame })));
   }, [cancelScheduledPreview, onCommit, resolveCurrentBlockIndices]);
 

@@ -1,7 +1,7 @@
 {
   "name": "open-slidex",
   "private": true,
-  "version": "0.3.5",
+  "version": "0.3.6",
   "workspaces": [
     "packages/editor-ui",
     "packages/open-slidex",

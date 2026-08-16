@@ -1,6 +1,6 @@
 export type MotionDocExportWindow = Window & {
   __motionDocExport?: {
-    prepareStaticExport: () => Promise<{ slideCount: number }>;
+    prepareStaticExport: (options?: { rasterScale?: number }) => Promise<{ slideCount: number }>;
   };
 };
 
@@ -17,10 +17,13 @@ export function waitForPitchExportIframe(iframe: HTMLIFrameElement) {
   });
 }
 
-export async function preparePitchExportWindow(frameWindow: MotionDocExportWindow) {
+export async function preparePitchExportWindow(
+  frameWindow: MotionDocExportWindow,
+  options?: { rasterScale?: number }
+) {
   for (let attempt = 0; attempt < EXPORT_API_MAX_ATTEMPTS; attempt += 1) {
     if (frameWindow.__motionDocExport?.prepareStaticExport) {
-      await frameWindow.__motionDocExport.prepareStaticExport();
+      await frameWindow.__motionDocExport.prepareStaticExport(options);
       return;
     }
     await wait(100);

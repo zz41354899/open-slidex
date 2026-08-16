@@ -107,6 +107,7 @@ function PitchInspectorContent({ commands, document, onOpenMdxEditor, selection,
       localAssetsOnly={view.localAssetsOnly === true}
       importImageUrlForBlock={commands.importImageUrlForBlock}
       isGridVisible={view.isCanvasGridVisible}
+      isSafeAreaVisible={view.isCanvasSafeAreaVisible}
       isSnapEnabled={view.isCanvasSnapEnabled}
       moveSelectedBlocksToEdge={commands.moveSelectedBlocksToEdge}
       onOpenMdxEditor={onOpenMdxEditor ?? (() => view.setIsCodeEditorOpen(true))}
@@ -117,6 +118,7 @@ function PitchInspectorContent({ commands, document, onOpenMdxEditor, selection,
       selectedBlockIndex={selection.selectedBlockIndex}
       selectedBlockIndices={selection.selectedBlockIndices}
       setIsGridVisible={view.setIsCanvasGridVisible}
+      setIsSafeAreaVisible={view.setIsCanvasSafeAreaVisible}
       setIsSnapEnabled={view.setIsCanvasSnapEnabled}
       snapSelectedBlocksToGrid={commands.snapSelectedBlocksToGrid}
       updateActiveSlideStyle={commands.updateActiveSlideStyle}

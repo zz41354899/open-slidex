@@ -6,6 +6,7 @@ import {
   Group,
   Image,
   Lock,
+  Maximize2,
   SendToBack,
   BringToFront,
   Trash2,
@@ -25,6 +26,7 @@ type CanvasContextMenuProps = {
   onCopy: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onFitTextBox: () => void;
   onGroup: () => void;
   onMoveToBack: () => void;
   onMoveToFront: () => void;
@@ -47,6 +49,7 @@ export function CanvasContextMenu({
   onCopy,
   onDelete,
   onDuplicate,
+  onFitTextBox,
   onGroup,
   onMoveToBack,
   onMoveToFront,
@@ -61,9 +64,10 @@ export function CanvasContextMenu({
   const { tx } = usePitchI18n();
   const hasSelection = Boolean(selectedBlock);
   const canUseAsBackground = selectedBlock?.type === "ImageBlock" && typeof selectedBlock.props.src === "string" && selectedBlock.props.src.trim().length > 0;
+  const isTextSelection = selectedBlock?.type === "Text" || selectedBlock?.type === "heading";
 
-  function run(action: () => void, disabled = false) {
-    if (disabled) {
+  function run(action: (() => void) | undefined, disabled = false) {
+    if (disabled || typeof action !== "function") {
       return;
     }
 
@@ -119,6 +123,12 @@ export function CanvasContextMenu({
         {canUseAsBackground ? (
           <>
             <MenuItem icon={Image} label={tx("Use as background")} onClick={() => run(onUseAsBackground)} />
+            <MenuSeparator />
+          </>
+        ) : null}
+        {isTextSelection ? (
+          <>
+            <MenuItem icon={Maximize2} label={tx("Fit text box")} onClick={() => run(onFitTextBox)} />
             <MenuSeparator />
           </>
         ) : null}

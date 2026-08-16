@@ -25,9 +25,13 @@ import {
   validateOpenSlideXLocalMedia,
   type TemplatePackageLocale
 } from "@open-slidex/sdk";
-import { importOpenSlideXImageAsset } from "@open-slidex/sdk/node";
+import {
+  importOpenSlideXImageAsset,
+  renderSlideXDocument
+} from "@open-slidex/sdk/node";
 
 import { SlideXProject } from "./project";
+import { renderOfficialTemplateCover } from "./templateCover";
 import { readWorkspaceImport } from "./workspaceImport";
 
 export type LocalWorkspacePresentation = {
@@ -76,6 +80,8 @@ export type DeleteWorkspacePresentationInput = {
 };
 
 export class OpenSlideXWorkspace {
+  private readonly presentationCoverCache = new Map<string, { revision: string; svg: string }>();
+  private readonly presentationCoverRenders = new Map<string, Promise<string>>();
   readonly mcpPresentationRoot?: string;
   readonly root: string;
   readonly stateRoot: string;
@@ -222,23 +228,35 @@ export class OpenSlideXWorkspace {
   async presentationCover(id: string) {
     const root = await this.existingProjectRoot(id);
     const document = await new SlideXProject(root).open();
-    return buildMotionDocPngSvg(stripNonLocalMotionDocMedia(document.source), 0, document.title);
+    const cached = this.presentationCoverCache.get(id);
+    if (cached?.revision === document.revision) return cached.svg;
+
+    const renderKey = `${id}:${document.revision}`;
+    const pending = this.presentationCoverRenders.get(renderKey);
+    if (pending) return pending;
+
+    const rendering = this.renderPresentationCover({
+      id,
+      revision: document.revision,
+      root,
+      source: stripNonLocalMotionDocMedia(document.source),
+      title: document.title
+    }).then((svg) => {
+      this.presentationCoverCache.set(id, { revision: document.revision, svg });
+      return svg;
+    }).finally(() => {
+      this.presentationCoverRenders.delete(renderKey);
+    });
+    this.presentationCoverRenders.set(renderKey, rendering);
+    return rendering;
   }
 
-  templateCover(value: { id: string; locale: TemplatePackageLocale; slideIndex?: number; version: string }) {
-    const template = getOfficialTemplatePackage(value.id, value.version);
-    if (!template) {
-      throw Object.assign(new Error(`Official template is unavailable: ${value.id}@${value.version}`), { status: 404 });
-    }
-    const slideIndex = value.slideIndex ?? 0;
-    if (!Number.isInteger(slideIndex) || slideIndex < 0 || slideIndex >= template.catalog.slideCount) {
-      throw Object.assign(new Error("The requested template slide was not found."), { status: 404 });
-    }
-    return buildMotionDocPngSvg(
-      stripNonLocalMotionDocMedia(template.sources[value.locale]),
-      slideIndex,
-      template.locales[value.locale].name
-    );
+  async templateCover(value: { id: string; locale: TemplatePackageLocale; slideIndex?: number; version: string }) {
+    return renderOfficialTemplateCover({
+      cacheRoot: path.join(this.stateRoot, "template-covers"),
+      projectRoot: this.root,
+      ...value
+    });
   }
 
   async open(id: string) {
@@ -297,6 +315,43 @@ export class OpenSlideXWorkspace {
       };
     } catch {
       return null;
+    }
+  }
+
+  private async renderPresentationCover(input: {
+    id: string;
+    revision: string;
+    root: string;
+    source: string;
+    title: string;
+  }) {
+    const coverRoot = path.join(this.stateRoot, "covers");
+    const coverPath = path.join(coverRoot, `${input.id}.png`);
+    const metadataPath = path.join(coverRoot, `${input.id}.json`);
+    await mkdir(coverRoot, { recursive: true });
+
+    const metadata = await readCoverMetadata(metadataPath);
+    if (metadata?.revision === input.revision) {
+      const cachedPng = await readFile(coverPath).catch(() => null);
+      if (cachedPng) return buildEmbeddedPngCoverSvg(cachedPng, input.title);
+    }
+
+    const temporaryPath = `${coverPath}.${process.pid}.${Date.now()}.tmp.png`;
+    try {
+      await renderSlideXDocument({
+        mode: "slide",
+        outputPath: temporaryPath,
+        projectRoot: input.root,
+        slideIndex: 0,
+        source: input.source,
+        title: input.title
+      });
+      await rename(temporaryPath, coverPath);
+      await writeFile(metadataPath, `${JSON.stringify({ revision: input.revision })}\n`, "utf8");
+      return buildEmbeddedPngCoverSvg(await readFile(coverPath), input.title);
+    } catch {
+      await rm(temporaryPath, { force: true });
+      return buildMotionDocPngSvg(input.source, 0, input.title);
     }
   }
 
@@ -380,6 +435,33 @@ export class OpenSlideXWorkspace {
     throw new Error("Could not allocate a local presentation folder.");
   }
 
+}
+
+async function readCoverMetadata(filePath: string) {
+  const contents = await readFile(filePath, "utf8").catch(() => "");
+  if (!contents) return null;
+  try {
+    const value = JSON.parse(contents) as { revision?: unknown };
+    return typeof value.revision === "string" ? { revision: value.revision } : null;
+  } catch {
+    return null;
+  }
+}
+
+function buildEmbeddedPngCoverSvg(png: Buffer, title: string) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <title>${escapeXml(title || "OpenSlideX presentation cover")}</title>
+  <image width="1920" height="1080" href="data:image/png;base64,${png.toString("base64")}" preserveAspectRatio="xMidYMid slice" />
+</svg>`;
+}
+
+function escapeXml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
 }
 
 async function directChildDirectories(root: string) {
