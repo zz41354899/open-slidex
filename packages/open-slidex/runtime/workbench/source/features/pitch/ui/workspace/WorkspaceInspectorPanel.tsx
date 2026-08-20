@@ -1,6 +1,7 @@
 
 import { SlidersHorizontal, X } from "lucide-react";
 import { PitchInspector } from "@/features/pitch/ui/PitchInspector";
+import { preloadMdxEditorPane } from "@/features/pitch/ui/workspace/WorkspaceCodeEditorOverlay";
 import type { PitchWorkspaceProps } from "@/features/pitch/ui/workspace/PitchWorkspaceTypes";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import {
@@ -111,6 +112,7 @@ function PitchInspectorContent({ commands, document, onOpenMdxEditor, selection,
       isSnapEnabled={view.isCanvasSnapEnabled}
       moveSelectedBlocksToEdge={commands.moveSelectedBlocksToEdge}
       onOpenMdxEditor={onOpenMdxEditor ?? (() => view.setIsCodeEditorOpen(true))}
+      onPreloadMdxEditor={preloadMdxEditorPane}
       pushUndoSnapshot={commands.pushUndoSnapshot}
       removeImageForBlock={commands.removeImageForBlock}
       requestImageRemoval={commands.requestImageRemoval}

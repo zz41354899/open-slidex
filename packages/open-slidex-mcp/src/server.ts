@@ -35,6 +35,7 @@ import {
   downloadTrustedImage,
   searchTrustedImages
 } from "./trustedImages";
+import { readOpenSlideXSourceImport } from "./sourceImport";
 
 const projectRoot = projectRootFromArgs(process.argv.slice(2));
 const adapter = new SlideXFileDocumentAdapter({ projectRoot });
@@ -86,13 +87,14 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     };
   };
   const server = new McpServer(
-    { name: "open-slidex-local", version: "0.3.6" },
+    { name: "open-slidex-local", version: "0.3.7" },
     {
       instructions: [
         "For Workspace scope, use open_slidex_workspace to list and explicitly select the intended presentation.",
         "Use open_slidex_read first to obtain the current revision, exact source scope, and a small skill manifest.",
         "Follow progressive disclosure: read each recommended SKILL.md, then only the reference files it routes to by passing their exact resourcePath back to open_slidex_read.",
         "Search user notes, documents, and research in knowledge/ with knowledgeQuery, then read one returned resourcePath at a time.",
+        "For a root-confined PPTX or HTML source, use open_slidex_source_import before authoring; it returns semantic evidence rather than unsafe source markup.",
         "Author only toolbar-native layers: Text, ImageBlock, VideoBlock, Chart, Table, and Shape.",
         "Card, Metric, Stack, Group, Title, Icon, and Notes no longer exist and make a document invalid.",
         "The project skills own narrative and visual direction; the MCP server owns safe file access, revision control, validation, and rendered quality gates.",
@@ -129,7 +131,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     description: "Read the current deck or slide plus a compact guidance manifest. Search knowledge/ by query, or load exactly one returned skill/reference/knowledge resourcePath at a time.",
     inputSchema: {
       intent: z.enum(openSlideXGuidanceIntents).default("authoring").describe(
-        "Task route for the manifest: create, redesign, design, authoring, motion, or qa."
+        "Task route for the manifest: import, create, redesign, design, authoring, motion, or qa."
       ),
       knowledgeQuery: z.string().trim().max(500).optional().describe(
         "Search terms for user files under knowledge/. Results are compact citations with readable resourcePath values."
@@ -201,6 +203,29 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         "If rejected, patch the same candidate from the reported node-specific findings."
       ]
     };
+  }));
+
+  server.registerTool("open_slidex_source_import", {
+    title: "Read a PPTX or HTML source for OpenSlideX conversion",
+    description: "Inspect a root-confined .pptx, .html, or .htm as semantic source evidence. PPTX import-media also converts embedded supported images to portable assets/*.webp and returns their original slide geometry for native ImageBlock layers.",
+    inputSchema: {
+      action: z.enum(["inspect", "import-media"]).default("inspect").describe(
+        "inspect is read-only. import-media writes supported embedded PPTX images as content-addressed WebP assets."
+      ),
+      expectedRevision: z.string().startsWith("sha256:").optional().describe(
+        "Required for import-media so asset import is tied to the latest selected deck revision."
+      ),
+      filePath: z.string().trim().min(1).max(500).describe(
+        "Local path relative to the selected OpenSlideX deck. Supports .pptx, .html, and .htm only."
+      )
+    }
+  }, ({ action, expectedRevision, filePath }) => runTool(async () => {
+    const { documentAdapter, root } = await projectContext();
+    if (action === "inspect") return readOpenSlideXSourceImport(root, filePath);
+    if (!expectedRevision) throw new Error("expectedRevision is required when action is import-media.");
+    const current = await documentAdapter.open();
+    if (current.revision !== expectedRevision) throw new SlideXRevisionConflictError(current.revision);
+    return { ...(await readOpenSlideXSourceImport(root, filePath, { importMedia: true })), revision: current.revision };
   }));
 
   const mediaSchema = z.discriminatedUnion("action", [

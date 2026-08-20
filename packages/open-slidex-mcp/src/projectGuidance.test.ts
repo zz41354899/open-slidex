@@ -23,17 +23,27 @@ test("guidance manifest exposes metadata and routes resources without eager cont
       "slidex-motion-direction",
       "slidex-deck-qa"
     ]);
-    assert.equal(manifest.skills.length, 4);
+    assert.equal(manifest.skills.length, 5);
     assert.equal("content" in manifest.skills[0]!, false);
-    assert.equal("content" in manifest.skills[1]!.references[0]!, false);
+    const designSkill = manifest.skills.find((skill) => skill.skill === "slidex-deck-design");
+    assert.ok(designSkill);
+    assert.equal("content" in designSkill.references[0]!, false);
     assert.match(manifest.skills[0]!.checksum, /^[0-9a-f]{64}$/);
     assert.deepEqual(
-      manifest.skills[1]!.references.map((resource) => resource.path),
+      designSkill.references.map((resource) => resource.path),
       [
         ".agents/skills/slidex-deck-design/references/data-brief.mdx",
         ".agents/skills/slidex-deck-design/references/source-to-story.md"
       ]
     );
+    const imported = await readOpenSlideXProjectGuidanceManifest(root, "import");
+    assert.deepEqual(imported.recommended, [
+      "slidex-source-import",
+      "slidex-mdx-authoring",
+      "slidex-deck-design",
+      "slidex-motion-direction",
+      "slidex-deck-qa"
+    ]);
   } finally {
     await rm(root, { force: true, recursive: true });
   }
@@ -74,6 +84,26 @@ test("guidance resource reader loads one approved direct file and rejects path o
   } finally {
     await rm(root, { force: true, recursive: true });
     await rm(outside, { force: true, recursive: true });
+  }
+});
+
+test("an older project without the source-import skill remains readable", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-guidance-older-project-"));
+  try {
+    await seedSkills(root);
+    await rm(path.join(root, ".agents", "skills", "slidex-source-import"), { force: true, recursive: true });
+    const authoring = await readOpenSlideXProjectGuidanceManifest(root, "authoring");
+    assert.deepEqual(authoring.recommended, ["slidex-mdx-authoring"]);
+    const imported = await readOpenSlideXProjectGuidanceManifest(root, "import");
+    assert.deepEqual(imported.missingSkills, ["slidex-source-import"]);
+    assert.deepEqual(imported.recommended, [
+      "slidex-mdx-authoring",
+      "slidex-deck-design",
+      "slidex-motion-direction",
+      "slidex-deck-qa"
+    ]);
+  } finally {
+    await rm(root, { force: true, recursive: true });
   }
 });
 

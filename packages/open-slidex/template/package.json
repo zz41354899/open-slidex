@@ -1,6 +1,6 @@
 {
   "name": "__PROJECT_NAME__",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "private": true,
   "engines": {
     "node": ">=22.12.0"

@@ -1,4 +1,4 @@
-# OpenSlideX 0.3.6
+# OpenSlideX 0.3.7
 
 OpenSlideX is a local-first, MDX presentation workspace with a visual Workbench,
 deterministic HTML/PPTX export, local image optimization, and a project-scoped
@@ -86,7 +86,7 @@ empty media frames instead of failing the complete presentation.
 `npm run dev` always opens `/workspace`. A fresh install starts with an empty
 library; creating or importing a deck adds an isolated child folder and then
 opens the Workbench. The Workbench includes slide and layer navigation, a left-side tool rail,
-canvas selection, Inspector editing, local asset management, Presenter mode,
+canvas selection, Inspector editing, local asset management,
 and animated bar, line, area, pie, donut, and scatter charts. HTML and the
 Workbench animate charts; PPTX exports their editable static final state.
 The installed CLI keeps its generated HMR source and Vite dependency cache in
@@ -150,9 +150,23 @@ After restarting a direct project MCP client:
 3. Use `open_slidex_review` only for read-only checks.
 
 For a multi-deck Workspace MCP, use `open_slidex_workspace` to list and select
-a presentation. Workspace scope loads five tools total: workspace, read, edit,
-media, and review. Generated config uses `open-slidex@latest`, so restarting the
-client loads the newest published server without rewriting configuration.
+a presentation. Workspace scope loads six tools total:
+
+| Tool | Purpose |
+| --- | --- |
+| `open_slidex_workspace` | List local decks and select the target deck. |
+| `open_slidex_read` | Read current MotionDoc, guided skill resources, or local knowledge. |
+| `open_slidex_source_import` | Inspect local PPTX/HTML sources; for PPTX, import embedded images as WebP and return native `ImageBlock` geometry. |
+| `open_slidex_media` | Search trusted images or import approved local media as WebP. |
+| `open_slidex_review` | Run read-only structural and rendered visual QA. |
+| `open_slidex_edit` | Apply a revision-safe complete deck or slide edit with validation and rendered QA. |
+
+For a PPTX or HTML migration, put the source file inside the selected deck,
+inspect it with `open_slidex_source_import`, then author native MotionDoc MDX.
+PPTX `import-media` converts supported embedded images to portable
+`assets/*.webp` and returns their original percentage frame for `ImageBlock`.
+Generated config uses `open-slidex@latest`, so restarting the client loads the
+newest published server without rewriting configuration.
 
 ## Troubleshooting
 

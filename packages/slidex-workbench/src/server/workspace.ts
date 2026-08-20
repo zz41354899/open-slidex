@@ -266,7 +266,9 @@ export class OpenSlideXWorkspace {
   }
 
   async project(id: string) {
-    return new SlideXProject(await this.existingProjectRoot(id));
+    const project = new SlideXProject(await this.existingProjectRoot(id));
+    await project.prepare();
+    return project;
   }
 
   async renamePresentation(id: string, value: RenameWorkspacePresentationInput) {

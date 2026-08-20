@@ -41,7 +41,7 @@ async function main() {
     const mcpPresentationRoot = invocationPresentation?.isFile() ? invocationRoot : undefined;
     const packagedSourceRoot = fileURLToPath(new URL("./source/", import.meta.url));
     const checkoutRoot = path.resolve(fileURLToPath(new URL("../../../", import.meta.url)));
-    const configPath = new URL("./vite.config.mjs", import.meta.url);
+    const configPath = await resolveWorkbenchViteConfigPath();
     const workspaceUrl = `http://127.0.0.1:${port}/workspace`;
     const workspace = new OpenSlideXWorkspace({
       mcpPresentationRoot,
@@ -104,11 +104,9 @@ async function main() {
     }
     const clientRoot = fileURLToPath(new URL("./client/", import.meta.url));
     const packagedSourceRoot = fileURLToPath(new URL("./source/", import.meta.url));
-    const configPath = new URL("./vite.config.mjs", import.meta.url);
-    if (!(await isDirectory(packagedSourceRoot))) {
-      throw new Error("The Workbench HMR sources are missing. Reinstall or rebuild open-slidex.");
-    }
-    const sourceRoot = await prepareWorkbenchSource(project, packagedSourceRoot);
+    const checkoutRoot = path.resolve(fileURLToPath(new URL("../../../", import.meta.url)));
+    const configPath = await resolveWorkbenchViteConfigPath();
+    const sourceRoot = await prepareWorkbenchSource(project, packagedSourceRoot, checkoutRoot);
     const running = await startWorkbenchServer({ clientRoot, port: 0, project });
     const { createServer: createViteServer } = await import("vite");
     const { createSlideXWorkbenchViteConfig } = await import(configPath.href) as {
@@ -248,11 +246,32 @@ async function isDirectory(filePath: string) {
   return stat(filePath).then((value) => value.isDirectory(), () => false);
 }
 
-async function prepareWorkbenchSource(project: SlideXProject, packagedSourceRoot: string) {
-  const checkoutClient = path.join(project.root, "packages/slidex-workbench/src/client");
-  if (await isDirectory(checkoutClient)) return project.root;
+async function isFile(filePath: string) {
+  return stat(filePath).then((value) => value.isFile(), () => false);
+}
+
+async function resolveWorkbenchViteConfigPath() {
+  const candidates = [
+    // Published runtime: runtime/workbench/cli.mjs -> runtime/workbench/vite.config.mjs.
+    new URL("./vite.config.mjs", import.meta.url),
+    // Source checkout: packages/slidex-workbench/src/cli.ts -> repository vite.config.mjs.
+    new URL("../../../vite.config.mjs", import.meta.url)
+  ];
+  for (const candidate of candidates) {
+    if (await isFile(fileURLToPath(candidate))) return candidate;
+  }
+  throw new Error("The Workbench Vite configuration is missing. Reinstall or rebuild open-slidex.");
+}
+
+async function prepareWorkbenchSource(project: SlideXProject, packagedSourceRoot: string, checkoutRoot: string) {
+  for (const candidate of [project.root, checkoutRoot]) {
+    if (await isDirectory(path.join(candidate, "packages/slidex-workbench/src/client"))) return candidate;
+  }
 
   const target = path.join(project.stateRoot, "workbench-source");
+  if (!(await isDirectory(packagedSourceRoot))) {
+    throw new Error("The Workbench HMR sources are missing. Reinstall or rebuild open-slidex.");
+  }
   await rm(target, { force: true, recursive: true });
   await cp(packagedSourceRoot, target, { recursive: true });
   await rewritePackagedTailwindImport(target);

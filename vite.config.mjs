@@ -59,14 +59,11 @@ const workbenchBrowserDependencyAliases = workbenchBrowserDependencies
   }));
 
 const workbenchVendorChunks = [
-  ["vendor-codemirror-view", ["/@codemirror/view/", "/@codemirror/state/", "/@uiw/", "/style-mod/", "/w3c-keyname/", "/crelt/", "/@marijn/"]],
-  ["vendor-codemirror-language", ["/@codemirror/language/", "/@codemirror/lang-", "/@lezer/"]],
-  ["vendor-codemirror-tools", ["/@codemirror/"]],
   ["vendor-shaders", ["/@paper-design/", "/three/"]],
   ["vendor-motion", ["/framer-motion/", "/motion-dom/", "/motion-utils/"]],
-  ["vendor-react", ["/react/", "/react-dom/", "/scheduler/"]],
   ["vendor-ui", ["/@radix-ui/", "/radix-ui/", "/lucide-react/"]],
-  ["vendor-mdx", ["/mdast-util-", "/micromark", "/zod/"]]
+  // Let Rolldown own the React and MDX dependency graphs. Their packages have
+  // internal cycles; forcing them into manual groups produced duplicate chunks.
 ];
 const workbenchEditorChunks = [
   ["editor-preview", ["/features/pitch/ui/preview/", "/features/pitch/ui/PreviewCanvas.tsx"]],
@@ -77,7 +74,6 @@ const workbenchEditorChunks = [
 const workbenchInitialPreloadPrefixes = [
   "I18nProvider-",
   "rolldown-runtime-",
-  "vendor-react-",
   "vendor-ui-"
 ];
 
@@ -99,6 +95,9 @@ export function createSlideXWorkbenchViteConfig(options = {}) {
       postcss: path.join(configRoot, "postcss.config.mjs")
     },
     build: {
+      // The CodeMirror overlay is intentionally one lazy chunk. It is not part
+      // of the Workspace or canvas startup path.
+      chunkSizeWarningLimit: 700,
       modulePreload: {
         resolveDependencies: workbenchModulePreloadDependencies
       },

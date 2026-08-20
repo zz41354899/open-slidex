@@ -16,13 +16,14 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 
 const skillNames = [
+  "slidex-source-import",
   "slidex-mdx-authoring",
   "slidex-deck-design",
   "slidex-motion-direction",
   "slidex-deck-qa"
 ] as const;
 
-test("starter ships only the four focused MDX-first skills", async () => {
+test("starter ships the five focused OpenSlideX skills", async () => {
   const skillsUrl = new URL("../template/.agents/skills/", import.meta.url);
   const bundledSkillsUrl = new URL(
     "../../slidex-workbench/skills/",
@@ -148,7 +149,8 @@ test("published README documents single-package install and workspace-global MCP
   assert.match(readme, /only development\s+dependency/);
   assert.match(readme, /open-slidex mcp --workspace/);
   assert.match(readme, /Workspace Settings/);
-  assert.match(readme, /five tools total/);
+  assert.match(readme, /six tools total/);
+  assert.match(readme, /open_slidex_source_import/);
   assert.doesNotMatch(readme, /\/absolute\/path\/to\/deck/);
 });
 
@@ -160,7 +162,7 @@ test("published package and generated starter both include the Workspace path", 
     await readFile(new URL("../template/package.json", import.meta.url), "utf8")
   ) as { devDependencies?: Record<string, string>; scripts?: Record<string, string> };
 
-  assert.equal(packageJson.version, "0.3.6");
+  assert.equal(packageJson.version, "0.3.7");
   assert.ok(packageJson.files?.includes("runtime"));
   assert.ok(packageJson.files?.includes("template"));
   assert.equal(starterPackageJson.devDependencies?.["open-slidex"], "latest");

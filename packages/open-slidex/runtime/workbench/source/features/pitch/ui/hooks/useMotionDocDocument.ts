@@ -1,10 +1,8 @@
 import { useMemo, useRef } from "react";
 import { stringValue } from "@/common/util/valueUtils";
-import { getMotionDocStats } from "@/core/motion-doc/application/mdxStats";
-import { materializeFreeformSource } from "@/core/motion-doc/application/motionDocFreeform";
+import { materializeFreeformDocument } from "@/core/motion-doc/application/motionDocFreeform";
 import { defaultSlideBackground } from "@/core/motion-doc/application/slideTheme";
 import { numberValue } from "@/core/motion-doc/domain/frame";
-import { parseMotionDoc } from "@/core/motion-doc/domain/motionDocParser";
 import { buildSlideRows } from "@/features/pitch/application/slideRows";
 import {
   motionDocSceneSourceSignatures,
@@ -20,20 +18,23 @@ export function useMotionDocDocument({
   source: string;
 }) {
   const sceneCacheRef = useRef<MotionDocSceneCache | undefined>(undefined);
-  const canvasSource = useMemo(() => materializeFreeformSource(source), [source]);
-  const stats = useMemo(() => getMotionDocStats(canvasSource), [canvasSource]);
+  const materialized = useMemo(() => materializeFreeformDocument(source), [source]);
+  const canvasSource = materialized.source;
   const sliderDocument = useMemo(() => {
-    const parsedDocument = parseMotionDoc(canvasSource);
     const sceneCache = stabilizeMotionDocScenes(
-      parsedDocument.scenes,
+      materialized.document.scenes,
       motionDocSceneSourceSignatures(canvasSource),
       sceneCacheRef.current
     );
     sceneCacheRef.current = sceneCache;
-    return sceneCache.scenes === parsedDocument.scenes
-      ? parsedDocument
-      : { ...parsedDocument, scenes: sceneCache.scenes };
-  }, [canvasSource]);
+    return sceneCache.scenes === materialized.document.scenes
+      ? materialized.document
+      : { ...materialized.document, scenes: sceneCache.scenes };
+  }, [canvasSource, materialized]);
+  const stats = useMemo(() => ({
+    sceneCount: sliderDocument.scenes.length,
+    totalDuration: sliderDocument.scenes.reduce((total, scene) => total + scene.duration, 0)
+  }), [sliderDocument.scenes]);
   const activeSlide = sliderDocument.scenes[activeSlideIndex] ?? sliderDocument.scenes[0];
   const activeSlideTheme = stringValue(activeSlide?.props.theme) ?? "dark";
   const activeSlideBackground = stringValue(activeSlide?.props.background) ?? defaultSlideBackground(activeSlideTheme);

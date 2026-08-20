@@ -578,7 +578,7 @@ export function usePitchCommands({
     setNotice(result.notice);
   }
 
-  return {
+  const { imageSourceRequiresAbsoluteUrl, ...latestActions } = {
     ...assetCommands,
     ...slideCommands,
     addBlockToActiveSlide,
@@ -592,7 +592,6 @@ export function usePitchCommands({
     duplicateSelectedBlock,
     distributeSelectedBlocks,
     groupSelectedBlocks,
-    hasCopiedBlock: (clipboardPacket?.blocks.length ?? 0) > 0,
     moveBlock,
     moveBlockToEdge,
     nudgeSelectedBlocks,
@@ -602,10 +601,6 @@ export function usePitchCommands({
     reorderBlock,
     renameBlock,
     selectBlockFromLayer,
-    selectedBlocksLocked: selectedLayerIndices(selectedBlockIndices, selectedBlockIndex).some((index) => {
-      const block = activeSlide?.blocks[index];
-      return Boolean(block && isPositionLocked(block));
-    }),
     toggleSelectedBlocksPositionLock,
     toggleBlockPositionLock,
     ungroupSelectedBlocks,
@@ -615,6 +610,52 @@ export function usePitchCommands({
     updateSelectionMdx,
     useSelectedImageAsBackground
   };
+
+  const actions = useLatestStableActions(latestActions);
+  const hasCopiedBlock = (clipboardPacket?.blocks.length ?? 0) > 0;
+  const selectedBlocksLocked = selectedLayerIndices(selectedBlockIndices, selectedBlockIndex).some((index) => {
+    const block = activeSlide?.blocks[index];
+    return Boolean(block && isPositionLocked(block));
+  });
+
+  return {
+    ...actions,
+    commandActions: actions,
+    hasCopiedBlock,
+    imageSourceRequiresAbsoluteUrl,
+    selectedBlocksLocked
+  };
+}
+
+type StableActions<T extends object> = {
+  [K in keyof T]: T[K] extends (...args: infer Args) => infer Result ? (...args: Args) => Result : never;
+};
+
+/**
+ * Keep event handlers referentially stable without making their behaviour stale.
+ * The canvas and editor subscribe to many commands; changing an unrelated local
+ * state value should not invalidate their memoized props.
+ */
+function useLatestStableActions<T extends object>(latestActions: T): StableActions<T> {
+  const latestActionsRef = useRef(latestActions);
+  latestActionsRef.current = latestActions;
+  const stableActionsRef = useRef<StableActions<T> | null>(null);
+
+  if (!stableActionsRef.current) {
+    stableActionsRef.current = Object.fromEntries(
+      Object.keys(latestActions).map((key) => [
+        key,
+        (...args: unknown[]) => {
+          const action = latestActionsRef.current[key as keyof T];
+          return typeof action === "function"
+            ? (action as (...actionArgs: unknown[]) => unknown)(...args)
+            : action;
+        }
+      ])
+    ) as StableActions<T>;
+  }
+
+  return stableActionsRef.current;
 }
 
 function isTextAddBlockType(type: AddBlockType) {

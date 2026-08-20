@@ -15,6 +15,14 @@ import sharp from "sharp";
 import { OpenSlideXWorkspace } from "./workspace";
 import { startWorkspaceServer } from "./workspaceHttp";
 
+const starterSkillNames = [
+  "slidex-source-import",
+  "slidex-mdx-authoring",
+  "slidex-deck-design",
+  "slidex-motion-direction",
+  "slidex-deck-qa"
+] as const;
+
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-workspace-"));
   const workspaceRoot = path.join(root, "presentations");
@@ -29,12 +37,15 @@ async function fixture() {
   await writeFile(path.join(templateRoot, "presentation.mdx"), "# Stale starter\n\n<Slide></Slide>\n", "utf8");
   await writeFile(path.join(templateRoot, ".open-slidex", "current.json"), "{}\n", "utf8");
   await writeFile(path.join(templateRoot, ".open-slidex", "template-lock.json"), `${JSON.stringify({ id: "stale" })}\n`, "utf8");
-  await mkdir(path.join(templateRoot, ".agents", "skills", "slidex-deck-design", "references"), { recursive: true });
-  await writeFile(
-    path.join(templateRoot, ".agents", "skills", "slidex-deck-design", "SKILL.md"),
-    "---\nname: slidex-deck-design\ndescription: Test deck design.\n---\n",
-    "utf8"
-  );
+  await Promise.all(starterSkillNames.map(async (skillName) => {
+    const skillRoot = path.join(templateRoot, ".agents", "skills", skillName);
+    await mkdir(path.join(skillRoot, "references"), { recursive: true });
+    await writeFile(
+      path.join(skillRoot, "SKILL.md"),
+      `---\nname: ${skillName}\ndescription: Test ${skillName}.\n---\n`,
+      "utf8"
+    );
+  }));
   await writeFile(
     path.join(templateRoot, ".agents", "skills", "slidex-deck-design", "references", "source-to-story.md"),
     "# Source to story\n",
@@ -62,6 +73,10 @@ test("local workspace creates isolated blank presentations without inherited run
   await assert.rejects(access(path.join(projectRoot, ".open-slidex", "current.json")));
   await assert.rejects(access(path.join(projectRoot, ".open-slidex", "template-lock.json")));
   assert.equal(JSON.parse(await readFile(path.join(projectRoot, "package.json"), "utf8")).name, created.id);
+  assert.deepEqual(
+    (await readdir(path.join(projectRoot, ".agents", "skills"))).sort(),
+    [...starterSkillNames].sort()
+  );
   await access(path.join(projectRoot, ".agents", "skills", "slidex-deck-design", "SKILL.md"));
   assert.match(
     await readFile(path.join(projectRoot, ".agents", "skills", "slidex-deck-design", "references", "source-to-story.md"), "utf8"),
@@ -552,6 +567,58 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   });
   assert.equal(deleted.status, 200);
   assert.equal((await deleted.json()).deleted, true);
+});
+
+test("local workspace prepares legacy decks before opening their editor API", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const created = await workspace.create({ locale: "en", title: "Legacy deck" });
+  const legacyAssetsRoot = path.join(workspaceRoot, created.id, "assets");
+  await rm(legacyAssetsRoot, { force: true, recursive: true });
+
+  const running = await startWorkspaceServer({ port: 0, uiPort: 4321, workspace });
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:${running.port}/api/v1/workspace/presentations/${created.id}/editor/api/v1/document`,
+      { headers: { origin: "http://127.0.0.1:4321" } }
+    );
+
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).title, "Legacy deck");
+    await access(legacyAssetsRoot);
+  } finally {
+    await running.close();
+  }
+});
+
+test("local workspace creates one editor router for concurrent legacy-deck reads", async (context) => {
+  const { root, workspace } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const created = await workspace.create({ locale: "en", title: "Concurrent legacy deck" });
+  const project = workspace.project.bind(workspace);
+  let projectReads = 0;
+  workspace.project = async (id) => {
+    projectReads += 1;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    return project(id);
+  };
+
+  const running = await startWorkspaceServer({ port: 0, uiPort: 4321, workspace });
+  try {
+    const url = `http://127.0.0.1:${running.port}/api/v1/workspace/presentations/${created.id}/editor/api/v1/document`;
+    const [first, second] = await Promise.all([
+      fetch(url, { headers: { origin: "http://127.0.0.1:4321" } }),
+      fetch(url, { headers: { origin: "http://127.0.0.1:4321" } })
+    ]);
+
+    assert.equal(first.status, 200);
+    assert.equal(second.status, 200);
+    assert.equal(projectReads, 1);
+  } finally {
+    await running.close();
+  }
 });
 
 test("starter Workspace MCP setup uses the exact installed presentation path", async (context) => {

@@ -87,6 +87,7 @@ export function PitchInspector({
   isSnapEnabled,
   moveSelectedBlocksToEdge,
   onOpenMdxEditor,
+  onPreloadMdxEditor,
   pushUndoSnapshot,
   removeImageForBlock,
   requestImageRemoval,
@@ -137,6 +138,7 @@ export function PitchInspector({
   isSnapEnabled: boolean;
   moveSelectedBlocksToEdge: (edge: "back" | "front") => void;
   onOpenMdxEditor: () => void;
+  onPreloadMdxEditor?: () => void;
   pushUndoSnapshot: () => void;
   removeImageForBlock: (blockIndex: number) => void;
   requestImageRemoval: () => boolean;
@@ -171,6 +173,8 @@ export function PitchInspector({
                 aria-label={tx("MDX Editor")}
                 className="h-7 px-2 text-neutral-500 hover:bg-white/[0.05] hover:text-white"
                 onClick={onOpenMdxEditor}
+                onFocus={onPreloadMdxEditor}
+                onPointerEnter={onPreloadMdxEditor}
                 size="sm"
                 type="button"
                 variant="ghost"

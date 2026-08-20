@@ -29,10 +29,18 @@ import {
 } from "./node";
 
 const execFileAsync = promisify(execFile);
+type PackagedSdkRuntime = typeof import("@open-slidex/sdk/node");
+const packagedSdkNodePath = "../../open-slidex/runtime/sdk/node.js";
+
+function packagedSdkRuntime() {
+  // The release build deliberately exercises the emitted runtime rather than
+  // the TypeScript source. Its public surface is the SDK node contract.
+  return import(packagedSdkNodePath) as Promise<PackagedSdkRuntime>;
+}
 
 test.after(async () => {
   await closeSlideXChromiumPool();
-  const packagedRuntime = await import("../../open-slidex/runtime/sdk/node.js");
+  const packagedRuntime = await packagedSdkRuntime();
   await packagedRuntime.closeSlideXChromiumPool();
 });
 
@@ -73,9 +81,7 @@ test("PowerPoint shader backgrounds are stored as real PNG media", async (contex
   try {
     // PPTX uses the generated browser bundle, so exercise the packaged runtime
     // that users receive after the release build.
-    const { exportSlideXDocument: exportPackagedSlideXDocument } = await import(
-      "../../open-slidex/runtime/sdk/node.js"
-    );
+    const { exportSlideXDocument: exportPackagedSlideXDocument } = await packagedSdkRuntime();
     await exportPackagedSlideXDocument({
       format: "pptx",
       outputPath,
@@ -108,9 +114,7 @@ test("PowerPoint paper-texture backgrounds do not freeze an opaque black placeho
   const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-pptx-paper-texture-"));
   const outputPath = path.join(root, "paper-texture.pptx");
   try {
-    const { exportSlideXDocument: exportPackagedSlideXDocument } = await import(
-      "../../open-slidex/runtime/sdk/node.js"
-    );
+    const { exportSlideXDocument: exportPackagedSlideXDocument } = await packagedSdkRuntime();
     await exportPackagedSlideXDocument({
       format: "pptx",
       outputPath,

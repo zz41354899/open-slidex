@@ -155,10 +155,6 @@ export function selectOfficialTemplate(template: { id: string; locale: "en" | "z
   });
 }
 
-export function listAssets() {
-  return requestJson<{ assets: AssetItem[] }>("/api/v1/assets");
-}
-
 export async function uploadAsset(file: File, expectedRevision: string) {
   const form = new FormData();
   form.set("file", file);
@@ -166,18 +162,6 @@ export async function uploadAsset(file: File, expectedRevision: string) {
   return requestJson<{ asset: AssetItem }>("/api/v1/assets", {
     body: form,
     method: "POST"
-  });
-}
-
-export function renameAsset(input: {
-  expectedRevision: string;
-  from: string;
-  to: string;
-}) {
-  return requestJson<{ document: DocumentSnapshot }>("/api/v1/assets", {
-    body: JSON.stringify(input),
-    headers: { "content-type": "application/json" },
-    method: "PATCH"
   });
 }
 

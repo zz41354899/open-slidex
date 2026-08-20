@@ -40,21 +40,18 @@ import {
 import { canGroupBlocks, isPositionLocked, type AddBlockOptions, type InsertSlidePlacement } from "@/features/pitch/application/motionDocCommands";
 import type { SlideRow } from "@/features/pitch/application/slideRows";
 import { canvasSlideRowsForRender } from "@/features/pitch/application/canvasSlideRender";
-import { CanvasBlockDock, CanvasSlideAddControls, CanvasSlideNav } from "@/features/pitch/ui/preview/CanvasChrome";
+import { CanvasBlockDock, CanvasSlideNav } from "@/features/pitch/ui/preview/CanvasChrome";
 import { MobileEdgePanelHandles } from "@/features/pitch/ui/preview/MobileCanvasChrome";
 import { CanvasContextMenu } from "@/features/pitch/ui/preview/CanvasContextMenu";
 import { CanvasSelectionLayer } from "@/features/pitch/ui/preview/CanvasSelectionLayer";
 import { CanvasSafeAreaOverlay } from "@/features/pitch/ui/preview/CanvasSafeAreaOverlay";
 import { CanvasGridView } from "@/features/pitch/ui/preview/CanvasGridView";
-import { ViewportDeferredPreview } from "@/features/pitch/ui/preview/ViewportDeferredPreview";
-import { RemoteMcpActivityOverlay } from "@/features/pitch/ui/preview/RemoteMcpActivityOverlay";
-import { AssistantCanvasActivityOverlay } from "@/features/pitch/ui/preview/AssistantCanvasActivityOverlay";
-import { RemoteMcpCanvasCursor } from "@/features/pitch/ui/preview/RemoteMcpCanvasCursor";
 import { RemoteMcpActivityRail } from "@/features/pitch/ui/preview/RemoteMcpActivityRail";
+import { ActiveCanvasOverlay } from "@/features/pitch/ui/preview/ActiveCanvasOverlay";
+import { CanvasSlideFrame } from "@/features/pitch/ui/preview/CanvasSlideFrame";
 import type { RemoteMcpOperation } from "@/features/pitch/domain/remoteMcpOperation";
 import type { AssistantCanvasActivity, AssistantCanvasTrace } from "@/core/motion-doc/domain/assistantCanvasActivity";
 import type { AssistantCanvasTone } from "@/features/pitch/ui/preview/assistantCanvasAppearance";
-import { PreviewPane } from "@/features/pitch/ui/preview/PreviewPane";
 import { ShapeDrawOverlay } from "@/features/pitch/ui/preview/ShapeDrawOverlay";
 import { useCanvasContextMenu } from "@/features/pitch/ui/preview/interaction/useCanvasContextMenu";
 import { useCanvasInteractionEngine } from "@/features/pitch/ui/preview/interaction/useCanvasInteractionEngine";
@@ -913,76 +910,33 @@ export function PreviewCanvas({
             const slideScene = scenes[slide.index];
 
             return (
-              <div
-                className={`relative flex shrink-0 flex-col gap-2 transition-opacity ${isActiveSlideFrame ? "z-10" : "z-0 opacity-80 hover:opacity-100"}`}
-                data-slide-frame-index={slide.index}
+              <CanvasSlideFrame
+                actualScale={actualScale}
+                activeSlideFrameRef={activeSlideFrameRef}
+                activeSlideIndex={activeSlideIndex}
+                canvasFrameStyle={canvasFrameStyle}
+                canvasRef={canvasRef}
+                frameOverrides={previewFrameOverrides}
+                hiddenBlockIndices={hiddenPreviewBlockIndices}
+                isActive={isActiveSlideFrame}
+                isMouseOverCanvas={isMouseOverCanvas}
                 key={slide.index}
-                onPointerDown={(event) => handleSlideFramePointerDown(event, slide.index)}
-                ref={isActiveSlideFrame ? activeSlideFrameRef : undefined}
+                locale={locale}
+                onCanvasDoubleClick={handleCanvasDoubleClick}
+                onFramePointerDown={(event) => handleSlideFramePointerDown(event, slide.index)}
+                onInsertSlideNearActive={onInsertSlideNearActive}
+                onMouseEnter={() => setIsMouseOverCanvas(true)}
+                onMouseLeave={() => setIsMouseOverCanvas(false)}
+                onShaderFrameCapture={onShaderFrameCapture}
+                onToolDragOver={handleToolDragOver}
+                onToolDrop={handleToolDrop}
+                replayNonce={replayNonce}
+                rootRef={scrollAreaRef}
+                shaderMaxPixelCount={canvasInteraction.mode === "idle" ? activeShaderMaxPixelCount : MAIN_CANVAS_INACTIVE_SHADER_MAX_PIXEL_COUNT}
+                shaderPlaybackActive={canvasInteraction.mode === "idle"}
+                slide={slide}
+                scene={slideScene}
               >
-                <div className="hidden h-7 items-center justify-between px-1 font-mono text-[14px] font-semibold uppercase tracking-[0.12em] text-neutral-500 sm:flex">
-                  <span className={isActiveSlideFrame ? "text-neutral-300" : undefined}>{locale === "zh-TW" ? `投影片 ${slide.index + 1}` : `Slide ${slide.index + 1}`}</span>
-                  <span>{slideScene?.duration ?? slide.duration}s</span>
-                </div>
-                <div
-                  className="relative"
-                  style={isActiveSlideFrame ? undefined : {
-                    containIntrinsicSize: `${Math.round(CANVAS_WIDTH * actualScale)}px ${Math.round(CANVAS_HEIGHT * actualScale)}px`,
-                    contentVisibility: "auto"
-                  }}
-                >
-                  {isActiveSlideFrame && !isMouseOverCanvas ? <CanvasSlideAddControls onInsertSlideNearActive={onInsertSlideNearActive} orientation="vertical" /> : null}
-                  <div
-                    aria-current={isActiveSlideFrame ? "true" : undefined}
-                    aria-label={locale === "zh-TW"
-                      ? `第 ${slide.index + 1} 張投影片畫布，16:9，${CANVAS_WIDTH} × ${CANVAS_HEIGHT}`
-                      : `Slide ${slide.index + 1} canvas, 16:9 ${CANVAS_WIDTH} by ${CANVAS_HEIGHT}`}
-                    className={`group relative shrink-0 bg-black shadow-xl ring-1 transition-shadow duration-200 ${isActiveSlideFrame ? "overflow-visible" : "overflow-hidden"} ${
-                      isActiveSlideFrame
-                        ? "ring-neutral-500/55 shadow-[0_18px_54px_rgba(0,0,0,0.48)]"
-                        : "ring-neutral-800/80 hover:ring-white/20"
-                    }`}
-                    onDoubleClick={isActiveSlideFrame ? handleCanvasDoubleClick : undefined}
-                    onDragOver={isActiveSlideFrame ? handleToolDragOver : undefined}
-                    onDrop={isActiveSlideFrame ? handleToolDrop : undefined}
-                    onMouseEnter={isActiveSlideFrame ? () => setIsMouseOverCanvas(true) : undefined}
-                    onMouseLeave={isActiveSlideFrame ? () => setIsMouseOverCanvas(false) : undefined}
-                    ref={isActiveSlideFrame ? canvasRef : undefined}
-                    style={canvasFrameStyle}
-                  >
-                    <div
-                      className={`absolute left-0 top-0 ${isActiveSlideFrame ? "overflow-visible" : "overflow-hidden"}`}
-                      style={{
-                        height: CANVAS_HEIGHT,
-                        transform: `scale(${actualScale})`,
-                        transformOrigin: "left top",
-                        width: CANVAS_WIDTH
-                      }}
-                    >
-                      <ViewportDeferredPreview
-                        eager={isActiveSlideFrame}
-                        rootMargin={MAIN_CANVAS_PRELOAD_MARGIN}
-                        rootRef={scrollAreaRef}
-                      >
-                        <PreviewPane
-                          activeSlideIndex={slide.index}
-                          allowOverflow={isActiveSlideFrame}
-                          hiddenBlockIndices={isActiveSlideFrame ? hiddenPreviewBlockIndices : emptyBlockIndices}
-                          frameOverrides={isActiveSlideFrame ? previewFrameOverrides : undefined}
-                          imageFetchPriority={isActiveSlideFrame ? "high" : "low"}
-                          imageLoading={isActiveSlideFrame ? "eager" : "lazy"}
-                          onShaderFrameCapture={isActiveSlideFrame ? onShaderFrameCapture : undefined}
-                          replayNonce={replayNonce}
-                          scene={slideScene}
-                          shaderMaxPixelCount={isActiveSlideFrame
-                            ? canvasInteraction.mode === "idle"
-                              ? activeShaderMaxPixelCount
-                              : MAIN_CANVAS_INACTIVE_SHADER_MAX_PIXEL_COUNT
-                            : MAIN_CANVAS_INACTIVE_SHADER_MAX_PIXEL_COUNT}
-                          shaderPlaybackActive={isActiveSlideFrame && canvasInteraction.mode === "idle"}
-                        />
-                      </ViewportDeferredPreview>
-                    </div>
                     {isActiveSlideFrame && isGridVisible ? (
                       <div
                         aria-hidden="true"
@@ -1039,27 +993,19 @@ export function PreviewCanvas({
                         tool={canvasShapeTool}
                       />
                     ) : null}
-                    <RemoteMcpActivityOverlay
+                    <ActiveCanvasOverlay
                       activeSlideIndex={activeSlideIndex}
                       activities={remoteMcpOperations}
+                      assistantActivities={assistantActivities}
+                      assistantTone={assistantTone}
+                      assistantTrace={assistantTrace}
+                      cursor={remoteMcpCursor}
+                      cursorLayerRef={remoteMcpCursorLayerRef}
+                      reducedMotion={remoteMcpCursorReducedMotion}
                       scene={slideScene}
                       slideIndex={slide.index}
-                    />
-                    <AssistantCanvasActivityOverlay
-                      activities={assistantActivities}
-                      scene={slideScene}
                       showCursor={isActiveSlideFrame}
-                      slideIndex={slide.index}
-                      tone={assistantTone}
-                      trace={assistantTrace}
                     />
-                    {isActiveSlideFrame ? (
-                      <RemoteMcpCanvasCursor
-                        cursor={remoteMcpCursor}
-                        layerRef={remoteMcpCursorLayerRef}
-                        reducedMotion={remoteMcpCursorReducedMotion}
-                      />
-                    ) : null}
                     {isActiveSlideFrame && contextMenu && !interactionDisabled ? (
                       <CanvasContextMenu
                         canGroup={canGroupSelection}
@@ -1082,9 +1028,7 @@ export function PreviewCanvas({
                         selectedBlocksLocked={selectedBlocksLocked}
                       />
                     ) : null}
-                  </div>
-                </div>
-              </div>
+              </CanvasSlideFrame>
             );
           })}
         </div>

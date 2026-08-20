@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -73,21 +73,29 @@ test("Workbench production and HMR builds share the same Vite client configurati
   assert.match(robotoAlias?.replacement ?? "", /node_modules\/@fontsource\/roboto\/latin-400\.css$/);
 });
 
-test("Workbench defers editor routes and groups large browser modules below the entry boundary", async () => {
-  const [workbenchSource, mainSource, overlaySource, buildSource] = await Promise.all([
+test("Workbench defers editor routes and leaves cyclic dependency graphs to Rolldown", async () => {
+  const [workbenchSource, workspaceSource, mainSource, overlaySource, buildSource, cliSource] = await Promise.all([
     readFile(new URL("../packages/slidex-workbench/src/client/Workbench.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../packages/slidex-workbench/src/client/WorkspaceHome.tsx", import.meta.url), "utf8"),
     readFile(new URL("../packages/slidex-workbench/src/client/main.tsx", import.meta.url), "utf8"),
     readFile(new URL("../features/pitch/ui/workspace/WorkspaceCodeEditorOverlay.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../scripts/build-slidex-workbench.mjs", import.meta.url), "utf8")
+    readFile(new URL("../scripts/build-slidex-workbench.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../packages/slidex-workbench/src/cli.ts", import.meta.url), "utf8")
   ]);
 
   assert.match(workbenchSource, /lazy\(\(\) => import\("\.\/EditorWorkbench"\)\)/);
   assert.match(workbenchSource, /lazy\(\(\) => import\("\.\/WorkspaceHome"\)/);
+  assert.match(workspaceSource, /lazy\(\(\) => import\("\.\/WorkspaceOnboarding"\)/);
   assert.doesNotMatch(mainSource, /from "@open-slidex\/editor-ui"/);
-  assert.match(overlaySource, /lazy\(\(\) => import\("@\/features\/pitch\/ui\/MdxEditorPane"\)/);
+  assert.match(overlaySource, /preloadMdxEditorPane/);
+  assert.match(overlaySource, /import\("@\/features\/pitch\/ui\/MdxEditorPane"\)/);
   assert.match(buildSource, /\.\.\.workbenchViteConfig\.build/);
+  assert.match(buildSource, /packages\/slidex-sdk\/dist/);
+  assert.match(buildSource, /path: "\.\/sdk\/node\.js"/);
+  assert.match(cliSource, /resolveWorkbenchViteConfigPath/);
+  assert.match(cliSource, /new URL\("\.\.\/\.\.\/\.\.\/vite\.config\.mjs", import\.meta\.url\)/);
 
-  assert.equal(workbenchVendorChunk("/repo/node_modules/@codemirror/view/dist/index.js"), "vendor-codemirror-view");
+  assert.equal(workbenchVendorChunk("/repo/node_modules/@codemirror/view/dist/index.js"), undefined);
   assert.equal(workbenchVendorChunk("/repo/node_modules/@paper-design/shaders/dist/index.js"), "vendor-shaders");
   assert.equal(workbenchEditorChunk("/repo/features/pitch/ui/preview/PreviewBlock.tsx"), "editor-preview");
   assert.equal(workbenchEditorChunk("/repo/features/pitch/ui/inspector/ImageFields.tsx"), "editor-inspector");
@@ -95,17 +103,24 @@ test("Workbench defers editor routes and groups large browser modules below the 
   const dependencies = [
     "_workbench/EditorWorkbench-abc.js",
     "_workbench/I18nProvider-abc.js",
-    "_workbench/vendor-react-abc.js",
+    "_workbench/vendor-ui-abc.js",
     "_workbench/vendor-shaders-abc.js"
   ];
   assert.deepEqual(
     workbenchModulePreloadDependencies("index.js", dependencies, { hostId: "index.html", hostType: "html" }),
-    ["_workbench/I18nProvider-abc.js", "_workbench/vendor-react-abc.js"]
+    ["_workbench/I18nProvider-abc.js", "_workbench/vendor-ui-abc.js"]
   );
   assert.deepEqual(
     workbenchModulePreloadDependencies("EditorWorkbench.js", dependencies, { hostId: "index.js", hostType: "js" }),
     dependencies
   );
+});
+
+test("Workbench does not retain unreachable legacy panels in its source runtime", async () => {
+  await Promise.all([
+    assert.rejects(access(new URL("../packages/slidex-workbench/src/client/AssetsPanel.tsx", import.meta.url))),
+    assert.rejects(access(new URL("../packages/slidex-workbench/src/client/Presenter.tsx", import.meta.url)))
+  ]);
 });
 
 test("Workbench HMR proxy preserves the local origin boundary and brand assets", () => {

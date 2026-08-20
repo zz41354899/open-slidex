@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { MotionDocBlock } from "@/core/motion-doc/domain/motionDocTypes";
 
 export function useLayerSelection(activeBlocks: MotionDocBlock[]) {
+  const activeBlocksRef = useRef(activeBlocks);
+  activeBlocksRef.current = activeBlocks;
   const activeBlockCount = activeBlocks.length;
   const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(null);
   const [selectedBlockIndices, setSelectedBlockIndices] = useState<number[]>([]);
@@ -17,16 +19,16 @@ export function useLayerSelection(activeBlocks: MotionDocBlock[]) {
     });
   }, [activeBlockCount]);
 
-  function selectSingleBlock(index: number | null) {
+  const selectSingleBlock = useCallback((index: number | null) => {
     setSelectedBlockIndex(index);
     setSelectedBlockIndices(index === null ? [] : [index]);
-  }
+  }, []);
 
-  function clearBlockSelection() {
+  const clearBlockSelection = useCallback(() => {
     selectSingleBlock(null);
-  }
+  }, [selectSingleBlock]);
 
-  function selectBlock(index: number, options: { additive?: boolean; bypassGroup?: boolean; range?: boolean } = {}) {
+  const selectBlock = useCallback((index: number, options: { additive?: boolean; bypassGroup?: boolean; range?: boolean } = {}) => {
     if (options.range && selectedBlockIndex !== null) {
       const start = Math.min(selectedBlockIndex, index);
       const end = Math.max(selectedBlockIndex, index);
@@ -36,12 +38,13 @@ export function useLayerSelection(activeBlocks: MotionDocBlock[]) {
       return;
     }
 
-    const block = activeBlocks[index];
+    const blocks = activeBlocksRef.current;
+    const block = blocks[index];
     const groupId = !options.bypassGroup && block && "props" in block && typeof block.props.groupId === "string"
       ? block.props.groupId
       : "";
     const groupedIndices = groupId
-      ? activeBlocks.flatMap((candidate, candidateIndex) => (
+      ? blocks.flatMap((candidate, candidateIndex) => (
           "props" in candidate && candidate.props.groupId === groupId ? [candidateIndex] : []
         ))
       : [];
@@ -78,9 +81,9 @@ export function useLayerSelection(activeBlocks: MotionDocBlock[]) {
     }
 
     selectSingleBlock(index);
-  }
+  }, [selectSingleBlock, selectedBlockIndex]);
 
-  function selectBlocks(indices: number[], options: { additive?: boolean } = {}) {
+  const selectBlocks = useCallback((indices: number[], options: { additive?: boolean } = {}) => {
     const uniqueIndices = indices
       .filter((index, offset, items) => items.indexOf(index) === offset)
       .sort((a, b) => a - b);
@@ -96,7 +99,7 @@ export function useLayerSelection(activeBlocks: MotionDocBlock[]) {
 
     setSelectedBlockIndices(uniqueIndices);
     setSelectedBlockIndex(uniqueIndices[uniqueIndices.length - 1] ?? null);
-  }
+  }, []);
 
   return {
     clearBlockSelection,

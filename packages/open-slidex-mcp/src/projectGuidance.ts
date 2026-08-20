@@ -3,6 +3,7 @@ import { readFile, readdir, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
 export const openSlideXProjectSkillNames = [
+  "slidex-source-import",
   "slidex-mdx-authoring",
   "slidex-deck-design",
   "slidex-motion-direction",
@@ -12,6 +13,7 @@ export const openSlideXProjectSkillNames = [
 export type OpenSlideXProjectSkillName = (typeof openSlideXProjectSkillNames)[number];
 
 export const openSlideXGuidanceIntents = [
+  "import",
   "authoring",
   "design",
   "create",
@@ -24,6 +26,7 @@ export type OpenSlideXGuidanceIntent = (typeof openSlideXGuidanceIntents)[number
 
 const intentSkills = {
   authoring: ["slidex-mdx-authoring"],
+  import: ["slidex-source-import", "slidex-mdx-authoring", "slidex-deck-design", "slidex-motion-direction", "slidex-deck-qa"],
   create: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-motion-direction", "slidex-deck-qa"],
   design: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-deck-qa"],
   motion: ["slidex-mdx-authoring", "slidex-motion-direction", "slidex-deck-qa"],
@@ -51,28 +54,39 @@ export async function readOpenSlideXProjectGuidanceManifest(
   root: string,
   intent: OpenSlideXGuidanceIntent
 ) {
-  const skills = await Promise.all(openSlideXProjectSkillNames.map(async (skill) => {
-    const skillResource = await readOpenSlideXProjectGuidanceResource(
-      root,
-      `.agents/skills/${skill}/SKILL.md`
-    );
-    const references = await listSkillReferences(root, skill);
-    return {
-      ...withoutContent(skillResource),
-      references: references.map(withoutContent)
-    };
-  }));
+  const skills = (await Promise.all(openSlideXProjectSkillNames.map(async (skill) => {
+    try {
+      const skillResource = await readOpenSlideXProjectGuidanceResource(
+        root,
+        `.agents/skills/${skill}/SKILL.md`
+      );
+      const references = await listSkillReferences(root, skill);
+      return {
+        ...withoutContent(skillResource),
+        references: references.map(withoutContent)
+      };
+    } catch (error) {
+      if (isNodeError(error) && error.code === "ENOENT") return undefined;
+      throw error;
+    }
+  }))).filter((skill): skill is {
+    references: OpenSlideXGuidanceResourceMetadata[];
+  } & OpenSlideXGuidanceResourceMetadata => Boolean(skill));
+  const available = new Set(skills.map((skill) => skill.skill));
+  const recommended = intentSkills[intent].filter((skill) => available.has(skill));
+  const missingSkills = intentSkills[intent].filter((skill) => !available.has(skill));
 
   return {
     intent,
     mode: "manifest" as const,
-    recommended: [...intentSkills[intent]],
+    recommended,
+    ...(missingSkills.length > 0 ? { missingSkills } : {}),
     skills,
     totalBytes: skills.reduce(
       (total, skill) => total + skill.bytes + skill.references.reduce((sum, resource) => sum + resource.bytes, 0),
       0
     ),
-    usage: "Read each recommended SKILL.md, then only the references it routes to. Pass an exact manifest path as resourcePath to open_slidex_read."
+    usage: "Read each recommended SKILL.md, then only the references it routes to. Pass an exact manifest path as resourcePath to open_slidex_read. If missingSkills is present, run open-slidex sync:skills before that workflow."
   };
 }
 

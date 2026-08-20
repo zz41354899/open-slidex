@@ -103,6 +103,7 @@ function completionMessage({
       ? [`The ${templateId} deck is ready in open-slidex-workspace/.`, ""]
       : ["Create or import your first deck in Workspace.", ""]),
     "Project-local OpenSlideX skills are ready in .agents/skills:",
+    "  slidex-source-import",
     "  slidex-mdx-authoring",
     "  slidex-deck-design",
     "  slidex-motion-direction",

@@ -8,6 +8,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { blankPresentationMdx } from "@open-slidex/sdk";
 import { closeSlideXChromiumPool, getSlideXQualityCacheStats } from "@open-slidex/sdk/node";
+import JSZip from "jszip";
 import sharp from "sharp";
 
 import { openSlideXProjectSkillNames } from "./projectGuidance";
@@ -77,6 +78,7 @@ test("Workspace MCP prints user-level configuration and selects a presentation",
       "open_slidex_media",
       "open_slidex_read",
       "open_slidex_review",
+      "open_slidex_source_import",
       "open_slidex_workspace"
     ]);
 
@@ -157,10 +159,18 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     await mkdir(path.join(root, ".open-slidex"), { recursive: true });
     await writeFile(path.join(root, "presentation.mdx"), `# Untitled Presentation\n\n<Slide duration={5} background="#ffffff"><Text id="first-slide" role="title" x={10} y={20} w={80} h={20} fontSize={42}>First slide</Text></Slide>\n\n<Slide duration={5} background="#f5f5f5"><Text id="second-slide" role="title" x={10} y={20} w={80} h={20} fontSize={42}>Second slide</Text></Slide>`, "utf8");
     await writeFile(path.join(root, "knowledge", "brief.md"), "# Brief\n\nThe launch metric is activation rate.\n", "utf8");
+    await writeFile(path.join(root, "source.html"), "<html><head><title>Launch source</title><script>throw new Error('never execute')</script></head><body><section><h1>Launch</h1><p>Activation is the key metric.</p><img src=\"hero.png\"></section></body></html>", "utf8");
     await writeFile(
       path.join(root, "import.png"),
       await sharp({ create: { background: "#3457d5", channels: 4, height: 64, width: 64 } }).png().toBuffer()
     );
+    const pptx = new JSZip();
+    pptx.file("ppt/presentation.xml", `<p:presentation xmlns:p="x" xmlns:r="y"><p:sldSz cx="13333333" cy="7500000"/><p:sldIdLst><p:sldId id="256" r:id="rId1"/></p:sldIdLst></p:presentation>`);
+    pptx.file("ppt/_rels/presentation.xml.rels", `<Relationships><Relationship Id="rId1" Target="slides/slide1.xml"/></Relationships>`);
+    pptx.file("ppt/slides/slide1.xml", `<p:sld xmlns:p="x" xmlns:a="y" xmlns:r="z"><p:pic><p:nvPicPr><p:cNvPr id="5" name="Cover" descr="Imported cover"/></p:nvPicPr><p:blipFill><a:blip r:embed="rId5"/></p:blipFill><p:spPr><a:xfrm><a:off x="1333333" y="750000"/><a:ext cx="6666667" cy="3750000"/></a:xfrm></p:spPr></p:pic></p:sld>`);
+    pptx.file("ppt/slides/_rels/slide1.xml.rels", `<Relationships><Relationship Id="rId5" Target="../media/image1.png"/></Relationships>`);
+    pptx.file("ppt/media/image1.png", await sharp({ create: { background: "#d55d34", channels: 4, height: 48, width: 96 } }).png().toBuffer());
+    await writeFile(path.join(root, "source.pptx"), await pptx.generateAsync({ type: "nodebuffer" }));
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
 
     const opened = structured(await client.callTool({
@@ -171,6 +181,23 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     const authoringContract = opened.authoringContract as Record<string, unknown>;
     assert.deepEqual(authoringContract.allowed, ["Text", "ImageBlock", "VideoBlock", "Chart", "Table", "Shape"]);
     assert.deepEqual(authoringContract.removed, ["Card", "Group", "Icon", "Metric", "Notes", "Stack", "Title"]);
+
+    const importedPptx = structured(await client.callTool({
+      arguments: { action: "import-media", expectedRevision: opened.revision, filePath: "source.pptx" },
+      name: "open_slidex_source_import"
+    }));
+    const pptxImage = ((importedPptx.slides as Array<Record<string, unknown>>)[0]?.images as Array<Record<string, unknown>>)[0];
+    assert.equal(pptxImage?.status, "imported");
+    assert.match(String(pptxImage?.source), /^assets\/image1-[a-f0-9]{16}\.webp$/);
+    assert.match(String(pptxImage?.imageBlock), /x=\{10\} y=\{10\} w=\{50\} h=\{50\}/);
+
+    const importedSource = structured(await client.callTool({
+      arguments: { filePath: "source.html" },
+      name: "open_slidex_source_import"
+    }));
+    assert.equal(importedSource.format, "html");
+    assert.equal((importedSource.summary as Record<string, unknown>).slideCount, 1);
+    assert.equal((importedSource.slides as Array<Record<string, unknown>>)[0]?.title, "Launch");
 
     const edited = structured(await client.callTool({
       arguments: {
@@ -262,7 +289,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     const guidance = context.guidance as Record<string, unknown>;
     assert.equal(guidance.mode, "manifest");
     assert.equal(guidance.intent, "redesign");
-    assert.equal((guidance.skills as unknown[]).length, 4);
+    assert.equal((guidance.skills as unknown[]).length, 5);
     assert.equal((guidance.recommended as unknown[]).length, 4);
     const knowledge = context.knowledge as Record<string, unknown>;
     const results = knowledge.results as Array<Record<string, unknown>>;

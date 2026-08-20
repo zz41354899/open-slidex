@@ -6,7 +6,8 @@ import {
   type StyleOverrides
 } from "@/core/motion-doc/application/tableBlock";
 import { parseMotionDoc } from "@/core/motion-doc/domain/motionDocParser";
-import type { MotionDocBlock, MotionDocProps, MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
+import type { MotionDocBlock, MotionDocProps, MotionDocScene, ParsedMotionDoc } from "@/core/motion-doc/domain/motionDocTypes";
+import { ensureMotionDocSceneBlockIds } from "@/core/motion-doc/application/motionDocBlockIdentity";
 import {
   fullHdFontPixelsToPoints,
   legacyFontPixelsToPoints,
@@ -24,11 +25,24 @@ type PositionProps = {
 };
 
 export function materializeFreeformSource(source: string) {
+  return materializeFreeformDocument(source).source;
+}
+
+/**
+ * Materializes the normalized canvas source and its parsed representation in
+ * one pass. Interactive editors can consume both without parsing the emitted
+ * MDX again after every source edit.
+ */
+export function materializeFreeformDocument(source: string): { document: ParsedMotionDoc; source: string } {
   const document = parseMotionDoc(source);
   const title = source.match(/^#\s+(.+)$/m)?.[0] ?? `# ${document.title}`;
-  const slides = document.scenes.map((scene) => generateSlideString(materializeFreeformScene(scene)));
+  const scenes = document.scenes.map((scene) => ensureMotionDocSceneBlockIds(materializeFreeformScene(scene)));
+  const slides = scenes.map(generateSlideString);
 
-  return `${title}\n\n${slides.join("\n\n")}`;
+  return {
+    document: { scenes, title: document.title },
+    source: `${title}\n\n${slides.join("\n\n")}`
+  };
 }
 
 export function materializeFreeformScene(scene: MotionDocScene): MotionDocScene {

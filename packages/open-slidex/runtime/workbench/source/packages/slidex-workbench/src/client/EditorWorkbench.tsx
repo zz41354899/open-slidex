@@ -1,4 +1,4 @@
-import { RefreshCw } from "lucide-react";
+import { LoaderCircle, RefreshCw } from "lucide-react";
 
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import { LocalMotionDocEditor } from "./LocalMotionDocEditor";
@@ -9,7 +9,12 @@ export default function EditorWorkbench() {
   const { tx } = usePitchI18n();
 
   if (!documentState.snapshot && documentState.saveState === "loading") {
-    return <main className="flex h-[100dvh] items-center justify-center bg-black text-sm text-neutral-500">{tx("Opening presentation.mdx…")}</main>;
+    return (
+      <main aria-busy="true" className="flex h-[100dvh] flex-col items-center justify-center gap-3 bg-black text-sm text-neutral-500">
+        <LoaderCircle aria-hidden="true" className="animate-spin text-[#a78bfa]" size={22} />
+        <span>{tx("Opening presentation.mdx…")}</span>
+      </main>
+    );
   }
 
   if (!documentState.snapshot) {

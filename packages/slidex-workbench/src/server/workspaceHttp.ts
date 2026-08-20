@@ -34,8 +34,9 @@ type StartWorkspaceServerInput = {
 export async function startWorkspaceServer(input: StartWorkspaceServerInput) {
   let listeningPort = input.port;
   const editorRouters = new Map<string, WorkbenchRouter>();
+  const editorRouterLoads = new Map<string, Promise<WorkbenchRouter>>();
   const server = createServer((request, response) => {
-    void routeWorkspaceRequest(request, response, { ...input, port: listeningPort }, editorRouters)
+    void routeWorkspaceRequest(request, response, { ...input, port: listeningPort }, editorRouters, editorRouterLoads)
       .catch((error) => sendError(response, error));
   });
   await new Promise<void>((resolve, reject) => {
@@ -45,8 +46,10 @@ export async function startWorkspaceServer(input: StartWorkspaceServerInput) {
   listeningPort = (server.address() as { port: number }).port;
   return {
     close: async () => {
+      await Promise.allSettled(editorRouterLoads.values());
       for (const router of editorRouters.values()) router.close();
       editorRouters.clear();
+      editorRouterLoads.clear();
       await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     },
     port: listeningPort
@@ -57,7 +60,8 @@ async function routeWorkspaceRequest(
   incoming: IncomingMessage,
   outgoing: ServerResponse,
   input: StartWorkspaceServerInput,
-  editorRouters: Map<string, WorkbenchRouter>
+  editorRouters: Map<string, WorkbenchRouter>,
+  editorRouterLoads: Map<string, Promise<WorkbenchRouter>>
 ) {
   const incomingUrl = new URL(incoming.url ?? "/", `http://127.0.0.1:${input.port}`);
   const editorMatch = incomingUrl.pathname.match(/^\/api\/v1\/workspace\/presentations\/([A-Za-z0-9._-]+)\/editor(\/.*)$/);
@@ -67,7 +71,7 @@ async function routeWorkspaceRequest(
 
   if (editorMatch?.[1]) {
     try {
-      const router = await editorRouter(editorMatch[1], input.workspace, editorRouters);
+      const router = await editorRouter(editorMatch[1], input.workspace, editorRouters, editorRouterLoads);
       if (await router.route({ incoming, outgoing, request, url })) return;
       sendJson(outgoing, { code: "not_found", message: "Not found." }, 404);
     } catch (error) {
@@ -196,12 +200,29 @@ function parseSlideIndex(value: string | null) {
   return slideIndex;
 }
 
-async function editorRouter(id: string, workspace: OpenSlideXWorkspace, routers: Map<string, WorkbenchRouter>) {
+async function editorRouter(
+  id: string,
+  workspace: OpenSlideXWorkspace,
+  routers: Map<string, WorkbenchRouter>,
+  loads: Map<string, Promise<WorkbenchRouter>>
+) {
   const existing = routers.get(id);
   if (existing) return existing;
-  const router = createWorkbenchRouter(await workspace.project(id));
-  routers.set(id, router);
-  return router;
+  const pending = loads.get(id);
+  if (pending) return pending;
+
+  let loading: Promise<WorkbenchRouter>;
+  loading = workspace.project(id)
+    .then((project) => {
+      const router = createWorkbenchRouter(project);
+      routers.set(id, router);
+      return router;
+    })
+    .finally(() => {
+      if (loads.get(id) === loading) loads.delete(id);
+    });
+  loads.set(id, loading);
+  return loading;
 }
 
 async function webRequest(incoming: IncomingMessage, port: number, requestPath?: string) {

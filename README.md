@@ -56,10 +56,11 @@ Generated Workbench source and dependency cache stay in the ignored
 `.open-slidex/` directory. Each Workspace deck owns its own source, assets,
 and exports.
 
-The starter includes four project-local Agent Skills. Detailed authoring rules,
-input-to-story guidance, motion patterns, QA checks, and five verified
-native-layer examples live inside each skill's `references/` directory. Agents
-load only the resources needed for the current task.
+The starter includes five project-local Agent Skills: PPTX/HTML source import,
+MDX authoring, narrative design, motion direction, and visual QA. Detailed
+guidance and verified native-layer examples live inside each skill's
+`references/` directory. Agents load only the resources needed for the current
+task.
 
 ## What you can do locally
 
@@ -77,11 +78,14 @@ or CLI bridge.
 
 Generated MCP configuration uses `open-slidex@latest`, so a client restart
 loads the newest published server without editing the config. Workspace scope
-exposes five workflow tools: workspace selection, progressive source/resource
-read, edit, media, and review. Narrative and visual direction stay in the
-project skills; MCP remains the revision-safe file and validation boundary.
-User notes and research stay local under each deck's `knowledge/`; Markdown,
-text, CSV, and PDF sources are searched first and read one resource at a time.
+exposes six workflow tools: workspace selection, progressive source/resource
+read, PPTX/HTML source import, media, review, and edit. Source import inspects
+PPTX/HTML safely; PPTX `import-media` converts embedded supported images to
+portable WebP and returns the original frame geometry for native `ImageBlock`
+layers. Narrative and visual direction stay in the project skills; MCP remains
+the revision-safe file and validation boundary. User notes and research stay
+local under each deck's `knowledge/`; Markdown, text, CSV, and PDF sources are
+searched first and read one resource at a time.
 
 ## Repository commands
 

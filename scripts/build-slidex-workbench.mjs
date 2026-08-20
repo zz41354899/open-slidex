@@ -32,6 +32,7 @@ await normalizeGeneratedText(path.join(distDir, "client"));
 await cp(path.join(rootDir, "vite.config.mjs"), path.join(distDir, "vite.config.mjs"));
 await cp(path.join(rootDir, "postcss.config.mjs"), path.join(distDir, "postcss.config.mjs"));
 await copyWorkbenchSources(path.join(distDir, "source"));
+await cp(path.join(rootDir, "packages/slidex-sdk/dist"), path.join(distDir, "sdk"), { recursive: true });
 
 await esbuild({
   absWorkingDir: rootDir,
@@ -99,11 +100,11 @@ function sourceAliases() {
     setup(context) {
       context.onResolve({ filter: /^@open-slidex\/sdk\/node$/ }, () => ({
         external: true,
-        path: "../sdk/node.js"
+        path: "./sdk/node.js"
       }));
       context.onResolve({ filter: /^@open-slidex\/sdk$/ }, () => ({
         external: true,
-        path: "../sdk/index.js"
+        path: "./sdk/index.js"
       }));
       context.onResolve({ filter: /^@\// }, (args) => {
         const base = path.join(rootDir, args.path.slice(2));

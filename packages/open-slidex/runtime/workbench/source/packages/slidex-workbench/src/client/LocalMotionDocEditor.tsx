@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { Sparkles } from "lucide-react";
 import { MotionDocEditor } from "@open-slidex/editor-ui";
 
@@ -247,6 +247,12 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     setSource,
     source
   });
+  const {
+    commandActions: pitchCommandActions,
+    hasCopiedBlock,
+    imageSourceRequiresAbsoluteUrl,
+    selectedBlocksLocked
+  } = pitchCommands;
 
   const selectionMdx = useMemo(
     () => getSelectionMdx(activeSlide, selectedBlockIndex, activeSlideIndex, selectedBlockIndices),
@@ -327,75 +333,75 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     setOpenTool
   });
 
-  const chartInspector = selectedBlock?.type === "Chart" && selectedBlockIndex !== null ? (
-    <ChartInspector block={selectedBlock} onPreviewMotion={triggerChartReplay} update={(props) => pitchCommands.updateBlock(selectedBlockIndex, props)} />
-  ) : undefined;
+  const chartInspector = useMemo(() => (
+    selectedBlock?.type === "Chart" && selectedBlockIndex !== null ? (
+      <ChartInspector block={selectedBlock} onPreviewMotion={triggerChartReplay} update={(props) => pitchCommandActions.updateBlock(selectedBlockIndex, props)} />
+    ) : undefined
+  ), [pitchCommandActions.updateBlock, selectedBlock, selectedBlockIndex, triggerChartReplay]);
 
-  return (
-    <div className="local-workbench-shell">
-      <MotionDocEditor
-        commands={{
-          addAllSlidesFromTemplate: pitchCommands.addAllSlidesFromTemplate,
-          addBlockToActiveSlide: pitchCommands.addBlockToActiveSlide,
-          addSlide: pitchCommands.addSlide,
-          addSlideFromTemplate: pitchCommands.addSlideFromTemplate,
-          addSlideWithLayout: pitchCommands.addSlideWithLayout,
-          alignSelectedBlocks: pitchCommands.alignSelectedBlocks,
-          applyTemplateDeck: pitchCommands.applyTemplateDeck,
-          beginBlockTransform: pitchCommands.beginBlockTransform,
+  const editorProps = useMemo<ComponentProps<typeof MotionDocEditor>>(() => ({
+    commands: {
+          addAllSlidesFromTemplate: pitchCommandActions.addAllSlidesFromTemplate,
+          addBlockToActiveSlide: pitchCommandActions.addBlockToActiveSlide,
+          addSlide: pitchCommandActions.addSlide,
+          addSlideFromTemplate: pitchCommandActions.addSlideFromTemplate,
+          addSlideWithLayout: pitchCommandActions.addSlideWithLayout,
+          alignSelectedBlocks: pitchCommandActions.alignSelectedBlocks,
+          applyTemplateDeck: pitchCommandActions.applyTemplateDeck,
+          beginBlockTransform: pitchCommandActions.beginBlockTransform,
           commitMdxSource: commitSource,
-          copySelectedBlock: pitchCommands.copySelectedBlock,
-          copySlide: pitchCommands.copySlide,
+          copySelectedBlock: pitchCommandActions.copySelectedBlock,
+          copySlide: pitchCommandActions.copySlide,
           copySource: async () => { await navigator.clipboard.writeText(source); setNotice(tx("MDX copied")); },
-          deleteBlock: pitchCommands.deleteBlock,
-          deleteSelectedBlocks: pitchCommands.deleteSelectedBlocks,
-          deleteSlide: pitchCommands.deleteSlide,
-          duplicateSelectedBlock: pitchCommands.duplicateSelectedBlock,
-          duplicateSlide: pitchCommands.duplicateSlide,
-          distributeSelectedBlocks: pitchCommands.distributeSelectedBlocks,
-          goToNextSlide: pitchCommands.goToNextSlide,
-          goToPreviousSlide: pitchCommands.goToPreviousSlide,
-          groupSelectedBlocks: pitchCommands.groupSelectedBlocks,
-          imageSourceRequiresAbsoluteUrl: pitchCommands.imageSourceRequiresAbsoluteUrl,
-          importImageUrlForBlock: pitchCommands.importImageUrlForBlock,
-          insertSlideNearActive: pitchCommands.insertSlideNearActive,
-          moveBlock: pitchCommands.moveBlock,
-          moveBlockToEdge: pitchCommands.moveBlockToEdge,
-          moveSelectedBlocksToEdge: pitchCommands.moveSelectedBlocksToEdge,
-          snapSelectedBlocksToGrid: pitchCommands.snapSelectedBlocksToGrid,
+          deleteBlock: pitchCommandActions.deleteBlock,
+          deleteSelectedBlocks: pitchCommandActions.deleteSelectedBlocks,
+          deleteSlide: pitchCommandActions.deleteSlide,
+          duplicateSelectedBlock: pitchCommandActions.duplicateSelectedBlock,
+          duplicateSlide: pitchCommandActions.duplicateSlide,
+          distributeSelectedBlocks: pitchCommandActions.distributeSelectedBlocks,
+          goToNextSlide: pitchCommandActions.goToNextSlide,
+          goToPreviousSlide: pitchCommandActions.goToPreviousSlide,
+          groupSelectedBlocks: pitchCommandActions.groupSelectedBlocks,
+          imageSourceRequiresAbsoluteUrl,
+          importImageUrlForBlock: pitchCommandActions.importImageUrlForBlock,
+          insertSlideNearActive: pitchCommandActions.insertSlideNearActive,
+          moveBlock: pitchCommandActions.moveBlock,
+          moveBlockToEdge: pitchCommandActions.moveBlockToEdge,
+          moveSelectedBlocksToEdge: pitchCommandActions.moveSelectedBlocksToEdge,
+          snapSelectedBlocksToGrid: pitchCommandActions.snapSelectedBlocksToGrid,
           newProject,
           onAddActiveSlideComment: () => undefined,
           onPassActiveSlideComment: () => undefined,
           openExport: () => { void runExport("html"); },
-          openExportWithFormat: (format) => { void runExport(format); },
+          openExportWithFormat: (format: "html" | "mdx" | "pptx") => { void runExport(format); },
           openPresentationPreview: () => setIsPresentationPreviewOpen(true),
-          pasteCopiedBlock: pitchCommands.pasteCopiedBlock,
-          pasteSlide: pitchCommands.pasteSlide,
-          persistActiveSlideShaderFrame: pitchCommands.persistActiveSlideShaderFrame,
+          pasteCopiedBlock: pitchCommandActions.pasteCopiedBlock,
+          pasteSlide: pitchCommandActions.pasteSlide,
+          persistActiveSlideShaderFrame: pitchCommandActions.persistActiveSlideShaderFrame,
           pushUndoSnapshot,
           redoLastChange,
-          removeImageForBlock: pitchCommands.removeImageForBlock,
-          requestImageRemoval: pitchCommands.requestImageRemoval,
-          requestImageUpload: pitchCommands.requestImageUpload,
-          renameBlock: pitchCommands.renameBlock,
-          reorderBlock: pitchCommands.reorderBlock,
-          reorderSlide: pitchCommands.reorderSlide,
+          removeImageForBlock: pitchCommandActions.removeImageForBlock,
+          requestImageRemoval: pitchCommandActions.requestImageRemoval,
+          requestImageUpload: pitchCommandActions.requestImageUpload,
+          renameBlock: pitchCommandActions.renameBlock,
+          reorderBlock: pitchCommandActions.reorderBlock,
+          reorderSlide: pitchCommandActions.reorderSlide,
           setActiveSlideIndex,
-          toggleBlockPositionLock: pitchCommands.toggleBlockPositionLock,
-          toggleSelectedBlocksPositionLock: pitchCommands.toggleSelectedBlocksPositionLock,
+          toggleBlockPositionLock: pitchCommandActions.toggleBlockPositionLock,
+          toggleSelectedBlocksPositionLock: pitchCommandActions.toggleSelectedBlocksPositionLock,
           undoLastChange,
-          ungroupSelectedBlocks: pitchCommands.ungroupSelectedBlocks,
-          updateActiveSlideStyle: pitchCommands.updateActiveSlideStyle,
-          updateAllSlidesStyle: pitchCommands.updateAllSlidesStyle,
-          updateSelectedBlockColor: pitchCommands.updateSelectedBlockColor,
-          updateBlock: pitchCommands.updateBlock,
-          updatePositionedBlockFrames: pitchCommands.updatePositionedBlockFrames,
-          updateSelectionMdx: pitchCommands.updateSelectionMdx,
-          uploadImageForBlock: pitchCommands.uploadImageForBlock,
-          uploadVideoForBlock: pitchCommands.uploadVideoForBlock,
-          useSelectedImageAsBackground: pitchCommands.useSelectedImageAsBackground
-        }}
-        document={{
+          ungroupSelectedBlocks: pitchCommandActions.ungroupSelectedBlocks,
+          updateActiveSlideStyle: pitchCommandActions.updateActiveSlideStyle,
+          updateAllSlidesStyle: pitchCommandActions.updateAllSlidesStyle,
+          updateSelectedBlockColor: pitchCommandActions.updateSelectedBlockColor,
+          updateBlock: pitchCommandActions.updateBlock,
+          updatePositionedBlockFrames: pitchCommandActions.updatePositionedBlockFrames,
+          updateSelectionMdx: pitchCommandActions.updateSelectionMdx,
+          uploadImageForBlock: pitchCommandActions.uploadImageForBlock,
+          uploadVideoForBlock: pitchCommandActions.uploadVideoForBlock,
+          useSelectedImageAsBackground: pitchCommandActions.useSelectedImageAsBackground
+    },
+    document: {
           activeSlide,
           activeSlideAccent,
           activeSlideBackground,
@@ -428,24 +434,24 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           slideRows,
           source,
           totalDuration: stats.totalDuration
-        }}
-        selection={{
+    },
+    selection: {
           clearBlockSelection,
           draggedBlockIndex,
           dragOverBlockIndex,
-          hasCopiedBlock: pitchCommands.hasCopiedBlock,
+          hasCopiedBlock,
           selectBlock,
-          selectBlockFromLayer: pitchCommands.selectBlockFromLayer,
+          selectBlockFromLayer: pitchCommandActions.selectBlockFromLayer,
           selectBlocks,
           selectedBlockIndex,
           selectedBlockIndices,
-          selectedBlocksLocked: pitchCommands.selectedBlocksLocked,
+          selectedBlocksLocked,
           selectionMdx,
           selectSingleBlock,
           setDraggedBlockIndex,
           setDragOverBlockIndex
-        }}
-        view={{
+    },
+    view: {
           accessMode: "guest",
           activeCanvasTool,
           assetUrl: localWorkbenchAssetUrl,
@@ -469,7 +475,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           headerTools: <LocalWorkbenchToolbar
             activeCanvasTool={activeCanvasTool}
             disabled={false}
-            onAddBlock={pitchCommands.addBlockToActiveSlide}
+            onAddBlock={pitchCommandActions.addBlockToActiveSlide}
             onCanvasToolChange={setActiveCanvasTool}
             onSelectShapeTool={(tool) => {
               setActiveCanvasTool("select");
@@ -507,8 +513,99 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           setIsMobileInspectorOpen,
           setIsMobileSidebarOpen,
           templateLibraryEnabled: false
-        }}
-      />
+    }
+  }), [
+    activeCanvasTool,
+    activeSlide,
+    activeSlideAccent,
+    activeSlideBackground,
+    activeSlideIndex,
+    activeSlideLayoutPreset,
+    activeSlideMutedColor,
+    activeSlideShader,
+    activeSlideShaderAngle,
+    activeSlideShaderColor1,
+    activeSlideShaderColor2,
+    activeSlideShaderColor3,
+    activeSlideShaderColor4,
+    activeSlideShaderColor5,
+    activeSlideShaderColor6,
+    activeSlideShaderDetail,
+    activeSlideShaderEngine,
+    activeSlideShaderIntensity,
+    activeSlideShaderPreset,
+    activeSlideShaderScale,
+    activeSlideShaderSoftness,
+    activeSlideShaderSpeed,
+    activeSlideTextColor,
+    activeSlideTheme,
+    canvasShapeTool,
+    canvasSource,
+    canvasViewMode,
+    chartInspector,
+    clearBlockSelection,
+    commitSource,
+    documentState.saveState,
+    draggedBlockIndex,
+    dragOverBlockIndex,
+    exportMenuRef,
+    isCanvasGridVisible,
+    isCanvasSafeAreaVisible,
+    isCanvasSnapEnabled,
+    isCodeEditorOpen,
+    isExportMenuOpen,
+    imageSourceRequiresAbsoluteUrl,
+    isMobileInspectorOpen,
+    isMobileSidebarOpen,
+    localChartAnimationsActive,
+    newProject,
+    notice,
+    openTool,
+    pitchCommandActions,
+    projectName,
+    pushUndoSnapshot,
+    redoLastChange,
+    replayNonce,
+    renamePresentation,
+    runExport,
+    selectedBlockIndex,
+    selectedBlockIndices,
+    selectedBlocksLocked,
+    selectedTemplateId,
+    selectionMdx,
+    selectBlock,
+    selectBlocks,
+    selectSingleBlock,
+    setActiveCanvasTool,
+    setActiveSlideIndex,
+    setCanvasShapeTool,
+    setCanvasViewMode,
+    setIsCanvasGridVisible,
+    setIsCanvasSafeAreaVisible,
+    setIsCanvasSnapEnabled,
+    setIsCodeEditorOpen,
+    setIsExportMenuOpen,
+    setIsMobileInspectorOpen,
+    setIsMobileSidebarOpen,
+    setIsPresentationPreviewOpen,
+    setOpenTool,
+    setShortcutHelpOpen,
+    setDraggedBlockIndex,
+    setDragOverBlockIndex,
+    setNotice,
+    shortcutHelpOpen,
+    slideRows,
+    sliderDocument.scenes,
+    source,
+    stats.totalDuration,
+    tx,
+    undoLastChange,
+    workspaceHomeUrl
+  ]);
+
+  return (
+    <div className="local-workbench-shell">
+      <MotionDocEditor {...editorProps} />
 
       {documentState.message ? (
         <LocalNotice documentState={documentState} onRestoreSaved={restoreSavedCanvas} />

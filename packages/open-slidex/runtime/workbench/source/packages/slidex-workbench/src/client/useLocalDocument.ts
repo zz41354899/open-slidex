@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
 import { parseMotionDoc, summarizeMotionDoc } from "@open-slidex/sdk";
 
 import { localWorkbenchApiPath, readDocument, saveDocument } from "./api";
@@ -9,6 +9,41 @@ import type {
   ValidationResult
 } from "./domain";
 
+export const LOCAL_DRAFT_DELAY_MS = 250;
+// The Workspace API and its per-deck router can be launched independently of
+// the Vite client. Keep the opening state while that local process finishes
+// booting instead of briefly presenting a fatal error that a retry resolves.
+export const INITIAL_DOCUMENT_READ_RETRY_DELAYS_MS = [250, 750, 1_500, 2_500] as const;
+
+export function scheduleLocalDraftPersist(callback: () => void, delay = LOCAL_DRAFT_DELAY_MS) {
+  const timeout = window.setTimeout(callback, delay);
+  return () => window.clearTimeout(timeout);
+}
+
+export function shouldValidateDeferredSource(
+  projectId: string,
+  deferredSource: string,
+  currentSource: string
+) {
+  return Boolean(projectId) && deferredSource === currentSource;
+}
+
+export async function readInitialDocument(
+  read: () => Promise<DocumentSnapshot>,
+  wait: (delay: number) => Promise<void> = waitForDocumentRetry
+) {
+  let lastError: unknown;
+  for (const delay of [...INITIAL_DOCUMENT_READ_RETRY_DELAYS_MS, 0]) {
+    try {
+      return await read();
+    } catch (error) {
+      lastError = error;
+      if (delay > 0) await wait(delay);
+    }
+  }
+  throw lastError;
+}
+
 export function useLocalDocument() {
   const [source, setSource] = useState("");
   const [snapshot, setSnapshot] = useState<DocumentSnapshot | null>(null);
@@ -18,6 +53,7 @@ export function useLocalDocument() {
     issues: []
   });
   const [message, setMessage] = useState("");
+  const deferredSource = useDeferredValue(source);
   const revisionRef = useRef("");
   const sourceRef = useRef("");
   const savedSourceRef = useRef("");
@@ -42,20 +78,34 @@ export function useLocalDocument() {
   const applySource = useCallback((nextSource: string) => {
     sourceRef.current = nextSource;
     setSource(nextSource);
-    const nextValidation = validateSource(nextSource);
-    setValidation(nextValidation);
     const dirty = nextSource !== savedSourceRef.current;
+    // Source state must remain synchronous for controlled editors. Validation
+    // and draft serialization run from deferred effects below instead.
+    setState(dirty ? "dirty" : "saved");
+  }, [setState]);
+
+  useEffect(() => {
+    if (!shouldValidateDeferredSource(projectIdRef.current, deferredSource, sourceRef.current)) return;
+    const nextValidation = validateSource(deferredSource);
+    setValidation(nextValidation);
+    const dirty = deferredSource !== savedSourceRef.current;
     setState(nextValidation.isValid ? (dirty ? "dirty" : "saved") : "invalid");
-    if (dirty) {
+  }, [deferredSource, setState]);
+
+  useEffect(() => {
+    if (!projectIdRef.current || source === savedSourceRef.current) {
+      localStorage.removeItem(draftKey());
+      return;
+    }
+
+    return scheduleLocalDraftPersist(() => {
       storeDraft({
         baseRevision: revisionRef.current,
-        source: nextSource,
+        source,
         updatedAt: new Date().toISOString()
       });
-    } else {
-      localStorage.removeItem(draftKey());
-    }
-  }, [draftKey, setState, storeDraft]);
+    });
+  }, [draftKey, source, storeDraft]);
 
   const acceptSnapshot = useCallback((next: DocumentSnapshot, note = "") => {
     revisionRef.current = next.revision;
@@ -72,7 +122,7 @@ export function useLocalDocument() {
 
   useEffect(() => {
     let cancelled = false;
-    void readDocument()
+    void readInitialDocument(readDocument)
       .then((next) => {
         if (cancelled) return;
         projectIdRef.current = next.projectId;
@@ -103,6 +153,7 @@ export function useLocalDocument() {
         setSource(next.source);
         setValidation(next.validation);
         setState("saved");
+        setMessage("");
       })
       .catch((error: unknown) => {
         if (cancelled) return;
@@ -207,10 +258,17 @@ export function useLocalDocument() {
   }, [acceptSnapshot, setState, storeDraft]);
 
   const reload = useCallback(async (note = "Reloaded presentation.mdx.") => {
-    const next = await readDocument();
-    acceptSnapshot(next, note);
-    return next;
-  }, [acceptSnapshot]);
+    if (!snapshot) setState("loading");
+    try {
+      const next = await (snapshot ? readDocument() : readInitialDocument(readDocument));
+      acceptSnapshot(next, note);
+      return next;
+    } catch (error) {
+      setState("error");
+      setMessage(error instanceof Error ? error.message : "Could not open presentation.mdx.");
+      throw error;
+    }
+  }, [acceptSnapshot, setState, snapshot]);
 
   const downloadDraft = useCallback(() => {
     const url = URL.createObjectURL(
@@ -255,4 +313,8 @@ function readDraft(key: string): StoredDraft | null {
   } catch {
     return null;
   }
+}
+
+function waitForDocumentRetry(delay: number) {
+  return new Promise<void>((resolve) => window.setTimeout(resolve, delay));
 }
