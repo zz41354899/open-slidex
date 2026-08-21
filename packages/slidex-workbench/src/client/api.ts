@@ -45,9 +45,11 @@ export type LocalWorkspaceSnapshot = {
 export type WorkspaceMcpClient = "codex" | "claude-code" | "claude-desktop";
 export type WorkspaceMcpPlatform = "macos" | "windows";
 export type WorkspaceMcpSetup = {
+  clientAvailable: boolean;
   client: WorkspaceMcpClient;
   config: string;
   configPath: string;
+  hostPlatform: WorkspaceMcpPlatform;
   platform: WorkspaceMcpPlatform;
   presentationPath?: string;
   prompt: string;
@@ -55,6 +57,12 @@ export type WorkspaceMcpSetup = {
   scopeRoot: string;
   scopeType: "presentation" | "workspace";
   workspaceRoot: string;
+};
+
+export type WorkspaceMcpInstallResult = {
+  action: "added" | "updated";
+  configPath: string;
+  restartRequired: true;
 };
 
 /** Keeps a deck opened from Workspace on the Workspace origin and API router. */
@@ -77,8 +85,22 @@ export function readLocalWorkspace(locale: "en" | "zh-TW") {
   return requestJson<LocalWorkspaceSnapshot>(`/api/v1/workspace?locale=${encodeURIComponent(locale)}`);
 }
 
-export function readWorkspaceMcpSetup(client: WorkspaceMcpClient, platform: WorkspaceMcpPlatform) {
-  return requestJson<WorkspaceMcpSetup>(`/api/v1/workspace/mcp/setup?client=${encodeURIComponent(client)}&platform=${encodeURIComponent(platform)}`);
+export function readWorkspaceMcpSetup(client: WorkspaceMcpClient, options?: {
+  platform?: WorkspaceMcpPlatform;
+  scopeRoot?: string;
+}) {
+  const query = new URLSearchParams({ client });
+  if (options?.platform) query.set("platform", options.platform);
+  if (options?.scopeRoot) query.set("scopeRoot", options.scopeRoot);
+  return requestJson<WorkspaceMcpSetup>(`/api/v1/workspace/mcp/setup?${query}`);
+}
+
+export function installWorkspaceMcp(client: WorkspaceMcpClient, platform: WorkspaceMcpPlatform) {
+  return requestJson<WorkspaceMcpInstallResult>("/api/v1/workspace/mcp/install", {
+    body: JSON.stringify({ client, platform }),
+    headers: { "content-type": "application/json" },
+    method: "POST"
+  });
 }
 
 export function createLocalWorkspacePresentation(input: {
@@ -290,8 +312,10 @@ async function apiError(response: Response) {
   const error = new Error(payload?.message ?? `Request failed (${response.status}).`) as Error & {
     code?: string;
     currentRevision?: string;
+    status?: number;
   };
   error.code = payload?.code;
   error.currentRevision = payload?.currentRevision;
+  error.status = response.status;
   return error;
 }

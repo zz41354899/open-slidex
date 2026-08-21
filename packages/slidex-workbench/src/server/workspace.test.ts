@@ -486,16 +486,54 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   assert.equal(mcpSetup.status, 200);
   const mcpPayload = await mcpSetup.json();
   assert.equal(mcpPayload.configPath, "~/.codex/config.toml");
+  assert.equal(mcpPayload.hostPlatform, process.platform === "win32" ? "windows" : "macos");
+  assert.equal(mcpPayload.clientAvailable, true);
   assert.equal(mcpPayload.workspaceRoot, workspaceRoot);
   assert.match(mcpPayload.config, /\[mcp_servers\.open_slidex_workspace\]/);
   assert.match(mcpPayload.config, /open-slidex@latest/);
   assert.match(mcpPayload.config, /--workspace/);
+  assert.match(mcpPayload.prompt, /macOS/);
+  assert.match(mcpPayload.prompt, /~\/\.codex\/config\.toml/);
+
+  const otherDeviceMcpSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=codex&platform=windows&scopeRoot=${encodeURIComponent("C:\\Users\\demo\\open-slidex-workspace")}`);
+  assert.equal(otherDeviceMcpSetup.status, 200);
+  const otherDeviceMcpPayload = await otherDeviceMcpSetup.json();
+  assert.equal(otherDeviceMcpPayload.platform, "windows");
+  assert.equal(otherDeviceMcpPayload.scopeRoot, "C:\\Users\\demo\\open-slidex-workspace");
+  assert.match(otherDeviceMcpPayload.config, /"cmd"/);
+  assert.match(otherDeviceMcpPayload.config, /--workspace/);
+  assert.match(otherDeviceMcpPayload.prompt, /Windows/);
+  assert.match(otherDeviceMcpPayload.prompt, /%USERPROFILE%\\\.codex\\config\.toml/);
+
+  const claudeCodeWindowsSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=claude-code&platform=windows&scopeRoot=${encodeURIComponent("C:\\Users\\demo\\open-slidex-workspace")}`);
+  assert.equal(claudeCodeWindowsSetup.status, 200);
+  const claudeCodeWindowsPayload = await claudeCodeWindowsSetup.json();
+  assert.match(claudeCodeWindowsPayload.prompt, /PowerShell or Command Prompt/);
+  assert.match(claudeCodeWindowsPayload.prompt, /cmd \/c npx/);
+
+  const claudeDesktopMacSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=claude-desktop&platform=macos`);
+  assert.equal(claudeDesktopMacSetup.status, 200);
+  const claudeDesktopMacPayload = await claudeDesktopMacSetup.json();
+  assert.equal(claudeDesktopMacPayload.configPath, "~/Library/Application Support/Claude/claude_desktop_config.json");
+  assert.match(claudeDesktopMacPayload.prompt, /Restart Claude Desktop after saving the file/);
+
+  const invalidOtherDeviceMcpSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=codex&platform=windows&scopeRoot=relative`);
+  assert.equal(invalidOtherDeviceMcpSetup.status, 400);
 
   const windowsMcpSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=codex&platform=windows`);
   assert.equal((await windowsMcpSetup.json()).configPath, "%USERPROFILE%\\.codex\\config.toml");
 
   const invalidMcpSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=unknown&platform=macos`);
   assert.equal(invalidMcpSetup.status, 400);
+
+  const otherPlatform = process.platform === "win32" ? "macos" : "windows";
+  const rejectedCrossPlatformInstall = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/install`, {
+    body: JSON.stringify({ client: "codex", platform: otherPlatform }),
+    headers: { "content-type": "application/json", origin: `http://127.0.0.1:${uiPort}` },
+    method: "POST"
+  });
+  assert.equal(rejectedCrossPlatformInstall.status, 400);
+  assert.match((await rejectedCrossPlatformInstall.json()).message, /Copy the configuration for a different platform/);
 
   const importForm = new FormData();
   const importedSource = blankPresentationMdx.replace(/^#\s+.*$/m, "# Imported through API");

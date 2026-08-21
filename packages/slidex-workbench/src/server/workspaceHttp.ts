@@ -1,4 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { existsSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
 
@@ -23,6 +25,7 @@ import {
   workspaceMcpConfig,
   workspaceMcpPrompt
 } from "./mcpConfig";
+import { installMcpConfiguration } from "./mcpInstaller";
 import { MAX_WORKSPACE_IMPORT_FILE_BYTES } from "./workspaceImport";
 
 type StartWorkspaceServerInput = {
@@ -87,9 +90,14 @@ async function routeWorkspaceRequest(
 
   if (url.pathname === "/api/v1/workspace/mcp/setup" && request.method === "GET") {
     const client = parseWorkspaceMcpClient(url.searchParams.get("client"));
-    const platform = parseWorkspaceMcpPlatform(url.searchParams.get("platform"));
+    const hostPlatform = currentMcpPlatform();
+    const platform = url.searchParams.has("platform")
+      ? parseWorkspaceMcpPlatform(url.searchParams.get("platform"))
+      : hostPlatform;
     const presentationRoot = input.workspace.mcpPresentationRoot;
-    const root = presentationRoot ?? input.workspace.root;
+    const localRoot = presentationRoot ?? input.workspace.root;
+    const requestedRoot = url.searchParams.get("scopeRoot");
+    const root = requestedRoot ? parseMcpScopeRoot(requestedRoot, platform) : localRoot;
     const configPath = client === "codex"
       ? platform === "windows" ? "%USERPROFILE%\\.codex\\config.toml" : "~/.codex/config.toml"
       : client === "claude-desktop"
@@ -98,13 +106,15 @@ async function routeWorkspaceRequest(
           : "~/Library/Application Support/Claude/claude_desktop_config.json"
         : "Claude Code user scope";
     sendJson(outgoing, {
+      clientAvailable: client !== "claude-desktop" || isClaudeDesktopInstalled(hostPlatform),
       client,
       config: presentationRoot
         ? presentationMcpConfig(client, root, platform)
         : workspaceMcpConfig(client, root, platform),
       configPath,
+      hostPlatform,
       platform,
-      presentationPath: presentationRoot ? path.join(presentationRoot, "presentation.mdx") : undefined,
+      presentationPath: presentationRoot ? platform === "windows" ? path.win32.join(root, "presentation.mdx") : path.join(root, "presentation.mdx") : undefined,
       prompt: presentationRoot
         ? presentationMcpPrompt(client, root, platform)
         : workspaceMcpPrompt(client, root, platform),
@@ -113,6 +123,27 @@ async function routeWorkspaceRequest(
       scopeType: presentationRoot ? "presentation" : "workspace",
       workspaceRoot: input.workspace.root
     });
+    return;
+  }
+
+  if (url.pathname === "/api/v1/workspace/mcp/install" && request.method === "POST") {
+    const body = await jsonBody<{ client?: string; platform?: string }>(request);
+    const client = parseWorkspaceMcpClient(body.client ?? null);
+    const platform = parseWorkspaceMcpPlatform(body.platform ?? null);
+    const hostPlatform = currentMcpPlatform();
+    if (platform !== hostPlatform) {
+      throw Object.assign(new Error("Copy the configuration for a different platform instead of installing it from this computer."), { status: 400 });
+    }
+    if (client === "claude-desktop" && !isClaudeDesktopInstalled(hostPlatform)) {
+      throw Object.assign(new Error("Claude Desktop is not installed on this device."), { status: 400 });
+    }
+    const presentationRoot = input.workspace.mcpPresentationRoot;
+    const root = presentationRoot ?? input.workspace.root;
+    const configKey = presentationRoot ? "open_slidex" : "open_slidex_workspace";
+    const config = presentationRoot
+      ? presentationMcpConfig(client, root, platform)
+      : workspaceMcpConfig(client, root, platform);
+    sendJson(outgoing, await installMcpConfiguration({ client, config, configKey, platform }));
     return;
   }
 
@@ -182,6 +213,30 @@ async function routeWorkspaceRequest(
   }
 
   sendJson(outgoing, { code: "not_found", message: "Not found." }, 404);
+}
+
+function currentMcpPlatform() {
+  return process.platform === "win32" ? "windows" as const : "macos" as const;
+}
+
+function parseMcpScopeRoot(value: string, platform: "macos" | "windows") {
+  const root = value.trim();
+  const valid = platform === "windows" ? /^[A-Za-z]:[\\/]/.test(root) : root.startsWith("/");
+  if (!valid || root.length > 2048) {
+    throw Object.assign(new Error(platform === "windows" ? "Enter an absolute Windows Workspace path, such as C:\\Users\\you\\OpenSlideX." : "Enter an absolute macOS Workspace path, such as /Users/you/OpenSlideX."), { status: 400 });
+  }
+  return root;
+}
+
+function isClaudeDesktopInstalled(platform: "macos" | "windows") {
+  if (platform === "macos") {
+    return ["/Applications/Claude.app", path.join(os.homedir(), "Applications", "Claude.app")].some(existsSync);
+  }
+  return [
+    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, "Programs", "Claude", "Claude.exe"),
+    process.env.ProgramFiles && path.join(process.env.ProgramFiles, "Claude", "Claude.exe"),
+    process.env["ProgramFiles(x86)"] && path.join(process.env["ProgramFiles(x86)"]!, "Claude", "Claude.exe")
+  ].some((candidate): candidate is string => Boolean(candidate) && existsSync(candidate));
 }
 
 function parseLocale(value: string | null): TemplatePackageLocale {

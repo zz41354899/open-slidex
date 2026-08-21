@@ -1,6 +1,7 @@
 import { lazy, Suspense, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import {
   CheckCircle2,
+  Cable,
   ChevronRight,
   Clock3,
   FileCheck2,
@@ -47,6 +48,7 @@ import {
 import { useWorkspaceActions } from "./useWorkspaceActions";
 
 const WorkspaceOnboarding = lazy(() => import("./WorkspaceOnboarding").then(({ WorkspaceOnboarding: component }) => ({ default: component })));
+const WorkspaceMcpDialog = lazy(() => import("./WorkspaceMcpDialog").then(({ WorkspaceMcpDialog: component }) => ({ default: component })));
 
 type View = "home" | "templates" | "presentations" | "recent" | "settings";
 const wordmark = slidexWordmark;
@@ -111,6 +113,8 @@ export function WorkspaceHome() {
   const onboardingCheckedRef = useRef(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
+  const [mcpOpen, setMcpOpen] = useState(false);
+  const [mcpNotice, setMcpNotice] = useState("");
   const workspaceActions = useWorkspaceActions({ locale, setLoadError, setWorkspace, zh });
   const {
     actionError,
@@ -177,6 +181,12 @@ export function WorkspaceHome() {
       setOnboardingOpen(true);
     }
   }, [workspace]);
+
+  useEffect(() => {
+    if (!mcpNotice) return;
+    const timeout = window.setTimeout(() => setMcpNotice(""), 5600);
+    return () => window.clearTimeout(timeout);
+  }, [mcpNotice]);
 
   const filteredPresentations = useMemo(() => {
     const needle = deferredQuery.trim().toLocaleLowerCase();
@@ -385,6 +395,17 @@ export function WorkspaceHome() {
         t={t}
         title={title}
       />
+
+      <button aria-label={zh ? "設定 OpenSlideX MCP" : "Set up OpenSlideX MCP"} className="osx-mcp-fab" onClick={() => setMcpOpen(true)} type="button">
+        <Cable size={18} /><span>{zh ? "設定 MCP" : "Set up MCP"}</span>
+      </button>
+
+      {mcpOpen ? (
+        <Suspense fallback={null}>
+          <WorkspaceMcpDialog locale={locale} onClose={() => setMcpOpen(false)} onNotice={setMcpNotice} />
+        </Suspense>
+      ) : null}
+      {mcpNotice ? <div aria-live="polite" className="osx-workspace-toast" role="status"><CheckCircle2 size={17} />{mcpNotice}</div> : null}
 
       {onboardingOpen ? (
         <Suspense fallback={null}>
