@@ -1,4 +1,4 @@
-import{Et as e,Gn as t,Kn as n,Yn as r,_ as i,g as a,h as o}from"./EditorWorkbench-JEpBsET2.js";var s=`moodboard`,c=String.raw`# Moodboard
+import{Et as e,Gn as t,Kn as n,Yn as r,_ as i,g as a,h as o}from"./EditorWorkbench-CiA4MFTE.js";var s=`moodboard`,c=String.raw`# Moodboard
 
 <Slide duration={5} fontSizeUnit="pt" theme="dark" background="#000000" accent="#f7f7f5" textColor="#f7f7f5" mutedColor="#b8b8b4" alignX="left" alignY="center" textAlign="left" canvasHeight={1080} canvasWidth={1920}>
   <Text enter="none" x={4.7} y={70.1} w={81.7} h={21.7} id="block-30cc2dc9-763f-4850-bd45-8df0eee65bb3" lineHeight={1} role="title" textAlign="left" fontFamily="Lato" fontSize={88} fontWeight={900} color="#ffffff">Moodboard</Text>

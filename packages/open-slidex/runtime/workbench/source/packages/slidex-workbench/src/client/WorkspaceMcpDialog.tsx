@@ -87,7 +87,7 @@ export function WorkspaceMcpDialog({ locale, onClose, onNotice }: Props) {
     : (zh ? `安裝到 ${clientLabel(client)}` : `Install in ${clientLabel(client)}`);
 
   return (
-    <div className="osx-workspace-overlay" onMouseDown={() => !pending && onClose()} role="presentation">
+    <div className="osx-workspace-overlay" onMouseDown={(event) => { if (event.button === 0 && !pending) onClose(); }} role="presentation">
       <section aria-labelledby="osx-mcp-title" aria-modal="true" className="osx-mcp-dialog" onMouseDown={(event) => event.stopPropagation()} role="dialog">
         <button aria-label={zh ? "關閉" : "Close"} className="osx-dialog-close" disabled={pending} onClick={onClose} type="button"><X size={17} /></button>
         <span className="osx-mcp-dialog-icon"><Cable size={20} /></span>
