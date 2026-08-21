@@ -1,4 +1,0 @@
-interface:
-  display_name: "SlideX MDX Authoring"
-  short_description: "Write safe, editable SlideX MotionDoc MDX"
-  default_prompt: "Use $slidex-mdx-authoring to create valid editable MotionDoc MDX."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "OpenSlideX Source Import"
-  short_description: "Convert local PowerPoint or HTML into editable OpenSlideX"
-  default_prompt: "Use $slidex-source-import to convert the supplied local PPTX or HTML into an editable native OpenSlideX deck."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "SlideX Deck QA"
-  short_description: "Validate and visually review SlideX decks"
-  default_prompt: "Use $slidex-deck-qa to validate and visually inspect a SlideX deck."

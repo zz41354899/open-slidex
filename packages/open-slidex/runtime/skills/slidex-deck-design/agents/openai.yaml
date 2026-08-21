@@ -1,4 +1,0 @@
-interface:
-  display_name: "OpenSlideX Deck Design"
-  short_description: "Turn source material into polished editable decks"
-  default_prompt: "Use $slidex-deck-design to turn the supplied prompt, notes, document, data, or research into a polished editable OpenSlideX deck."
