@@ -396,8 +396,8 @@ export function WorkspaceHome() {
         title={title}
       />
 
-      <button aria-label={zh ? "設定 OpenSlideX MCP" : "Set up OpenSlideX MCP"} className="osx-mcp-fab" onClick={() => setMcpOpen(true)} type="button">
-        <Cable size={18} /><span>{zh ? "設定 MCP" : "Set up MCP"}</span>
+      <button aria-label={zh ? "連接 OpenSlideX MCP" : "Connect OpenSlideX MCP"} className="osx-mcp-fab" onClick={() => setMcpOpen(true)} type="button">
+        <Cable size={18} /><span>{zh ? "連接 MCP" : "Connect MCP"}</span>
       </button>
 
       {mcpOpen ? (

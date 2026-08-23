@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -18,6 +19,7 @@ import {
   type RenameWorkspacePresentationInput
 } from "./workspace";
 import {
+  type OpenSlideXMcpClient,
   parseWorkspaceMcpClient,
   parseWorkspaceMcpPlatform,
   presentationMcpConfig,
@@ -106,7 +108,7 @@ async function routeWorkspaceRequest(
           : "~/Library/Application Support/Claude/claude_desktop_config.json"
         : "Claude Code user scope";
     sendJson(outgoing, {
-      clientAvailable: client !== "claude-desktop" || isClaudeDesktopInstalled(hostPlatform),
+      clientAvailable: isMcpClientInstalled(client, hostPlatform),
       client,
       config: presentationRoot
         ? presentationMcpConfig(client, root, platform)
@@ -237,6 +239,17 @@ function isClaudeDesktopInstalled(platform: "macos" | "windows") {
     process.env.ProgramFiles && path.join(process.env.ProgramFiles, "Claude", "Claude.exe"),
     process.env["ProgramFiles(x86)"] && path.join(process.env["ProgramFiles(x86)"]!, "Claude", "Claude.exe")
   ].some((candidate): candidate is string => Boolean(candidate) && existsSync(candidate));
+}
+
+function isMcpClientInstalled(client: OpenSlideXMcpClient, platform: "macos" | "windows") {
+  if (client === "codex") return true;
+  if (client === "claude-desktop") return isClaudeDesktopInstalled(platform);
+  return isClaudeCodeInstalled(platform);
+}
+
+function isClaudeCodeInstalled(platform: "macos" | "windows") {
+  const executable = platform === "windows" ? "where.exe" : "which";
+  return spawnSync(executable, ["claude"], { stdio: "ignore", windowsHide: true }).status === 0;
 }
 
 function parseLocale(value: string | null): TemplatePackageLocale {

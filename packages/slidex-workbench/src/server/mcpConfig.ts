@@ -72,6 +72,7 @@ function clientInstructions(client: OpenSlideXMcpClient, platform: OpenSlideXMcp
   if (client === "claude-code") {
     return [
       `On ${platformName}, open ${platform === "windows" ? "PowerShell or Command Prompt" : "Terminal"}.`,
+      "Claude Code must be installed and the claude command must be available on PATH before running this command.",
       "Run the generated command exactly once. It creates or updates only the user-scoped OpenSlideX MCP entry; do not manually edit Claude Code's managed configuration.",
       `Generated command:\n${config}`
     ];

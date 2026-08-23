@@ -40,6 +40,10 @@ export function TextOptionRow({ children, label }: { children: ReactNode; label:
   );
 }
 
+export function isTextOptionsFloatingChild(target: EventTarget | null) {
+  return target instanceof Element && target.closest("[data-text-options-floating-child]") !== null;
+}
+
 export function TextColorPopover({
   color,
   onChange

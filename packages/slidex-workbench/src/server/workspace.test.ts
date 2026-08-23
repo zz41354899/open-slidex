@@ -509,7 +509,9 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   assert.equal(claudeCodeWindowsSetup.status, 200);
   const claudeCodeWindowsPayload = await claudeCodeWindowsSetup.json();
   assert.match(claudeCodeWindowsPayload.prompt, /PowerShell or Command Prompt/);
+  assert.match(claudeCodeWindowsPayload.prompt, /Claude Code must be installed/);
   assert.match(claudeCodeWindowsPayload.prompt, /cmd \/c npx/);
+  assert.equal(typeof claudeCodeWindowsPayload.clientAvailable, "boolean");
 
   const claudeDesktopMacSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=claude-desktop&platform=macos`);
   assert.equal(claudeDesktopMacSetup.status, 200);

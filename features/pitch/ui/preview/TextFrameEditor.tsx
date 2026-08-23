@@ -66,6 +66,7 @@ import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import { FontPicker } from "@/features/pitch/ui/preview/controls/FontPicker";
 import { editableFrameStyle, editableTextStyle } from "@/features/pitch/ui/preview/textEditorStyles";
 import {
+  isTextOptionsFloatingChild,
   TextColorPopover,
   TextOptionRow,
   TextPresetPicker,
@@ -510,7 +511,7 @@ function TextStyleToolbar({
       const target = event.target;
       if (!(target instanceof Node)) return;
       if (optionsTriggerRef.current?.contains(target) || optionsContentRef.current?.contains(target)) return;
-      if (target instanceof Element && target.closest("[data-text-options-floating-child]")) return;
+      if (isTextOptionsFloatingChild(target)) return;
 
       updateOptionsOffset({ x: 0, y: 0 });
       onOptionsOpenChange(false);
@@ -741,7 +742,12 @@ function TextStyleToolbar({
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
-      onPointerDownCapture={(event) => event.stopPropagation()}
+      onPointerDownCapture={(event) => {
+        // Portalled controls still participate in React's event path. Let the
+        // color panel receive pointerdown so its sliders can capture the drag.
+        if (isTextOptionsFloatingChild(event.target)) return;
+        event.stopPropagation();
+      }}
     >
       <TextPresetPicker
         block={block}

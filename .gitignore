@@ -6,6 +6,7 @@ open-slidex-workspace/
 .DS_Store
 *.tsbuildinfo
 dist/
+packages/open-slidex/runtime/
 output/
 *.tgz
 .open-slidex/

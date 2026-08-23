@@ -230,15 +230,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .osx-mcp-details pre { max-height: 154px; overflow: auto; margin: 12px 0; border: 1px solid rgb(255 255 255 / .08); border-radius: 9px; padding: 12px; background: #0b0d0f; color: #d7d4ff; font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
 .osx-mcp-prompt pre { max-height: 210px; }
 .osx-mcp-details button { display: inline-flex; min-height: 36px; align-items: center; gap: 6px; border: 1px solid rgb(255 255 255 / .13); border-radius: 999px; padding: 0 13px; background: #24262b; color: #e5e3dd; cursor: pointer; font-size: 12px; font-weight: 680; }
-.osx-mcp-unavailable { border: 1px solid rgb(240 198 116 / .22); border-radius: 10px; padding: 11px 12px; background: rgb(240 198 116 / .06); color: #f0c674; font-size: 12px; line-height: 1.55; }
 .osx-mcp-platform-section { display: grid; gap: 7px; }
 .osx-mcp-platform-section > span { color: #b5b7bd; font-size: 12px; font-weight: 650; }
 .osx-mcp-platform-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid rgb(255 255 255 / .09); border-radius: 10px; padding: 4px; background: #0c0e10; }
 .osx-mcp-platform-picker button { min-height: 39px; border: 0; border-radius: 7px; background: transparent; color: #9699a1; font-size: 13px; }
 .osx-mcp-platform-picker button.is-active { background: #27292e; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .06); color: #fff; }
 .osx-mcp-dialog footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 3px; border-top: 1px solid rgb(255 255 255 / .075); padding-top: 16px; }
-.osx-mcp-dialog footer button { display: inline-flex; min-height: 42px; align-items: center; gap: 6px; border: 1px solid rgb(255 255 255 / .1); border-radius: 999px; padding: 0 16px; background: transparent; color: #b8b8bd; cursor: pointer; font-size: 13px; font-weight: 680; }
-.osx-mcp-dialog footer button.is-primary { border-color: #eee; background: #eee; color: #111; }
+.osx-mcp-dialog footer button, .osx-mcp-dialog footer a { display: inline-flex; min-height: 42px; align-items: center; gap: 6px; border: 1px solid rgb(255 255 255 / .1); border-radius: 999px; padding: 0 16px; background: transparent; color: #b8b8bd; cursor: pointer; font-size: 13px; font-weight: 680; text-decoration: none; }
+.osx-mcp-dialog footer button.is-primary, .osx-mcp-dialog footer a.is-primary { border-color: #eee; background: #eee; color: #111; }
 .osx-mcp-dialog footer button:disabled { cursor: not-allowed; opacity: .5; }
 .osx-workspace-error { margin: 18px 48px 0; border: 1px solid rgb(243 139 130 / .2); border-radius: 10px; padding: 10px 12px; background: rgb(243 139 130 / .06); color: #e8aaa4; font-size: 10px; }
 .osx-workspace-skeleton { display: grid; grid-template-columns: .58fr 1.42fr; gap: 28px; padding: 36px 48px; }

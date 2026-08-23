@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Cable, Check, ClipboardCopy, LoaderCircle, MonitorCog, ShieldCheck, X } from "lucide-react";
+import { Cable, Check, ClipboardCopy, ExternalLink, LoaderCircle, MonitorCog, ShieldCheck, X } from "lucide-react";
 
 import {
   installWorkspaceMcp,
@@ -16,6 +16,10 @@ type Props = {
 };
 
 const clients: readonly WorkspaceMcpClient[] = ["codex", "claude-code", "claude-desktop"];
+const officialInstallUrls: Partial<Record<WorkspaceMcpClient, string>> = {
+  "claude-code": "https://code.claude.com/docs/en/quickstart",
+  "claude-desktop": "https://claude.com/download"
+};
 
 export function WorkspaceMcpDialog({ locale, onClose, onNotice }: Props) {
   const zh = locale === "zh-TW";
@@ -49,7 +53,14 @@ export function WorkspaceMcpDialog({ locale, onClose, onNotice }: Props) {
   async function install() {
     if (!setup) return;
     if (client === "claude-code") {
-      await copy(setup.config, zh ? "Claude Code 指令已複製，貼到終端機後執行即可。" : "Claude Code command copied. Paste and run it in your terminal.");
+      const installedHere = setup.platform === setup.hostPlatform && setup.clientAvailable;
+      await copy(
+        installedHere ? setup.config : setup.prompt,
+        installedHere
+          ? (zh ? "Claude Code 指令已複製，貼到終端機後執行即可。" : "Claude Code command copied. Paste and run it in your terminal.")
+          : (zh ? "Claude Code 安裝說明已複製。請先安裝 Claude Code，再執行設定指令。" : "Claude Code setup guidance copied. Install Claude Code before running the setup command."),
+        installedHere ? "configuration" : "prompt"
+      );
       return;
     }
     if (setup.platform !== setup.hostPlatform || !setup.clientAvailable) {
@@ -80,8 +91,13 @@ export function WorkspaceMcpDialog({ locale, onClose, onNotice }: Props) {
     ? (zh ? "這份簡報" : "This presentation")
     : (zh ? "整個 Workspace" : "This Workspace");
   const canInstallHere = setup?.platform === setup?.hostPlatform && setup?.clientAvailable === true;
-  const primaryLabel = client === "claude-code"
-    ? (zh ? "複製安裝指令" : "Copy install command")
+  const officialInstallUrl = !canInstallHere ? officialInstallUrls[client] : undefined;
+  const primaryLabel = officialInstallUrl
+    ? (zh ? `前往 ${clientLabel(client)} 官方安裝` : `Install ${clientLabel(client)}`)
+    : client === "claude-code"
+    ? !canInstallHere
+      ? (zh ? "複製安裝說明" : "Copy setup guidance")
+      : (zh ? "複製安裝指令" : "Copy install command")
     : !canInstallHere
       ? (zh ? "複製設定" : "Copy configuration")
     : (zh ? `安裝到 ${clientLabel(client)}` : `Install in ${clientLabel(client)}`);
@@ -109,13 +125,12 @@ export function WorkspaceMcpDialog({ locale, onClose, onNotice }: Props) {
           <div className="osx-mcp-summary">
             <MonitorCog size={18} /><span><small>{zh ? "設定平台" : "Setup platform"}</small><strong>{platformName(setup.platform)}</strong></span><span><small>{scopeLabel}</small><strong>{setup.scopeRoot}</strong></span><span><small>{zh ? "設定位置" : "Configuration location"}</small><strong>{setup.configPath}</strong></span>
           </div>
-          {!setup.clientAvailable && setup.platform === setup.hostPlatform ? <div className="osx-mcp-unavailable">{zh ? "這台電腦未安裝 Claude Desktop，因此不會直接寫入其設定；你仍可複製設定。" : "Claude Desktop is not installed on this computer, so its configuration will not be written here. You can still copy the configuration."}</div> : null}
           <div className="osx-mcp-privacy"><ShieldCheck size={15} /><span>{zh ? "不會啟動 CLI，也不會把你的設定內容傳到瀏覽器。" : "No CLI is started and your configuration contents never reach the browser."}</span></div>
           <details className="osx-mcp-details"><summary>{zh ? "檢視產生的設定" : "View generated configuration"}</summary><pre><code>{setup.config}</code></pre><button onClick={() => void copy(setup.config, zh ? "MCP 設定已複製。" : "MCP configuration copied.")} type="button">{copied === "configuration" ? <Check size={14} /> : <ClipboardCopy size={14} />}{zh ? "複製設定" : "Copy configuration"}</button></details>
           <details className="osx-mcp-details osx-mcp-prompt"><summary>{zh ? "複製平台安裝提示詞" : "Copy platform setup prompt"}</summary><p>{zh ? "提示詞會依目前選取的 macOS／Windows 分頁，帶入正確路徑、步驟與命令。" : "The prompt uses the selected macOS or Windows tab's correct paths, steps, and command."}</p><pre><code>{setup.prompt}</code></pre><button onClick={() => void copy(setup.prompt, zh ? "平台專屬安裝提示詞已複製。" : "Platform-specific setup prompt copied.", "prompt")} type="button">{copied === "prompt" ? <Check size={14} /> : <ClipboardCopy size={14} />}{zh ? "複製安裝提示詞" : "Copy setup prompt"}</button></details>
         </> : null}
 
-        <footer><button disabled={pending} onClick={onClose} type="button">{zh ? "稍後再說" : "Not now"}</button><button className="is-primary" disabled={!setup || pending} onClick={() => void install()} type="button">{pending ? <LoaderCircle className="spin" size={14} /> : <Cable size={14} />}{pending ? (zh ? "安裝中…" : "Installing…") : primaryLabel}</button></footer>
+        <footer><button disabled={pending} onClick={onClose} type="button">{zh ? "稍後再說" : "Not now"}</button>{officialInstallUrl ? <a className="is-primary" href={officialInstallUrl} rel="noreferrer" target="_blank"><ExternalLink size={14} />{primaryLabel}</a> : <button className="is-primary" disabled={!setup || pending} onClick={() => void install()} type="button">{pending ? <LoaderCircle className="spin" size={14} /> : <Cable size={14} />}{pending ? (zh ? "安裝中…" : "Installing…") : primaryLabel}</button>}</footer>
       </section>
     </div>
   );
