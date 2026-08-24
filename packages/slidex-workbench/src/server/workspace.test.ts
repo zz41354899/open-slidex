@@ -690,7 +690,8 @@ test("starter Workspace MCP setup uses the exact installed presentation path", a
   assert.match(setup.config, /--project/);
   assert.match(setup.config, new RegExp(projectRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.doesNotMatch(setup.config, /open_slidex_workspace/);
-  assert.match(setup.prompt, /Replace an older open_slidex_workspace entry/);
+  assert.match(setup.prompt, /Replace an older open_slidex entry/);
+  assert.doesNotMatch(setup.prompt, /older open_slidex_workspace entry/);
 });
 
 function tinyPng() {

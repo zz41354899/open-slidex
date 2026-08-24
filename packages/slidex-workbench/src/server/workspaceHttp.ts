@@ -238,7 +238,7 @@ function isClaudeDesktopInstalled(platform: "macos" | "windows") {
     process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, "Programs", "Claude", "Claude.exe"),
     process.env.ProgramFiles && path.join(process.env.ProgramFiles, "Claude", "Claude.exe"),
     process.env["ProgramFiles(x86)"] && path.join(process.env["ProgramFiles(x86)"]!, "Claude", "Claude.exe")
-  ].some((candidate): candidate is string => Boolean(candidate) && existsSync(candidate));
+  ].some((candidate) => typeof candidate === "string" && existsSync(candidate));
 }
 
 function isMcpClientInstalled(client: OpenSlideXMcpClient, platform: "macos" | "windows") {

@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { basename, dirname, extname, join, resolve, win32 } from "node:path";
+import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { access, mkdir, readFile, readdir, realpath, stat } from "node:fs/promises";
 
@@ -7,6 +7,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod/v4";
+
+import {
+  createOpenSlideXMcpConfig,
+  resolveOpenSlideXMcpRoot,
+  type OpenSlideXMcpConfigClient,
+  type OpenSlideXMcpConfigPlatform
+} from "@/common/lib/openSlideXMcpConfig";
 
 import {
   applySlideXBatch,
@@ -27,6 +34,7 @@ import {
 import { readOpenSlideXKnowledgeResource, searchOpenSlideXKnowledge } from "./knowledge";
 import {
   openSlideXGuidanceIntents,
+  recommendOpenSlideXStyles,
   readOpenSlideXProjectGuidanceManifest,
   readOpenSlideXProjectGuidanceResource
 } from "./projectGuidance";
@@ -35,6 +43,7 @@ import {
   downloadTrustedImage,
   searchTrustedImages
 } from "./trustedImages";
+import { openSlideXMcpVersion } from "./version";
 import { readOpenSlideXSourceImport } from "./sourceImport";
 
 const projectRoot = projectRootFromArgs(process.argv.slice(2));
@@ -87,18 +96,13 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     };
   };
   const server = new McpServer(
-    { name: "open-slidex-local", version: "0.3.7" },
+    { name: "open-slidex-local", version: openSlideXMcpVersion() },
     {
       instructions: [
-        "For Workspace scope, use open_slidex_workspace to list and explicitly select the intended presentation.",
-        "Use open_slidex_read first to obtain the current revision, exact source scope, and a small skill manifest.",
-        "Follow progressive disclosure: read each recommended SKILL.md, then only the reference files it routes to by passing their exact resourcePath back to open_slidex_read.",
-        "Search user notes, documents, and research in knowledge/ with knowledgeQuery, then read one returned resourcePath at a time.",
-        "For a root-confined PPTX or HTML source, use open_slidex_source_import before authoring; it returns semantic evidence rather than unsafe source markup.",
-        "Author only toolbar-native layers: Text, ImageBlock, VideoBlock, Chart, Table, and Shape.",
-        "Card, Metric, Stack, Group, Title, Icon, and Notes no longer exist and make a document invalid.",
-        "The project skills own narrative and visual direction; the MCP server owns safe file access, revision control, validation, and rendered quality gates.",
-        "Submit either one complete deck source or one complete slide source to open_slidex_edit; it validates and visually checks the candidate before writing."
+        "In Workspace scope, use open_slidex_workspace to select one presentation.",
+        "Call open_slidex_read before work to get the exact source, current revision, and recommended SKILL.md entrypoints; read only the references they route to.",
+        "Before any mutation, re-read the latest revision and pass it as expectedRevision to open_slidex_edit; an accepted edit includes structural validation and rendered QA.",
+        "Use open_slidex_review for review-only work and the focused import or media tools only when their task applies."
       ].join(" ")
     }
   );
@@ -114,8 +118,12 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       title: "Choose an OpenSlideX workspace presentation",
       description: "List Workspace decks or select exactly one deck for all later read, edit, media, and review calls.",
       inputSchema: {
-        action: z.enum(["list", "select"]).default("list"),
-        presentationId: z.string().regex(/^[A-Za-z0-9._-]+$/).optional()
+        action: z.enum(["list", "select"]).default("list").describe(
+          "Use list to discover presentations. Use select before any deck-specific tool call."
+        ),
+        presentationId: z.string().regex(/^[A-Za-z0-9._-]+$/).optional().describe(
+          "Required for select. Use one exact presentation id returned by list."
+        )
       }
     }, ({ action, presentationId }) => runTool(() => {
       if (action === "select") {
@@ -128,7 +136,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
 
   server.registerTool("open_slidex_read", {
     title: "Read OpenSlideX source or one project resource",
-    description: "Read the current deck or slide plus a compact guidance manifest. Search knowledge/ by query, or load exactly one returned skill/reference/knowledge resourcePath at a time.",
+    description: "Read the current deck or slide plus a compact guidance manifest. Search knowledge/ or rank the eight curated native presentation styles from a source brief, then load exactly one returned skill/reference/knowledge resourcePath at a time.",
     inputSchema: {
       intent: z.enum(openSlideXGuidanceIntents).default("authoring").describe(
         "Task route for the manifest: import, create, redesign, design, authoring, motion, or qa."
@@ -142,18 +150,22 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       resourcePath: z.string().trim().min(1).max(500).optional().describe(
         "Exact .agents/skills/... or knowledge/... path returned by a previous read. Loads only that resource."
       ),
+      styleQuery: z.string().trim().min(2).max(1200).optional().describe(
+        "A concise report, brief, or summary including source type, audience, outcome, evidence density, tone, industry, and brand constraints. Returns the three best matches from S01, S05, S08, S09, S19, S20, S25, and S27."
+      ),
       slideIndex: z.number().int().min(0).optional().describe(
         "Zero-based slide index for a focused source read; omit for the complete deck."
       )
     }
-  }, ({ intent, knowledgeQuery, resourceCursor, resourcePath, slideIndex }) => runTool(async () => {
+  }, ({ intent, knowledgeQuery, resourceCursor, resourcePath, slideIndex, styleQuery }) => runTool(async () => {
     const { documentAdapter, root } = await projectContext();
     const guidanceRoot = await resolveAuthoringGuidanceRoot(root, configuredWorkspaceRoot);
     if (resourcePath) {
-      if (slideIndex !== undefined || knowledgeQuery) {
-        throw new Error("resourcePath cannot be combined with slideIndex or knowledgeQuery.");
+      if (slideIndex !== undefined || knowledgeQuery || styleQuery) {
+        throw new Error("resourcePath cannot be combined with slideIndex, knowledgeQuery, or styleQuery.");
       }
       if (resourcePath.startsWith(".agents/skills/")) {
+        if (resourceCursor !== 0) throw new Error("resourceCursor requires a knowledge resourcePath.");
         return {
           guidance: await readOpenSlideXProjectGuidanceResource(guidanceRoot, resourcePath),
           mode: "resource"
@@ -170,13 +182,18 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     if (resourceCursor !== 0) throw new Error("resourceCursor requires a knowledge resourcePath.");
 
     const document = await documentAdapter.open();
-    const [guidance, knowledge] = await Promise.all([
+    const [guidance, knowledge, styleRecommendations] = await Promise.all([
       readOpenSlideXProjectGuidanceManifest(guidanceRoot, intent).catch((error: unknown) => ({
         error: error instanceof Error ? error.message : "Project skill guidance is unavailable.",
         intent,
         mode: "unavailable"
       })),
-      knowledgeQuery ? searchOpenSlideXKnowledge(root, knowledgeQuery, 8) : undefined
+      knowledgeQuery ? searchOpenSlideXKnowledge(root, knowledgeQuery, 8) : undefined,
+      styleQuery ? recommendOpenSlideXStyles(guidanceRoot, styleQuery).catch((error: unknown) => ({
+        error: error instanceof Error ? error.message : "Style recommendation is unavailable.",
+        query: styleQuery,
+        recommendations: []
+      })) : undefined
     ]);
     const ranges = motionDocSlideSourceRanges(document.source);
     if (slideIndex !== undefined && !ranges[slideIndex]) throw new Error(`Slide index is out of range: ${slideIndex}`);
@@ -189,8 +206,15 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         rule: "Removed tags are rejected, not parsed for compatibility. Put all visible copy inside positioned Text layers."
       },
       charts: { motions: motionDocChartMotions, types: motionDocChartTypes },
+      designContract: {
+        composition: "Treat a selected style as visual grammar. Design each slide from its claim and vary focal position, density, and dominant device; do not default to repeated equal cards.",
+        data: "Use a native Chart for quantitative comparison, distribution, or ordered change and a Table for exact lookup. Protect room for conclusion, labels, units, period, legend, and source.",
+        media: "Every cover needs a verified portable ImageBlock with an intentional crop. For style-driven work, use Shape only as a semantic card background with named grouped children; never use it for decoration, rules, abstract artwork, fake icons, or charts.",
+        typography: "Reserve frames for rendered line count and presentation distance. Repair overflow, clipping, collisions, CJK orphans, English widows, low contrast, and weak hierarchy before reducing type."
+      },
       guidance,
       knowledge,
+      styleRecommendations,
       revision: document.revision,
       source: slideIndex === undefined ? document.source : ranges[slideIndex]!.source,
       stats: summary.stats,
@@ -198,7 +222,9 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       validation: summary.validation,
       workflow: [
         "Read the recommended SKILL.md files and only their task-relevant references.",
-        "Plan hierarchy and geometry from the current source before writing.",
+        "For a supplied document, search knowledge first, preserve evidence and gaps, then define audience, outcome, thesis, and narrative pattern.",
+        "For creation or redesign, compare style recommendations and read one twelve-page style MDX plus the closest narrative example before composing slides.",
+        "Plan claim-specific hierarchy and geometry from the source; include a real cover image, vary image and card rhythm, and do not clone the specimen page-for-page.",
         "Submit one complete deck or slide source to open_slidex_edit with this revision.",
         "If rejected, patch the same candidate from the reported node-specific findings."
       ]
@@ -206,8 +232,8 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   }));
 
   server.registerTool("open_slidex_source_import", {
-    title: "Read a PPTX or HTML source for OpenSlideX conversion",
-    description: "Inspect a root-confined .pptx, .html, or .htm as semantic source evidence. PPTX import-media also converts embedded supported images to portable assets/*.webp and returns their original slide geometry for native ImageBlock layers.",
+    title: "Read a PPTX source for high-fidelity OpenSlideX conversion",
+    description: "Inspect a root-confined .pptx as ordered semantic evidence. It recovers text geometry and typography hints as native Text blocks; import-media converts supported embedded images to portable assets/*.webp with original geometry and z-order.",
     inputSchema: {
       action: z.enum(["inspect", "import-media"]).default("inspect").describe(
         "inspect is read-only. import-media writes supported embedded PPTX images as content-addressed WebP assets."
@@ -216,7 +242,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         "Required for import-media so asset import is tied to the latest selected deck revision."
       ),
       filePath: z.string().trim().min(1).max(500).describe(
-        "Local path relative to the selected OpenSlideX deck. Supports .pptx, .html, and .htm only."
+        "Local path relative to the selected OpenSlideX deck. Supports .pptx only."
       )
     }
   }, ({ action, expectedRevision, filePath }) => runTool(async () => {
@@ -228,32 +254,41 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     return { ...(await readOpenSlideXSourceImport(root, filePath, { importMedia: true })), revision: current.revision };
   }));
 
-  const mediaSchema = z.discriminatedUnion("action", [
-    z.object({ action: z.literal("search-trusted"), query: z.string().trim().min(2).max(200) }),
-    z.object({
-      action: z.literal("import-trusted"),
-      confirmedByUser: z.literal(true),
-      expectedRevision: z.string().startsWith("sha256:"),
-      providerAssetId: z.string().regex(/^[A-Za-z0-9_-]{1,80}$/)
-    }),
-    z.object({
-      action: z.literal("import-local"),
-      expectedRevision: z.string().startsWith("sha256:"),
-      filePath: z.string().min(1)
-    })
-  ]);
   server.registerTool("open_slidex_media", {
     title: "Search or import OpenSlideX media",
     description: "One media workflow: search trusted Unsplash candidates, import one user-confirmed candidate, or import a root-confined local image as content-addressed WebP.",
-    inputSchema: mediaSchema
+    inputSchema: {
+      action: z.enum(["search-trusted", "import-trusted", "import-local"]).describe(
+        "Search first, then import either one explicitly confirmed trusted result or one root-confined local image."
+      ),
+      confirmedByUser: z.boolean().optional().describe(
+        "Must be true for import-trusted after the user selected a returned candidate."
+      ),
+      expectedRevision: z.string().startsWith("sha256:").optional().describe(
+        "Required for both import actions and must match the selected deck's latest revision."
+      ),
+      filePath: z.string().trim().min(1).max(500).optional().describe(
+        "Required for import-local. Use a path inside the selected deck, never a URL or Base64 value."
+      ),
+      providerAssetId: z.string().regex(/^[A-Za-z0-9_-]{1,80}$/).optional().describe(
+        "Required for import-trusted. Use an exact providerAssetId returned by search-trusted."
+      ),
+      query: z.string().trim().min(2).max(200).optional().describe(
+        "Required for search-trusted. Describe the subject and useful visual context."
+      )
+    }
   }, (input) => runTool(async () => {
     if (input.action === "search-trusted") {
+      if (!input.query) throw new Error("query is required when action is search-trusted.");
       return searchTrustedImages(input.query, { accessKey: process.env.UNSPLASH_ACCESS_KEY });
     }
+    if (!input.expectedRevision) throw new Error(`expectedRevision is required when action is ${input.action}.`);
     const { documentAdapter, root } = await projectContext();
     const current = await documentAdapter.open();
     if (current.revision !== input.expectedRevision) throw new SlideXRevisionConflictError(current.revision);
     if (input.action === "import-trusted") {
+      if (input.confirmedByUser !== true) throw new Error("confirmedByUser must be true when action is import-trusted.");
+      if (!input.providerAssetId) throw new Error("providerAssetId is required when action is import-trusted.");
       const downloaded = await downloadTrustedImage(input.providerAssetId, { accessKey: process.env.UNSPLASH_ACCESS_KEY });
       const asset = await importSlideXImageAsset({
         bytes: downloaded.bytes,
@@ -268,6 +303,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       });
       return { ...asset, provenance: downloaded.photo, revision: current.revision };
     }
+    if (!input.filePath) throw new Error("filePath is required when action is import-local.");
     if (/^(?:data|blob|https?):/i.test(input.filePath)) throw new Error("filePath must be a local file path, not Base64 or a URL.");
     const inputPath = resolveInsideRoot(root, input.filePath);
     await access(inputPath);
@@ -283,13 +319,20 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   }));
 
   server.registerTool("open_slidex_review", {
-    title: "Review OpenSlideX presentation",
-    description: "Run structural validation and rendered visual QA together, returning one immutable slide or montage preview. Use for review-only work; edits already include this gate.",
-    inputSchema: {
-      scope: z.enum(["deck", "slide"]).default("deck"),
-      slideIndex: z.number().int().min(0).optional()
+      title: "Review OpenSlideX presentation",
+      description: "Run structural validation and rendered visual QA together, returning one immutable slide or montage preview. Use for review-only work; edits already include this gate.",
+      inputSchema: {
+      scope: z.enum(["deck", "slide"]).default("deck").describe(
+        "Review the complete deck montage or one zero-based slide."
+      ),
+      slideIndex: z.number().int().min(0).optional().describe(
+        "Required when scope is slide; omit when scope is deck."
+      )
     }
   }, ({ scope, slideIndex }, extra) => runTool(async () => {
+    if (scope === "slide" && slideIndex === undefined) {
+      throw new Error("slideIndex is required when scope is slide.");
+    }
     const { documentAdapter, root } = await projectContext();
     const document = await documentAdapter.open();
     const mode = scope === "slide" ? "slide" : "deck";
@@ -315,14 +358,24 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   }));
 
   server.registerTool("open_slidex_edit", {
-    title: "Edit OpenSlideX presentation",
-    description: "Replace one complete deck or one complete slide. The server rejects removed components, validates deterministic geometry, render-checks the candidate, and atomically writes only when visual QA passes.",
-    inputSchema: {
-      expectedRevision: z.string().startsWith("sha256:"),
-      rejectedCandidateId: z.string().uuid().optional(),
-      slideIndex: z.number().int().min(0).optional(),
-      source: z.string().min(1),
-      target: z.enum(["deck", "slide"])
+      title: "Edit OpenSlideX presentation",
+      description: "Replace one complete deck or one complete slide. The server rejects removed components, validates deterministic geometry, render-checks the candidate, and atomically writes only when visual QA passes.",
+      inputSchema: {
+      expectedRevision: z.string().startsWith("sha256:").describe(
+        "Latest revision returned by open_slidex_read. Never reuse a stale revision."
+      ),
+      rejectedCandidateId: z.string().uuid().optional().describe(
+        "Use only when patching the exact rejected candidate returned by the previous edit attempt."
+      ),
+      slideIndex: z.number().int().min(0).optional().describe(
+        "Required when target is slide; identifies the zero-based slide to replace."
+      ),
+      source: z.string().min(1).describe(
+        "One complete MotionDoc deck when target is deck, or one complete Slide block when target is slide."
+      ),
+      target: z.enum(["deck", "slide"]).describe(
+        "Choose whether source replaces the whole deck or one complete slide."
+      )
     }
   }, ({ expectedRevision, rejectedCandidateId, slideIndex, source, target }, extra) => runTool(async () => {
     const { documentAdapter, root } = await projectContext();
@@ -561,36 +614,16 @@ async function main() {
   process.stderr.write(`OpenSlideX MCP connected to ${workspaceRoot ? `workspace ${workspaceRoot}` : projectRoot}\n`);
 }
 
-export type OpenSlideXMcpClient = "claude" | "claude-code" | "claude-desktop" | "codex";
-export type OpenSlideXPlatform = "macos" | "windows";
-export const openSlideXMcpNpxPackage = "open-slidex@latest";
+export type OpenSlideXMcpClient = OpenSlideXMcpConfigClient;
+export type OpenSlideXPlatform = OpenSlideXMcpConfigPlatform;
+export { openSlideXMcpNpxPackage } from "@/common/lib/openSlideXMcpConfig";
 
 export function openSlideXMcpConfig(
   client: OpenSlideXMcpClient,
   root: string,
   platform: OpenSlideXPlatform = process.platform === "win32" ? "windows" : "macos"
 ) {
-  const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root)
-    ? win32.resolve(root)
-    : resolve(root);
-  const command = platform === "windows" ? "cmd" : "npx";
-  const args = platform === "windows"
-    ? ["/c", "npx", "-y", openSlideXMcpNpxPackage, "mcp", "--project", absoluteRoot]
-    : ["-y", openSlideXMcpNpxPackage, "mcp", "--project", absoluteRoot];
-  if (client === "codex") {
-    return `[mcp_servers.open_slidex]\ncommand = ${JSON.stringify(command)}\nargs = ${JSON.stringify(args)}`;
-  }
-  if (client === "claude-desktop") {
-    return JSON.stringify({
-      mcpServers: {
-        open_slidex: { args, command, type: "stdio" }
-      }
-    }, null, 2);
-  }
-  const launch = platform === "windows"
-    ? `cmd /c npx -y ${openSlideXMcpNpxPackage} mcp --project ${windowsQuote(absoluteRoot)}`
-    : `npx -y ${openSlideXMcpNpxPackage} mcp --project ${shellQuote(absoluteRoot)}`;
-  return `claude mcp add open-slidex -- ${launch}`;
+  return createOpenSlideXMcpConfig({ client, platform, root, scope: "project" });
 }
 
 export function openSlideXWorkspaceMcpConfig(
@@ -598,27 +631,7 @@ export function openSlideXWorkspaceMcpConfig(
   root: string,
   platform: OpenSlideXPlatform = process.platform === "win32" ? "windows" : "macos"
 ) {
-  const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root)
-    ? win32.resolve(root)
-    : resolve(root);
-  const command = platform === "windows" ? "cmd" : "npx";
-  const args = platform === "windows"
-    ? ["/c", "npx", "-y", openSlideXMcpNpxPackage, "mcp", "--workspace", absoluteRoot]
-    : ["-y", openSlideXMcpNpxPackage, "mcp", "--workspace", absoluteRoot];
-  if (client === "codex") {
-    return `[mcp_servers.open_slidex_workspace]\ncommand = ${JSON.stringify(command)}\nargs = ${JSON.stringify(args)}`;
-  }
-  if (client === "claude-desktop") {
-    return JSON.stringify({
-      mcpServers: {
-        open_slidex_workspace: { args, command, type: "stdio" }
-      }
-    }, null, 2);
-  }
-  const launch = platform === "windows"
-    ? `cmd /c npx -y ${openSlideXMcpNpxPackage} mcp --workspace ${windowsQuote(absoluteRoot)}`
-    : `npx -y ${openSlideXMcpNpxPackage} mcp --workspace ${shellQuote(absoluteRoot)}`;
-  return `claude mcp add --scope user open-slidex-workspace -- ${launch}`;
+  return createOpenSlideXMcpConfig({ client, platform, root, scope: "workspace" });
 }
 
 export function openSlideXMcpSetupPrompt(
@@ -626,9 +639,7 @@ export function openSlideXMcpSetupPrompt(
   root: string,
   platform: OpenSlideXPlatform = process.platform === "win32" ? "windows" : "macos"
 ) {
-  const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root)
-    ? win32.resolve(root)
-    : resolve(root);
+  const absoluteRoot = resolveOpenSlideXMcpRoot(root, platform);
   const target = client === "claude" ? "Claude Code" : client === "claude-code"
     ? "Claude Code"
     : client === "claude-desktop"
@@ -637,7 +648,7 @@ export function openSlideXMcpSetupPrompt(
   return [
     `Configure the local OpenSlideX MCP server for ${target} on ${platform}.`,
     `The only allowed deck root is: ${absoluteRoot}`,
-    "Replace an older open_slidex_workspace entry only when it targets this same deck. Preserve every unrelated MCP entry, do not widen the project path, and do not copy credentials.",
+    "Replace an older open_slidex entry only when it targets this same deck. Preserve every unrelated MCP entry, do not widen the project path, and do not copy credentials.",
     "Show me the exact proposed change before writing any global configuration file.",
     "Use this generated configuration:",
     "",
@@ -652,9 +663,7 @@ export function openSlideXWorkspaceMcpSetupPrompt(
   root: string,
   platform: OpenSlideXPlatform = process.platform === "win32" ? "windows" : "macos"
 ) {
-  const absoluteRoot = platform === "windows" && /^[A-Za-z]:[\\/]/.test(root)
-    ? win32.resolve(root)
-    : resolve(root);
+  const absoluteRoot = resolveOpenSlideXMcpRoot(root, platform);
   const target = client === "codex" ? "Codex" : client === "claude-desktop" ? "Claude Desktop" : "Claude Code";
   return [
     `Configure one user-level OpenSlideX Workspace MCP server for ${target} on ${platform}.`,
@@ -709,14 +718,6 @@ function imageMediaType(extension: string) {
     ".webp": "image/webp"
   };
   return types[extension.toLowerCase()];
-}
-
-function shellQuote(value: string) {
-  return `'${value.replaceAll("'", `'"'"'`)}'`;
-}
-
-function windowsQuote(value: string) {
-  return `"${value.replaceAll('"', '\\"')}"`;
 }
 
 function sourceChecksum(source: string) {

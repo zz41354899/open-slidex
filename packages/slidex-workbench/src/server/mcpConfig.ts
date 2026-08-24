@@ -1,12 +1,17 @@
-import path from "node:path";
+import {
+  createOpenSlideXMcpConfig,
+  openSlideXMcpConfigClients,
+  openSlideXMcpPresentationPath,
+  resolveOpenSlideXMcpRoot
+} from "@/common/lib/openSlideXMcpConfig";
 
-export const openSlideXMcpNpxPackage = "open-slidex@latest";
-export const openSlideXMcpClients = ["codex", "claude-code", "claude-desktop"] as const;
+export { openSlideXMcpNpxPackage } from "@/common/lib/openSlideXMcpConfig";
+
+export const openSlideXMcpClients = openSlideXMcpConfigClients;
 export type OpenSlideXMcpClient = (typeof openSlideXMcpClients)[number];
 export type OpenSlideXMcpPlatform = "macos" | "windows";
 
 type McpTarget = {
-  configKey: "open_slidex" | "open_slidex_workspace";
   option: "--project" | "--workspace";
 };
 
@@ -29,42 +34,28 @@ function configLocation(client: OpenSlideXMcpClient, platform: OpenSlideXMcpPlat
 }
 
 function resolveMcpRoot(root: string, platform: OpenSlideXMcpPlatform) {
-  return platform === "windows" && /^[A-Za-z]:[\\/]/.test(root)
-    ? path.win32.resolve(root)
-    : path.resolve(root);
+  return resolveOpenSlideXMcpRoot(root, platform);
 }
 
 function presentationPath(root: string, platform: OpenSlideXMcpPlatform) {
-  const absoluteRoot = resolveMcpRoot(root, platform);
-  return platform === "windows" && /^[A-Za-z]:[\\/]/.test(absoluteRoot)
-    ? path.win32.join(absoluteRoot, "presentation.mdx")
-    : path.join(absoluteRoot, "presentation.mdx");
+  return openSlideXMcpPresentationPath(root, platform);
 }
 
 function mcpConfig(client: OpenSlideXMcpClient, root: string, platform: OpenSlideXMcpPlatform, target: McpTarget) {
-  const absoluteRoot = resolveMcpRoot(root, platform);
-  const command = platform === "windows" ? "cmd" : "npx";
-  const args = platform === "windows"
-    ? ["/c", "npx", "-y", openSlideXMcpNpxPackage, "mcp", target.option, absoluteRoot]
-    : ["-y", openSlideXMcpNpxPackage, "mcp", target.option, absoluteRoot];
-  if (client === "codex") {
-    return `[mcp_servers.${target.configKey}]\ncommand = ${JSON.stringify(command)}\nargs = ${JSON.stringify(args)}`;
-  }
-  if (client === "claude-desktop") {
-    return JSON.stringify({ mcpServers: { [target.configKey]: { args, command, type: "stdio" } } }, null, 2);
-  }
-  const launch = platform === "windows"
-    ? `cmd /c npx -y ${openSlideXMcpNpxPackage} mcp ${target.option} "${absoluteRoot.replaceAll('"', '\\"')}"`
-    : `npx -y ${openSlideXMcpNpxPackage} mcp ${target.option} '${absoluteRoot.replaceAll("'", `"'"'`)}'`;
-  return `claude mcp add --scope user ${target.configKey.replaceAll("_", "-")} -- ${launch}`;
+  return createOpenSlideXMcpConfig({
+    client,
+    platform,
+    root,
+    scope: target.option === "--workspace" ? "workspace" : "project"
+  });
 }
 
 export function presentationMcpConfig(client: OpenSlideXMcpClient, root: string, platform: OpenSlideXMcpPlatform) {
-  return mcpConfig(client, root, platform, { configKey: "open_slidex", option: "--project" });
+  return mcpConfig(client, root, platform, { option: "--project" });
 }
 
 export function workspaceMcpConfig(client: OpenSlideXMcpClient, root: string, platform: OpenSlideXMcpPlatform) {
-  return mcpConfig(client, root, platform, { configKey: "open_slidex_workspace", option: "--workspace" });
+  return mcpConfig(client, root, platform, { option: "--workspace" });
 }
 
 function clientInstructions(client: OpenSlideXMcpClient, platform: OpenSlideXMcpPlatform, config: string) {
@@ -95,7 +86,7 @@ export function presentationMcpPrompt(client: OpenSlideXMcpClient, root: string,
     `Configure one user-level OpenSlideX presentation MCP server for ${label} on ${platformLabel(platform)}.`,
     `Restrict it to this exact deck root: ${absoluteRoot}`,
     `The only editable presentation is: ${presentationPath(absoluteRoot, platform)}`,
-    "Replace an older open_slidex_workspace entry only when it targets this same deck; preserve every unrelated MCP entry and show the exact proposed change before writing any global config.",
+    "Replace an older open_slidex entry only when it targets this same deck; preserve every unrelated MCP entry and show the exact proposed change before writing any global config.",
     "",
     ...clientInstructions(client, platform, config),
     "",

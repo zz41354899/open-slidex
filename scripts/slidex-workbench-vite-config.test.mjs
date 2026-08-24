@@ -119,7 +119,11 @@ test("Workbench defers editor routes and leaves cyclic dependency graphs to Roll
 test("Workbench does not retain unreachable legacy panels in its source runtime", async () => {
   await Promise.all([
     assert.rejects(access(new URL("../packages/slidex-workbench/src/client/AssetsPanel.tsx", import.meta.url))),
-    assert.rejects(access(new URL("../packages/slidex-workbench/src/client/Presenter.tsx", import.meta.url)))
+    assert.rejects(access(new URL("../packages/slidex-workbench/src/client/Presenter.tsx", import.meta.url))),
+    assert.rejects(access(new URL("../packages/slidex-workbench/src/client/assets/onboarding/onboarding-export.mp4", import.meta.url))),
+    assert.rejects(access(new URL("../core/motion-doc/application/deckPlanMaterializer.ts", import.meta.url))),
+    assert.rejects(access(new URL("../core/motion-doc/domain/deckPlanTemplate.ts", import.meta.url))),
+    assert.rejects(access(new URL("../core/motion-doc/domain/deckPlanV1.ts", import.meta.url)))
   ]);
 });
 

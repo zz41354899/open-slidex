@@ -2,37 +2,20 @@ import { createHash } from "node:crypto";
 import { readFile, readdir, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
-export const openSlideXProjectSkillNames = [
-  "slidex-source-import",
-  "slidex-mdx-authoring",
-  "slidex-deck-design",
-  "slidex-motion-direction",
-  "slidex-deck-qa"
-] as const;
+import {
+  openSlideXGuidanceIntents,
+  openSlideXGuidanceSkillsByIntent,
+  openSlideXProjectSkillNames,
+  type OpenSlideXGuidanceIntent,
+  type OpenSlideXProjectSkillName
+} from "@/core/motion-doc/domain/openSlideXProjectSkills";
 
-export type OpenSlideXProjectSkillName = (typeof openSlideXProjectSkillNames)[number];
-
-export const openSlideXGuidanceIntents = [
-  "import",
-  "authoring",
-  "design",
-  "create",
-  "redesign",
-  "motion",
-  "qa"
-] as const;
-
-export type OpenSlideXGuidanceIntent = (typeof openSlideXGuidanceIntents)[number];
-
-const intentSkills = {
-  authoring: ["slidex-mdx-authoring"],
-  import: ["slidex-source-import", "slidex-mdx-authoring", "slidex-deck-design", "slidex-motion-direction", "slidex-deck-qa"],
-  create: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-motion-direction", "slidex-deck-qa"],
-  design: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-deck-qa"],
-  motion: ["slidex-mdx-authoring", "slidex-motion-direction", "slidex-deck-qa"],
-  qa: ["slidex-deck-qa"],
-  redesign: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-motion-direction", "slidex-deck-qa"]
-} as const satisfies Record<OpenSlideXGuidanceIntent, readonly OpenSlideXProjectSkillName[]>;
+export {
+  openSlideXGuidanceIntents,
+  openSlideXProjectSkillNames,
+  type OpenSlideXGuidanceIntent,
+  type OpenSlideXProjectSkillName
+} from "@/core/motion-doc/domain/openSlideXProjectSkills";
 
 const maximumGuidanceBytes = 256 * 1024;
 const guidanceCache = new Map<string, { signature: string; value: OpenSlideXGuidanceResource }>();
@@ -46,6 +29,16 @@ export type OpenSlideXGuidanceResource = {
   kind: "reference" | "skill";
   path: string;
   skill: OpenSlideXProjectSkillName;
+};
+
+export type OpenSlideXStyleRecommendation = {
+  bestFor: string[];
+  category: string;
+  id: string;
+  industries: string[];
+  mdxResourcePath: string;
+  name: string;
+  score: number;
 };
 
 type OpenSlideXGuidanceResourceMetadata = Omit<OpenSlideXGuidanceResource, "content">;
@@ -73,8 +66,8 @@ export async function readOpenSlideXProjectGuidanceManifest(
     references: OpenSlideXGuidanceResourceMetadata[];
   } & OpenSlideXGuidanceResourceMetadata => Boolean(skill));
   const available = new Set(skills.map((skill) => skill.skill));
-  const recommended = intentSkills[intent].filter((skill) => available.has(skill));
-  const missingSkills = intentSkills[intent].filter((skill) => !available.has(skill));
+  const recommended = openSlideXGuidanceSkillsByIntent[intent].filter((skill) => available.has(skill));
+  const missingSkills = openSlideXGuidanceSkillsByIntent[intent].filter((skill) => !available.has(skill));
 
   return {
     intent,
@@ -123,6 +116,30 @@ export async function readOpenSlideXProjectGuidanceResource(
   };
   guidanceCache.set(canonicalFile, { signature, value });
   return value;
+}
+
+export async function recommendOpenSlideXStyles(
+  root: string,
+  query: string,
+  limit = 3
+): Promise<{ query: string; recommendations: OpenSlideXStyleRecommendation[] }> {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) throw new Error("styleQuery must contain readable style or presentation context.");
+  const catalogResource = await readOpenSlideXProjectGuidanceResource(
+    root,
+    ".agents/skills/slidex-deck-design/references/style-catalog.json"
+  );
+  const catalog = parseStyleCatalog(catalogResource.content);
+  const ranked = catalog.map((style) => ({
+    ...style,
+    score: styleScore(style, normalizedQuery)
+  })).sort((left, right) => right.score - left.score || fallbackStyleRank(left.id) - fallbackStyleRank(right.id));
+  const positive = ranked.filter((style) => style.score > 0);
+  const recommendations = [
+    ...positive,
+    ...ranked.filter((style) => style.score === 0)
+  ].slice(0, Math.min(Math.max(limit, 1), 5));
+  return { query, recommendations };
 }
 
 async function listSkillReferences(root: string, skill: OpenSlideXProjectSkillName) {
@@ -178,6 +195,81 @@ function frontmatterDescription(content: string) {
 
 function referenceDescription(content: string) {
   return content.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? "Approved OpenSlideX skill reference.";
+}
+
+type StyleCatalogEntry = Omit<OpenSlideXStyleRecommendation, "score"> & {
+  keywords: string[];
+};
+
+function parseStyleCatalog(content: string): StyleCatalogEntry[] {
+  const parsed = JSON.parse(content) as { styles?: unknown };
+  if (!Array.isArray(parsed.styles) || parsed.styles.length !== 8) {
+    throw new Error("The OpenSlideX style catalog must contain exactly 8 curated styles.");
+  }
+  return parsed.styles.map((value, index) => {
+    if (!value || typeof value !== "object") throw new Error(`Style catalog entry ${index + 1} is invalid.`);
+    const style = value as Record<string, unknown>;
+    const id = stringField(style, "id");
+    if (!/^S\d{2}$/.test(id)) throw new Error(`Style catalog entry ${index + 1} has an invalid ID.`);
+    const mdxResourcePath = stringField(style, "mdxResourcePath");
+    if (!/^\.agents\/skills\/slidex-deck-design\/references\/style-s\d{2}-[a-z0-9-]+\.mdx$/.test(mdxResourcePath)) {
+      throw new Error(`Style catalog entry ${id} has an invalid MDX resource path.`);
+    }
+    return {
+      bestFor: stringArrayField(style, "bestFor"),
+      category: stringField(style, "category"),
+      id,
+      industries: stringArrayField(style, "industries"),
+      keywords: stringArrayField(style, "keywords"),
+      mdxResourcePath,
+      name: stringField(style, "name")
+    };
+  });
+}
+
+function styleScore(style: StyleCatalogEntry, query: string) {
+  let score = 0;
+  const id = style.id.toLowerCase();
+  const name = normalizeSearchText(style.name);
+  if (query.includes(id)) score += 100;
+  if (query.includes(name)) score += 60;
+  for (const value of style.keywords) score += matchScore(query, value, 8);
+  for (const value of style.bestFor) score += matchScore(query, value, 7);
+  for (const value of style.industries) score += matchScore(query, value, 5);
+  score += matchScore(query, style.category, 4);
+  return score;
+}
+
+function matchScore(query: string, candidate: string, weight: number) {
+  const normalized = normalizeSearchText(candidate);
+  if (!normalized || normalized.length < 2) return 0;
+  if (query.includes(normalized)) return weight;
+  const terms = normalized.split(" ").filter((term) => term.length >= 3);
+  return terms.reduce((score, term) => score + (query.includes(term) ? Math.max(1, Math.floor(weight / 3)) : 0), 0);
+}
+
+function normalizeSearchText(value: string) {
+  return value.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+}
+
+function fallbackStyleRank(id: string) {
+  const preferred = ["S09", "S01", "S24", "S03", "S26"];
+  const rank = preferred.indexOf(id);
+  return rank === -1 ? preferred.length + Number(id.slice(1)) : rank;
+}
+
+function stringField(value: Record<string, unknown>, key: string) {
+  const field = value[key];
+  if (typeof field !== "string" || !field.trim()) throw new Error(`Style catalog field ${key} is invalid.`);
+  return field;
+}
+
+function stringArrayField(value: Record<string, unknown>, key: string) {
+  const field = value[key];
+  if (!Array.isArray(field) || !field.every((item) => typeof item === "string" && item.trim())) {
+    throw new Error(`Style catalog field ${key} is invalid.`);
+  }
+  return field;
 }
 
 function assertInside(root: string, candidate: string) {

@@ -33,6 +33,9 @@ Do not give every bullet equal visual weight or one slide of its own.
 Find the thesis, strongest sections, evidence, examples, and final implication.
 Recompose for presentation reading order; do not reproduce the table of contents
 or create one slide per heading. Compress background and promote conclusions.
+When the user explicitly requests a company-profile or reference-style contents
+page, use one concise orientation slide after the cover; do not copy a long
+document table of contents verbatim.
 
 ### Research report
 

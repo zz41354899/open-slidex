@@ -11,6 +11,10 @@ import { closeSlideXChromiumPool, getSlideXQualityCacheStats } from "@open-slide
 import JSZip from "jszip";
 import sharp from "sharp";
 
+import {
+  presentationMcpConfig,
+  workspaceMcpConfig
+} from "@/packages/slidex-workbench/src/server/mcpConfig";
 import { openSlideXProjectSkillNames } from "./projectGuidance";
 import {
   createOpenSlideXMcpServer,
@@ -39,7 +43,7 @@ test("MCP prints copyable Codex and Claude Code configuration", () => {
   assert.match(openSlideXMcpConfig("codex", root), /OpenSlideX demo/);
   assert.equal(
     openSlideXMcpConfig("claude", root),
-    "claude mcp add open-slidex -- npx -y open-slidex@latest mcp --project '/tmp/OpenSlideX demo'"
+    "claude mcp add --scope user open-slidex -- npx -y open-slidex@latest mcp --project '/tmp/OpenSlideX demo'"
   );
   const desktop = JSON.parse(openSlideXMcpConfig("claude-desktop", root));
   assert.equal(desktop.mcpServers.open_slidex.command, "npx");
@@ -47,8 +51,23 @@ test("MCP prints copyable Codex and Claude Code configuration", () => {
   const windows = JSON.parse(openSlideXMcpConfig("claude-desktop", "C:\\Decks\\Demo", "windows"));
   assert.equal(windows.mcpServers.open_slidex.command, "cmd");
   assert.deepEqual(windows.mcpServers.open_slidex.args.slice(0, 3), ["/c", "npx", "-y"]);
-  assert.match(openSlideXMcpSetupPrompt("codex", root), /Show me the exact proposed change/);
-  assert.match(openSlideXMcpSetupPrompt("codex", root), /Replace an older open_slidex_workspace entry/);
+  const setupPrompt = openSlideXMcpSetupPrompt("codex", root);
+  assert.match(setupPrompt, /Show me the exact proposed change/);
+  assert.match(setupPrompt, /Replace an older open_slidex entry/);
+  assert.doesNotMatch(setupPrompt, /older open_slidex_workspace entry/);
+
+  for (const platform of ["macos", "windows"] as const) {
+    for (const client of ["codex", "claude-code", "claude-desktop"] as const) {
+      assert.equal(
+        openSlideXMcpConfig(client, root, platform),
+        presentationMcpConfig(client, root, platform)
+      );
+      assert.equal(
+        openSlideXWorkspaceMcpConfig(client, root, platform),
+        workspaceMcpConfig(client, root, platform)
+      );
+    }
+  }
 });
 
 test("Workspace MCP prints user-level configuration and selects a presentation", async () => {
@@ -64,6 +83,7 @@ test("Workspace MCP prints user-level configuration and selects a presentation",
       await writeFile(path.join(skillRoot, "SKILL.md"), `---\nname: ${skill}\ndescription: ${skill} guidance.\n---\n`, "utf8");
       if (skill === "slidex-deck-design") {
         await writeFile(path.join(skillRoot, "references", "source-to-story.md"), "# Source to story\n", "utf8");
+        await writeTestStyleCatalog(path.join(skillRoot, "references"));
       }
     }));
     await Promise.all(["alpha", "beta"].map(async (id) => {
@@ -71,6 +91,11 @@ test("Workspace MCP prints user-level configuration and selects a presentation",
       await writeFile(path.join(root, id, "presentation.mdx"), blankPresentationMdx.replace("Untitled Presentation", id), "utf8");
     }));
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+    const packageManifest = JSON.parse(
+      await readFile(new URL("../package.json", import.meta.url), "utf8")
+    ) as { version?: string };
+    assert.equal(client.getServerVersion()?.version, packageManifest.version);
 
     const tools = await client.listTools();
     assert.deepEqual(tools.tools.map((tool) => tool.name).sort(), [
@@ -81,6 +106,41 @@ test("Workspace MCP prints user-level configuration and selects a presentation",
       "open_slidex_source_import",
       "open_slidex_workspace"
     ]);
+    const mediaTool = tools.tools.find((tool) => tool.name === "open_slidex_media");
+    assert.ok(mediaTool);
+    const mediaProperties = (mediaTool.inputSchema as {
+      properties?: Record<string, unknown>;
+    }).properties;
+    assert.deepEqual(Object.keys(mediaProperties ?? {}).sort(), [
+      "action",
+      "confirmedByUser",
+      "expectedRevision",
+      "filePath",
+      "providerAssetId",
+      "query"
+    ]);
+    for (const tool of tools.tools) {
+      const properties = (tool.inputSchema as {
+        properties?: Record<string, { description?: unknown }>;
+      }).properties ?? {};
+      for (const [propertyName, property] of Object.entries(properties)) {
+        assert.equal(
+          typeof property.description === "string" && property.description.length > 0,
+          true,
+          `${tool.name}.${propertyName} needs an AI-readable JSON Schema description.`
+        );
+      }
+    }
+
+    const instructions = client.getInstructions() ?? "";
+    assert.ok(instructions.length <= 512, "MCP core instructions must remain useful within the client instruction budget.");
+    assert.match(instructions, /open_slidex_workspace/);
+    assert.match(instructions, /open_slidex_read/);
+    assert.match(instructions, /expectedRevision/);
+    assert.match(instructions, /open_slidex_edit/);
+    assert.match(instructions, /rendered QA/);
+    assert.doesNotMatch(instructions, /30 style/i);
+    assert.match(instructions, /\.$/);
 
     const listed = structured(await client.callTool({ arguments: { action: "list" }, name: "open_slidex_workspace" }));
     assert.deepEqual((listed.presentations as Array<{ id: string }>).map((item) => item.id).sort(), ["alpha", "beta"]);
@@ -96,6 +156,23 @@ test("Workspace MCP prints user-level configuration and selects a presentation",
     assert.equal(guidance.mode, "manifest");
     assert.equal((guidance.recommended as unknown[]).length, 1);
     assert.equal("references" in opened, false);
+
+    const invalidSkillCursor = await client.callTool({
+      arguments: {
+        resourceCursor: 1,
+        resourcePath: ".agents/skills/slidex-deck-design/references/source-to-story.md"
+      },
+      name: "open_slidex_read"
+    });
+    assert.equal(invalidSkillCursor.isError, true);
+    assert.match(String(structured(invalidSkillCursor).message), /resourceCursor.*knowledge resourcePath/i);
+
+    const missingReviewSlide = await client.callTool({
+      arguments: { scope: "slide" },
+      name: "open_slidex_review"
+    });
+    assert.equal(missingReviewSlide.isError, true);
+    assert.match(String(structured(missingReviewSlide).message), /slideIndex is required/i);
 
     const skillResource = structured(await client.callTool({
       arguments: { resourcePath: ".agents/skills/slidex-deck-design/references/source-to-story.md" },
@@ -154,12 +231,13 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
       await writeFile(path.join(skillRoot, "SKILL.md"), `---\nname: ${skill}\ndescription: ${skill} guidance.\n---\n\nUse a coherent visual world.\n`, "utf8");
       if (skill === "slidex-deck-design") {
         await writeFile(path.join(skillRoot, "references", "source-to-story.md"), "# Source to story\n", "utf8");
+        await writeTestStyleCatalog(path.join(skillRoot, "references"));
       }
     }));
     await mkdir(path.join(root, ".open-slidex"), { recursive: true });
     await writeFile(path.join(root, "presentation.mdx"), `# Untitled Presentation\n\n<Slide duration={5} background="#ffffff"><Text id="first-slide" role="title" x={10} y={20} w={80} h={20} fontSize={42}>First slide</Text></Slide>\n\n<Slide duration={5} background="#f5f5f5"><Text id="second-slide" role="title" x={10} y={20} w={80} h={20} fontSize={42}>Second slide</Text></Slide>`, "utf8");
     await writeFile(path.join(root, "knowledge", "brief.md"), "# Brief\n\nThe launch metric is activation rate.\n", "utf8");
-    await writeFile(path.join(root, "source.html"), "<html><head><title>Launch source</title><script>throw new Error('never execute')</script></head><body><section><h1>Launch</h1><p>Activation is the key metric.</p><img src=\"hero.png\"></section></body></html>", "utf8");
+    await writeFile(path.join(root, "source.html"), "<h1>Unsupported source</h1>", "utf8");
     await writeFile(
       path.join(root, "import.png"),
       await sharp({ create: { background: "#3457d5", channels: 4, height: 64, width: 64 } }).png().toBuffer()
@@ -191,13 +269,12 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     assert.match(String(pptxImage?.source), /^assets\/image1-[a-f0-9]{16}\.webp$/);
     assert.match(String(pptxImage?.imageBlock), /x=\{10\} y=\{10\} w=\{50\} h=\{50\}/);
 
-    const importedSource = structured(await client.callTool({
+    const rejectedHtml = await client.callTool({
       arguments: { filePath: "source.html" },
       name: "open_slidex_source_import"
-    }));
-    assert.equal(importedSource.format, "html");
-    assert.equal((importedSource.summary as Record<string, unknown>).slideCount, 1);
-    assert.equal((importedSource.slides as Array<Record<string, unknown>>)[0]?.title, "Launch");
+    });
+    assert.equal(rejectedHtml.isError, true);
+    assert.match(String(structured(rejectedHtml).message), /supports \.pptx files only/);
 
     const edited = structured(await client.callTool({
       arguments: {
@@ -282,7 +359,8 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     const context = structured(await client.callTool({
       arguments: {
         intent: "redesign",
-        knowledgeQuery: "activation rate"
+        knowledgeQuery: "activation rate",
+        styleQuery: "董事會營運報告，需要企業、乾淨、可信任的視覺方向"
       },
       name: "open_slidex_read"
     }));
@@ -298,6 +376,11 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     assert.match(String(results[0]?.hash), /^[0-9a-f]{64}$/);
     assert.equal(results[0]?.resourcePath, "knowledge/brief.md");
     assert.equal("content" in results[0]!, false);
+    const styleRecommendations = context.styleRecommendations as Record<string, unknown>;
+    const recommendedStyles = styleRecommendations.recommendations as Array<Record<string, unknown>>;
+    assert.equal(recommendedStyles.length, 3);
+    assert.equal(recommendedStyles[0]?.id, "S09");
+    assert.match(String(recommendedStyles[0]?.mdxResourcePath), /style-s09-/);
 
     const knowledgeResource = structured(await client.callTool({
       arguments: { resourcePath: "knowledge/brief.md" },
@@ -406,4 +489,21 @@ function structured(result: unknown) {
   const text = record.content?.find((item) => item.type === "text")?.text;
   assert.ok(text);
   return JSON.parse(text) as Record<string, unknown>;
+}
+
+async function writeTestStyleCatalog(referenceRoot: string) {
+  const selectedIds = ["S01", "S05", "S08", "S09", "S19", "S20", "S25", "S27"];
+  const styles = selectedIds.map((id) => {
+    const isCorporate = id === "S09";
+    return {
+      bestFor: isCorporate ? ["board update", "report"] : ["editorial story"],
+      category: isCorporate ? "Professional" : "Creative",
+      id,
+      industries: isCorporate ? ["Corporate"] : ["Creative"],
+      keywords: isCorporate ? ["企業", "董事會", "營運", "報告", "乾淨", "可信任"] : [id],
+      mdxResourcePath: `.agents/skills/slidex-deck-design/references/style-${id.toLowerCase()}-curated.mdx`,
+      name: isCorporate ? "Corporate Clean" : `Style ${id}`
+    };
+  });
+  await writeFile(path.join(referenceRoot, "style-catalog.json"), `${JSON.stringify({ schemaVersion: 1, styles })}\n`, "utf8");
 }

@@ -1,6 +1,8 @@
 import { cp, readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 
+import { openSlideXProjectSkillNames } from "@/core/motion-doc/domain/openSlideXProjectSkills";
+
 export async function discoverOpenSlideXSkillTargets(invocationRoot: string) {
   const root = path.resolve(invocationRoot);
   if (await isFile(path.join(root, "presentation.mdx"))) return [root];
@@ -20,20 +22,27 @@ export async function discoverOpenSlideXSkillTargets(invocationRoot: string) {
 }
 
 export async function syncOpenSlideXProjectSkills(skillsRoot: string, targetRoots: readonly string[]) {
-  const sourceEntries = (await readdir(skillsRoot, { withFileTypes: true }))
-    .filter((entry) => entry.isDirectory() && !entry.name.startsWith("."));
-  if (sourceEntries.length === 0) throw new Error("The bundled OpenSlideX skills are missing.");
+  const sourceEntries = await readdir(skillsRoot, { withFileTypes: true });
+  const available = new Set(
+    sourceEntries
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
+      .map((entry) => entry.name)
+  );
+  const missing = openSlideXProjectSkillNames.filter((skill) => !available.has(skill));
+  if (missing.length > 0) {
+    throw new Error(`The bundled OpenSlideX skills are incomplete: ${missing.join(", ")}.`);
+  }
 
   for (const targetRoot of targetRoots) {
     const target = path.join(targetRoot, ".agents", "skills");
-    for (const entry of sourceEntries) {
-      const targetSkill = path.join(target, entry.name);
+    for (const skill of openSlideXProjectSkillNames) {
+      const targetSkill = path.join(target, skill);
       await rm(targetSkill, { force: true, recursive: true });
-      await cp(path.join(skillsRoot, entry.name), targetSkill, { recursive: true });
+      await cp(path.join(skillsRoot, skill), targetSkill, { recursive: true });
     }
   }
   return {
-    skillCount: sourceEntries.length,
+    skillCount: openSlideXProjectSkillNames.length,
     targetCount: targetRoots.length
   };
 }

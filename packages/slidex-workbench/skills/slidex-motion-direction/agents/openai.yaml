@@ -1,4 +1,4 @@
 interface:
-  display_name: "SlideX Motion Direction"
-  short_description: "Apply deliberate SlideX presentation motion"
-  default_prompt: "Use $slidex-motion-direction to design restrained SlideX motion."
+  display_name: "OpenSlideX Motion Direction"
+  short_description: "Apply deliberate OpenSlideX presentation motion"
+  default_prompt: "Use $slidex-motion-direction to design restrained OpenSlideX motion."

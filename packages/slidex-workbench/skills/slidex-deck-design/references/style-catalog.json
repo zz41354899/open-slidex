@@ -1,0 +1,304 @@
+{
+  "schemaVersion": 1,
+  "styles": [
+    {
+      "id": "S01",
+      "name": "Tech Minimal",
+      "category": "Minimalist",
+      "industries": [
+        "Tech",
+        "Professional"
+      ],
+      "keywords": [
+        "S01",
+        "Tech Minimal",
+        "Minimalist",
+        "Tech",
+        "Professional",
+        "report",
+        "strategy",
+        "board update",
+        "data brief",
+        "product launch",
+        "vision",
+        "technical proposal",
+        "科技",
+        "極簡",
+        "專業",
+        "SaaS",
+        "軟體",
+        "產品",
+        "發表"
+      ],
+      "bestFor": [
+        "report",
+        "strategy",
+        "board update",
+        "data brief",
+        "product launch",
+        "vision",
+        "technical proposal"
+      ],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/style-s01-tech-minimal.mdx"
+    },
+    {
+      "id": "S05",
+      "name": "Japanese Minimal",
+      "category": "Minimalist",
+      "industries": [
+        "Luxury",
+        "Creative"
+      ],
+      "keywords": [
+        "S05",
+        "Japanese Minimal",
+        "Minimalist",
+        "Luxury",
+        "Creative",
+        "report",
+        "strategy",
+        "board update",
+        "data brief",
+        "brand story",
+        "keynote",
+        "creative proposal",
+        "workshop",
+        "campaign",
+        "editorial story",
+        "日式",
+        "留白",
+        "安靜",
+        "禪意",
+        "提案",
+        "故事"
+      ],
+      "bestFor": [
+        "report",
+        "strategy",
+        "board update",
+        "data brief",
+        "brand story",
+        "keynote",
+        "creative proposal",
+        "workshop",
+        "campaign",
+        "editorial story"
+      ],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/style-s05-japanese-minimal.mdx"
+    },
+    {
+      "id": "S08",
+      "name": "Dark Mode Elegance",
+      "category": "Minimalist",
+      "industries": [
+        "Tech",
+        "Lifestyle"
+      ],
+      "keywords": [
+        "S08",
+        "Dark Mode Elegance",
+        "Minimalist",
+        "Tech",
+        "Lifestyle",
+        "report",
+        "strategy",
+        "board update",
+        "data brief",
+        "product launch",
+        "vision",
+        "technical proposal",
+        "brand story",
+        "keynote",
+        "creative proposal",
+        "深色",
+        "優雅",
+        "高級",
+        "科技",
+        "簡報"
+      ],
+      "bestFor": [
+        "report",
+        "strategy",
+        "board update",
+        "data brief",
+        "product launch",
+        "vision",
+        "technical proposal",
+        "brand story",
+        "keynote",
+        "creative proposal"
+      ],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/style-s08-dark-mode-elegance.mdx"
+    },
+    {
+      "id": "S09",
+      "name": "Corporate Clean",
+      "category": "Corporate",
+      "industries": [
+        "Professional"
+      ],
+      "keywords": [
+        "S09",
+        "Corporate Clean",
+        "Corporate",
+        "Professional",
+        "report",
+        "strategy",
+        "board update",
+        "data brief",
+        "企業",
+        "乾淨",
+        "董事會",
+        "營運",
+        "報告",
+        "專業"
+      ],
+      "bestFor": [
+        "report",
+        "strategy",
+        "board update",
+        "data brief"
+      ],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/style-s09-corporate-clean.mdx"
+    },
+    {
+      "id": "S19",
+      "name": "Luxury Editorial",
+      "category": "Luxury",
+      "industries": [
+        "Luxury",
+        "Commerce"
+      ],
+      "keywords": [
+        "S19",
+        "Luxury Editorial",
+        "Luxury",
+        "Commerce",
+        "brand story",
+        "keynote",
+        "creative proposal",
+        "奢華",
+        "編輯",
+        "雜誌",
+        "品牌",
+        "時尚",
+        "故事"
+      ],
+      "bestFor": [
+        "brand story",
+        "keynote",
+        "creative proposal"
+      ],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/style-s19-luxury-editorial.mdx"
+    },
+    {
+      "id": "S20",
+      "name": "Nature Organic",
+      "category": "Unique",
+      "industries": [
+        "Lifestyle",
+        "Commerce"
+      ],
+      "keywords": [
+        "S20",
+        "Nature Organic",
+        "Unique",
+        "Lifestyle",
+        "Commerce",
+        "brand story",
+        "keynote",
+        "creative proposal",
+        "自然",
+        "有機",
+        "永續",
+        "ESG",
+        "健康",
+        "報告"
+      ],
+      "bestFor": [
+        "brand story",
+        "keynote",
+        "creative proposal"
+      ],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/style-s20-nature-organic.mdx"
+    },
+    {
+      "id": "S25",
+      "name": "Startup Vibrant",
+      "category": "Corporate",
+      "industries": [
+        "Tech",
+        "Professional"
+      ],
+      "keywords": [
+        "S25",
+        "Startup Vibrant",
+        "Corporate",
+        "Tech",
+        "Professional",
+        "report",
+        "strategy",
+        "board update",
+        "data brief",
+        "product launch",
+        "vision",
+        "technical proposal",
+        "新創",
+        "活力",
+        "成長",
+        "融資",
+        "產品",
+        "發表"
+      ],
+      "bestFor": [
+        "report",
+        "strategy",
+        "board update",
+        "data brief",
+        "product launch",
+        "vision",
+        "technical proposal"
+      ],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/style-s25-startup-vibrant.mdx"
+    },
+    {
+      "id": "S27",
+      "name": "Fintech Trust",
+      "category": "Corporate",
+      "industries": [
+        "Professional",
+        "Tech"
+      ],
+      "keywords": [
+        "S27",
+        "Fintech Trust",
+        "Corporate",
+        "Professional",
+        "Tech",
+        "report",
+        "strategy",
+        "board update",
+        "data brief",
+        "product launch",
+        "vision",
+        "technical proposal",
+        "金融",
+        "科技",
+        "信任",
+        "數據",
+        "投資",
+        "報告"
+      ],
+      "bestFor": [
+        "report",
+        "strategy",
+        "board update",
+        "data brief",
+        "product launch",
+        "vision",
+        "technical proposal"
+      ],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/style-s27-fintech-trust.mdx"
+    }
+  ]
+}

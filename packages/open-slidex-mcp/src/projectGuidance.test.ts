@@ -6,6 +6,7 @@ import test from "node:test";
 
 import {
   openSlideXProjectSkillNames,
+  recommendOpenSlideXStyles,
   readOpenSlideXProjectGuidanceManifest,
   readOpenSlideXProjectGuidanceResource
 } from "./projectGuidance";
@@ -107,6 +108,21 @@ test("an older project without the source-import skill remains readable", async 
   }
 });
 
+test("style recommendation ranks one of eight curated native MDX directions from a Chinese report summary", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-style-recommendation-"));
+  try {
+    await seedSkills(root);
+    await writeStyleCatalog(root);
+    const result = await recommendOpenSlideXStyles(root, "董事會營運報告，需要企業、乾淨、可信任的視覺方向");
+
+    assert.equal(result.recommendations.length, 3);
+    assert.equal(result.recommendations[0]?.id, "S09");
+    assert.match(result.recommendations[0]?.mdxResourcePath ?? "", /style-s09-/);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
 async function seedSkills(root: string) {
   await Promise.all(openSlideXProjectSkillNames.map(async (skill) => {
     const skillRoot = path.join(root, ".agents", "skills", skill);
@@ -121,4 +137,22 @@ async function seedSkills(root: string) {
       await writeFile(path.join(skillRoot, "references", "data-brief.mdx"), "# Data brief\n", "utf8");
     }
   }));
+}
+
+async function writeStyleCatalog(root: string) {
+  const referenceRoot = path.join(root, ".agents", "skills", "slidex-deck-design", "references");
+  const selectedIds = ["S01", "S05", "S08", "S09", "S19", "S20", "S25", "S27"];
+  const styles = selectedIds.map((id) => {
+    const isCorporate = id === "S09";
+    return {
+      bestFor: isCorporate ? ["board update", "report"] : ["editorial story"],
+      category: isCorporate ? "Professional" : "Creative",
+      id,
+      industries: isCorporate ? ["Corporate"] : ["Creative"],
+      keywords: isCorporate ? ["企業", "董事會", "營運", "報告", "乾淨", "可信任"] : [id],
+      mdxResourcePath: `.agents/skills/slidex-deck-design/references/style-${id.toLowerCase()}-curated.mdx`,
+      name: isCorporate ? "Corporate Clean" : `Style ${id}`
+    };
+  });
+  await writeFile(path.join(referenceRoot, "style-catalog.json"), `${JSON.stringify({ schemaVersion: 1, styles })}\n`, "utf8");
 }

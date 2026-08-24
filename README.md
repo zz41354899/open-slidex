@@ -56,11 +56,13 @@ Generated Workbench source and dependency cache stay in the ignored
 `.open-slidex/` directory. Each Workspace deck owns its own source, assets,
 and exports.
 
-The starter includes five project-local Agent Skills: PPTX/HTML source import,
+The starter includes five project-local Agent Skills: PPTX source import,
 MDX authoring, narrative design, motion direction, and visual QA. Detailed
 guidance and verified native-layer examples live inside each skill's
-`references/` directory. Agents load only the resources needed for the current
-task.
+`references/` directory. Narrative design includes eight curated presentation
+style specimens plus five narrative examples, all using a disciplined,
+image-led company-profile design language. Agents rank the styles from a report
+or summary and load only the selected MDX resource.
 
 ## What you can do locally
 
@@ -79,13 +81,19 @@ or CLI bridge.
 Generated MCP configuration uses `open-slidex@latest`, so a client restart
 loads the newest published server without editing the config. Workspace scope
 exposes six workflow tools: workspace selection, progressive source/resource
-read, PPTX/HTML source import, media, review, and edit. Source import inspects
-PPTX/HTML safely; PPTX `import-media` converts embedded supported images to
-portable WebP and returns the original frame geometry for native `ImageBlock`
-layers. Narrative and visual direction stay in the project skills; MCP remains
+read, PPTX source import, media, review, and edit. Source import inspects PPTX
+text geometry, typography hints, reading order, and embedded images safely;
+`import-media` converts supported images to portable WebP and returns the
+original frame geometry for native `ImageBlock` layers. Narrative and visual
+direction stay in the project skills; MCP remains
 the revision-safe file and validation boundary. User notes and research stay
 local under each deck's `knowledge/`; Markdown, text, CSV, and PDF sources are
 searched first and read one resource at a time.
+
+For creation or redesign, `open_slidex_read` accepts a `styleQuery` containing
+the source brief, audience, outcome, tone, and brand constraints. It ranks the
+eight curated native style directions and returns three exact MDX resource paths; the
+agent reads one specimen before composing the complete deck.
 
 ## Repository commands
 
@@ -94,6 +102,10 @@ searched first and read one resource at a time.
 | `npm run dev` | Open the local Workspace. |
 | `npm run mcp` | Start MCP for `open-slidex-workspace/`. |
 | `npm run build:runtime` | Rebuild the distributable runtime after SDK, Workbench, MCP, or CLI changes. |
+| `npm run styles:compile -- <style-prompt references>` | Read all 30 source style profiles, retain the eight curated directions, and sync their catalog and examples. |
+| `npm run styles:redesign` | Rebuild eight curated style specimens and five redesigned narrative examples with verified Unsplash imagery. |
+| `npm run styles:qa` | Render all 156 teaching slides and reject overflow, collision, canvas, or safety-margin defects. |
+| `npm run styles:gallery -- <output>` | Render a 13-cover contact sheet plus a complete twelve-slide screenshot for every example. |
 | `npm run test:source` | Run source-level SDK, Workbench, MCP, CLI, and Workspace tests. |
 
 ## Architecture

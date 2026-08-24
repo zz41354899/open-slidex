@@ -40,7 +40,7 @@ Never create or use an outer `presentation.mdx`.
 
 - Skill loading is progressive. Read the recommended `SKILL.md`, then only the
   direct `references/` files it routes to. Do not load every example.
-- For a supplied `.pptx`, `.html`, or `.htm`, first load `slidex-source-import`
+- For a supplied `.pptx`, first load `slidex-source-import`
   and use `open_slidex_source_import`; rebuild its semantic evidence with
   native MotionDoc layers rather than copying foreign markup.
 - For a full creation or redesign, use

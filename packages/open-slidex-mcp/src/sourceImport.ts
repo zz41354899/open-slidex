@@ -3,7 +3,7 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import JSZip, { type JSZipObject } from "jszip";
 import { importSlideXImageAsset, resolveInsideRoot } from "@open-slidex/sdk/node";
 
-const MAX_SOURCE_BYTES = 25 * 1024 * 1024;
+const MAX_SOURCE_BYTES = 100 * 1024 * 1024;
 const MAX_PPTX_ENTRIES = 2_000;
 const MAX_PPTX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024;
 const MAX_SLIDES = 200;
@@ -22,26 +22,36 @@ export type OpenSlideXImportImage = {
   status: "imported" | "missing" | "not_imported" | "unsupported";
   zIndex: number;
 };
-export type OpenSlideXImportSlide = { imageCount: number; images: OpenSlideXImportImage[]; index: number; text: string[]; title?: string };
+export type OpenSlideXImportTextFrame = {
+  alignment?: "center" | "justify" | "left" | "right";
+  fontFamily?: string;
+  fontSizePt?: number;
+  fontWeight?: number;
+  geometry: { h: number; w: number; x: number; y: number };
+  geometryWarning?: string;
+  id: string;
+  text: string;
+  textBlock: string;
+  titleHint: boolean;
+  zIndex: number;
+};
+export type OpenSlideXImportSlide = { imageCount: number; images: OpenSlideXImportImage[]; index: number; text: string[]; textFrames: OpenSlideXImportTextFrame[]; title?: string };
 export type OpenSlideXSourceImport = {
-  conversionBoundary: string; format: "html" | "pptx"; sourceFile: string; sourceTitle?: string;
+  conversionBoundary: string; format: "pptx"; sourceFile: string; sourceTitle?: string;
   summary: { imageCount: number; slideCount: number; textBlockCount: number }; warnings: string[]; slides: OpenSlideXImportSlide[];
 };
 
 export async function readOpenSlideXSourceImport(projectRoot: string, requestedPath: string, options: { importMedia?: boolean } = {}): Promise<OpenSlideXSourceImport> {
-  if (!requestedPath || /^(?:data|blob|https?):/i.test(requestedPath)) throw new Error("filePath must be a root-confined local .pptx, .html, or .htm file.");
+  if (!requestedPath || /^(?:data|blob|https?):/i.test(requestedPath)) throw new Error("filePath must be a root-confined local .pptx file.");
   const extension = extname(requestedPath).toLowerCase();
-  if (extension !== ".pptx" && extension !== ".html" && extension !== ".htm") throw new Error("Source import supports .pptx, .html, and .htm files only.");
-  if (options.importMedia && extension !== ".pptx") throw new Error("import-media is available for .pptx files only.");
+  if (extension !== ".pptx") throw new Error("Source import supports .pptx files only.");
   const inputPath = resolveInsideRoot(projectRoot, requestedPath);
   const inputStats = await stat(inputPath);
-  if (!inputStats.isFile() || inputStats.size < 1 || inputStats.size > MAX_SOURCE_BYTES) throw new Error("The source file must be a regular file between 1 byte and 25 MB.");
+  if (!inputStats.isFile() || inputStats.size < 1 || inputStats.size > MAX_SOURCE_BYTES) throw new Error("The source file must be a regular file between 1 byte and 100 MB.");
   const canonicalRoot = await realpath(projectRoot);
   const canonicalInput = resolveInsideRoot(canonicalRoot, await realpath(inputPath));
   const sourceFile = relative(canonicalRoot, canonicalInput).split("\\").join("/");
-  return extension === ".pptx"
-    ? readPptxSource(await readFile(canonicalInput), sourceFile, canonicalRoot, Boolean(options.importMedia))
-    : readHtmlSource(await readFile(canonicalInput, "utf8"), sourceFile);
+  return readPptxSource(await readFile(canonicalInput), sourceFile, canonicalRoot, Boolean(options.importMedia));
 }
 
 async function readPptxSource(bytes: Buffer, sourceFile: string, projectRoot: string, importMedia: boolean) {
@@ -60,8 +70,9 @@ async function readPptxSource(bytes: Buffer, sourceFile: string, projectRoot: st
   if (orderedSlides.length > MAX_SLIDES) throw new Error(`The source .pptx contains more than ${MAX_SLIDES} slides.`);
   const pageSize = pptxPageSize(await archive.file("ppt/presentation.xml")?.async("string"));
   const parsed = await Promise.all(orderedSlides.map(async ({ entry, path }, index) => pptxSlide({ archive, importMedia, index, pageSize, projectRoot, slidePath: path, xml: await entry.async("string") })));
-  return completeImport("pptx", sourceFile, firstText(await archive.file("docProps/core.xml")?.async("string")), parsed.map(({ slide }) => slide), [
-    "PPTX text and image frames are converted to native MotionDoc evidence; themes, animations, SmartArt, and unsupported charts are not copied verbatim.",
+  return completeImport(sourceFile, firstText(await archive.file("docProps/core.xml")?.async("string")), parsed.map(({ slide }) => slide), [
+    "PPTX text frames preserve recovered geometry, typography hints, reading order, and ready-to-review native Text blocks; image frames preserve geometry and z-order.",
+    "Themes, animations, SmartArt, and unsupported charts remain semantic or visual references and are not copied verbatim.",
     importMedia ? "Only images with status imported have portable assets/... sources and may be authored as ImageBlock layers." : "Image frames include original geometry but no assets are written. Call import-media before authoring ImageBlock layers.",
     ...parsed.flatMap(({ warnings }) => warnings)
   ]);
@@ -86,10 +97,13 @@ async function pptxSlideEntries(archive: JSZip): Promise<Array<{ entry: JSZipObj
 }
 
 async function pptxSlide(input: { archive: JSZip; importMedia: boolean; index: number; pageSize: { cx: number; cy: number }; projectRoot: string; slidePath: string; xml: string }) {
-  const text = [...input.xml.matchAll(/<p:sp\b[\s\S]*?<\/p:sp>/gi)].map((shape) => textFromXml(shape[0])).filter(Boolean).map(limitText);
-  const blocks = text.length ? text : [textFromXml(input.xml)].filter(Boolean).map(limitText);
+  const textFrames = [...input.xml.matchAll(/<p:sp\b[\s\S]*?<\/p:sp>/gi)]
+    .map((shape, zIndex) => pptxTextFrame(shape[0], input.index, zIndex, input.pageSize))
+    .filter((frame): frame is OpenSlideXImportTextFrame => Boolean(frame));
+  const blocks = textFrames.length ? textFrames.map((frame) => frame.text) : [textFromXml(input.xml)].filter(Boolean).map(limitText);
   const imported = await pptxSlideImages(input);
-  return { slide: { imageCount: imported.images.length, images: imported.images, index: input.index, text: blocks, ...(blocks[0] ? { title: blocks[0] } : {}) }, warnings: imported.warnings };
+  const title = textFrames.find((frame) => frame.titleHint)?.text ?? blocks[0];
+  return { slide: { imageCount: imported.images.length, images: imported.images, index: input.index, text: blocks, textFrames, ...(title ? { title } : {}) }, warnings: imported.warnings };
 }
 
 async function pptxSlideImages(input: { archive: JSZip; importMedia: boolean; index: number; pageSize: { cx: number; cy: number }; projectRoot: string; slidePath: string; xml: string }) {
@@ -102,7 +116,7 @@ async function pptxSlideImages(input: { archive: JSZip; importMedia: boolean; in
   const warnings: string[] = [];
   const images = await Promise.all([...input.xml.matchAll(/<p:pic\b[\s\S]*?<\/p:pic>/gi)].map(async (picture, zIndex) => {
     const fragment = picture[0]; const embedId = attribute(fragment.match(/<a:blip\b([^>]*)\/?>(?:<\/a:blip>)?/i)?.[1] ?? "", "r:embed");
-    const sourceName = posix.basename(targets.get(embedId ?? "") ?? `pptx-image-${zIndex + 1}`); const geometry = pictureGeometry(fragment, input.pageSize);
+    const sourceName = posix.basename(targets.get(embedId ?? "") ?? `pptx-image-${zIndex + 1}`); const geometry = frameGeometry(fragment, input.pageSize);
     const base = { alt: pictureAlt(fragment, sourceName), geometry: geometry.value, ...(geometry.warning ? { geometryWarning: geometry.warning } : {}), id: `pptx-slide-${input.index + 1}-image-${zIndex + 1}`, sourceName, zIndex };
     const target = embedId ? targets.get(embedId) : undefined; const media = target ? input.archive.file(target) : undefined;
     if (!media || media.dir) { const reason = "The PowerPoint image relationship does not point to an embedded media file."; warnings.push(`Slide ${input.index + 1} image ${zIndex + 1}: ${reason}`); return { ...base, reason, status: "missing" as const }; }
@@ -119,16 +133,33 @@ async function pptxSlideImages(input: { archive: JSZip; importMedia: boolean; in
   return { images, warnings };
 }
 
-function readHtmlSource(source: string, sourceFile: string): OpenSlideXSourceImport {
-  const withoutUnsafe = source.replace(/<!--([\s\S]*?)-->/g, " ").replace(/<(script|style|template|noscript)\b[^>]*>[\s\S]*?<\/\1>/gi, " ");
-  const sections = [...withoutUnsafe.matchAll(/<(?:section|article|main)\b[^>]*>[\s\S]*?<\/(?:section|article|main)>/gi)].map((match) => match[0]); const frames = sections.length ? sections : [withoutUnsafe];
-  if (frames.length > MAX_SLIDES) throw new Error(`The source HTML contains more than ${MAX_SLIDES} slide-like sections.`);
-  const slides = frames.map((frame, index) => { const text = htmlTextBlocks(frame); return { imageCount: (frame.match(/<img\b/gi) ?? []).length, images: [], index, text, ...(text[0] ? { title: text[0] } : {}) }; });
-  return completeImport("html", sourceFile, htmlTitle(withoutUnsafe), slides, ["HTML CSS, JavaScript, canvases, embedded frames, and responsive behavior are not executed or copied into MotionDoc.", "HTML image files are not imported automatically; use the approved local-media flow before creating ImageBlock layers."]);
+function pptxTextFrame(fragment: string, slideIndex: number, zIndex: number, pageSize: { cx: number; cy: number }): OpenSlideXImportTextFrame | undefined {
+  const text = limitText(textFromXml(fragment));
+  if (!text) return undefined;
+  const geometry = frameGeometry(fragment, pageSize);
+  const placeholder = attribute(fragment.match(/<p:ph\b([^>]*)\/?>(?:<\/p:ph>)?/i)?.[1] ?? "", "type")?.toLowerCase();
+  const runProperties = fragment.match(/<a:(?:rPr|defRPr|endParaRPr)\b([^>]*)\/?>(?:<\/a:(?:rPr|defRPr|endParaRPr)>)?/i)?.[1] ?? "";
+  const size = Number(attribute(runProperties, "sz"));
+  const typeface = attribute(fragment.match(/<a:latin\b([^>]*)\/?>(?:<\/a:latin>)?/i)?.[1] ?? "", "typeface");
+  const alignmentValue = attribute(fragment.match(/<a:pPr\b([^>]*)\/?>(?:<\/a:pPr>)?/i)?.[1] ?? "", "algn")?.toLowerCase();
+  const alignment = ({ ctr: "center", just: "justify", l: "left", r: "right" } as const)[alignmentValue as "ctr" | "just" | "l" | "r"];
+  const titleHint = placeholder === "title" || placeholder === "ctrtitle" || (zIndex === 0 && Number.isFinite(size) && size >= 2800);
+  const frame = {
+    alignment,
+    fontFamily: typeface,
+    fontSizePt: Number.isFinite(size) && size > 0 ? Number((size / 100).toFixed(2)) : undefined,
+    fontWeight: /\bb\s*=\s*(["'])1\1/i.test(runProperties) ? 700 : undefined,
+    geometry: geometry.value,
+    geometryWarning: geometry.warning,
+    id: `pptx-slide-${slideIndex + 1}-text-${zIndex + 1}`,
+    text,
+    titleHint,
+    zIndex
+  };
+  return { ...frame, textBlock: textBlockMdx(frame) };
 }
-function htmlTextBlocks(source: string) { const blocks = [...source.matchAll(/<(?:h[1-6]|p|li|figcaption|blockquote|td|th)\b[^>]*>([\s\S]*?)<\/(?:h[1-6]|p|li|figcaption|blockquote|td|th)>/gi)].map((match) => textFromHtml(match[1] ?? "")).filter(Boolean).map(limitText); return blocks.length ? blocks : [textFromHtml(source)].filter(Boolean).map(limitText); }
 function pptxPageSize(xml: string | undefined) { const tag = xml?.match(/<p:sldSz\b([^>]*)\/?>(?:<\/p:sldSz>)?/i)?.[1] ?? ""; const cx = Number(attribute(tag, "cx")); const cy = Number(attribute(tag, "cy")); return Number.isFinite(cx) && cx > 0 && Number.isFinite(cy) && cy > 0 ? { cx, cy } : defaultPageSize; }
-function pictureGeometry(fragment: string, pageSize: { cx: number; cy: number }) { const transform = fragment.match(/<a:xfrm\b[^>]*>([\s\S]*?)<\/a:xfrm>/i)?.[1]; const off = transform?.match(/<a:off\b([^>]*)\/?>(?:<\/a:off>)?/i)?.[1] ?? ""; const ext = transform?.match(/<a:ext\b([^>]*)\/?>(?:<\/a:ext>)?/i)?.[1] ?? ""; const raw = [Number(attribute(off, "x")), Number(attribute(off, "y")), Number(attribute(ext, "cx")), Number(attribute(ext, "cy"))]; if (raw.some((value) => !Number.isFinite(value) || value < 0)) return { value: { x: 0, y: 0, w: 100, h: 100 }, warning: "PPTX image geometry was missing; a full-slide frame was used." }; return { value: { x: percentage(raw[0]!, pageSize.cx), y: percentage(raw[1]!, pageSize.cy), w: percentage(raw[2]!, pageSize.cx), h: percentage(raw[3]!, pageSize.cy) } }; }
+function frameGeometry(fragment: string, pageSize: { cx: number; cy: number }) { const transform = fragment.match(/<a:xfrm\b[^>]*>([\s\S]*?)<\/a:xfrm>/i)?.[1]; const off = transform?.match(/<a:off\b([^>]*)\/?>(?:<\/a:off>)?/i)?.[1] ?? ""; const ext = transform?.match(/<a:ext\b([^>]*)\/?>(?:<\/a:ext>)?/i)?.[1] ?? ""; const raw = [Number(attribute(off, "x")), Number(attribute(off, "y")), Number(attribute(ext, "cx")), Number(attribute(ext, "cy"))]; if (raw.some((value) => !Number.isFinite(value) || value < 0)) return { value: { x: 0, y: 0, w: 100, h: 100 }, warning: "PPTX frame geometry was missing; a full-slide frame was used." }; return { value: { x: percentage(raw[0]!, pageSize.cx), y: percentage(raw[1]!, pageSize.cy), w: percentage(raw[2]!, pageSize.cx), h: percentage(raw[3]!, pageSize.cy) } }; }
 function pictureAlt(fragment: string, fallback: string) { const props = fragment.match(/<p:cNvPr\b([^>]*)\/?>(?:<\/p:cNvPr>)?/i)?.[1] ?? ""; return decodeEntities(attribute(props, "descr") || attribute(props, "name") || fallback); }
 function relationshipPath(slidePath: string) { return `${posix.dirname(slidePath)}/_rels/${posix.basename(slidePath)}.rels`; }
 function resolvePptxTarget(slidePath: string, target: string) { const resolved = posix.normalize(posix.join(posix.dirname(slidePath), target)); return resolved.startsWith("ppt/") && !resolved.includes("..") ? resolved : ""; }
@@ -139,11 +170,23 @@ function imageBlockMdx(image: { alt: string; geometry: { h: number; w: number; x
   const { h, w, x, y } = image.geometry;
   return `<ImageBlock id="${attributeValue(image.id)}" alt="${attributeValue(image.alt)}" src="${attributeValue(image.source)}" fit="cover" x={${x}} y={${y}} w={${w}} h={${h}} />`;
 }
-function completeImport(format: "html" | "pptx", sourceFile: string, sourceTitle: string | undefined, slides: OpenSlideXImportSlide[], warnings: string[]): OpenSlideXSourceImport { return { conversionBoundary: "This is semantic source evidence, not MotionDoc. Only PPTX images with status imported include a portable assets/... source; author those as native ImageBlock layers through open_slidex_edit.", format, sourceFile, ...(sourceTitle ? { sourceTitle } : {}), summary: { imageCount: slides.reduce((total, slide) => total + slide.imageCount, 0), slideCount: slides.length, textBlockCount: slides.reduce((total, slide) => total + slide.text.length, 0) }, warnings, slides }; }
-function firstText(xml: string | undefined) { const title = xml?.match(/<dc:title\b[^>]*>([\s\S]*?)<\/dc:title>/i)?.[1]; return title ? textFromHtml(title) : undefined; }
+function textBlockMdx(frame: Omit<OpenSlideXImportTextFrame, "textBlock">) {
+  const attributeValue = (value: string) => value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  const textValue = (value: string) => attributeValue(value).replace(/>/g, "&gt;");
+  const { h, w, x, y } = frame.geometry;
+  const optional = [
+    frame.titleHint ? ' role="title"' : "",
+    frame.fontFamily ? ` fontFamily="${attributeValue(frame.fontFamily)}"` : "",
+    frame.fontSizePt ? ` fontSize={${frame.fontSizePt}}` : "",
+    frame.fontWeight ? ` fontWeight={${frame.fontWeight}}` : "",
+    frame.alignment ? ` textAlign="${frame.alignment}"` : ""
+  ].join("");
+  return `<Text id="${attributeValue(frame.id)}"${optional} x={${x}} y={${y}} w={${w}} h={${h}}>${textValue(frame.text)}</Text>`;
+}
+function completeImport(sourceFile: string, sourceTitle: string | undefined, slides: OpenSlideXImportSlide[], warnings: string[]): OpenSlideXSourceImport { return { conversionBoundary: "This is semantic PPTX evidence, not a finished MotionDoc deck. Review recovered Text blocks and imported ImageBlock layers, then recompose them through open_slidex_edit and the selected twelve-page visual grammar.", format: "pptx", sourceFile, ...(sourceTitle ? { sourceTitle } : {}), summary: { imageCount: slides.reduce((total, slide) => total + slide.imageCount, 0), slideCount: slides.length, textBlockCount: slides.reduce((total, slide) => total + slide.text.length, 0) }, warnings, slides }; }
+function firstText(xml: string | undefined) { const title = xml?.match(/<dc:title\b[^>]*>([\s\S]*?)<\/dc:title>/i)?.[1]; return title ? textFromMarkup(title) : undefined; }
 function textFromXml(value: string) { return decodeEntities([...value.matchAll(/<a:t\b[^>]*>([\s\S]*?)<\/a:t>/gi)].map((match) => match[1] ?? "").join(" ")).replace(/\s+/g, " ").trim(); }
-function textFromHtml(value: string) { return decodeEntities(value.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim(); }
-function htmlTitle(source: string) { const title = source.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1]; return title ? textFromHtml(title) : undefined; }
+function textFromMarkup(value: string) { return decodeEntities(value.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim(); }
 function attribute(source: string, name: string) { const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); return source.match(new RegExp(`\\b${escaped}\\s*=\\s*(["'])(.*?)\\1`, "i"))?.[2]; }
 function decodeEntities(value: string) { return value.replace(/&nbsp;/gi, " ").replace(/&quot;/gi, '"').replace(/&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&amp;/gi, "&"); }
 function limitText(value: string) { return value.length > MAX_TEXT_PER_SLIDE ? `${value.slice(0, MAX_TEXT_PER_SLIDE - 1)}…` : value; }

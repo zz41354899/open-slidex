@@ -12,6 +12,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { getOfficialTemplatePackage } from "@/core/motion-doc/presets/officialTemplatePackages";
+import { openSlideXProjectSkillNames } from "@/core/motion-doc/domain/openSlideXProjectSkills";
 
 import {
   assertSupportedNodeVersion,
@@ -41,6 +42,7 @@ async function main() {
   }
 
   assertSupportedNodeVersion();
+  const version = await packageVersion();
   const targetDir = path.resolve(process.cwd(), options.target);
   const templateDir = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
@@ -59,9 +61,9 @@ async function main() {
     path.join(targetDir, ".gitignore")
   );
   await mkdir(path.join(targetDir, "open-slidex-workspace"), { recursive: true });
-  await replaceProjectName(targetDir, path.basename(targetDir));
+  await configureProjectManifest(targetDir, path.basename(targetDir), version);
   if (options.template) {
-    await createInitialTemplateDeck(targetDir, templateDir, options.template);
+    await createInitialTemplateDeck(targetDir, templateDir, options.template, version);
   }
 
   if (options.installDependencies) {
@@ -103,11 +105,7 @@ function completionMessage({
       ? [`The ${templateId} deck is ready in open-slidex-workspace/.`, ""]
       : ["Create or import your first deck in Workspace.", ""]),
     "Project-local OpenSlideX skills are ready in .agents/skills:",
-    "  slidex-source-import",
-    "  slidex-mdx-authoring",
-    "  slidex-deck-design",
-    "  slidex-motion-direction",
-    "  slidex-deck-qa",
+    ...openSlideXProjectSkillNames.map((skill) => `  ${skill}`),
     "",
     "Workspace MCP is configured once from OpenSlideX Workspace Settings.",
     ""
@@ -143,13 +141,14 @@ async function applyOfficialTemplate(
 async function createInitialTemplateDeck(
   workspaceRoot: string,
   templateDir: string,
-  reference: { id: string; locale: "en" | "zh-TW" }
+  reference: { id: string; locale: "en" | "zh-TW" },
+  version: string
 ) {
   const deckRoot = path.join(workspaceRoot, "open-slidex-workspace", reference.id);
   await mkdir(path.dirname(deckRoot), { recursive: true });
   await cp(templateDir, deckRoot, { recursive: true });
   await rename(path.join(deckRoot, "gitignore"), path.join(deckRoot, ".gitignore"));
-  await replaceProjectName(deckRoot, reference.id);
+  await configureProjectManifest(deckRoot, reference.id, version);
   await applyOfficialTemplate(deckRoot, reference);
 }
 
@@ -173,17 +172,28 @@ async function assertNpmAvailable() {
   }
 }
 
-async function replaceProjectName(root: string, projectName: string) {
+async function configureProjectManifest(root: string, projectName: string, version: string) {
   const packagePath = path.join(root, "package.json");
   const source = await readFile(packagePath, "utf8");
+  const manifest = JSON.parse(source) as {
+    devDependencies?: Record<string, string>;
+    name?: string;
+    version?: string;
+  };
   const safeName =
     projectName
       .toLowerCase()
       .replace(/[^a-z0-9._-]+/g, "-")
       .replace(/^-+|-+$/g, "") || "slidex-deck";
+  manifest.name = safeName;
+  manifest.version = version;
+  manifest.devDependencies = {
+    ...manifest.devDependencies,
+    "open-slidex": version
+  };
   await writeFile(
     packagePath,
-    source.replaceAll("__PROJECT_NAME__", safeName),
+    `${JSON.stringify(manifest, null, 2)}\n`,
     "utf8"
   );
 }

@@ -12,6 +12,7 @@ import { usePitchShortcuts } from "@/features/pitch/ui/hooks/usePitchShortcuts";
 import { usePitchUndo } from "@/features/pitch/ui/hooks/usePitchUndo";
 import { usePitchWorkspaceViewState } from "@/features/pitch/ui/hooks/usePitchWorkspaceViewState";
 import { PresentationPreviewModal } from "@/features/pitch/ui/PresentationPreviewModal";
+import { PresentationPlaybackModePicker, type PresentationPlaybackMode } from "@/features/pitch/ui/PresentationPlaybackModePicker";
 import { PreviewMediaPolicyProvider } from "@/features/pitch/ui/preview/PreviewMediaPolicy";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import type { SlideXEditorAssetAdapter } from "@/features/pitch/domain/localEditor";
@@ -48,6 +49,8 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
   const [openTool, setOpenTool] = useState<LocalToolMenuId | null>(null);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const [localChartAnimationsActive, setLocalChartAnimationsActive] = useState(false);
+  const [isPlaybackModePickerOpen, setIsPlaybackModePickerOpen] = useState(false);
+  const [presentationPlaybackMode, setPresentationPlaybackMode] = useState<PresentationPlaybackMode>("projection");
   const undoStackRef = useRef<string[]>([]);
   const redoStackRef = useRef<string[]>([]);
   const chartReplayTimerRef = useRef<number | null>(null);
@@ -374,7 +377,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           onPassActiveSlideComment: () => undefined,
           openExport: () => { void runExport("html"); },
           openExportWithFormat: (format: "html" | "mdx" | "pptx") => { void runExport(format); },
-          openPresentationPreview: () => setIsPresentationPreviewOpen(true),
+          openPresentationPreview: () => setIsPlaybackModePickerOpen(true),
           pasteCopiedBlock: pitchCommandActions.pasteCopiedBlock,
           pasteSlide: pitchCommandActions.pasteSlide,
           persistActiveSlideShaderFrame: pitchCommandActions.persistActiveSlideShaderFrame,
@@ -616,11 +619,19 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           documentTitle={projectName}
           isOpen={isPresentationPreviewOpen}
           onClose={() => setIsPresentationPreviewOpen(false)}
-          onExport={() => { setIsPresentationPreviewOpen(false); void runExport("html"); }}
           scenes={sliderDocument.scenes}
-          source={canvasSource}
+          startInFullscreen={presentationPlaybackMode === "fullscreen"}
         />
       </PreviewMediaPolicyProvider>
+      <PresentationPlaybackModePicker
+        isOpen={isPlaybackModePickerOpen}
+        onClose={() => setIsPlaybackModePickerOpen(false)}
+        onSelect={(mode) => {
+          setPresentationPlaybackMode(mode);
+          setIsPlaybackModePickerOpen(false);
+          setIsPresentationPreviewOpen(true);
+        }}
+      />
       {commandOpen ? <LocalCommandMenu onClose={() => setCommandOpen(false)} onExport={() => void runExport("html")} onRender={() => void renderMontage()} /> : null}
     </div>
   );

@@ -17,6 +17,7 @@ import { embedSlideXProjectMedia } from "./nodeMedia";
 export const slideXQualityIssueCodes = [
   "cjk_orphan",
   "dense_slide",
+  "group_containment",
   "media_unresolved",
   "non_canonical_prop",
   "out_of_canvas",
@@ -87,6 +88,7 @@ type BlockMeasurement = {
   blockType: string;
   fontSize: number;
   frame: RectMeasurement;
+  groupId: string;
   lastLine: string;
   lineCount: number;
   mediaUnresolved: boolean;
@@ -400,6 +402,7 @@ const measureRenderedSlideScript = String.raw`(() => {
         blockType: block.dataset.slidexBlockType || "Unknown",
         fontSize: content ? Number.parseFloat(getComputedStyle(content).fontSize) || 0 : 0,
         frame: rect(block.getBoundingClientRect()),
+        groupId: block.dataset.slidexGroupId || "",
         lastLine: lines.at(-1) || "",
         lineCount: lines.length,
         mediaUnresolved,
@@ -510,6 +513,38 @@ function qualityIssuesForSlide(slideIndex: number, measurement: SlideMeasurement
     }
     totalCharacters += [...block.text].length;
     cjkCharacters += [...block.text].filter((character) => /[\u3400-\u9fff]/u.test(character)).length;
+  }
+
+  const groupedBlocks = Object.groupBy(
+    measurement.blocks.filter((block) => block.groupId),
+    (block) => block.groupId
+  );
+  for (const [groupId, blocks] of Object.entries(groupedBlocks)) {
+    const container = blocks?.find((block) => block.blockType === "Shape");
+    if (!container || !blocks) continue;
+    for (const child of blocks) {
+      if (child === container) continue;
+      const tolerance = 2;
+      const outside = {
+        bottom: Math.max(0, child.frame.bottom - container.frame.bottom),
+        left: Math.max(0, container.frame.left - child.frame.left),
+        right: Math.max(0, child.frame.right - container.frame.right),
+        top: Math.max(0, container.frame.top - child.frame.top)
+      };
+      const maximum = Math.max(outside.bottom, outside.left, outside.right, outside.top);
+      if (maximum <= tolerance) continue;
+      issues.push({
+        code: "group_containment",
+        message: `${child.nodeId} leaves its grouped Shape ${container.nodeId} by ${round(maximum)}px. Keep card content inside the card frame.`,
+        metrics: {
+          ...Object.fromEntries(Object.entries(outside).map(([key, value]) => [key, round(value)])),
+          groupId
+        },
+        nodeIds: [container.nodeId, child.nodeId],
+        severity: "error",
+        slideIndex
+      });
+    }
   }
 
   const textBlocks = measurement.blocks.filter((block) => block.textRect);

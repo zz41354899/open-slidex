@@ -1,4 +1,4 @@
-# OpenSlideX 0.3.7
+# OpenSlideX
 
 OpenSlideX is a local-first, MDX presentation workspace with a visual Workbench,
 deterministic HTML/PPTX export, local image optimization, and a project-scoped
@@ -45,8 +45,9 @@ template becomes the first Workspace deck and never creates an outer source
 file.
 
 `init` creates the Workspace container and installs `open-slidex` as its only development
-dependency. Installation attempts to download the Chromium runtime used for
-local rendering and exports; an offline download never blocks installation.
+dependency. Installation does not download Chromium. Local render
+and visual export use an existing Chrome or Chromium executable; see
+Troubleshooting for the optional managed-browser command.
 
 Use `--no-install` when you want to inspect the generated files before
 installing dependencies:
@@ -108,6 +109,13 @@ work. Its first read returns only skill metadata; the agent then loads one
 approved `SKILL.md`, reference, or knowledge resource at a time. Arbitrary skill
 names and filesystem paths are rejected.
 
+For creation or redesign, pass a concise report or summary brief through
+`open_slidex_read.styleQuery`. The local server ranks eight curated native
+MotionDoc style specimens—S01, S05, S08, S09, S19, S20, S25, and S27—and
+returns three exact MDX resource paths. The agent
+loads one style, combines it with the selected narrative pattern, and submits
+the complete result through the normal revision and rendered-quality gate.
+
 Place source notes or research in the selected deck's `knowledge/` directory.
 Markdown, text, CSV, and PDF files are indexed locally. Search returns compact
 cited matches; a second read loads one exact source resource with pagination for
@@ -138,8 +146,10 @@ open-slidex mcp --workspace "$HOME/Presentations" --print-setup-prompt claude-de
 Codex reads its global MCP configuration from `~/.codex/config.toml`. Claude
 Desktop uses `~/Library/Application Support/Claude/claude_desktop_config.json`
 on macOS and `%APPDATA%\\Claude\\claude_desktop_config.json` on Windows. The
-Workspace Settings screen generates `cmd /c npx` on native Windows and never
-reads, merges, or writes those files automatically.
+Workspace Settings screen generates `cmd /c npx` on native Windows. Its
+explicit install action reads the selected local config, preserves unrelated
+entries, and adds or updates only OpenSlideX's entry. Claude Code uses the
+displayed user-scope CLI command instead of direct file editing.
 
 ## MCP smoke test
 
@@ -155,16 +165,17 @@ a presentation. Workspace scope loads six tools total:
 | Tool | Purpose |
 | --- | --- |
 | `open_slidex_workspace` | List local decks and select the target deck. |
-| `open_slidex_read` | Read current MotionDoc, guided skill resources, or local knowledge. |
-| `open_slidex_source_import` | Inspect local PPTX/HTML sources; for PPTX, import embedded images as WebP and return native `ImageBlock` geometry. |
+| `open_slidex_read` | Read current MotionDoc, guided skill resources or local knowledge, and rank eight curated native styles from `styleQuery`. |
+| `open_slidex_source_import` | Inspect local PPTX text and image evidence, preserve geometry and type hints, and import embedded images as WebP. |
 | `open_slidex_media` | Search trusted images or import approved local media as WebP. |
 | `open_slidex_review` | Run read-only structural and rendered visual QA. |
 | `open_slidex_edit` | Apply a revision-safe complete deck or slide edit with validation and rendered QA. |
 
-For a PPTX or HTML migration, put the source file inside the selected deck,
+For a PPTX migration, put the source file inside the selected deck,
 inspect it with `open_slidex_source_import`, then author native MotionDoc MDX.
-PPTX `import-media` converts supported embedded images to portable
-`assets/*.webp` and returns their original percentage frame for `ImageBlock`.
+`import-media` converts supported embedded images to portable `assets/*.webp`
+and returns their original percentage frame for `ImageBlock`; recovered text
+frames include native reviewable `Text` blocks plus geometry and type hints.
 Generated config uses `open-slidex@latest`, so restarting the client loads the
 newest published server without rewriting configuration.
 
@@ -185,5 +196,6 @@ npx -y playwright@1.61.1 install chromium
 ```
 
 If the MCP server is not shown after changing global configuration, completely
-restart the client and inspect its MCP list or logs. OpenSlideX never writes a
-global MCP configuration during installation or Workspace use.
+restart the client and inspect its MCP list or logs. Installing the npm package
+never writes global MCP configuration; Workspace changes it only after the user
+chooses the explicit MCP install action.

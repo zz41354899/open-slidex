@@ -929,6 +929,7 @@ function tableVerticalAlign(value: string | number | undefined) {
 function renderMotionBlock(block: MotionDocBlock, content: string) {
   const props = "props" in block ? block.props : {};
   const nodeId = motionDocBlockId(block);
+  const groupId = stringProp(props.groupId)?.trim() ?? "";
   const enter = animationClass(props.enter);
   const delay = numberProp(props.delay, 0);
   const duration = numberProp(props.duration, 0.6);
@@ -938,7 +939,7 @@ function renderMotionBlock(block: MotionDocBlock, content: string) {
     ? ` data-slidex-x="${framePositionPercent(props.x, 8)}" data-slidex-y="${framePositionPercent(props.y, 12)}" data-slidex-w="${framePercent(props.w, 42)}" data-slidex-h="${framePercent(props.h, 18)}"`
     : "";
 
-  return `<div class="motion-block ${enter}${fullClass}${positionClass}"${nodeId ? ` data-slidex-node-id="${escapeAttribute(nodeId)}"` : ""}${frameAttributes} data-slidex-block-type="${escapeAttribute(block.type)}" style="${escapeAttribute(inlineCss({
+  return `<div class="motion-block ${enter}${fullClass}${positionClass}"${nodeId ? ` data-slidex-node-id="${escapeAttribute(nodeId)}"` : ""}${groupId ? ` data-slidex-group-id="${escapeAttribute(groupId)}"` : ""}${frameAttributes} data-slidex-block-type="${escapeAttribute(block.type)}" style="${escapeAttribute(inlineCss({
     "--motion-delay": `${delay}s`,
     "--motion-duration": `${duration}s`,
     ...fontSizeVars(props),

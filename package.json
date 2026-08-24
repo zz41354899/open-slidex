@@ -1,7 +1,7 @@
 {
   "name": "open-slidex",
   "private": true,
-  "version": "0.3.7",
+  "version": "0.3.8",
   "workspaces": [
     "packages/editor-ui",
     "packages/open-slidex",
@@ -15,7 +15,13 @@
     "mcp": "node packages/open-slidex/dist/cli.mjs mcp --workspace open-slidex-workspace",
     "sync:skills": "node packages/open-slidex/dist/cli.mjs sync:skills",
     "build:runtime": "node scripts/build-open-slidex-package.mjs",
-    "test:source": "npm run test --workspace @open-slidex/mcp && node --test scripts/*.test.mjs && node --import tsx --test --test-concurrency=1 packages/slidex-workbench/src/client/*.test.ts packages/slidex-workbench/src/server/*.test.ts packages/slidex-sdk/src/*.test.ts packages/open-slidex/src/*.test.ts",
+    "styles:compile": "node scripts/generate-slide-style-library.mjs",
+    "styles:redesign": "node scripts/redesign-slide-style-library.mjs",
+    "styles:qa": "node scripts/qa-slide-style-library.mjs",
+    "styles:gallery": "node scripts/render-slide-style-gallery.mjs",
+    "check:skills": "node --import tsx --test --test-name-pattern='skill entrypoints are discoverable' packages/open-slidex/src/templateSkills.test.ts",
+    "test:source": "node --import tsx --test packages/open-slidex-mcp/src/*.test.ts && node --test scripts/*.test.mjs && node --import tsx --test --test-concurrency=1 packages/slidex-workbench/src/client/*.test.ts packages/slidex-workbench/src/server/*.test.ts packages/slidex-sdk/src/*.test.ts packages/open-slidex/src/*.test.ts",
+    "test:release": "npm run build:runtime && node scripts/verify-open-slidex-release.mjs",
     "check:cloud-boundary": "node scripts/check-open-source-boundary.mjs",
     "check:open-source-boundary": "node scripts/check-open-source-boundary.mjs",
     "open-slidex": "node packages/open-slidex/dist/cli.mjs"

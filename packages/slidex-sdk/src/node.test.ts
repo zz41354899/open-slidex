@@ -171,6 +171,24 @@ test("quality analysis honors a pre-aborted run before Chromium work", async () 
   );
 });
 
+test("quality analysis rejects grouped card content outside its Shape", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+  const report = await analyzeSlideXDocumentQuality({
+    mode: "slide",
+    source: `# Group containment
+
+<Slide canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light">
+  <Shape id="test-card" groupId="test-card-group" groupName="Test card" shape="rectangle" x={10} y={10} w={40} h={30} fill="#E7F7FA" />
+  <Text id="test-card-copy" groupId="test-card-group" groupName="Test card" x={12} y={36} w={36} h={8} fontSize={14}>This copy leaves its card.</Text>
+</Slide>`
+  });
+  assert.equal(report.passed, false);
+  assert.ok(report.issues.some((issue) => issue.code === "group_containment" && issue.nodeIds.includes("test-card-copy")));
+});
+
 test("file adapter uses revision CAS and does not persist a stale save", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-"));
   try {

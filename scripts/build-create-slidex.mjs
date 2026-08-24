@@ -9,7 +9,12 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const packageDir = path.join(rootDir, "packages/open-slidex");
 const distDir = path.join(packageDir, "dist");
 const runtimeDir = path.join(packageDir, "runtime");
+const canonicalSkillsDir = path.join(rootDir, "packages/slidex-workbench/skills");
+const templateSkillsDir = path.join(packageDir, "template/.agents/skills");
 const manifest = JSON.parse(await readFile(path.join(packageDir, "package.json"), "utf8"));
+
+await rm(templateSkillsDir, { force: true, recursive: true });
+await cp(canonicalSkillsDir, templateSkillsDir, { recursive: true });
 
 await runBuild("build-slidex-sdk.mjs");
 await runBuild("build-slidex-workbench.mjs");
@@ -62,15 +67,31 @@ await rm(runtimeDir, { force: true, recursive: true });
 await mkdir(runtimeDir, { recursive: true });
 await Promise.all([
   cp(path.join(rootDir, "packages/slidex-sdk/dist"), path.join(runtimeDir, "sdk"), { recursive: true }),
-  cp(path.join(rootDir, "packages/slidex-workbench/dist"), path.join(runtimeDir, "workbench"), { recursive: true }),
+  copyWorkbenchRuntime(),
   cp(path.join(rootDir, "packages/open-slidex-mcp/dist"), path.join(runtimeDir, "mcp"), { recursive: true }),
-  cp(path.join(rootDir, "packages/slidex-workbench/skills"), path.join(runtimeDir, "skills"), { recursive: true })
+  cp(canonicalSkillsDir, path.join(runtimeDir, "skills"), { recursive: true })
 ]);
 await writeFile(
   path.join(runtimeDir, "package.json"),
   `${JSON.stringify({ name: "open-slidex-runtime", type: "module", version: manifest.version }, null, 2)}\n`,
   "utf8"
 );
+
+async function copyWorkbenchRuntime() {
+  const sourceDir = path.join(rootDir, "packages/slidex-workbench/dist");
+  const destinationDir = path.join(runtimeDir, "workbench");
+  const bundledSdkDir = path.join(sourceDir, "sdk");
+  await cp(sourceDir, destinationDir, {
+    recursive: true,
+    filter: (candidate) => candidate !== bundledSdkDir && !candidate.startsWith(`${bundledSdkDir}${path.sep}`)
+  });
+  const bridgeDir = path.join(destinationDir, "sdk");
+  await mkdir(bridgeDir, { recursive: true });
+  await Promise.all([
+    writeFile(path.join(bridgeDir, "index.js"), 'export * from "../../sdk/index.js";\n', "utf8"),
+    writeFile(path.join(bridgeDir, "node.js"), 'export * from "../../sdk/node.js";\n', "utf8")
+  ]);
+}
 
 function runBuild(script) {
   return new Promise((resolve, reject) => {

@@ -10,3 +10,4 @@ packages/open-slidex/runtime/
 output/
 *.tgz
 .open-slidex/
+.codex

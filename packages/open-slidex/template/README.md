@@ -31,8 +31,10 @@ live with that deck. The five focused skills in `.agents/skills/` are copied
 into every new deck and define source conversion, the MDX contract, art
 direction, motion vocabulary, and required visual QA loop. Their `references/` directories cover
 prompt, notes, document, research, data, and redesign workflows plus five
-verified native-layer examples. Load only the resource routed by the active
-skill; illustrative content is never factual evidence for a real deck.
+verified narrative examples and eight curated native style specimens. For creation
+or redesign, MCP can rank those styles from a report or summary and return one
+exact MDX resource to load. Load only the resource routed by the active skill;
+illustrative content is never factual evidence for a real deck.
 
 Put source notes, Markdown, text, CSV, or PDF research in an inner deck's
 `knowledge/` directory. MCP searches locally, returns cited matches, and reads
@@ -42,7 +44,7 @@ Configure the user-level Workspace MCP once from OpenSlideX Workspace Settings.
 It is restricted to `open-slidex-workspace/`; the desktop agent lists and
 selects one inner deck before it reads or edits that deck's `presentation.mdx`.
 The generated command uses `open-slidex@latest`; Workspace MCP exposes six
-tools: workspace selection, progressive read, PPTX/HTML source import, local
-media import, review, and revision-safe edit. `open_slidex_source_import`
-converts supported embedded PPTX images to portable WebP and returns the
-original frame geometry for native `ImageBlock` layers.
+tools: workspace selection, progressive read, PPTX source import, local media
+import, review, and revision-safe edit. `open_slidex_source_import` recovers
+text geometry and typography hints, converts supported embedded images to
+portable WebP, and returns native reviewable `Text` and `ImageBlock` evidence.

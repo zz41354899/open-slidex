@@ -1,39 +1,143 @@
-# Strategy Proposal Reference
+# Strategy Proposal Twelve-Page Reference
 
-<Slide duration={6} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" theme="light" background="#F7F4EE" accent="#1D4ED8" textColor="#172033" mutedColor="#687386" slideTransition="fade">
-  <Text id="strategy-label" x={7} y={10} w={30} h={6} fontFamily="Inter" fontSize={12} fontWeight={750} letterSpacing={2.1} color="#1D4ED8">STRATEGY MEMO · SAMPLE</Text>
-  <Text id="strategy-title" role="title" x={7} y={25} w={69} h={36} fontFamily="Inter" fontSize={50} fontWeight={740} lineHeight={1} color="#172033">State the decision before presenting the analysis.</Text>
-  <Text id="strategy-subtitle" x={7} y={68} w={52} h={12} fontFamily="Inter" fontSize={17} lineHeight={1.35} color="#687386">A proposal deck should narrow options, expose tradeoffs, and secure ownership.</Text>
-  <Shape id="strategy-field" shape="rectangle" x={79} y={12} w={14} h={76} fill="#1D4ED8" stroke="transparent" radius={16} />
-  <Text id="strategy-question" x={82} y={25} w={8} h={46} fontFamily="Inter" fontSize={26} fontWeight={760} lineHeight={1.05} textAlign="center" color="#FFFFFF">WHAT MUST BE TRUE?</Text>
+<Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light" slideTransition="fade">
+  <ImageBlock id="strategy-proposal-cover-image" src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash cover photograph for Strategy Proposal" fit="cover" x={0} y={0} w={48} h={100} radius={0} enter="fadeIn" />
+  <Text id="strategy-proposal-cover-label" x={58} y={12} w={35} h={7} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>DECISION MEMO · EDITABLE PROFILE</Text>
+  <Text id="strategy-proposal-cover-title" role="title" x={58} y={31} w={36} h={29} color="#111820" fontFamily="Inter" fontSize={48} fontWeight={790} letterSpacing={-1.15} lineHeight={0.96} enter="rise">Strategy Proposal</Text>
+  <Text id="strategy-proposal-cover-thesis" x={58} y={69} w={34} h={12} color="#5A6870" fontFamily="Inter" fontSize={12.5} lineHeight={1.4} enter="fadeUp">Lead with the decision and make the tradeoff visible.</Text>
+  <Text id="strategy-proposal-cover-meta" x={58} y={88} w={35} h={6} color="#5A6870" fontFamily="Inter" fontSize={8.5} letterSpacing={0.65}>OPENSLIDEX · 12 EDITABLE LAYOUTS · 2026</Text>
 </Slide>
 
-<Slide duration={6} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" theme="dark" background="#172033" accent="#93C5FD" textColor="#F8FAFC" mutedColor="#A8B2C3" slideTransition="pushLeft">
-  <Text id="options-title" role="title" x={7} y={8} w={54} h={23} fontFamily="Inter" fontSize={32} fontWeight={720} color="#F8FAFC">Compare options on the same criteria.</Text>
-  <Text id="options-caption" x={68} y={10} w={25} h={6} fontFamily="Inter" fontSize={12} textAlign="right" color="#A8B2C3">Illustrative assessment only</Text>
-  <Table id="options-table" x={7} y={29} w={61} h={54} rows={4} columns={4} cells="Option|Speed|Control|Risk;A · Extend|Fast|Medium|Medium;B · Partner|Medium|Low|Low;C · Build|Slow|High|High" fontSize={13} color="#F8FAFC" background="#202B40" cellBackground="#202B40" stripeBackground="#26334B" borderColor="#41506A" borderWidth={1} enter="fadeUp" />
-  <Shape id="options-decision" shape="rectangle" x={74} y={29} w={19} h={54} fill="#DBEAFE" stroke="transparent" radius={16} />
-  <Text id="options-label" x={78} y={35} w={11} h={6} fontFamily="Inter" fontSize={11} fontWeight={760} letterSpacing={1.5} color="#1D4ED8">RECOMMEND</Text>
-  <Text id="options-choice" x={78} y={47} w={11} h={16} fontFamily="Inter" fontSize={30} fontWeight={760} textAlign="center" color="#172033">B</Text>
-  <Text id="options-reason" x={77} y={66} w={13} h={13} fontFamily="Inter" fontSize={12} lineHeight={1.3} textAlign="center" color="#34425A">Best fit for the stated constraint.</Text>
+<Slide duration={6} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light" slideTransition="fade">
+  <Text id="strategy-proposal-agenda-label" x={7} y={10} w={40} h={6} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>01 · CONTENTS</Text>
+  <Text id="strategy-proposal-agenda-title" role="title" x={7} y={42} w={22} h={18} color="#111820" fontFamily="Inter" fontSize={25} fontWeight={760}>Contents</Text>
+  <Text id="strategy-proposal-agenda-intro" x={7} y={64} w={22} h={12} color="#5A6870" fontFamily="Inter" fontSize={10.5} lineHeight={1.45}>A compact orientation page for a structured company or report narrative.</Text>
+  <Text id="strategy-proposal-agenda-number-1" x={39} y={18} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10.5} fontWeight={760}>01</Text>
+  <Text id="strategy-proposal-agenda-item-1" x={46} y={18} w={34} h={7} color="#111820" fontFamily="Inter" fontSize={12.5} fontWeight={620}>Company overview</Text>
+  <Text id="strategy-proposal-agenda-number-2" x={39} y={30} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10.5} fontWeight={760}>02</Text>
+  <Text id="strategy-proposal-agenda-item-2" x={46} y={30} w={34} h={7} color="#111820" fontFamily="Inter" fontSize={12.5} fontWeight={620}>Business content</Text>
+  <Text id="strategy-proposal-agenda-number-3" x={39} y={42} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10.5} fontWeight={760}>03</Text>
+  <Text id="strategy-proposal-agenda-item-3" x={46} y={42} w={34} h={7} color="#111820" fontFamily="Inter" fontSize={12.5} fontWeight={620}>Related information</Text>
+  <Text id="strategy-proposal-agenda-number-4" x={39} y={54} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10.5} fontWeight={760}>04</Text>
+  <Text id="strategy-proposal-agenda-item-4" x={46} y={54} w={34} h={7} color="#111820" fontFamily="Inter" fontSize={12.5} fontWeight={620}>Work environment</Text>
+  <Text id="strategy-proposal-agenda-number-5" x={39} y={66} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10.5} fontWeight={760}>05</Text>
+  <Text id="strategy-proposal-agenda-item-5" x={46} y={66} w={34} h={7} color="#111820" fontFamily="Inter" fontSize={12.5} fontWeight={620}>Company data</Text>
+  <Text id="strategy-proposal-agenda-number-6" x={39} y={78} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10.5} fontWeight={760}>06</Text>
+  <Text id="strategy-proposal-agenda-item-6" x={46} y={78} w={34} h={7} color="#111820" fontFamily="Inter" fontSize={12.5} fontWeight={620}>Opportunity</Text>
+  <Text id="strategy-proposal-agenda-page" x={87} y={84} w={6} h={6} color="#5A6870" fontFamily="Inter" fontSize={8.5} textAlign="right">02 / 12</Text>
 </Slide>
 
-<Slide duration={6} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" theme="light" background="#EEF2FF" accent="#4338CA" textColor="#1E1B4B" mutedColor="#6366A0" slideTransition="rise">
-  <Text id="roadmap-title" role="title" x={7} y={9} w={64} h={25} fontFamily="Inter" fontSize={36} fontWeight={730} color="#1E1B4B">Sequence commitment before scale.</Text>
-  <Shape id="roadmap-line" shape="line" x={11} y={52} w={78} h={0.5} stroke="#A5B4FC" strokeWidth={3} />
-  <Shape id="roadmap-one" shape="circle" x={10} y={46} w={7} h={12.4} fill="#4338CA" stroke="transparent" />
-  <Shape id="roadmap-two" shape="circle" x={46.5} y={46} w={7} h={12.4} fill="#EEF2FF" stroke="#4338CA" strokeWidth={3} />
-  <Shape id="roadmap-three" shape="circle" x={83} y={46} w={7} h={12.4} fill="#C7D2FE" stroke="#4338CA" strokeWidth={2} />
-  <Text id="roadmap-one" x={7} y={64} w={20} h={16} fontFamily="Inter" fontSize={17} fontWeight={700} lineHeight={1.2} textAlign="center" color="#1E1B4B">1 · Prove the assumption</Text>
-  <Text id="roadmap-two" x={40} y={64} w={20} h={16} fontFamily="Inter" fontSize={17} fontWeight={700} lineHeight={1.2} textAlign="center" color="#1E1B4B">2 · Measure the signal</Text>
-  <Text id="roadmap-three" x={73} y={64} w={20} h={16} fontFamily="Inter" fontSize={17} fontWeight={700} lineHeight={1.2} textAlign="center" color="#1E1B4B">3 · Expand deliberately</Text>
+<Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light" slideTransition="fade">
+  <Text id="strategy-proposal-profile-label" x={7} y={9} w={40} h={6} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>02 · COMPANY OVERVIEW</Text>
+  <Text id="strategy-proposal-profile-title" role="title" x={7} y={19} w={42} h={21} color="#111820" fontFamily="Inter" fontSize={25.5} fontWeight={760} lineHeight={1.08}>Lead with the decision the audience must make.</Text>
+  <Text id="strategy-proposal-profile-body" x={7} y={42} w={42} h={13} color="#5A6870" fontFamily="Inter" fontSize={10.5} lineHeight={1.45}>State who the organization serves, the change it creates, and the evidence the audience should remember.</Text>
+  <Table id="strategy-proposal-profile-table" x={7} y={59} w={42} h={27} rows={4} columns={2} cells="Field|Detail;Direction|Strategy Proposal;Focus|DECISION MEMO;System|12 editable layouts" fontSize={9.5} fontWeight={500} color="#111820" background="#FFFFFF" cellBackground="#FFFFFF" stripeBackground="#E7F7FA" borderColor="#C8EAF0" borderWidth={1} enter="fadeUp" />
+  <ImageBlock id="strategy-proposal-profile-image" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash company overview photograph" fit="cover" x={58} y={20} w={35} h={66} radius={6} enter="fadeIn" />
 </Slide>
 
-<Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" theme="dark" background="#1D4ED8" accent="#FFFFFF" textColor="#FFFFFF" mutedColor="#DBEAFE" slideTransition="wipe">
-  <Text id="decision-label" x={7} y={11} w={26} h={6} fontFamily="Inter" fontSize={12} fontWeight={760} letterSpacing={2.2} color="#DBEAFE">DECISION REQUIRED</Text>
-  <Text id="decision-title" role="title" x={7} y={27} w={71} h={28} fontFamily="Inter" fontSize={51} fontWeight={760} lineHeight={1} color="#FFFFFF">Approve the smallest reversible next step.</Text>
-  <Shape id="decision-rule" shape="line" x={7} y={66} w={86} h={0.5} stroke="#93C5FD" strokeWidth={2} />
-  <Text id="decision-owner" x={7} y={75} w={24} h={10} fontFamily="Inter" fontSize={16} fontWeight={700} color="#FFFFFF">OWNER · Name</Text>
-  <Text id="decision-date" x={37} y={75} w={24} h={10} fontFamily="Inter" fontSize={16} fontWeight={700} color="#FFFFFF">DATE · Confirm</Text>
-  <Text id="decision-test" x={67} y={75} w={26} h={10} fontFamily="Inter" fontSize={16} fontWeight={700} textAlign="right" color="#FFFFFF">TEST · Define success</Text>
+<Slide duration={6} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light" slideTransition="fade">
+  <Text id="strategy-proposal-business-label" x={7} y={9} w={60} h={6} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>03 · BUSINESS CONTENT</Text>
+  <Text id="strategy-proposal-business-title" role="title" x={7} y={18} w={70} h={15} color="#111820" fontFamily="Inter" fontSize={25.5} fontWeight={760} lineHeight={1.08}>Connect the recommendation to the governing logic.</Text>
+  <ImageBlock id="strategy-proposal-business-image" src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash photograph establishing the business context" fit="cover" x={63} y={39} w={30} h={48} radius={6} enter="fadeIn" />
+  <Text id="strategy-proposal-business-number-1" x={7} y={40} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10} fontWeight={760}>01</Text>
+  <Text id="strategy-proposal-business-item-1" x={14} y={39} w={38} h={8} color="#111820" fontFamily="Inter" fontSize={14} fontWeight={700}>Discover</Text>
+  <Text id="strategy-proposal-business-copy-1" x={14} y={47} w={42} h={7} color="#5A6870" fontFamily="Inter" fontSize={9.5} lineHeight={1.35}>Frame the question and the evidence boundary.</Text>
+  <Text id="strategy-proposal-business-number-2" x={7} y={56} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10} fontWeight={760}>02</Text>
+  <Text id="strategy-proposal-business-item-2" x={14} y={55} w={38} h={8} color="#111820" fontFamily="Inter" fontSize={14} fontWeight={700}>Design</Text>
+  <Text id="strategy-proposal-business-copy-2" x={14} y={63} w={42} h={7} color="#5A6870" fontFamily="Inter" fontSize={9.5} lineHeight={1.35}>Translate the operating model into a readable system.</Text>
+  <Text id="strategy-proposal-business-number-3" x={7} y={72} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10} fontWeight={760}>03</Text>
+  <Text id="strategy-proposal-business-item-3" x={14} y={71} w={38} h={8} color="#111820" fontFamily="Inter" fontSize={14} fontWeight={700}>Deliver</Text>
+  <Text id="strategy-proposal-business-copy-3" x={14} y={79} w={42} h={7} color="#5A6870" fontFamily="Inter" fontSize={9.5} lineHeight={1.35}>Connect ownership, action, and the next review point.</Text>
+</Slide>
+
+<Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light" slideTransition="fade">
+  <Text id="strategy-proposal-services-label" x={7} y={9} w={60} h={6} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>04 · RELATED INFORMATION</Text>
+  <Text id="strategy-proposal-services-title" role="title" x={7} y={18} w={66} h={19} color="#111820" fontFamily="Inter" fontSize={25.5} fontWeight={760}>Use four criteria to evaluate every option.</Text>
+  <Chart id="strategy-proposal-services-chart" type="area" x={54} y={37} w={39} h={48} data='[{"label":"Core","value":40},{"label":"Growth","value":30},{"label":"Support","value":18},{"label":"Research","value":12}]' palette="ocean" showAxes="false" showLabels="false" ariaLabel="Illustrative capability distribution" chartMotion="draw" enter="fadeUp" />
+  <Shape id="strategy-proposal-service-stat-one-card" groupId="strategy-proposal-service-stat-one-card-group" groupName="ILLUSTRATIVE CURRENT VALUE card" shape="rectangle" x={7} y={38} w={38} h={21} fill="#E7F7FA" stroke="#2587B5" strokeWidth={1} radius={8} enter="fadeUp" />
+  <Text id="strategy-proposal-service-stat-one-value" groupId="strategy-proposal-service-stat-one-card-group" groupName="ILLUSTRATIVE CURRENT VALUE card" x={10} y={40.5} w={32} h={11} color="#2587B5" fontFamily="Inter" fontSize={25} fontWeight={790}>32.4</Text>
+  <Text id="strategy-proposal-service-stat-one-label" groupId="strategy-proposal-service-stat-one-card-group" groupName="ILLUSTRATIVE CURRENT VALUE card" x={10} y={52} w={32} h={5} color="#111820" fontFamily="Inter" fontSize={9} fontWeight={680} letterSpacing={0.6}>ILLUSTRATIVE CURRENT VALUE</Text>
+  <Shape id="strategy-proposal-service-stat-two-card" groupId="strategy-proposal-service-stat-two-card-group" groupName="ILLUSTRATIVE COMPOSITION card" shape="rectangle" x={7} y={64} w={38} h={21} fill="#E7F7FA" stroke="#2587B5" strokeWidth={1} radius={8} enter="fadeUp" />
+  <Text id="strategy-proposal-service-stat-two-value" groupId="strategy-proposal-service-stat-two-card-group" groupName="ILLUSTRATIVE COMPOSITION card" x={10} y={66.5} w={32} h={11} color="#2587B5" fontFamily="Inter" fontSize={25} fontWeight={790}>60 / 40</Text>
+  <Text id="strategy-proposal-service-stat-two-label" groupId="strategy-proposal-service-stat-two-card-group" groupName="ILLUSTRATIVE COMPOSITION card" x={10} y={78} w={32} h={5} color="#111820" fontFamily="Inter" fontSize={9} fontWeight={680} letterSpacing={0.6}>ILLUSTRATIVE COMPOSITION</Text>
+</Slide>
+
+<Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light" slideTransition="fade">
+  <Text id="strategy-proposal-data-label" x={7} y={9} w={60} h={6} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>05 · WORK ENVIRONMENT</Text>
+  <Text id="strategy-proposal-data-title" role="title" x={7} y={18} w={66} h={15} color="#111820" fontFamily="Inter" fontSize={25.5} fontWeight={760} lineHeight={1.08}>Show the owners and capabilities required to execute.</Text>
+  <Shape id="strategy-proposal-environment-1-card" groupId="strategy-proposal-environment-1-card-group" groupName="Remote-friendly card" shape="rectangle" x={7} y={42} w={19} h={44} fill="#E7F7FA" stroke="#2587B5" strokeWidth={1} radius={10} enter="fadeUp" />
+  <Text id="strategy-proposal-environment-1-index" groupId="strategy-proposal-environment-1-card-group" groupName="Remote-friendly card" x={9} y={45} w={15} h={7} color="#2587B5" fontFamily="Inter" fontSize={14} fontWeight={780}>01</Text>
+  <Text id="strategy-proposal-environment-1-title" groupId="strategy-proposal-environment-1-card-group" groupName="Remote-friendly card" x={9} y={55} w={15} h={9} color="#111820" fontFamily="Inter" fontSize={12.5} fontWeight={700}>Remote-friendly</Text>
+  <Text id="strategy-proposal-environment-1-body" groupId="strategy-proposal-environment-1-card-group" groupName="Remote-friendly card" x={9} y={67} w={15} h={16} color="#5A6870" fontFamily="Inter" fontSize={9.2} lineHeight={1.35}>Choose the environment that protects focused work.</Text>
+  <Shape id="strategy-proposal-environment-2-card" groupId="strategy-proposal-environment-2-card-group" groupName="Flexible roles card" shape="rectangle" x={29} y={42} w={19} h={44} fill="#E7F7FA" stroke="#2587B5" strokeWidth={1} radius={10} enter="fadeUp" />
+  <Text id="strategy-proposal-environment-2-index" groupId="strategy-proposal-environment-2-card-group" groupName="Flexible roles card" x={31} y={45} w={15} h={7} color="#2587B5" fontFamily="Inter" fontSize={14} fontWeight={780}>02</Text>
+  <Text id="strategy-proposal-environment-2-title" groupId="strategy-proposal-environment-2-card-group" groupName="Flexible roles card" x={31} y={55} w={15} h={9} color="#111820" fontFamily="Inter" fontSize={12.5} fontWeight={700}>Flexible roles</Text>
+  <Text id="strategy-proposal-environment-2-body" groupId="strategy-proposal-environment-2-card-group" groupName="Flexible roles card" x={31} y={67} w={15} h={16} color="#5A6870" fontFamily="Inter" fontSize={9.2} lineHeight={1.35}>Make expectations and decision rights explicit.</Text>
+  <Shape id="strategy-proposal-environment-3-card" groupId="strategy-proposal-environment-3-card-group" groupName="Learning support card" shape="rectangle" x={51} y={42} w={19} h={44} fill="#E7F7FA" stroke="#2587B5" strokeWidth={1} radius={10} enter="fadeUp" />
+  <Text id="strategy-proposal-environment-3-index" groupId="strategy-proposal-environment-3-card-group" groupName="Learning support card" x={53} y={45} w={15} h={7} color="#2587B5" fontFamily="Inter" fontSize={14} fontWeight={780}>03</Text>
+  <Text id="strategy-proposal-environment-3-title" groupId="strategy-proposal-environment-3-card-group" groupName="Learning support card" x={53} y={55} w={15} h={9} color="#111820" fontFamily="Inter" fontSize={12.5} fontWeight={700}>Learning support</Text>
+  <Text id="strategy-proposal-environment-3-body" groupId="strategy-proposal-environment-3-card-group" groupName="Learning support card" x={53} y={67} w={15} h={16} color="#5A6870" fontFamily="Inter" fontSize={9.2} lineHeight={1.35}>Connect review notes to shared practice.</Text>
+  <Shape id="strategy-proposal-environment-4-card" groupId="strategy-proposal-environment-4-card-group" groupName="Visible ownership card" shape="rectangle" x={73} y={42} w={19} h={44} fill="#E7F7FA" stroke="#2587B5" strokeWidth={1} radius={10} enter="fadeUp" />
+  <Text id="strategy-proposal-environment-4-index" groupId="strategy-proposal-environment-4-card-group" groupName="Visible ownership card" x={75} y={45} w={15} h={7} color="#2587B5" fontFamily="Inter" fontSize={14} fontWeight={780}>04</Text>
+  <Text id="strategy-proposal-environment-4-title" groupId="strategy-proposal-environment-4-card-group" groupName="Visible ownership card" x={75} y={55} w={15} h={9} color="#111820" fontFamily="Inter" fontSize={12.5} fontWeight={700}>Visible ownership</Text>
+  <Text id="strategy-proposal-environment-4-body" groupId="strategy-proposal-environment-4-card-group" groupName="Visible ownership card" x={75} y={67} w={15} h={16} color="#5A6870" fontFamily="Inter" fontSize={9.2} lineHeight={1.35}>Keep the next action and owner easy to find.</Text>
+</Slide>
+
+<Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light" slideTransition="fade">
+  <ImageBlock id="strategy-proposal-culture-image" src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash team or workplace photograph" fit="cover" x={7} y={20} w={37} h={67} radius={6} enter="fadeIn" />
+  <Text id="strategy-proposal-culture-label" x={54} y={9} w={40} h={6} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>06 · PEOPLE &amp; CULTURE</Text>
+  <Text id="strategy-proposal-culture-title" role="title" x={54} y={20} w={39} h={21} color="#111820" fontFamily="Inter" fontSize={25.5} fontWeight={760} lineHeight={1.08}>Show the people behind the operating model.</Text>
+  <Text id="strategy-proposal-culture-body" x={54} y={43} w={38} h={15} color="#5A6870" fontFamily="Inter" fontSize={10.5} lineHeight={1.45}>State who the organization serves, the change it creates, and the evidence the audience should remember.</Text>
+  <Text id="strategy-proposal-culture-stat-one" x={54} y={68} w={9} h={10} color="#2587B5" fontFamily="Inter" fontSize={23} fontWeight={780}>01</Text>
+  <Text id="strategy-proposal-culture-stat-one-label" x={64} y={69} w={12} h={8} color="#111820" fontFamily="Inter" fontSize={9.5} fontWeight={650}>OWNERSHIP</Text>
+  <Text id="strategy-proposal-culture-stat-two" x={76} y={68} w={9} h={10} color="#2587B5" fontFamily="Inter" fontSize={23} fontWeight={780}>02</Text>
+  <Text id="strategy-proposal-culture-stat-two-label" x={86} y={69} w={10} h={8} color="#111820" fontFamily="Inter" fontSize={9.5} fontWeight={650}>LEARNING</Text>
+</Slide>
+
+<Slide duration={6} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light" slideTransition="fade">
+  <Text id="strategy-proposal-case-label" x={7} y={9} w={60} h={6} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>07 · CASE STUDY</Text>
+  <Text id="strategy-proposal-case-title" role="title" x={7} y={18} w={68} h={19} color="#111820" fontFamily="Inter" fontSize={25.5} fontWeight={760}>A bounded pilot makes the strategy testable.</Text>
+  <ImageBlock id="strategy-proposal-case-image-one" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&auto=format&fit=crop&q=82" alt="First verified Unsplash case-study photograph" fit="cover" x={37} y={38} w={56} h={49} radius={6} enter="fadeIn" />
+  <ImageBlock id="strategy-proposal-case-image-two" src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1600&auto=format&fit=crop&q=82" alt="Second verified Unsplash case-study photograph" fit="cover" x={7} y={38} w={25} h={22} radius={6} enter="fadeIn" />
+  <Text id="strategy-proposal-case-body" x={7} y={65} w={25} h={20} color="#5A6870" fontFamily="Inter" fontSize={10.5} lineHeight={1.45}>Use a concrete scene, then explain the decision, evidence, and implication it makes visible.</Text>
+</Slide>
+
+<Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light" slideTransition="fade">
+  <Text id="strategy-proposal-process-label" x={7} y={9} w={60} h={6} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>08 · PROCESS</Text>
+  <Text id="strategy-proposal-process-title" role="title" x={7} y={18} w={70} h={19} color="#111820" fontFamily="Inter" fontSize={25.5} fontWeight={760}>Sequence the commitment into reversible stages.</Text>
+  <ImageBlock id="strategy-proposal-process-image" src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash photograph accompanying the process" fit="cover" x={7} y={39} w={25} h={48} radius={6} enter="fadeIn" />
+  <Text id="strategy-proposal-process-number-1" x={37} y={42} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10.5} fontWeight={760}>01</Text>
+  <Text id="strategy-proposal-process-item-1" x={43} y={41} w={17} h={8} color="#111820" fontFamily="Inter" fontSize={13.5} fontWeight={700}>Frame</Text>
+  <Text id="strategy-proposal-process-copy-1" x={43} y={50} w={17} h={7} color="#5A6870" fontFamily="Inter" fontSize={9.5}>Name the outcome.</Text>
+  <Text id="strategy-proposal-process-number-2" x={60} y={42} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10.5} fontWeight={760}>02</Text>
+  <Text id="strategy-proposal-process-item-2" x={66} y={41} w={17} h={8} color="#111820" fontFamily="Inter" fontSize={13.5} fontWeight={700}>Align</Text>
+  <Text id="strategy-proposal-process-copy-2" x={66} y={50} w={17} h={7} color="#5A6870" fontFamily="Inter" fontSize={9.5}>Choose the criteria.</Text>
+  <Text id="strategy-proposal-process-number-3" x={37} y={64} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10.5} fontWeight={760}>03</Text>
+  <Text id="strategy-proposal-process-item-3" x={43} y={63} w={17} h={8} color="#111820" fontFamily="Inter" fontSize={13.5} fontWeight={700}>Build</Text>
+  <Text id="strategy-proposal-process-copy-3" x={43} y={72} w={17} h={7} color="#5A6870" fontFamily="Inter" fontSize={9.5}>Create the system.</Text>
+  <Text id="strategy-proposal-process-number-4" x={60} y={64} w={5} h={7} color="#2587B5" fontFamily="Inter" fontSize={10.5} fontWeight={760}>04</Text>
+  <Text id="strategy-proposal-process-item-4" x={66} y={63} w={17} h={8} color="#111820" fontFamily="Inter" fontSize={13.5} fontWeight={700}>Measure</Text>
+  <Text id="strategy-proposal-process-copy-4" x={66} y={72} w={17} h={7} color="#5A6870" fontFamily="Inter" fontSize={9.5}>Review the evidence.</Text>
+</Slide>
+
+<Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light" slideTransition="fade">
+  <Text id="strategy-proposal-comparison-label" x={7} y={9} w={60} h={6} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>09 · COMPANY DATA</Text>
+  <Text id="strategy-proposal-comparison-title" role="title" x={7} y={18} w={68} h={19} color="#111820" fontFamily="Inter" fontSize={25.5} fontWeight={760}>Make every tradeoff explicit.</Text>
+  <Table id="strategy-proposal-comparison-table" x={41} y={38} w={52} h={49} rows={4} columns={3} cells="Option|Speed|Control;Extend|Fast|Medium;Partner|Medium|Low;Build|Slow|High" fontSize={10} fontWeight={520} color="#111820" background="#FFFFFF" cellBackground="#FFFFFF" stripeBackground="#E7F7FA" borderColor="#C8EAF0" borderWidth={1} enter="fadeUp" />
+  <ImageBlock id="strategy-proposal-comparison-image" src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash company data context photograph" fit="cover" x={7} y={38} w={29} h={49} radius={6} enter="fadeIn" />
+</Slide>
+
+<Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light" slideTransition="fade">
+  <Text id="strategy-proposal-opportunity-label" x={7} y={9} w={54} h={6} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>10 · OPPORTUNITY</Text>
+  <Text id="strategy-proposal-opportunity-title" role="title" x={7} y={18} w={53} h={20} color="#111820" fontFamily="Inter" fontSize={25.5} fontWeight={760} lineHeight={1.08}>Request the smallest approval that unlocks learning.</Text>
+  <Table id="strategy-proposal-opportunity-table" x={7} y={43} w={52} h={43} rows={5} columns={2} cells="Field|Detail;Role|Named owner;Timing|Next review;Evidence|Defined before approval;Status|Open for decision" fontSize={9.5} fontWeight={520} color="#111820" background="#FFFFFF" cellBackground="#FFFFFF" stripeBackground="#E7F7FA" borderColor="#C8EAF0" borderWidth={1} enter="fadeUp" />
+  <ImageBlock id="strategy-proposal-opportunity-image" src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash opportunity or recruiting photograph" fit="cover" x={66} y={21} w={27} h={65} radius={6} enter="fadeIn" />
+</Slide>
+
+<Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light" slideTransition="fade">
+  <ImageBlock id="strategy-proposal-closing-image" src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash closing photograph" fit="cover" x={0} y={0} w={48} h={100} radius={0} enter="fadeIn" />
+  <Text id="strategy-proposal-closing-label" x={58} y={12} w={35} h={7} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>11 · NEXT DIRECTION</Text>
+  <Text id="strategy-proposal-closing-title" role="title" x={58} y={34} w={36} h={31} color="#111820" fontFamily="Inter" fontSize={30} fontWeight={770} lineHeight={1.06}>Approve the next reversible step.</Text>
+  <Text id="strategy-proposal-closing-body" x={58} y={68} w={34} h={14} color="#5A6870" fontFamily="Inter" fontSize={11.5} lineHeight={1.42}>Name the next action, owner, and evidence that will guide the following decision.</Text>
+  <Text id="strategy-proposal-closing-meta" x={58} y={88} w={35} h={6} color="#5A6870" fontFamily="Inter" fontSize={8.5}>OPENSLIDEX · EDITABLE NATIVE LAYERS</Text>
 </Slide>
