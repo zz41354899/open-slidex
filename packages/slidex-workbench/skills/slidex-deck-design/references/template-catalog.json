@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "templates": [
+    {
+      "id": "consulting-financial-report",
+      "name": "Consulting Financial Report",
+      "bestFor": ["board update", "consulting", "investment", "earnings", "financial weekly"],
+      "keywords": ["董事會", "顧問", "投資", "財報", "財務週報", "earnings", "finance", "risk", "scenario"],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/consulting-financial-report.mdx"
+    },
+    {
+      "id": "data-brief",
+      "name": "Data Brief",
+      "bestFor": ["KPI", "research", "status", "operations"],
+      "keywords": ["數據", "營運", "儀表板", "研究", "週報", "KPI", "metrics", "operations"],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/data-brief.mdx"
+    },
+    {
+      "id": "editorial-story",
+      "name": "Editorial Story",
+      "bestFor": ["keynote", "vision", "brand", "narrative report"],
+      "keywords": ["品牌", "願景", "故事", "演講", "keynote", "editorial", "narrative"],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/editorial-story.mdx"
+    },
+    {
+      "id": "product-launch",
+      "name": "Product Launch",
+      "bestFor": ["product", "sales", "feature announcement", "go to market"],
+      "keywords": ["產品", "發布", "銷售", "功能", "launch", "product", "adoption", "customer"],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/product-launch.mdx"
+    },
+    {
+      "id": "strategy-proposal",
+      "name": "Strategy Proposal",
+      "bestFor": ["recommendation", "board memo", "plan", "decision"],
+      "keywords": ["策略", "提案", "決策", "計畫", "recommendation", "strategy", "options", "tradeoff"],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/strategy-proposal.mdx"
+    },
+    {
+      "id": "training-workshop",
+      "name": "Training Workshop",
+      "bestFor": ["lesson", "onboarding", "enablement", "workshop"],
+      "keywords": ["培訓", "教學", "工作坊", "新人", "training", "workshop", "practice", "learning"],
+      "mdxResourcePath": ".agents/skills/slidex-deck-design/references/training-workshop.mdx"
+    }
+  ]
+}

@@ -34,7 +34,7 @@ import {
 import { readOpenSlideXKnowledgeResource, searchOpenSlideXKnowledge } from "./knowledge";
 import {
   openSlideXGuidanceIntents,
-  recommendOpenSlideXStyles,
+  recommendOpenSlideXTemplates,
   readOpenSlideXProjectGuidanceManifest,
   readOpenSlideXProjectGuidanceResource
 } from "./projectGuidance";
@@ -175,19 +175,19 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       resourcePath: z.string().trim().min(1).max(500).optional().describe(
         "Exact .agents/skills/... or knowledge/... path returned by a previous read. Loads only that resource."
       ),
-      styleQuery: z.string().trim().min(2).max(1200).optional().describe(
-        "A concise report, brief, or summary including source type, audience, outcome, evidence density, tone, industry, and brand constraints. Returns the three best matches from S01, S05, S08, S09, S19, S20, S25, and S27."
+      templateQuery: z.string().trim().min(2).max(1200).optional().describe(
+        "A concise brief including source type, audience, outcome, and evidence type. Returns the three best matches from the six thirty-page core MDX references."
       ),
       slideIndex: z.number().int().min(0).optional().describe(
         "Zero-based slide index for a focused source read; omit for the complete deck."
       )
     }
-  }, ({ htmlCursor, htmlMaxChars, htmlSource, intent, knowledgeQuery, resourceCursor, resourcePath, slideIndex, sourceFormat, styleQuery }) => runTool(async () => {
+  }, ({ htmlCursor, htmlMaxChars, htmlSource, intent, knowledgeQuery, resourceCursor, resourcePath, slideIndex, sourceFormat, templateQuery }) => runTool(async () => {
     const { documentAdapter, root } = await projectContext();
     const guidanceRoot = await resolveAuthoringGuidanceRoot(root, configuredWorkspaceRoot);
     if (resourcePath) {
-      if (slideIndex !== undefined || knowledgeQuery || styleQuery) {
-        throw new Error("resourcePath cannot be combined with slideIndex, knowledgeQuery, or styleQuery.");
+      if (slideIndex !== undefined || knowledgeQuery || templateQuery) {
+        throw new Error("resourcePath cannot be combined with slideIndex, knowledgeQuery, or templateQuery.");
       }
       if (resourcePath.startsWith(".agents/skills/")) {
         if (resourceCursor !== 0) throw new Error("resourceCursor requires a knowledge resourcePath.");
@@ -208,8 +208,8 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
 
     const document = await documentAdapter.open();
     if (sourceFormat === "html") {
-      if (slideIndex !== undefined || knowledgeQuery || styleQuery) {
-        throw new Error("HTML source reads cannot be combined with slideIndex, knowledgeQuery, or styleQuery.");
+      if (slideIndex !== undefined || knowledgeQuery || templateQuery) {
+        throw new Error("HTML source reads cannot be combined with slideIndex, knowledgeQuery, or templateQuery.");
       }
       const guidance = await readOpenSlideXProjectGuidanceManifest(guidanceRoot, "html").catch((error: unknown) => ({
         error: error instanceof Error ? error.message : "HTML skill guidance is unavailable.",
@@ -263,16 +263,16 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         totalChars: html.length
       };
     }
-    const [guidance, knowledge, styleRecommendations] = await Promise.all([
+    const [guidance, knowledge, templateRecommendations] = await Promise.all([
       readOpenSlideXProjectGuidanceManifest(guidanceRoot, intent).catch((error: unknown) => ({
         error: error instanceof Error ? error.message : "Project skill guidance is unavailable.",
         intent,
         mode: "unavailable"
       })),
       knowledgeQuery ? searchOpenSlideXKnowledge(root, knowledgeQuery, 8) : undefined,
-      styleQuery ? recommendOpenSlideXStyles(guidanceRoot, styleQuery).catch((error: unknown) => ({
-        error: error instanceof Error ? error.message : "Style recommendation is unavailable.",
-        query: styleQuery,
+      templateQuery ? recommendOpenSlideXTemplates(guidanceRoot, templateQuery).catch((error: unknown) => ({
+        error: error instanceof Error ? error.message : "Template recommendation is unavailable.",
+        query: templateQuery,
         recommendations: []
       })) : undefined
     ]);
@@ -288,14 +288,14 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       },
       charts: { motions: motionDocChartMotions, types: motionDocChartTypes },
       designContract: {
-        composition: "Treat a selected style as visual grammar. Design each slide from its claim and vary focal position, density, and dominant device; do not default to repeated equal cards.",
+        composition: "Treat one selected core reference as narrative and visual grammar. Design each slide from its claim and vary focal position, density, and dominant device; do not default to repeated equal cards.",
         data: "Use a native Chart for quantitative comparison, distribution, or ordered change and a Table for exact lookup. Protect room for conclusion, labels, units, period, legend, and source.",
-        media: "Every cover needs a verified portable ImageBlock with an intentional crop. For style-driven work, use Shape only as a semantic card background with named grouped children; never use it for decoration, rules, abstract artwork, fake icons, or charts.",
+        media: "Every cover needs a verified portable ImageBlock with an intentional crop. In reference-driven work, use Shape only as a semantic card background with named grouped children; never use it for decoration, rules, abstract artwork, fake icons, or charts.",
         typography: "Reserve frames for rendered line count and presentation distance. Repair overflow, clipping, collisions, CJK orphans, English widows, low contrast, and weak hierarchy before reducing type."
       },
       guidance,
       knowledge,
-      styleRecommendations,
+      templateRecommendations,
       revision: document.revision,
       source: slideIndex === undefined ? document.source : ranges[slideIndex]!.source,
       stats: summary.stats,
@@ -304,7 +304,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       workflow: [
         "Read the recommended SKILL.md files and only their task-relevant references.",
         "For a supplied document, search knowledge first, preserve evidence and gaps, then define audience, outcome, thesis, and narrative pattern.",
-        "For creation or redesign, compare style recommendations and read one twelve-page style MDX plus the closest narrative example before composing slides.",
+        "For creation or redesign, use template recommendations and read exactly one thirty-page core MDX reference before composing slides.",
         "Plan claim-specific hierarchy and geometry from the source; include a real cover image, vary image and card rhythm, and do not clone the specimen page-for-page.",
         "Submit one complete deck or slide source to open_slidex_edit with this revision.",
         "If rejected, patch the same candidate from the reported node-specific findings."

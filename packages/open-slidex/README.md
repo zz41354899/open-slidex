@@ -120,11 +120,10 @@ approved `SKILL.md`, reference, or knowledge resource at a time. Arbitrary skill
 names and filesystem paths are rejected.
 
 For creation or redesign, pass a concise report or summary brief through
-`open_slidex_read.styleQuery`. The local server ranks eight curated native
-MotionDoc style specimens—S01, S05, S08, S09, S19, S20, S25, and S27—and
-returns three exact MDX resource paths. The agent
-loads one style, combines it with the selected narrative pattern, and submits
-the complete result through the normal revision and rendered-quality gate.
+`open_slidex_read.templateQuery`. The local server ranks six core thirty-page
+MotionDoc references and returns three exact MDX resource paths. The agent
+loads exactly one reference and submits the complete result through the normal
+revision and rendered-quality gate.
 
 Place source notes or research in the selected deck's `knowledge/` directory.
 Markdown, text, CSV, and PDF files are indexed locally. Search returns compact
@@ -178,7 +177,7 @@ a presentation. Workspace scope loads six tools total:
 | Tool | Purpose |
 | --- | --- |
 | `open_slidex_workspace` | List local decks and select the target deck. |
-| `open_slidex_read` | Read current MotionDoc, canonical browser-native HTML, guided skill resources or local knowledge, and rank eight curated native styles from `styleQuery`. |
+| `open_slidex_read` | Read current MotionDoc, canonical browser-native HTML, guided skill resources or local knowledge, and rank six core native references from `templateQuery`. |
 | `open_slidex_source_import` | Inspect local PPTX text and image evidence, preserve geometry and type hints, and import embedded images as WebP. |
 | `open_slidex_media` | Search trusted images or import approved local media as WebP. |
 | `open_slidex_review` | Run read-only structural and rendered visual QA. |

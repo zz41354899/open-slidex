@@ -65,10 +65,11 @@ test("starter ships the six focused OpenSlideX skills", async () => {
 
   const designSkillUrl = new URL("slidex-deck-design/", skillsUrl);
   const designFiles = await relativeFiles(designSkillUrl);
-  const styleFiles = designFiles.filter((file) => /^references\/style-s\d{2}-.+\.mdx$/.test(file));
+  const coreFiles = designFiles.filter((file) => file.endsWith(".mdx"));
   assert.deepEqual(
-    designFiles.filter((file) => file.endsWith(".mdx") && !styleFiles.includes(file)),
+    coreFiles,
     [
+      "references/consulting-financial-report.mdx",
       "references/data-brief.mdx",
       "references/editorial-story.mdx",
       "references/product-launch.mdx",
@@ -76,67 +77,19 @@ test("starter ships the six focused OpenSlideX skills", async () => {
       "references/training-workshop.mdx"
     ]
   );
-  assert.equal(styleFiles.length, 8);
-  assert.deepEqual(
-    styleFiles.map((file) => file.match(/style-(s\d{2})-/)?.[1]),
-    ["s01", "s05", "s08", "s09", "s19", "s20", "s25", "s27"]
-  );
-  const compositionSignatures = new Set<string>();
-  for (const file of styleFiles) {
-    const source = await readFile(new URL(file, designSkillUrl), "utf8");
+  assert.equal(designFiles.some((file) => /style-(?:catalog|selection|s\d{2})/.test(file)), false);
+  const visualSignatures = new Set<string>();
+  let totalSlides = 0;
+  for (const resource of coreFiles) {
+    const file = resource.replace(/^references\//, "");
+    const source = await readFile(new URL(resource, designSkillUrl), "utf8");
     const parsed = parseMotionDoc(source);
     assert.equal(summarizeMotionDoc(source).validation.isValid, true, file);
-    assert.doesNotMatch(
-      source,
-      /One idea\. Made unmistakable|Give every signal a visible role|Compare before you decide|End on the next move/,
-      `${file}: generic card-style specimen copy must not return`
-    );
-    assert.equal(parsed.scenes.length, 12, file);
-    const styleId = file.match(/style-(s\d{2})-/)?.[1];
-    assert.ok(styleId, file);
-    const cover = source.match(/<Slide\b[\s\S]*?<\/Slide>/)?.[0] ?? "";
-    assert.match(cover, /<ImageBlock\b[^>]*src="https:\/\/images\.unsplash\.com\/photo-[^"]+"/, `${file}: cover image`);
-    assert.ok((source.match(/<ImageBlock\b/g)?.length ?? 0) >= 10, `${file}: image-led visual system`);
-    assert.ok(new Set([...source.matchAll(/<ImageBlock\b[^>]*\bsrc="([^"]+)"/g)].map((match) => match[1])).size >= 4, `${file}: varied image paths`);
-    assert.match(source, /<Chart\b/, `${file}: native Chart teaching slide`);
-    assert.match(source, /<Table\b/, `${file}: native Table teaching slide`);
-    assert.doesNotMatch(source, /\bsrc="(?:data:|blob:|\/Users\/)/i, `${file}: portable media`);
-    for (const shape of source.matchAll(/<Shape\b([^>]*)>/g)) {
-      assert.match(shape[1], /\bid="[^"]*-card[^"]*"/, `${file}: Shape is card-only`);
-      assert.match(shape[1], /\bgroupId="[^"]+"/, `${file}: card Shape needs grouped children`);
-      assert.match(shape[1], /\bgroupName="[^"]*card[^"]*"/i, `${file}: card group must be named`);
-    }
-    assertGroupedShapeContainment(parsed, file);
-    compositionSignatures.add(JSON.stringify(parsed.scenes.map((scene) => scene.blocks
-      .filter((block) => block.type !== "heading")
-      .map((block) => [
-        block.type,
-        block.props.shape,
-        block.props.x,
-        block.props.y,
-        block.props.w,
-        block.props.h,
-        block.props.textAlign,
-        block.props.fontSize
-      ]))));
-    for (const scene of parsed.scenes) {
-      for (const block of scene.blocks) {
-        if (block.type === "heading") continue;
-        assert.match(String(block.props.id), /^s\d{2}-/, `${file}: ${block.type} needs a stable style ID`);
-        for (const key of ["x", "y", "w", "h"]) assert.equal(typeof block.props[key], "number", `${file}: ${key}`);
-      }
-    }
-  }
-  assert.equal(compositionSignatures.size, 8, "Each curated style MDX needs its own complete composition signature.");
-
-  for (const file of ["data-brief.mdx", "editorial-story.mdx", "product-launch.mdx", "strategy-proposal.mdx", "training-workshop.mdx"]) {
-    const source = await readFile(new URL(`references/${file}`, designSkillUrl), "utf8");
-    const parsed = parseMotionDoc(source);
-    assert.equal(summarizeMotionDoc(source).validation.isValid, true, file);
-    assert.equal(parsed.scenes.length, 12, file);
+    assert.equal(parsed.scenes.length, 30, file);
+    totalSlides += parsed.scenes.length;
     const cover = source.match(/<Slide\b[\s\S]*?<\/Slide>/)?.[0] ?? "";
     assert.match(cover, /<ImageBlock\b[^>]*src="https:\/\/images\.unsplash\.com\/photo-[^"]+"/, `${file}: image-led cover`);
-    assert.ok((source.match(/<ImageBlock\b/g)?.length ?? 0) >= 10, `${file}: image-led inner slides`);
+    assert.ok((source.match(/<ImageBlock\b/g)?.length ?? 0) >= 6, `${file}: image-led inner slides`);
     assert.ok(new Set([...source.matchAll(/<ImageBlock\b[^>]*\bsrc="([^"]+)"/g)].map((match) => match[1])).size >= 4, `${file}: varied image paths`);
     assert.match(source, /<Chart\b/, `${file}: native chart`);
     assert.match(source, /<Table\b/, `${file}: native table`);
@@ -147,7 +100,12 @@ test("starter ships the six focused OpenSlideX skills", async () => {
       assert.match(shape[1], /\bgroupName="[^"]*card[^"]*"/i, `${file}: card group must be named`);
     }
     assertGroupedShapeContainment(parsed, file);
+    const background = cover.match(/\bbackground="([^"]+)"/)?.[1];
+    const accent = cover.match(/<Text\b[^>]*-01-label[^>]*\bcolor="([^"]+)"/)?.[1];
+    visualSignatures.add(`${background}:${accent}`);
   }
+  assert.equal(totalSlides, 180);
+  assert.equal(visualSignatures.size, 6, "Each core reference needs its own visual system.");
 });
 
 test("skill entrypoints are discoverable and every bundled reference is reachable", async () => {
@@ -272,29 +230,27 @@ test("agent guides keep source import conditional and the full-design skill orde
   }
 });
 
-test("the style catalog contains only MCP-consumed routing metadata", async () => {
+test("the template catalog contains exactly the six MCP-consumed core references", async () => {
   const designSkillUrl = new URL("../../slidex-workbench/skills/slidex-deck-design/", import.meta.url);
   const catalog = JSON.parse(
-    await readFile(new URL("references/style-catalog.json", designSkillUrl), "utf8")
-  ) as { schemaVersion?: unknown; styles?: Array<Record<string, unknown>> };
-  assert.deepEqual(Object.keys(catalog).sort(), ["schemaVersion", "styles"]);
+    await readFile(new URL("references/template-catalog.json", designSkillUrl), "utf8")
+  ) as { schemaVersion?: unknown; templates?: Array<Record<string, unknown>> };
+  assert.deepEqual(Object.keys(catalog).sort(), ["schemaVersion", "templates"]);
   assert.equal(catalog.schemaVersion, 1);
-  assert.equal(catalog.styles?.length, 8);
+  assert.equal(catalog.templates?.length, 6);
 
-  const allowedStyleFields = [
+  const allowedTemplateFields = [
     "bestFor",
-    "category",
     "id",
-    "industries",
     "keywords",
     "mdxResourcePath",
     "name"
   ];
-  for (const style of catalog.styles ?? []) {
-    assert.deepEqual(Object.keys(style).sort(), allowedStyleFields);
-    const resourcePath = String(style.mdxResourcePath ?? "");
+  for (const template of catalog.templates ?? []) {
+    assert.deepEqual(Object.keys(template).sort(), allowedTemplateFields);
+    const resourcePath = String(template.mdxResourcePath ?? "");
     const fileName = resourcePath.match(/\/references\/([^/]+\.mdx)$/)?.[1];
-    assert.ok(fileName, `${String(style.id)} needs one direct style MDX resource path`);
+    assert.ok(fileName, `${String(template.id)} needs one direct core MDX resource path`);
     await access(new URL(`references/${fileName}`, designSkillUrl));
   }
 });

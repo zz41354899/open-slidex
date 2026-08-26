@@ -15,32 +15,31 @@ place in the story, and remains editable with native MotionDoc layers.
    When a user supplies a document or report, search the selected deck's
    `knowledge/` resources first and read only the relevant evidence before
    choosing a visual direction.
-2. Read [narrative patterns](references/narrative-patterns.md) and choose one
-   primary deck pattern.
-   For a 24-32 page consulting, investment, earnings, or financial weekly deck,
-   read [consulting financial report](references/consulting-financial-report.md)
-   before choosing the slide outline.
+2. Read [narrative patterns](references/narrative-patterns.md) and choose one of
+   the six core deck patterns. If the best fit is unclear, pass the brief,
+   audience, evidence type, and outcome as `templateQuery` to
+   `open_slidex_read`, then inspect only the top recommended MDX reference.
+   The MCP consumes [the six-template catalog](references/template-catalog.json);
+   do not load it when the returned recommendation already identifies a match.
+   For consulting, investment, earnings, or financial weekly work, also read
+   [consulting financial report](references/consulting-financial-report.md).
 3. Read [visual direction](references/visual-direction.md) to establish the
    composition, type, color, image, and data rules.
-4. Read [style selection](references/style-selection.md). Treat the eight curated
-   directions as design grammar, not fixed templates. If the user did not specify
-   S01, S05, S08, S09, S19, S20, S25, or S27
-   style, pass the report, brief, or summary plus audience and outcome as
-   `styleQuery` to `open_slidex_read`. Compare the returned candidates, then
-   read exactly one recommended twelve-page `style-*.mdx` resource; never load
-   all eight.
-5. Read exactly one closest narrative example:
+4. Read exactly one closest core reference:
 
+   - Consulting, investment, earnings, financial weekly: [consulting financial report](references/consulting-financial-report.mdx)
    - Keynote, vision, brand story: [editorial story](references/editorial-story.mdx)
    - KPI, research, status, operations: [data brief](references/data-brief.mdx)
    - Product, sales, feature launch: [product launch](references/product-launch.mdx)
    - Recommendation, board memo, plan: [strategy proposal](references/strategy-proposal.mdx)
    - Lesson, onboarding, workshop: [training workshop](references/training-workshop.mdx)
 
-Each resource is a twelve-page layout vocabulary, not a required output length.
-Borrow reading paths and composition principles—not sample wording, facts,
-IDs, or brand claims. The selected style specimen owns the starting visual
-DNA; explicit user brand requirements override its tokens.
+The six resources contain 30 pages each: 180 maintained editable teaching
+slides in total. They are complete narrative and visual systems, not content to
+copy wholesale. Borrow the closest reading path, composition logic, and motion
+grammar—not sample wording, figures, IDs, or claims. Preserve the source deck's
+required length unless the user asks for a 30-page deliverable. Explicit user
+brand requirements override the reference tokens.
 
 For browser-native HTML, use this skill only for story, evidence, and visual
 system decisions. Implement the result through `slidex-html-authoring`; do not
@@ -59,7 +58,7 @@ translate HTML DOM into editable MotionDoc or author `HtmlEmbedBlock`.
    asset; lead with a meaningful crop rather than decorative geometry.
 5. Compose every slide for its actual claim. Do not turn content units into
    equal cards by default or repeat one specimen geometry across the deck.
-   In style-driven work, use `Shape` for semantic card backgrounds whose native
+   In reference-driven work, use `Shape` for semantic card backgrounds whose native
    children share named groups. Multiple cards are appropriate for genuinely
    repeated capabilities, people, steps, or opportunities. Do not use Shape for ornaments,
    rules, fake icons, abstract art, or hand-built charts.

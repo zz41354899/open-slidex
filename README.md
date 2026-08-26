@@ -95,13 +95,14 @@ Generated Workbench source and dependency cache stay in the ignored
 `.open-slidex/` directory. Each Workspace deck owns its own source, assets,
 and exports.
 
-The starter includes five project-local Agent Skills: PPTX source import,
-MDX authoring, narrative design, motion direction, and visual QA. Detailed
+The starter includes six project-local Agent Skills: PPTX source import,
+MDX authoring, browser-native HTML authoring, narrative design, motion
+direction, and visual QA. Detailed
 guidance and verified native-layer examples live inside each skill's
-`references/` directory. Narrative design includes eight curated presentation
-style specimens plus five narrative examples, all using a disciplined,
-image-led company-profile design language. Agents rank the styles from a report
-or summary and load only the selected MDX resource.
+`references/` directory. Narrative design includes exactly six core
+thirty-page references—180 editable teaching slides covering financial, data,
+editorial, product, strategy, and training work. Agents rank the templates from
+a brief and load only one selected MDX resource.
 
 ## What you can do locally
 
@@ -133,10 +134,10 @@ the revision-safe file and validation boundary. User notes and research stay
 local under each deck's `knowledge/`; Markdown, text, CSV, and PDF sources are
 searched first and read one resource at a time.
 
-For creation or redesign, `open_slidex_read` accepts a `styleQuery` containing
-the source brief, audience, outcome, tone, and brand constraints. It ranks the
-eight curated native style directions and returns three exact MDX resource paths; the
-agent reads one specimen before composing the complete deck.
+For creation or redesign, `open_slidex_read` accepts a `templateQuery`
+containing the source brief, audience, outcome, and evidence type. It ranks the
+six core thirty-page native references and returns three exact MDX resource
+paths; the agent reads one reference before composing the complete deck.
 
 ## Repository commands
 
@@ -147,10 +148,9 @@ agent reads one specimen before composing the complete deck.
 | `npm run build:runtime` | Rebuild the distributable runtime after SDK, Workbench, MCP, or CLI changes. |
 | `npm run build:standalone` | Build the current platform's complete Node/Chromium standalone archive. |
 | `npm run test:standalone` | Verify installer targets plus isolated install, update, launch, and uninstall behavior. |
-| `npm run styles:compile -- <style-prompt references>` | Read all 30 source style profiles, retain the eight curated directions, and sync their catalog and examples. |
-| `npm run styles:redesign` | Rebuild eight curated style specimens and five redesigned narrative examples with verified Unsplash imagery. |
-| `npm run styles:qa` | Render all 156 teaching slides and reject overflow, collision, canvas, or safety-margin defects. |
-| `npm run styles:gallery -- <output>` | Render a 13-cover contact sheet plus a complete twelve-slide screenshot for every example. |
+| `npm run decks:build` | Rebuild the six core thirty-page MDX references (180 editable teaching slides). |
+| `npm run decks:qa` | Render all six references and reject structural or visual release blockers. |
+| `npm run decks:gallery -- <output>` | Render six covers plus a complete montage for every thirty-page reference. |
 | `npm run test:source` | Run source-level SDK, Workbench, MCP, CLI, and Workspace tests. |
 
 ## Architecture

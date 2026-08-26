@@ -83,7 +83,7 @@ test("Workspace MCP prints user-level configuration and selects a presentation",
       await writeFile(path.join(skillRoot, "SKILL.md"), `---\nname: ${skill}\ndescription: ${skill} guidance.\n---\n`, "utf8");
       if (skill === "slidex-deck-design") {
         await writeFile(path.join(skillRoot, "references", "source-to-story.md"), "# Source to story\n", "utf8");
-        await writeTestStyleCatalog(path.join(skillRoot, "references"));
+        await writeTestTemplateCatalog(path.join(skillRoot, "references"));
       }
     }));
     await Promise.all(["alpha", "beta"].map(async (id) => {
@@ -382,7 +382,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
       await writeFile(path.join(skillRoot, "SKILL.md"), `---\nname: ${skill}\ndescription: ${skill} guidance.\n---\n\nUse a coherent visual world.\n`, "utf8");
       if (skill === "slidex-deck-design") {
         await writeFile(path.join(skillRoot, "references", "source-to-story.md"), "# Source to story\n", "utf8");
-        await writeTestStyleCatalog(path.join(skillRoot, "references"));
+        await writeTestTemplateCatalog(path.join(skillRoot, "references"));
       }
     }));
     await mkdir(path.join(root, ".open-slidex"), { recursive: true });
@@ -511,7 +511,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
       arguments: {
         intent: "redesign",
         knowledgeQuery: "activation rate",
-        styleQuery: "董事會營運報告，需要企業、乾淨、可信任的視覺方向"
+        templateQuery: "董事會財務營運報告，需要風險、情境與決策建議"
       },
       name: "open_slidex_read"
     }));
@@ -527,11 +527,11 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     assert.match(String(results[0]?.hash), /^[0-9a-f]{64}$/);
     assert.equal(results[0]?.resourcePath, "knowledge/brief.md");
     assert.equal("content" in results[0]!, false);
-    const styleRecommendations = context.styleRecommendations as Record<string, unknown>;
-    const recommendedStyles = styleRecommendations.recommendations as Array<Record<string, unknown>>;
-    assert.equal(recommendedStyles.length, 3);
-    assert.equal(recommendedStyles[0]?.id, "S09");
-    assert.match(String(recommendedStyles[0]?.mdxResourcePath), /style-s09-/);
+    const templateRecommendations = context.templateRecommendations as Record<string, unknown>;
+    const recommendedTemplates = templateRecommendations.recommendations as Array<Record<string, unknown>>;
+    assert.equal(recommendedTemplates.length, 3);
+    assert.equal(recommendedTemplates[0]?.id, "consulting-financial-report");
+    assert.match(String(recommendedTemplates[0]?.mdxResourcePath), /consulting-financial-report\.mdx$/);
 
     const knowledgeResource = structured(await client.callTool({
       arguments: { resourcePath: "knowledge/brief.md" },
@@ -642,19 +642,17 @@ function structured(result: unknown) {
   return JSON.parse(text) as Record<string, unknown>;
 }
 
-async function writeTestStyleCatalog(referenceRoot: string) {
-  const selectedIds = ["S01", "S05", "S08", "S09", "S19", "S20", "S25", "S27"];
-  const styles = selectedIds.map((id) => {
-    const isCorporate = id === "S09";
+async function writeTestTemplateCatalog(referenceRoot: string) {
+  const selectedIds = ["consulting-financial-report", "data-brief", "editorial-story", "product-launch", "strategy-proposal", "training-workshop"];
+  const templates = selectedIds.map((id) => {
+    const isFinancial = id === "consulting-financial-report";
     return {
-      bestFor: isCorporate ? ["board update", "report"] : ["editorial story"],
-      category: isCorporate ? "Professional" : "Creative",
+      bestFor: isFinancial ? ["board update", "financial report"] : [id],
       id,
-      industries: isCorporate ? ["Corporate"] : ["Creative"],
-      keywords: isCorporate ? ["企業", "董事會", "營運", "報告", "乾淨", "可信任"] : [id],
-      mdxResourcePath: `.agents/skills/slidex-deck-design/references/style-${id.toLowerCase()}-curated.mdx`,
-      name: isCorporate ? "Corporate Clean" : `Style ${id}`
+      keywords: isFinancial ? ["董事會", "財務", "營運", "報告", "風險", "情境", "決策"] : [id],
+      mdxResourcePath: `.agents/skills/slidex-deck-design/references/${id}.mdx`,
+      name: id.replaceAll("-", " ")
     };
   });
-  await writeFile(path.join(referenceRoot, "style-catalog.json"), `${JSON.stringify({ schemaVersion: 1, styles })}\n`, "utf8");
+  await writeFile(path.join(referenceRoot, "template-catalog.json"), `${JSON.stringify({ schemaVersion: 1, templates })}\n`, "utf8");
 }

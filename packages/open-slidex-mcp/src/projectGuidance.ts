@@ -31,11 +31,9 @@ export type OpenSlideXGuidanceResource = {
   skill: OpenSlideXProjectSkillName;
 };
 
-export type OpenSlideXStyleRecommendation = {
+export type OpenSlideXTemplateRecommendation = {
   bestFor: string[];
-  category: string;
   id: string;
-  industries: string[];
   mdxResourcePath: string;
   name: string;
   score: number;
@@ -118,26 +116,26 @@ export async function readOpenSlideXProjectGuidanceResource(
   return value;
 }
 
-export async function recommendOpenSlideXStyles(
+export async function recommendOpenSlideXTemplates(
   root: string,
   query: string,
   limit = 3
-): Promise<{ query: string; recommendations: OpenSlideXStyleRecommendation[] }> {
+): Promise<{ query: string; recommendations: OpenSlideXTemplateRecommendation[] }> {
   const normalizedQuery = normalizeSearchText(query);
-  if (!normalizedQuery) throw new Error("styleQuery must contain readable style or presentation context.");
+  if (!normalizedQuery) throw new Error("templateQuery must contain readable presentation context.");
   const catalogResource = await readOpenSlideXProjectGuidanceResource(
     root,
-    ".agents/skills/slidex-deck-design/references/style-catalog.json"
+    ".agents/skills/slidex-deck-design/references/template-catalog.json"
   );
-  const catalog = parseStyleCatalog(catalogResource.content);
-  const ranked = catalog.map((style) => ({
-    ...style,
-    score: styleScore(style, normalizedQuery)
-  })).sort((left, right) => right.score - left.score || fallbackStyleRank(left.id) - fallbackStyleRank(right.id));
-  const positive = ranked.filter((style) => style.score > 0);
+  const catalog = parseTemplateCatalog(catalogResource.content);
+  const ranked = catalog.map((template) => ({
+    ...template,
+    score: templateScore(template, normalizedQuery)
+  })).sort((left, right) => right.score - left.score || fallbackTemplateRank(left.id) - fallbackTemplateRank(right.id));
+  const positive = ranked.filter((template) => template.score > 0);
   const recommendations = [
     ...positive,
-    ...ranked.filter((style) => style.score === 0)
+    ...ranked.filter((template) => template.score === 0)
   ].slice(0, Math.min(Math.max(limit, 1), 5));
   return { query, recommendations };
 }
@@ -197,46 +195,42 @@ function referenceDescription(content: string) {
   return content.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? "Approved OpenSlideX skill reference.";
 }
 
-type StyleCatalogEntry = Omit<OpenSlideXStyleRecommendation, "score"> & {
+type TemplateCatalogEntry = Omit<OpenSlideXTemplateRecommendation, "score"> & {
   keywords: string[];
 };
 
-function parseStyleCatalog(content: string): StyleCatalogEntry[] {
-  const parsed = JSON.parse(content) as { styles?: unknown };
-  if (!Array.isArray(parsed.styles) || parsed.styles.length !== 8) {
-    throw new Error("The OpenSlideX style catalog must contain exactly 8 curated styles.");
+function parseTemplateCatalog(content: string): TemplateCatalogEntry[] {
+  const parsed = JSON.parse(content) as { templates?: unknown };
+  if (!Array.isArray(parsed.templates) || parsed.templates.length !== 6) {
+    throw new Error("The OpenSlideX template catalog must contain exactly 6 core templates.");
   }
-  return parsed.styles.map((value, index) => {
-    if (!value || typeof value !== "object") throw new Error(`Style catalog entry ${index + 1} is invalid.`);
-    const style = value as Record<string, unknown>;
-    const id = stringField(style, "id");
-    if (!/^S\d{2}$/.test(id)) throw new Error(`Style catalog entry ${index + 1} has an invalid ID.`);
-    const mdxResourcePath = stringField(style, "mdxResourcePath");
-    if (!/^\.agents\/skills\/slidex-deck-design\/references\/style-s\d{2}-[a-z0-9-]+\.mdx$/.test(mdxResourcePath)) {
-      throw new Error(`Style catalog entry ${id} has an invalid MDX resource path.`);
+  return parsed.templates.map((value, index) => {
+    if (!value || typeof value !== "object") throw new Error(`Template catalog entry ${index + 1} is invalid.`);
+    const template = value as Record<string, unknown>;
+    const id = stringField(template, "id");
+    if (!/^[a-z0-9-]+$/.test(id)) throw new Error(`Template catalog entry ${index + 1} has an invalid ID.`);
+    const mdxResourcePath = stringField(template, "mdxResourcePath");
+    if (mdxResourcePath !== `.agents/skills/slidex-deck-design/references/${id}.mdx`) {
+      throw new Error(`Template catalog entry ${id} has an invalid MDX resource path.`);
     }
     return {
-      bestFor: stringArrayField(style, "bestFor"),
-      category: stringField(style, "category"),
+      bestFor: stringArrayField(template, "bestFor"),
       id,
-      industries: stringArrayField(style, "industries"),
-      keywords: stringArrayField(style, "keywords"),
+      keywords: stringArrayField(template, "keywords"),
       mdxResourcePath,
-      name: stringField(style, "name")
+      name: stringField(template, "name")
     };
   });
 }
 
-function styleScore(style: StyleCatalogEntry, query: string) {
+function templateScore(template: TemplateCatalogEntry, query: string) {
   let score = 0;
-  const id = style.id.toLowerCase();
-  const name = normalizeSearchText(style.name);
+  const id = template.id.toLowerCase();
+  const name = normalizeSearchText(template.name);
   if (query.includes(id)) score += 100;
   if (query.includes(name)) score += 60;
-  for (const value of style.keywords) score += matchScore(query, value, 8);
-  for (const value of style.bestFor) score += matchScore(query, value, 7);
-  for (const value of style.industries) score += matchScore(query, value, 5);
-  score += matchScore(query, style.category, 4);
+  for (const value of template.keywords) score += matchScore(query, value, 8);
+  for (const value of template.bestFor) score += matchScore(query, value, 7);
   return score;
 }
 
@@ -252,22 +246,22 @@ function normalizeSearchText(value: string) {
   return value.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
 }
 
-function fallbackStyleRank(id: string) {
-  const preferred = ["S09", "S01", "S24", "S03", "S26"];
+function fallbackTemplateRank(id: string) {
+  const preferred = ["consulting-financial-report", "data-brief", "strategy-proposal", "product-launch", "editorial-story", "training-workshop"];
   const rank = preferred.indexOf(id);
-  return rank === -1 ? preferred.length + Number(id.slice(1)) : rank;
+  return rank === -1 ? preferred.length : rank;
 }
 
 function stringField(value: Record<string, unknown>, key: string) {
   const field = value[key];
-  if (typeof field !== "string" || !field.trim()) throw new Error(`Style catalog field ${key} is invalid.`);
+  if (typeof field !== "string" || !field.trim()) throw new Error(`Template catalog field ${key} is invalid.`);
   return field;
 }
 
 function stringArrayField(value: Record<string, unknown>, key: string) {
   const field = value[key];
   if (!Array.isArray(field) || !field.every((item) => typeof item === "string" && item.trim())) {
-    throw new Error(`Style catalog field ${key} is invalid.`);
+    throw new Error(`Template catalog field ${key} is invalid.`);
   }
   return field;
 }
