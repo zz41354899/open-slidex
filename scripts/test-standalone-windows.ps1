@@ -36,7 +36,8 @@ try {
   $Digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $ArchivePath).Hash.ToLowerInvariant()
   Set-Content -LiteralPath (Join-Path $ReleaseRoot "SHA256SUMS.txt") -Value "$Digest  $Asset" -Encoding ASCII
   $UpdateOutput = & $Launcher update
-  if ($UpdateOutput -notmatch "updated to 9.9.10") { throw "Update did not complete: $UpdateOutput" }
+  $UpdateOutputText = $UpdateOutput -join "`n"
+  if ($UpdateOutputText -notmatch "updated to 9.9.10") { throw "Update did not complete: $UpdateOutputText" }
   if ((Get-Content -Raw -LiteralPath (Join-Path $env:OPEN_SLIDEX_INSTALL_ROOT "current")).Trim() -ne "9.9.10") { throw "Current version was not switched." }
   if (Test-Path -LiteralPath (Join-Path $env:OPEN_SLIDEX_INSTALL_ROOT "versions\9.9.9")) { throw "Previous version was not cleaned up." }
   $UninstallOutput = & $Launcher uninstall
