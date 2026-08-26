@@ -1,5 +1,7 @@
 # OpenSlideX
 
+[English](README.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md)
+
 OpenSlideX is an open-source, local-first workspace for editable presentations.
 Every presentation lives in a folder you own, and its `presentation.mdx` file is
 the source of truth.
@@ -7,6 +9,14 @@ the source of truth.
 Create, edit, preview, and export decks without an account, background sync, or
 hidden cloud dependency. The MotionDoc format stays portable, readable, and
 editable in your own tools and Git workflow.
+
+## Watch the Workspace demo
+
+<video src="https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4" poster="https://www.slidexdeck.com/marketing/open-slidex/slidex-poster.webp" controls muted playsinline width="100%">
+  <a href="https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4">Watch the OpenSlideX Workspace demo</a>
+</video>
+
+If your README viewer does not support embedded video, [watch the OpenSlideX Workspace demo](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4).
 
 ## Install without Node.js or Git
 
@@ -111,11 +121,12 @@ or CLI bridge.
 
 Generated MCP configuration uses `open-slidex@latest`, so a client restart
 loads the newest published server without editing the config. Workspace scope
-exposes seven workflow tools: workspace selection, progressive source/resource
-read, browser-native HTML, PPTX source import, media, review, and edit.
-`open_slidex_html` preserves canonical HTML bytes and reports online
-dependencies while HTTP(S) libraries, styles, fonts, images, media, frames,
-workers, and connections run in an opaque-origin sandbox. Source import inspects PPTX
+exposes six workflow tools: workspace selection, progressive source/resource
+read (including browser-native HTML), PPTX source import, media, review, and
+edit. `open_slidex_read` preserves canonical HTML bytes and reports online
+dependencies; `open_slidex_edit` creates or replaces that HTML with revision
+protection. HTTP(S) libraries, styles, fonts, images, media, frames, workers,
+and connections run in an opaque-origin sandbox. Source import inspects PPTX
 text geometry, typography hints, reading order, and embedded images safely;
 `import-media` converts supported images to portable WebP and returns the
 original frame geometry for native `ImageBlock` layers. Narrative and visual
