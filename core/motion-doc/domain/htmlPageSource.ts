@@ -26,7 +26,7 @@ type HtmlTagToken = {
 
 type OpenHtmlElement = {
   name: string;
-  pageIndex?: number;
+  page?: HtmlPageSourceLocation;
 };
 
 const rawTextTags = new Set(["iframe", "noembed", "noframes", "script", "style", "textarea", "title", "xmp"]);
@@ -41,6 +41,7 @@ const voidTags = new Set([
  */
 export function htmlPageSourceLocations(source: string): HtmlPageSourceLocation[] {
   const pages: HtmlPageSourceLocation[] = [];
+  const genericSlides: HtmlPageSourceLocation[] = [];
   const stack: OpenHtmlElement[] = [];
   let cursor = 0;
   let scannedTo = 0;
@@ -76,7 +77,7 @@ export function htmlPageSourceLocations(source: string): HtmlPageSourceLocation[
       if (openIndex >= 0) {
         const closed = stack.splice(openIndex);
         closed.forEach((element) => {
-          if (element.pageIndex !== undefined) pages[element.pageIndex]!.outerTo = token.to;
+          if (element.page) element.page.outerTo = token.to;
         });
       }
       cursor = token.to;
@@ -88,19 +89,20 @@ export function htmlPageSourceLocations(source: string): HtmlPageSourceLocation[
     const classes = new Set((htmlAttribute(token.attributes, "class") ?? "").split(/\s+/).filter(Boolean));
     const isGammaPage = classes.has("gcard") && classes.has("page");
     const isNativeSlide = classes.has("slide") && nativeSlideIndex !== undefined;
-    let pageIndex: number | undefined;
+    const isGenericSlide = classes.has("slide") && !isNativeSlide && !isGammaPage && explicitPage === undefined;
+    let pageRecord: HtmlPageSourceLocation | undefined;
 
-    if (explicitPage !== undefined || isGammaPage || isNativeSlide) {
+    if (explicitPage !== undefined || isGammaPage || isNativeSlide || isGenericSlide) {
+      const target = isGenericSlide ? genericSlides : pages;
       const requestedPage = explicitPage !== undefined
         ? Number(explicitPage)
         : isNativeSlide
           ? Number(nativeSlideIndex) + 1
-          : pages.length + 1;
-      const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : pages.length + 1;
+          : target.length + 1;
+      const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : target.length + 1;
       const requestedStage = Number(htmlAttribute(token.attributes, "data-stage"));
       const id = htmlAttribute(token.attributes, "id");
-      pageIndex = pages.length;
-      pages.push({
+      pageRecord = {
         from: token.from,
         ...(id ? { id } : {}),
         line,
@@ -109,12 +111,12 @@ export function htmlPageSourceLocations(source: string): HtmlPageSourceLocation[
         ...(Number.isFinite(requestedStage) && requestedStage >= 0 ? { stage: requestedStage } : {}),
         tagName: token.name,
         to: token.to
-      });
-      if (pages.length >= 200) break;
+      };
+      if (target.length < 200) target.push(pageRecord);
     }
 
     if (!token.selfClosing && !voidTags.has(token.name)) {
-      stack.push({ name: token.name, ...(pageIndex === undefined ? {} : { pageIndex }) });
+      stack.push({ name: token.name, ...(pageRecord ? { page: pageRecord } : {}) });
     }
 
     if (!token.selfClosing && rawTextTags.has(token.name)) {
@@ -125,7 +127,10 @@ export function htmlPageSourceLocations(source: string): HtmlPageSourceLocation[
     }
   }
 
-  return pages;
+  // A plain `.slide` shell is the common fallback used by exported HTML decks.
+  // Prefer stronger page declarations whenever the document supplies them so
+  // nested decorative `.slide` elements cannot inflate the deck page count.
+  return pages.length ? pages : genericSlides;
 }
 
 /** Returns exactly the selected page element, or the whole document for a one-page HTML file. */

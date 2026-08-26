@@ -18,9 +18,16 @@ function htmlPlaybackBridge(nonce: string) {
   if(bridgeScript&&bridgeScript.nonce)motionStyle.nonce=bridgeScript.nonce;
   motionStyle.textContent='[aria-hidden="true"] *,[data-on="0"] *{animation-play-state:paused!important}';
   var nativeSlides=[].slice.call(document.querySelectorAll('[data-slidex-slide-index]'));
+  var declaredPages=[].slice.call(document.querySelectorAll('[data-slidex-page],.gcard.page')).filter(function(node,index,list){return node!==document.documentElement&&list.indexOf(node)===index});
+  var genericSlides=!nativeSlides.length&&!declaredPages.length?[].slice.call(document.querySelectorAll('.slide')):[];
+  genericSlides.forEach(function(node,index){node.setAttribute('data-open-slidex-page-index',String(index+1))});
   if(nativeSlides.length){
     document.documentElement.setAttribute('data-open-slidex-native-projection','');
     motionStyle.textContent+='html[data-open-slidex-native-projection],html[data-open-slidex-native-projection] body{height:100%;min-height:0;overflow:hidden}html[data-open-slidex-native-projection] .player{height:100%;min-height:0;width:100%}html[data-open-slidex-native-projection] .stage{height:100%;min-height:0;padding:0;width:100%}html[data-open-slidex-native-projection] .viewport{border-radius:0!important;box-shadow:none!important;height:100%!important;width:100%!important}html[data-open-slidex-native-projection] .controls,html[data-open-slidex-native-projection] .slide-dots{display:none!important}';
+  }
+  if(genericSlides.length){
+    document.documentElement.setAttribute('data-open-slidex-generic-projection','');
+    motionStyle.textContent+='html[data-open-slidex-generic-projection] .slide[aria-hidden="true"]{display:none!important}';
   }
   (document.head||document.documentElement).appendChild(motionStyle);
   function syncMotionActivity(){
@@ -33,10 +40,10 @@ function htmlPlaybackBridge(nonce: string) {
     var active=document.querySelector('[data-slidex-slide-index].is-active');
     var nativeIndex=active?+(active.getAttribute('data-slidex-slide-index')||0):NaN;
     if(Number.isInteger(nativeIndex)&&nativeIndex>=0)return nativeIndex+1;
-    var explicit=[].slice.call(document.querySelectorAll('[data-slidex-page],.gcard.page')).filter(function(node){return node!==document.documentElement});
+    var explicit=declaredPages.length?declaredPages:genericSlides;
     var visible=explicit.find(function(node){return node.getAttribute('data-on')==='1'||node.classList.contains('active')});
     if(visible){
-      var value=+(visible.getAttribute('data-slidex-page')||visible.getAttribute('data-page')||explicit.indexOf(visible)+1);
+      var value=+(visible.getAttribute('data-slidex-page')||visible.getAttribute('data-page')||visible.getAttribute('data-open-slidex-page-index')||explicit.indexOf(visible)+1);
       if(Number.isInteger(value)&&value>0)return value;
     }
     var m=/^#p?(\\d+)$/.exec(location.hash);return m?Math.max(1,+m[1]||1):1;
@@ -55,14 +62,15 @@ function htmlPlaybackBridge(nonce: string) {
     return true;
   }
   function explicitPage(page){
-    var nodes=[].slice.call(document.querySelectorAll('[data-slidex-page],.gcard.page')).filter(function(node,index,list){return node!==document.documentElement&&list.indexOf(node)===index});
+    var nodes=declaredPages.length?declaredPages:genericSlides;
     if(!nodes.length)return nativeProjectionPage(page);
     nodes.forEach(function(node,index){
-      var value=+(node.getAttribute('data-slidex-page')||node.getAttribute('data-page')||index+1);
+      var value=+(node.getAttribute('data-slidex-page')||node.getAttribute('data-page')||node.getAttribute('data-open-slidex-page-index')||index+1);
       var active=value===page;
       node.setAttribute('data-on',active?'1':'0');
       node.setAttribute('aria-hidden',active?'false':'true');
       if(node.matches('.gcard.page'))node.classList.toggle('active',active);
+      if(genericSlides.length){node.classList.toggle('active',active);node.classList.toggle('is-active',active)}
     });
     document.documentElement.setAttribute('data-slidex-page',String(page));
     return true;

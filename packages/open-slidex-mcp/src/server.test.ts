@@ -315,9 +315,38 @@ test("MCP reads, replaces, and creates browser-native HTML presentations with re
     assert.equal(rejectedRelative.isError, true);
     assert.match(String(structured(rejectedRelative).message), /relative or unsupported resource/i);
 
-    const created = structured(await client.callTool({
+    const assetRoot = path.join(root, "html-source-assets");
+    await mkdir(assetRoot);
+    await writeFile(path.join(assetRoot, "cover.png"), await sharp({
+      create: { background: "#3457d5", channels: 4, height: 40, width: 80 }
+    }).png().toBuffer());
+    const packaged = structured(await client.callTool({
       arguments: {
         expectedRevision: replaced.revision,
+        htmlAssetRoot: assetRoot,
+        source: `<!doctype html><html><body>${Array.from({ length: 52 }, (_, index) => `<section class="slide${index === 0 ? " active" : ""}"><img src="cover.png"><span>${index + 1}</span></section>`).join("")}</body></html>`,
+        target: "html",
+        title: "52 page HTML deck"
+      },
+      name: "open_slidex_edit"
+    }));
+    assert.equal(packaged.pageCount, 52);
+    assert.equal(packaged.packagedAssetCount, 1);
+    const packagedHtml = await readFile(path.join(root, String(packaged.source)), "utf8");
+    const packagedWebp = packagedHtml.match(/html-asset-[a-f0-9]{16}\.webp/)?.[0];
+    assert.ok(packagedWebp);
+    assert.equal((await sharp(path.join(root, "assets", packagedWebp)).metadata()).format, "webp");
+    assert.equal((await readFile(path.join(root, "presentation.mdx"), "utf8").then((value) => value.match(/<Slide\b/g) ?? [])).length, 52);
+    const packagedRead = structured(await client.callTool({
+      arguments: { sourceFormat: "html" },
+      name: "open_slidex_read"
+    }));
+    assert.equal((packagedRead.htmlAssets as Array<Record<string, unknown>>)[0]?.status, "ready");
+    assert.equal((packagedRead.htmlAssets as Array<{ pages?: unknown[] }>)[0]?.pages?.length, 52);
+
+    const created = structured(await client.callTool({
+      arguments: {
+        expectedRevision: packaged.revision,
         source: `<!doctype html><html><head><script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script></head><body><h1>AI authored HTML</h1><img src="https://images.unsplash.com/photo.jpg"><video src="https://media.example.com/demo.mp4"></video><script>document.body.dataset.ready='yes'</script></body></html>`,
         target: "html",
         title: "AI HTML deck"

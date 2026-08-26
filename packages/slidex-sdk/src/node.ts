@@ -257,6 +257,7 @@ export type RenderSlideXDocumentInput = {
 
 export type RenderSlideXHtmlThumbnailInput = {
   html: string;
+  localAssets?: Array<{ bytes: Uint8Array; mimeType: string; name: string }>;
   outputPath: string;
   page: number;
   signal?: AbortSignal;
@@ -272,12 +273,25 @@ export async function renderSlideXHtmlThumbnail(input: RenderSlideXHtmlThumbnail
   return withSlideXChromiumPage({
     viewport: { height: MOTION_DOC_PNG_HEIGHT, width: MOTION_DOC_PNG_WIDTH }
   }, async (page) => {
+    const localAssetOrigin = "https://open-slidex.local";
+    const localAssets = new Map((input.localAssets ?? []).map((asset) => [asset.name, asset]));
     await page.route("**/*", async (route) => {
       const url = route.request().url();
+      const parsed = new URL(url);
+      if (parsed.origin === localAssetOrigin && parsed.pathname.startsWith("/assets/")) {
+        const asset = localAssets.get(decodeURIComponent(parsed.pathname.slice("/assets/".length)));
+        if (asset) {
+          await route.fulfill({ body: asset.bytes, contentType: asset.mimeType });
+          return;
+        }
+        await route.abort("blockedbyclient");
+        return;
+      }
       if (/^(?:about:|blob:|data:|https?:)/i.test(url)) await route.continue();
       else await route.abort("blockedbyclient");
     });
-    await page.setContent(input.html, { waitUntil: "domcontentloaded" });
+    const html = localAssets.size ? injectThumbnailAssetBase(input.html, `${localAssetOrigin}/assets/`) : input.html;
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => undefined);
     await page.evaluate(async (requestedPage) => {
       const pageNumber = Math.max(1, Math.floor(requestedPage));
@@ -286,12 +300,21 @@ export async function renderSlideXHtmlThumbnail(input: RenderSlideXHtmlThumbnail
         .filter((element) => element !== document.documentElement);
       const gamma = [...document.querySelectorAll<HTMLElement>(".gcard.page")]
         .filter((element) => !explicit.includes(element));
-      [...explicit, ...gamma].forEach((element, index) => {
+      const declared = [...explicit, ...gamma];
+      const generic = declared.length || document.querySelector("[data-slidex-slide-index]")
+        ? []
+        : [...document.querySelectorAll<HTMLElement>(".slide")];
+      [...declared, ...generic].forEach((element, index) => {
         const value = Number(element.dataset.slidexPage ?? element.dataset.page ?? index + 1);
         const active = value === pageNumber;
         element.dataset.on = active ? "1" : "0";
         element.setAttribute("aria-hidden", active ? "false" : "true");
         if (element.matches(".gcard.page")) element.classList.toggle("active", active);
+        if (generic.length) {
+          element.classList.toggle("active", active);
+          element.classList.toggle("is-active", active);
+          element.style.setProperty("display", active ? "" : "none", active ? "" : "important");
+        }
       });
       const nativeSlides = [...document.querySelectorAll<HTMLElement>("[data-slidex-slide-index]")];
       const nativeTarget = nativeSlides.find((element) => Number(element.dataset.slidexSlideIndex) + 1 === pageNumber);
@@ -334,7 +357,9 @@ export async function renderSlideXHtmlThumbnail(input: RenderSlideXHtmlThumbnail
       }
       document.documentElement.dataset.slidexPage = String(pageNumber);
       const hash = /^#\d+$/.test(location.hash) ? `#${pageNumber}` : `#p${pageNumber}`;
-      if (location.hash !== hash) history.replaceState(null, "", hash);
+      // A thumbnail may temporarily inject a virtual asset base. Resolve the
+      // navigation hash against the document URL, not that asset base.
+      if (location.hash !== hash) history.replaceState(null, "", `${oldURL.split("#", 1)[0]}${hash}`);
       window.dispatchEvent(new HashChangeEvent("hashchange", { oldURL, newURL: location.href }));
       await Promise.race([
         document.fonts.ready.catch(() => undefined),
@@ -375,6 +400,13 @@ export async function renderSlideXHtmlThumbnail(input: RenderSlideXHtmlThumbnail
       width: MOTION_DOC_PNG_WIDTH
     };
   }, input.signal);
+}
+
+function injectThumbnailAssetBase(html: string, href: string) {
+  if (/<base\b/i.test(html)) throw new Error("Packaged HTML sidecars cannot be combined with a remote <base href>.");
+  const base = `<base href="${href}">`;
+  if (/<head\b[^>]*>/i.test(html)) return html.replace(/<head\b[^>]*>/i, (head) => `${head}${base}`);
+  return html.replace(/<html\b[^>]*>/i, (tag) => `${tag}<head>${base}</head>`);
 }
 
 export async function renderSlideXDocument(input: RenderSlideXDocumentInput) {

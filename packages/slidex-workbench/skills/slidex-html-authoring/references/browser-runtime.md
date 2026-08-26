@@ -10,8 +10,15 @@ asset and maps its detected pages through a generated, non-authorable
 - Absolute HTTP(S) and protocol-relative libraries, styles, fonts, images,
   audio, video, frames, workers, and connections may load at playback time.
 - A remote `<base href>` may resolve relative remote resources.
-- Unresolved local sidecars, `file:`, Base64 document storage, blob URLs, and
-  browser-unsupported protocols are not portable inputs.
+- Workspace folder import copies relative AVIF, GIF, JPEG, PNG, WebP, and SVG
+  sidecars into the selected deck's `assets/`. PNG bytes are converted to WebP
+  before the HTML reference is rewritten.
+- `open_slidex_edit` packages absolute local image paths directly. For relative
+  local image references, pass their absolute containing folder as
+  `htmlAssetRoot`. The saved canonical HTML must refer only to the packaged
+  filenames, not the original filesystem paths.
+- Base64 document storage and browser-unsupported protocols are not portable
+  inputs. Blob URLs may exist only as runtime values created by the document.
 
 Playback uses an opaque-origin sandbox with scripts but without
 `allow-same-origin`. Remote resources cannot receive OpenSlideX local-origin
@@ -20,9 +27,11 @@ authentication, and the remote URL remaining valid.
 
 ## Page and export boundary
 
-Use explicit `[data-slidex-page]`, Gamma-style `.gcard.page`, or a supported
-native exported-page marker when one document contains multiple pages. Verify
-page order after every material edit.
+Page detection uses explicit `[data-slidex-page]`, Gamma-style `.gcard.page`,
+native `[data-slidex-slide-index]`, then plain `.slide` elements as the generic
+fallback. The detected count maps one-to-one to OpenSlideX slides; a document
+without page markers remains a single page. Verify first, middle, and last page
+after every material edit.
 
 HTML playback can preserve browser behavior, but arbitrary JavaScript does not
 become editable MotionDoc and does not have native PPTX parity. Raster and PPTX

@@ -1,18 +1,21 @@
 import type { DragEvent, RefObject } from "react";
-import { CheckCircle2, ChevronRight, FileCheck2, FilePlus2, LayoutGrid, LoaderCircle, Pencil, Plus, ShieldCheck, Trash2, Upload, X } from "lucide-react";
+import { CheckCircle2, ChevronRight, FileCheck2, FilePlus2, FolderInput, LayoutGrid, LoaderCircle, Pencil, Plus, ShieldCheck, Trash2, Upload, X } from "lucide-react";
 import type { CreationIntent, ManageIntent, TemplatePreview } from "./useWorkspaceActions";
 import { formatBytes, templateSlideCover } from "./WorkspaceHomeViews";
 
 type WorkspaceDialogsProps = {
   actionError: string;
   chooseImportFile: (file?: File) => void;
+  chooseImportFolder: (files?: FileList | null) => void;
   createPresentation: () => Promise<void>;
   deletePresentation: () => Promise<void>;
   importError: string;
   importFile?: File;
+  importFolderInputRef: RefObject<HTMLInputElement | null>;
   importInputRef: RefObject<HTMLInputElement | null>;
   importOpen: boolean;
   importPending: boolean;
+  importSidecars: Array<{ file: File; path: string }>;
   importPresentation: () => Promise<void>;
   intent?: CreationIntent;
   locale: "en" | "zh-TW";
@@ -38,13 +41,16 @@ type WorkspaceDialogsProps = {
 export function WorkspaceDialogs({
   actionError,
   chooseImportFile,
+  chooseImportFolder,
   createPresentation,
   deletePresentation,
   importError,
   importFile,
+  importFolderInputRef,
   importInputRef,
   importOpen,
   importPending,
+  importSidecars,
   importPresentation,
   intent,
   locale,
@@ -106,12 +112,14 @@ export function WorkspaceDialogs({
           <section aria-modal="true" className="osx-import-dialog" onMouseDown={(event) => event.stopPropagation()} role="dialog">
             <button aria-label={zh ? "關閉" : "Close"} className="osx-dialog-close" disabled={importPending} onClick={() => setImportOpen(false)} type="button"><X size={17} /></button>
             <span className="osx-import-dialog-icon"><Upload size={20} /></span><small>{zh ? "本機簡報匯入" : "Local presentation import"}</small><h2>{zh ? "匯入 OpenSlideX 簡報" : "Import an OpenSlideX presentation"}</h2>
-            <p>{zh ? "MDX 保留原生可編輯圖層；HTML 會原樣保留，並可在無同源權限的隔離播放器中載入 HTTP(S) 圖庫、函式庫與影音。" : "MDX keeps native editable layers. HTML stays byte-exact and can load HTTP(S) libraries, images, and media in an isolated player without same-origin access."}</p>
+            <p>{zh ? "MDX 保留原生可編輯圖層；HTML 可選整個資料夾，PNG 會轉成 WebP，SVG 與其他圖片會一起收進此簡報的 assets。" : "MDX keeps native editable layers. For HTML, choose the complete folder: PNG is converted to WebP, while SVG and other images are copied into this presentation’s assets."}</p>
             <input accept=".mdx,.html,text/mdx,text/markdown,text/html" className="sr-only" onChange={(event) => chooseImportFile(event.currentTarget.files?.[0])} ref={importInputRef} type="file" />
+            <input className="sr-only" multiple onChange={(event) => chooseImportFolder(event.currentTarget.files)} ref={importFolderInputRef} type="file" webkitdirectory="" />
             <button className={`osx-mdx-dropzone${importFile ? " has-file" : ""}`} onClick={() => importInputRef.current?.click()} onDragOver={(event: DragEvent<HTMLButtonElement>) => event.preventDefault()} onDrop={(event: DragEvent<HTMLButtonElement>) => { event.preventDefault(); chooseImportFile(event.dataTransfer.files[0]); }} type="button">
               {importFile ? <FileCheck2 size={28} /> : <Upload size={28} />}<span><strong>{importFile?.name ?? (zh ? "拖放 MDX 或 HTML" : "Drop MDX or HTML")}</strong><small>{importFile ? formatBytes(importFile.size) : (zh ? ".mdx/.html · 上限 50 MB" : ".mdx/.html · 50 MB maximum")}</small></span>
             </button>
-            <div className="osx-import-policy"><ShieldCheck size={15} /><span>{zh ? "原始檔保留在本機；HTML 內的 HTTP(S) 素材會直接連線到其提供者。" : "The original stays local; HTTP(S) resources inside HTML connect directly to their providers."}</span></div>
+            <button className="osx-import-folder" onClick={() => importFolderInputRef.current?.click()} type="button"><FolderInput size={16} /><span>{zh ? "選擇完整 HTML 簡報資料夾" : "Choose complete HTML presentation folder"}</span><small>{importSidecars.length ? (zh ? `已收集 ${importSidecars.length} 個素材；PNG 將轉成 WebP` : `${importSidecars.length} sidecars collected; PNG will become WebP`) : (zh ? "自動收集圖片並將 PNG 轉成 WebP" : "Collect images and convert PNG to WebP automatically")}</small></button>
+            <div className="osx-import-policy"><ShieldCheck size={15} /><span>{zh ? "原始檔與收集到的素材都保留在本機；HTML 的 HTTP(S) 素材仍會直接連線到其提供者。" : "The original and collected sidecars stay local; HTTP(S) HTML resources still connect directly to their providers."}</span></div>
             {importError ? <div className="osx-workspace-error">{importError}</div> : null}
             <footer><button disabled={importPending} onClick={() => setImportOpen(false)} type="button">{zh ? "取消" : "Cancel"}</button><button className="is-primary" disabled={!importFile || importPending} onClick={() => void importPresentation()} type="button">{importPending ? <LoaderCircle className="spin" size={14} /> : <Upload size={14} />}{importPending ? (zh ? "正在匯入…" : "Importing…") : (zh ? "匯入並開啟" : "Import and open")}</button></footer>
           </section>

@@ -122,13 +122,16 @@ export function WorkspaceHome() {
     beginImport,
     beginManagement,
     chooseImportFile,
+    chooseImportFolder,
     createPresentation,
     deletePresentation,
     importError,
     importFile,
+    importFolderInputRef,
     importInputRef,
     importOpen,
     importPending,
+    importSidecars,
     importPresentation,
     intent,
     manageError,
@@ -368,13 +371,16 @@ export function WorkspaceHome() {
       <WorkspaceDialogs
         actionError={actionError}
         chooseImportFile={chooseImportFile}
+        chooseImportFolder={chooseImportFolder}
         createPresentation={createPresentation}
         deletePresentation={deletePresentation}
         importError={importError}
         importFile={importFile}
+        importFolderInputRef={importFolderInputRef}
         importInputRef={importInputRef}
         importOpen={importOpen}
         importPending={importPending}
+        importSidecars={importSidecars}
         importPresentation={importPresentation}
         intent={intent}
         locale={locale}

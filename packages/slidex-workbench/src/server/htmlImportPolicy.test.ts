@@ -70,6 +70,14 @@ test("HTML import resolves relative CDN resources through a remote base", () => 
   });
 });
 
+test("HTML import permits only explicitly packaged local sidecars", () => {
+  const source = `<html><body><img src="html-asset-0123456789abcdef.png"></body></html>`;
+  assert.doesNotThrow(() => assertSandboxedHtml(source, {
+    localAssets: ["html-asset-0123456789abcdef.png"]
+  }));
+  assert.throws(() => assertSandboxedHtml(source), /relative or unsupported resource/i);
+});
+
 test("HTML dependency inspection supports valid unquoted and protocol-relative resource attributes", () => {
   const source = `<html><head><script src=//cdn.example.com/runtime.js></script></head><body><img src=https://images.example.com/hero.webp></body></html>`;
   assert.doesNotThrow(() => assertSandboxedHtml(source));
@@ -140,6 +148,9 @@ test("HTML presentation analysis maps explicit and IDAEO Gamma-style pages", () 
     <section class="slide" data-slidex-slide-index="1"></section>
     <section class="slide" data-slidex-slide-index="2"></section>
   </body></html>`).map(({ page }) => page), [1, 2, 3]);
+  assert.deepEqual(analyzeHtmlPresentation(`<html><body>
+    <section class="slide active"></section><section class="slide"></section><section class="slide"></section>
+  </body></html>`).map(({ page }) => page), [1, 2, 3]);
 });
 
 test("HTML playback bridge changes only the served response", () => {
@@ -170,6 +181,8 @@ test("HTML playback bridge inherits the source nonce and fits native export slid
   assert.match(served, /node!==document\.documentElement/);
   assert.match(served, /\[data-slidex-page\],\.gcard\.page/);
   assert.match(served, /getAttribute\('data-page'\)/);
+  assert.match(served, /data-open-slidex-page-index/);
+  assert.match(served, /genericSlides/);
   assert.match(served, /\^#p\?\(\\d\+\)\$/);
   assert.match(served, /\.controls.*\.slide-dots\{display:none!important\}/);
   assert.equal(source.includes("data-open-slidex-playback-bridge"), false);
@@ -203,6 +216,29 @@ test("HTML playback bridge keeps Gamma-style outer and inner navigation synchron
       active: document.querySelector(".gcard.page.active")?.getAttribute("data-page"),
       hash: location.hash
     })), { active: "3", hash: "#3" });
+  });
+});
+
+test("HTML playback bridge switches every page in a 52-page generic slide deck", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+  const source = `<!doctype html><html><head><style>.slide{display:none}.slide.active{display:block}</style></head><body>${Array.from(
+    { length: 52 },
+    (_, index) => `<section class="slide${index === 0 ? " active" : ""}" data-page-name="${index + 1}">${index + 1}</section>`
+  ).join("")}</body></html>`;
+
+  await withSlideXChromiumPage({ viewport: { height: 1080, width: 1920 } }, async (page) => {
+    await page.setContent(injectHtmlPlaybackBridge(source), { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => window.postMessage({ page: 52, type: "open-slidex:html-page" }, "*"));
+    await page.waitForTimeout(50);
+    assert.deepEqual(await page.evaluate(() => ({
+      active: document.querySelector(".slide.active")?.getAttribute("data-page-name"),
+      hash: location.hash,
+      hidden: document.querySelectorAll('.slide[aria-hidden="true"]').length,
+      visible: document.querySelectorAll('.slide[aria-hidden="false"]').length
+    })), { active: "52", hash: "#p52", hidden: 51, visible: 1 });
   });
 });
 

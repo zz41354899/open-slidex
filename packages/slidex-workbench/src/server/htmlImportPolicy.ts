@@ -23,26 +23,34 @@ export type HtmlNetworkResourceSummary = {
   requiresNetwork: boolean;
 };
 
+/** Local sidecars are only permitted after Workspace has copied and hashed them. */
+export type HtmlImportPolicyOptions = {
+  localAssets?: Iterable<string>;
+};
+
 /**
  * Imported HTML keeps its original bytes and runs as an opaque-origin browser
  * document. Embedded resources work offline. Absolute HTTP(S) resources, CDN
  * libraries, and relative resources resolved by a remote <base> stay online.
- * Relative filesystem sidecars cannot be recovered from a single-file upload.
+ * Local image sidecars are packaged before this policy runs. A single browser
+ * file upload cannot expose sibling bytes, so relative images require folder
+ * import; MCP may resolve them through htmlAssetRoot.
  */
-export function assertSandboxedHtml(source: string) {
+export function assertSandboxedHtml(source: string, options: HtmlImportPolicyOptions = {}) {
   if (!/^\s*(?:<!doctype\s+html\b[^>]*>\s*)?<html\b/i.test(source)) {
     throw badRequest("The HTML import must contain a complete <html> document.");
   }
-  inspectHtmlNetworkResources(source);
+  inspectHtmlNetworkResources(source, options);
 }
 
 /** Returns the online dependency boundary without changing canonical HTML. */
-export function inspectHtmlNetworkResources(source: string): HtmlNetworkResourceSummary {
+export function inspectHtmlNetworkResources(source: string, options: HtmlImportPolicyOptions = {}): HtmlNetworkResourceSummary {
   const inspectedSource = htmlInspectionSource(source);
   const base = remoteBaseUrl(inspectedSource);
+  const localAssets = new Set(options.localAssets ?? []);
   const networkUrls: URL[] = [];
   for (const reference of htmlResourceReferences(inspectedSource)) {
-    const resolved = networkResourceUrl(reference, base);
+    const resolved = networkResourceUrl(reference, base, localAssets);
     if (resolved) networkUrls.push(resolved);
   }
   const origins = [...new Set(networkUrls.map((url) => url.origin))].sort();
@@ -167,10 +175,11 @@ function decodeHtmlAttributeValue(value: string) {
   );
 }
 
-function networkResourceUrl(value: string, base?: URL): URL | undefined {
+function networkResourceUrl(value: string, base?: URL, localAssets = new Set<string>()): URL | undefined {
   const reference = value.trim();
   if (!reference || reference.startsWith("#")) return undefined;
   if (/^(?:data:|blob:|about:blank(?:#.*)?$)/i.test(reference)) return undefined;
+  if (localAssets.has(reference)) return undefined;
 
   let resolved: URL;
   try {
@@ -180,7 +189,8 @@ function networkResourceUrl(value: string, base?: URL): URL | undefined {
     else {
       throw badRequest(
         `The HTML import references a relative or unsupported resource (${summarizeReference(reference)}). ` +
-        "Use an absolute HTTP(S) URL, add a remote <base href>, or inline the resource."
+        "Choose the complete HTML presentation folder to package local images, or pass htmlAssetRoot through MCP. " +
+        "Remote resources may use an absolute HTTP(S) URL or a remote <base href>."
       );
     }
   } catch (error) {

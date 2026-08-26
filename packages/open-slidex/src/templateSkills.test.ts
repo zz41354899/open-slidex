@@ -249,7 +249,8 @@ test("agent guides keep source import conditional and the full-design skill orde
     assert.match(guide, /`open_slidex_edit` with `target: "html"`/);
     assert.match(guide, /HTTP\(S\) libraries,\s+fonts, images, media, frames, workers/);
     assert.match(guide, /opaque-origin\s+sandbox/);
-    assert.match(guide, /unresolved local sidecars do\s+not/);
+    assert.match(guide, /Pass `htmlAssetRoot` for relative local\s+images/);
+    assert.match(guide, /PNG is converted to\s+WebP/);
     const workflow = guide.split("Apply the project-local skills in this order for a full creation or redesign:")[1] ?? "";
     const orderedSkills = [...workflow.matchAll(/^\d+\. `([^`]+)`$/gm)].map((match) => match[1]);
     assert.deepEqual(orderedSkills, expectedOrder);

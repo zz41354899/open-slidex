@@ -21,7 +21,13 @@ HTML that loads scripts, images, video, fonts, frames, workers, or connections.
 3. For a replacement, call `open_slidex_edit` with `target: "html"`, the
    complete HTML in `source`, the returned `htmlSource`, and `expectedRevision`.
    Omit `htmlSource` only when replacing the selected deck with a new HTML deck.
-4. Read the saved HTML again and inspect every mapped page in playback.
+   When `source` contains relative local images, also pass the absolute folder
+   containing those sidecars as `htmlAssetRoot`. Absolute local image paths do
+   not need an asset root. The edit copies those images into the selected
+   deck's `assets/`, converts PNG to WebP, and rewrites the canonical HTML.
+4. Read the saved HTML again and inspect every mapped page in playback. Confirm
+   the returned `pageCount` matches the source deck, including plain `.slide`
+   HTML exports.
 
 Never author the generated `HtmlEmbedBlock` wrapper. Never use
 `open_slidex_edit` to convert arbitrary HTML into editable MDX. If native

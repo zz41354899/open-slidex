@@ -226,6 +226,9 @@ export class SlideXProject {
 
   async renameAsset(input: { expectedRevision: string; from: string; to: string }) {
     const fromName = assetName(input.from);
+    if (/^html-asset-[a-f0-9]{16}\.(?:avif|gif|jpe?g|png|webp|svg)$/i.test(fromName)) {
+      throw badRequest("Packaged HTML sidecars use content-addressed names and cannot be renamed.");
+    }
     const toName = normalizedAssetName(input.to);
     if (fromName === toName) return this.open();
     const fromPath = resolveInsideRoot(this.assetsRoot, fromName);
@@ -256,7 +259,7 @@ export class SlideXProject {
     if (!input.html || Buffer.byteLength(input.html, "utf8") > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
       throw Object.assign(new Error("The HTML source must be between 1 byte and 50 MB."), { status: 413 });
     }
-    assertSandboxedHtml(input.html);
+    assertSandboxedHtml(input.html, { localAssets: await this.htmlSidecarNames() });
     const document = parseMotionDoc(current.source);
     const referenced = document.scenes.some((scene) => scene.blocks.some(
       (block) => block.type === "HtmlEmbedBlock" && block.props.src === input.source
@@ -316,7 +319,7 @@ export class SlideXProject {
     const used = listSlideXAssetReferences(document.source).some(
       (reference) => reference.source === `assets/${name}`
     );
-    if (used) throw new Error("The asset is still referenced by presentation.mdx.");
+    if (used || await this.htmlSidecarIsReferenced(name)) throw new Error("The asset is still referenced by this presentation.");
     await unlink(resolveInsideRoot(this.assetsRoot, name));
   }
 
@@ -350,7 +353,8 @@ export class SlideXProject {
     if (!Number.isInteger(page) || page < 1 || page > 200) throw badRequest("HTML thumbnail page must be between 1 and 200.");
     const bytes = await this.readAsset(name);
     const html = bytes.toString("utf8");
-    assertSandboxedHtml(html);
+    const htmlSidecars = await this.htmlSidecarNames();
+    assertSandboxedHtml(html, { localAssets: htmlSidecars });
     const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 24);
     const cacheRoot = path.join(this.stateRoot, "html-thumbnails", HTML_THUMBNAIL_RENDER_VERSION, hash);
     const outputPath = path.join(cacheRoot, `page-${page}.png`);
@@ -364,7 +368,16 @@ export class SlideXProject {
       await mkdir(cacheRoot, { recursive: true });
       const temporaryPath = `${outputPath}.${process.pid}.${Date.now()}.tmp.png`;
       try {
-        await renderSlideXHtmlThumbnail({ html, outputPath: temporaryPath, page });
+        await renderSlideXHtmlThumbnail({
+          html,
+          localAssets: await Promise.all(htmlSidecars.map(async (asset) => ({
+            bytes: await this.readAsset(asset),
+            mimeType: this.assetMimeType(asset),
+            name: asset
+          }))),
+          outputPath: temporaryPath,
+          page
+        });
         await rename(temporaryPath, outputPath);
         return readFile(outputPath);
       } finally {
@@ -378,6 +391,23 @@ export class SlideXProject {
     } finally {
       if (this.htmlThumbnailRenders.get(key) === render) this.htmlThumbnailRenders.delete(key);
     }
+  }
+
+  private async htmlSidecarNames() {
+    const entries = await readdir(this.assetsRoot, { withFileTypes: true });
+    return entries
+      .filter((entry) => entry.isFile() && /^html-asset-[a-f0-9]{16}\.(?:avif|gif|jpe?g|png|webp|svg)$/i.test(entry.name))
+      .map((entry) => entry.name);
+  }
+
+  private async htmlSidecarIsReferenced(name: string) {
+    const entries = await readdir(this.assetsRoot, { withFileTypes: true });
+    const expression = new RegExp(`(?:["'(\\s]|^)${escapeRegExp(name)}(?:["')\\s,]|$)`);
+    for (const entry of entries) {
+      if (!entry.isFile() || !/^source-[a-f0-9]{16}\.html?$/i.test(entry.name)) continue;
+      if (expression.test(await readFile(path.join(this.assetsRoot, entry.name), "utf8"))) return true;
+    }
+    return false;
   }
 
   async writeCurrent(input: {
@@ -558,7 +588,7 @@ export function safeExportName(value: unknown) {
 }
 
 function assetName(source: string) {
-  if (!/^assets\/[A-Za-z0-9._-]+\.(?:webp|mp4|svg|html?)$/i.test(source)) {
+  if (!/^assets\/[A-Za-z0-9._-]+\.(?:avif|gif|jpe?g|png|webp|mp4|svg|html?)$/i.test(source)) {
     throw new Error("Asset paths must use a supported file in assets/.");
   }
   return source.slice("assets/".length);
@@ -579,15 +609,23 @@ function normalizedAssetName(value: string) {
 }
 
 function isAssetFileName(value: string) {
-  return /^[A-Za-z0-9._-]+\.(?:webp|mp4|svg|html?)$/i.test(value);
+  return /^[A-Za-z0-9._-]+\.(?:avif|gif|jpe?g|png|webp|mp4|svg|html?)$/i.test(value);
 }
 
 function assetMimeType(value: string) {
   const extension = path.extname(value).toLowerCase();
+  if (extension === ".avif") return "image/avif";
+  if (extension === ".gif") return "image/gif";
+  if (extension === ".jpg" || extension === ".jpeg") return "image/jpeg";
+  if (extension === ".png") return "image/png";
   if (extension === ".mp4") return "video/mp4";
   if (extension === ".svg") return "image/svg+xml";
   if (extension === ".html" || extension === ".htm") return "text/html; charset=utf-8";
   return "image/webp";
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function isMp4Upload(file: File) {

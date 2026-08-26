@@ -52,7 +52,8 @@ import {
 } from "@/packages/slidex-workbench/src/server/htmlImportPolicy";
 import {
   createHtmlPresentationMdx,
-  MAX_WORKSPACE_IMPORT_FILE_BYTES
+  MAX_WORKSPACE_IMPORT_FILE_BYTES,
+  packageHtmlAssets
 } from "@/packages/slidex-workbench/src/server/workspaceImport";
 
 const projectRoot = projectRootFromArgs(process.argv.slice(2));
@@ -109,9 +110,9 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     { name: "open-slidex-local", version: openSlideXMcpVersion() },
     {
       instructions: [
-        "In Workspace scope, select one deck with open_slidex_workspace.",
-        "Call open_slidex_read before work for exact source, revision, and skill routes.",
-        "Read canonical HTML with open_slidex_read sourceFormat html; write it with open_slidex_edit target html.",
+        "In Workspace scope, select a deck with open_slidex_workspace.",
+        "Call open_slidex_read for source, revision, and skill routes.",
+        "For HTML, use open_slidex_read sourceFormat html and open_slidex_edit target html; htmlAssetRoot packages local images.",
         "Before mutation, re-read and pass expectedRevision to open_slidex_edit.",
         "Native layers are Text, ImageBlock, VideoBlock, SvgBlock, Chart, Table, and Shape.",
         "Browser HTML runs opaque-origin; native edits include rendered QA, and open_slidex_review is review-only."
@@ -216,10 +217,12 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         mode: "unavailable"
       }));
       const assets = listHtmlPresentationAssets(document.source);
+      const localAssets = await readdir(join(root, "assets"), { withFileTypes: true })
+        .then((entries) => entries.filter((entry) => entry.isFile()).map((entry) => entry.name), () => []);
       const htmlAssets = await Promise.all(assets.map(async (record) => {
         try {
           const html = await readFile(resolveInsideRoot(root, record.source), "utf8");
-          return { ...record, networkResources: inspectHtmlNetworkResources(html), status: "ready" };
+          return { ...record, networkResources: inspectHtmlNetworkResources(html, { localAssets }), status: "ready" };
         } catch (error) {
           return {
             ...record,
@@ -253,7 +256,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         htmlAssets,
         htmlSource: selectedSource,
         mode: "html",
-        networkResources: inspectHtmlNetworkResources(html),
+        networkResources: inspectHtmlNetworkResources(html, { localAssets }),
         nextCursor,
         revision: document.revision,
         title: document.title,
@@ -451,8 +454,11 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       htmlSource: z.string().regex(/^assets\/[A-Za-z0-9._-]+\.html?$/i).optional().describe(
         "For target html, pass the exact canonical assets/*.html returned by open_slidex_read to replace it. Omit only to replace the selected deck with a new HTML presentation."
       ),
+      htmlAssetRoot: z.string().trim().min(1).max(4096).optional().describe(
+        "Optional absolute local folder used to resolve relative PNG, SVG, JPEG, GIF, AVIF, and WebP references in source. Local absolute image paths work without this field. Images are copied into this deck's assets and PNG is converted to WebP."
+      ),
       source: z.string().min(1).describe(
-        "One complete MotionDoc deck, one complete Slide block, or one complete UTF-8 HTML document according to target. HTML may use inline or HTTP(S) browser resources; unresolved local sidecars are rejected."
+        "One complete MotionDoc deck, one complete Slide block, or one complete UTF-8 HTML document according to target. HTML may use inline, HTTP(S), packaged relative images, or local absolute image paths."
       ),
       target: z.enum(["deck", "slide", "html"]).describe(
         "Choose whether source replaces the whole native deck, one complete native slide, or canonical browser-native HTML."
@@ -461,7 +467,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         "Optional presentation title when target is html and htmlSource is omitted."
       )
     }
-  }, ({ expectedRevision, htmlSource, rejectedCandidateId, slideIndex, source, target, title }, extra) => runTool(async () => {
+  }, ({ expectedRevision, htmlAssetRoot, htmlSource, rejectedCandidateId, slideIndex, source, target, title }, extra) => runTool(async () => {
     const { documentAdapter, root } = await projectContext();
     extra.signal.throwIfAborted();
     const current = await documentAdapter.open();
@@ -470,25 +476,38 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       if (rejectedCandidateId) throw new Error("rejectedCandidateId is only used for native rendered-QA repairs.");
       if (slideIndex !== undefined) throw new Error("slideIndex cannot be combined with target html.");
       if (htmlSource && title) throw new Error("title is only used when htmlSource is omitted for a new HTML deck.");
-      const bytes = Buffer.from(source, "utf8");
+      if (htmlAssetRoot && !/^\/?(?:[A-Za-z]:[\\/]|\/)/.test(htmlAssetRoot)) {
+        throw new Error("htmlAssetRoot must be an absolute local folder.");
+      }
+      const packaged = await packageHtmlAssets(source, { assetRoot: htmlAssetRoot });
+      const bytes = Buffer.from(packaged.source, "utf8");
       if (!bytes.byteLength || bytes.byteLength > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
         throw new Error("The HTML source must be between 1 byte and 50 MB.");
       }
-      assertSandboxedHtml(source);
-      const networkResources = inspectHtmlNetworkResources(source);
-      const pages = analyzeHtmlPresentation(source);
+      const existingLocalAssets = await readdir(join(root, "assets"), { withFileTypes: true })
+        .then((entries) => entries.filter((entry) => entry.isFile()).map((entry) => entry.name), () => []);
+      const localAssets = [...new Set([...existingLocalAssets, ...packaged.assets.map((asset) => asset.fileName)])];
+      assertSandboxedHtml(packaged.source, { localAssets });
+      const networkResources = inspectHtmlNetworkResources(packaged.source, { localAssets });
+      const pages = analyzeHtmlPresentation(packaged.source);
       const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
       const nextSource = `assets/source-${hash}.html`;
       const nextPath = resolveInsideRoot(root, nextSource);
-      let createdAsset = false;
+      const createdAssets: string[] = [];
+      const writeNewAsset = async (assetPath: string, assetBytes: Uint8Array) => {
+        try {
+          await writeFile(assetPath, assetBytes, { flag: "wx" });
+          createdAssets.push(assetPath);
+        } catch (error) {
+          if (!isNodeError(error) || error.code !== "EEXIST") throw error;
+        }
+      };
       try {
-        await writeFile(nextPath, bytes, { flag: "wx" });
-        createdAsset = true;
-      } catch (error) {
-        if (!isNodeError(error) || error.code !== "EEXIST") throw error;
-      }
-
-      try {
+        await mkdir(dirname(nextPath), { recursive: true });
+        for (const asset of packaged.assets) {
+          await writeNewAsset(resolveInsideRoot(root, asset.source), asset.bytes);
+        }
+        await writeNewAsset(nextPath, bytes);
         let candidateSource: string;
         let replacedSource: string | undefined;
         if (htmlSource) {
@@ -518,6 +537,8 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         return {
           action: htmlSource ? "replace" : "create",
           bytes: bytes.byteLength,
+          packagedAssetCount: packaged.assets.length,
+          pngConvertedToWebp: packaged.assets.filter((asset) => asset.fileName.endsWith(".webp")).length,
           networkResources,
           pageCount: Math.max(1, pages.length),
           revision: saved.revision,
@@ -526,11 +547,11 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
           title: saved.title
         };
       } catch (error) {
-        if (createdAsset) await unlink(nextPath).catch(() => undefined);
+        await Promise.all(createdAssets.map((assetPath) => unlink(assetPath).catch(() => undefined)));
         throw error;
       }
     }
-    if (htmlSource || title) throw new Error("htmlSource and title are only used with target html.");
+    if (htmlAssetRoot || htmlSource || title) throw new Error("htmlAssetRoot, htmlSource, and title are only used with target html.");
     pruneRejectedCandidates(rejectedCandidates);
     const rejected = rejectedCandidateId ? rejectedCandidates.get(rejectedCandidateId) : undefined;
     if (rejectedCandidateId && !rejected) {

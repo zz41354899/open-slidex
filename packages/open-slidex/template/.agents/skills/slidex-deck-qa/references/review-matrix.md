@@ -34,7 +34,8 @@ Run an evidence pass and a visual pass. Fix blockers before polish.
 - Confirm scripts and HTTP(S) resources run only inside the opaque-origin
   sandbox. Libraries, fonts, images, video, frames, workers, and connections
   may require network access at playback time.
-- Inline required local resources. Unresolved local sidecars are not portable.
+- Package required local HTML images through folder import or MCP
+  `htmlAssetRoot`; verify PNG became WebP and no original local path remains.
 
 ## Visual pass
 

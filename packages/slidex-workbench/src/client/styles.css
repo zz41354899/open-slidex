@@ -339,6 +339,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .osx-mdx-dropzone > span { display: grid; gap: 6px; }
 .osx-mdx-dropzone strong { color: #e4e2dd; font-size: 12px; font-weight: 620; }
 .osx-mdx-dropzone small { color: #70737a; font-size: 9px; }
+.osx-import-folder { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 8px; width: 100%; border: 1px solid rgb(255 255 255 / .1); border-radius: 10px; padding: 10px 12px; background: rgb(255 255 255 / .025); color: #d9d7df; cursor: pointer; text-align: left; }
+.osx-import-folder:hover { border-color: rgb(143 131 255 / .46); background: rgb(143 131 255 / .06); }
+.osx-import-folder svg { color: #9a8fff; }
+.osx-import-folder span { font-size: 10px; font-weight: 650; }
+.osx-import-folder small { grid-column: 2; color: #74777d; font-size: 9px; margin-top: 3px; }
 .osx-import-policy { display: flex; align-items: flex-start; gap: 8px; margin-top: 3px; color: #74777d; font-size: 9px; line-height: 1.5; }
 .osx-import-policy svg { flex: 0 0 auto; color: #8f83ff; }
 .osx-import-dialog .osx-workspace-error { margin: 2px 0; }

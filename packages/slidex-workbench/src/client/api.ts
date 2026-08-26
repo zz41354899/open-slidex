@@ -116,9 +116,15 @@ export function createLocalWorkspacePresentation(input: {
   });
 }
 
-export function importLocalWorkspacePresentation(file: File) {
+export type WorkspaceHtmlSidecarFile = { file: File; path: string };
+
+export function importLocalWorkspacePresentation(file: File, sidecars: WorkspaceHtmlSidecarFile[] = []) {
   const form = new FormData();
   form.set("file", file);
+  for (const sidecar of sidecars) {
+    form.append("asset", sidecar.file);
+    form.append("assetPath", sidecar.path);
+  }
   return requestJson<{ editorUrl: string; presentation: LocalWorkspacePresentation }>("/api/v1/workspace/presentations/import", {
     body: form,
     method: "POST"

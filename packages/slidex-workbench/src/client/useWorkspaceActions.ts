@@ -36,9 +36,11 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
   const [manageError, setManageError] = useState("");
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File>();
+  const [importSidecars, setImportSidecars] = useState<Array<{ file: File; path: string }>>([]);
   const [importPending, setImportPending] = useState(false);
   const [importError, setImportError] = useState("");
   const importInputRef = useRef<HTMLInputElement>(null);
+  const importFolderInputRef = useRef<HTMLInputElement>(null);
 
   const beginCreation = useCallback((next: CreationIntent) => {
     setPreview(undefined);
@@ -73,6 +75,7 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
 
   const beginImport = useCallback(() => {
     setImportFile(undefined);
+    setImportSidecars([]);
     setImportError("");
     setImportOpen(true);
   }, []);
@@ -83,6 +86,7 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
     const extension = file.name.toLowerCase().match(/\.(mdx|html)$/)?.[1];
     if (!extension) {
       setImportFile(undefined);
+      setImportSidecars([]);
       setImportError(zh ? "只支援 .mdx 或 .html。" : "Use an .mdx or .html file.");
       return;
     }
@@ -93,6 +97,33 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
       return;
     }
     setImportFile(file);
+    setImportSidecars([]);
+  }, [zh]);
+
+  const chooseImportFolder = useCallback((files?: FileList | null) => {
+    setImportError("");
+    const candidates = [...(files ?? [])];
+    const sources = candidates.filter((file) => /\.(?:mdx|html)$/i.test(file.name));
+    if (sources.length !== 1) {
+      setImportFile(undefined);
+      setImportSidecars([]);
+      setImportError(zh ? "請選擇只包含一份 .html 或 .mdx 的簡報資料夾。" : "Choose a presentation folder containing exactly one .html or .mdx file.");
+      return;
+    }
+    const source = sources[0]!;
+    if (!source.size || source.size > 50 * 1024 * 1024) {
+      setImportFile(undefined);
+      setImportSidecars([]);
+      setImportError(zh ? "匯入檔案大小必須介於 1 byte 與 50 MB 之間。" : "The import file must be between 1 byte and 50 MB.");
+      return;
+    }
+    const sidecars = /\.html$/i.test(source.name)
+      ? candidates
+          .filter((file) => file !== source && /\.(?:avif|gif|jpe?g|png|webp|svg)$/i.test(file.name))
+          .map((file) => ({ file, path: importFolderPath(file) }))
+      : [];
+    setImportFile(source);
+    setImportSidecars(sidecars);
   }, [zh]);
 
   const importPresentation = useCallback(async () => {
@@ -100,13 +131,13 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
     setImportPending(true);
     setImportError("");
     try {
-      const result = await importLocalWorkspacePresentation(importFile);
+      const result = await importLocalWorkspacePresentation(importFile, importSidecars);
       window.location.assign(result.editorUrl);
     } catch (error) {
       setImportError(messageOf(error, zh ? "無法匯入這份 OpenSlideX 簡報。" : "Could not import this OpenSlideX presentation."));
       setImportPending(false);
     }
-  }, [importFile, importPending, zh]);
+  }, [importFile, importPending, importSidecars, zh]);
 
   const openPresentation = useCallback(async (id: string) => {
     if (openingId) return;
@@ -171,13 +202,16 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
     beginImport,
     beginManagement,
     chooseImportFile,
+    chooseImportFolder,
     createPresentation,
     deletePresentation,
     importError,
     importFile,
+    importFolderInputRef,
     importInputRef,
     importOpen,
     importPending,
+    importSidecars,
     importPresentation,
     intent,
     manageError,
@@ -198,4 +232,10 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
     setTitle,
     title
   };
+}
+
+function importFolderPath(file: File) {
+  const relative = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
+  const parts = relative.replace(/\\/g, "/").split("/").filter(Boolean);
+  return parts.length > 1 ? parts.slice(1).join("/") : file.name;
 }

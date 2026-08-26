@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
+import { readFile as readLocalFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import sharp from "sharp";
 
 import { analyzeHtmlPresentation, assertSandboxedHtml } from "./htmlImportPolicy";
 import { assertSafeMotionDocSvg } from "@/core/motion-doc/domain/svgPolicy";
@@ -11,7 +15,19 @@ export type WorkspaceImportAsset = {
   bytes: Uint8Array;
   fileName: string;
   mediaType?: string;
+  preserveOriginal?: boolean;
   source: string;
+};
+
+export type WorkspaceHtmlSidecar = {
+  file: File;
+  path: string;
+};
+
+export type PackageHtmlAssetsOptions = {
+  /** Absolute folder used to resolve relative image references, primarily for MCP. */
+  assetRoot?: string;
+  htmlSidecars?: WorkspaceHtmlSidecar[];
 };
 
 export type WorkspaceImportPayload = {
@@ -26,7 +42,8 @@ export type ResolveWorkspaceImportAsset = (source: string) => Promise<WorkspaceI
 export async function readWorkspaceImport(
   file: File,
   referencedSources: (source: string) => string[],
-  resolveWorkspaceAsset?: ResolveWorkspaceImportAsset
+  resolveWorkspaceAsset?: ResolveWorkspaceImportAsset,
+  options: { htmlSidecars?: WorkspaceHtmlSidecar[] } = {}
 ): Promise<WorkspaceImportPayload> {
   const extension = path.extname(file.name).toLowerCase();
   if (extension === ".mdx") {
@@ -56,18 +73,203 @@ export async function readWorkspaceImport(
   } catch {
     throw badRequest("The HTML import must use UTF-8 encoding.");
   }
-  assertSandboxedHtml(html);
-  const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
+  const packaged = await packageHtmlAssets(html, { htmlSidecars: options.htmlSidecars });
+  assertSandboxedHtml(packaged.source, { localAssets: packaged.assets.map((asset) => asset.fileName) });
+  const packagedBytes = new TextEncoder().encode(packaged.source);
+  const hash = createHash("sha256").update(packagedBytes).digest("hex").slice(0, 16);
   const fileName = `source-${hash}.html`;
   const assetSource = `assets/${fileName}`;
   const title = file.name.replace(/\.html$/i, "").trim() || "Imported HTML";
-  const pages = analyzeHtmlPresentation(html);
+  const pages = analyzeHtmlPresentation(packaged.source);
   return {
-    assets: [],
-    html: { bytes, fileName, source: assetSource },
+    assets: packaged.assets,
+    html: { bytes: packagedBytes, fileName, source: assetSource },
     kind: "html",
     source: createHtmlPresentationMdx(title, assetSource, hash, pages)
   };
+}
+
+export async function packageHtmlAssets(source: string, options: PackageHtmlAssetsOptions = {}) {
+  const sidecars = options.htmlSidecars ?? [];
+  const assetsByReference = new Map<string, WorkspaceImportAsset>();
+  for (const sidecar of sidecars) {
+    const reference = normalizeSidecarReference(sidecar.path);
+    if (assetsByReference.has(reference)) throw badRequest(`The HTML import includes the sidecar more than once: ${reference}`);
+    if (!sidecar.file.size || sidecar.file.size > 25 * 1024 * 1024) {
+      throw badRequest(`HTML sidecar ${reference} must be between 1 byte and 25 MB.`);
+    }
+    const extension = localImageExtension(reference);
+    if (!extension) {
+      throw badRequest(`HTML sidecars must be raster images or SVG files: ${reference}`);
+    }
+    assetsByReference.set(reference, await packageHtmlImage(
+      new Uint8Array(await sidecar.file.arrayBuffer()),
+      extension,
+      reference
+    ));
+  }
+
+  for (const reference of htmlLocalImageReferences(source)) {
+    const normalized = normalizeHtmlReference(reference);
+    if (assetsByReference.has(normalized)) continue;
+    const localPath = await resolveHtmlLocalImagePath(reference, options.assetRoot);
+    if (!localPath) continue;
+    const file = await stat(localPath).catch(() => undefined);
+    if (!file?.isFile() || !file.size || file.size > 25 * 1024 * 1024) {
+      throw badRequest(`HTML image ${reference} must be a readable file between 1 byte and 25 MB.`);
+    }
+    const extension = localImageExtension(localPath);
+    if (!extension) continue;
+    assetsByReference.set(normalized, await packageHtmlImage(
+      new Uint8Array(await readLocalFile(localPath)),
+      extension,
+      reference
+    ));
+  }
+
+  const replacements = new Map([...assetsByReference].map(([reference, asset]) => [reference, asset.fileName]));
+  return {
+    assets: [...assetsByReference.values()],
+    source: rewriteHtmlSidecarReferences(source, replacements)
+  };
+}
+
+async function packageHtmlImage(bytes: Uint8Array, extension: string, reference: string): Promise<WorkspaceImportAsset> {
+  let outputBytes = bytes;
+  let outputExtension = extension === ".jpeg" ? ".jpg" : extension;
+  if (extension === ".png") {
+    try {
+      outputBytes = new Uint8Array(await sharp(bytes, { failOn: "error" })
+        .rotate()
+        .webp({ alphaQuality: 100, effort: 4, quality: 90 })
+        .toBuffer());
+      outputExtension = ".webp";
+    } catch {
+      throw badRequest(`HTML PNG image could not be converted to WebP: ${reference}`);
+    }
+  } else if (extension === ".svg") {
+    let svg: string;
+    try { svg = new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { throw badRequest(`HTML SVG sidecar must use UTF-8: ${reference}`); }
+    try { assertSafeMotionDocSvg(svg); } catch (error) { throw badRequest(error instanceof Error ? error.message : `HTML SVG sidecar is unsafe: ${reference}`); }
+  }
+  const hash = createHash("sha256").update(outputBytes).digest("hex").slice(0, 16);
+  const fileName = `html-asset-${hash}${outputExtension}`;
+  return {
+    bytes: outputBytes,
+    fileName,
+    mediaType: htmlSidecarMimeType(outputExtension),
+    preserveOriginal: true,
+    source: `assets/${fileName}`
+  };
+}
+
+function htmlLocalImageReferences(source: string) {
+  const values: string[] = [];
+  const attributes = /<[A-Za-z][^>]*?\s+(?:src|poster|data|href|xlink:href)\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))/gi;
+  const cssUrl = /\burl\(\s*(["']?)(.*?)\1\s*\)/gi;
+  const srcset = /<[A-Za-z][^>]*?\s+srcset\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))/gi;
+  for (const match of source.matchAll(attributes)) values.push(match[2] ?? match[3] ?? "");
+  for (const match of source.matchAll(cssUrl)) values.push(match[2] ?? "");
+  for (const match of source.matchAll(srcset)) {
+    values.push(...(match[2] ?? match[3] ?? "").split(",").map((candidate) => candidate.trim().split(/\s+/, 1)[0] ?? ""));
+  }
+  return unique(values.map((value) => decodeHtmlReference(value).trim()))
+    .filter((value) => localImageExtension(value));
+}
+
+async function resolveHtmlLocalImagePath(reference: string, assetRoot?: string) {
+  const encodedValue = decodeHtmlReference(reference).trim().split(/[?#]/, 1)[0] ?? "";
+  let value = encodedValue;
+  try { value = decodeURIComponent(encodedValue); } catch { /* Keep literal filesystem characters. */ }
+  if (!value || /^(?:https?:|data:|blob:|about:|\/\/)/i.test(value)) return undefined;
+  if (/^file:/i.test(value)) {
+    try { return fileURLToPath(value); } catch { throw badRequest(`The HTML image uses an invalid file URL: ${reference}`); }
+  }
+  if (path.isAbsolute(value) || path.win32.isAbsolute(value)) return value;
+  if (!assetRoot) return undefined;
+  const root = await realpath(path.resolve(assetRoot)).catch(() => undefined);
+  if (!root) throw badRequest(`The HTML asset root does not exist: ${assetRoot}`);
+  const candidate = path.resolve(root, value.replace(/\\/g, path.sep));
+  const relative = path.relative(root, candidate);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw badRequest(`The HTML image escapes its asset root: ${reference}`);
+  }
+  return candidate;
+}
+
+function localImageExtension(value: string) {
+  const pathname = value.replace(/[?#].*$/, "");
+  const extension = path.extname(pathname).toLowerCase();
+  return /^(?:\.avif|\.gif|\.jpe?g|\.png|\.webp|\.svg)$/.test(extension) ? extension : undefined;
+}
+
+function decodeHtmlReference(value: string) {
+  return value.replace(/&(?:#(\d+)|#x([\da-f]+)|(amp|apos|gt|lt|quot));/gi, (reference, decimal, hexadecimal, named) => {
+    if (decimal || hexadecimal) return String.fromCodePoint(Number.parseInt(decimal ?? hexadecimal, decimal ? 10 : 16));
+    return { amp: "&", apos: "'", gt: ">", lt: "<", quot: '"' }[String(named).toLowerCase()] ?? reference;
+  });
+}
+
+function normalizeSidecarReference(value: string) {
+  const normalized = value.replace(/\\/g, "/").replace(/^\.\//, "");
+  if (!normalized || normalized.startsWith("/") || normalized.split("/").some((part) => !part || part === "." || part === "..")) {
+    throw badRequest("HTML sidecar paths must stay within the selected presentation folder.");
+  }
+  return normalized;
+}
+
+function htmlSidecarMimeType(extension: string) {
+  return {
+    ".avif": "image/avif",
+    ".gif": "image/gif",
+    ".jpeg": "image/jpeg",
+    ".jpg": "image/jpeg",
+    ".png": "image/png",
+    ".svg": "image/svg+xml",
+    ".webp": "image/webp"
+  }[extension];
+}
+
+function rewriteHtmlSidecarReferences(source: string, replacements: Map<string, string>) {
+  if (!replacements.size) return source;
+  const baseMatch = source.match(/<base\b[^>]*\bhref\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))[^>]*>/i);
+  const baseValue = decodeHtmlReference(baseMatch?.[2] ?? baseMatch?.[3] ?? "").trim();
+  const remoteBase = /^https?:/i.test(baseValue) ? new URL(baseValue) : undefined;
+  const replace = (value: string) => {
+    const packaged = replacements.get(normalizeHtmlReference(value));
+    if (packaged) return packaged;
+    if (!remoteBase || !value || value.startsWith("#") || /^(?:[A-Za-z][A-Za-z\d+.-]*:|\/\/)/.test(value)) return value;
+    try { return new URL(value, remoteBase).href; } catch { return value; }
+  };
+  const attributes = /(<[A-Za-z][^>]*?\s+(?:src|poster|data|href|xlink:href)\s*=\s*)(?:(['"])(.*?)\2|([^\s"'=<>`]+))/gi;
+  const cssUrl = /\burl\(\s*(['"]?)(.*?)\1\s*\)/gi;
+  const srcset = /(<[A-Za-z][^>]*?\s+srcset\s*=\s*)(?:(['"])(.*?)\2|([^\s"'=<>`]+))/gi;
+  const rewritten = source
+    .replace(attributes, (_match, prefix: string, quote: string | undefined, quoted: string | undefined, bare: string | undefined) => {
+      const value = quoted ?? bare ?? "";
+      const next = replace(value);
+      const delimiter = quote ?? '"';
+      return `${prefix}${delimiter}${next}${delimiter}`;
+    })
+    .replace(cssUrl, (_match, quote: string, value: string) => `url(${quote}${replace(value)}${quote})`)
+    .replace(srcset, (_match, prefix: string, quote: string | undefined, quoted: string | undefined, bare: string | undefined) => {
+      const value = quoted ?? bare ?? "";
+      const next = value.split(",").map((candidate) => {
+        const [reference, ...descriptor] = candidate.trim().split(/\s+/);
+        return [replace(reference ?? ""), ...descriptor].join(" ");
+      }).join(", ");
+      const delimiter = quote ?? '"';
+      return `${prefix}${delimiter}${next}${delimiter}`;
+    });
+  // A remote base would redirect packaged filenames away from the local deck.
+  // Static relative resources were expanded above, so remove it only when a
+  // local sidecar has actually been made portable.
+  return remoteBase && baseMatch ? rewritten.replace(baseMatch[0], "") : rewritten;
+}
+
+function normalizeHtmlReference(value: string) {
+  const normalized = decodeHtmlReference(value).trim().replace(/^\.\//, "").replace(/\\/g, "/");
+  try { return decodeURIComponent(normalized); } catch { return normalized; }
 }
 
 export function createHtmlPresentationMdx(

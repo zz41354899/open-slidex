@@ -33,7 +33,7 @@ import {
 import { SlideXProject } from "./project";
 import { assertSandboxedHtml } from "./htmlImportPolicy";
 import { renderOfficialTemplateCover } from "./templateCover";
-import { readWorkspaceImport } from "./workspaceImport";
+import { readWorkspaceImport, type WorkspaceHtmlSidecar } from "./workspaceImport";
 
 export type LocalWorkspacePresentation = {
   cover: string;
@@ -170,11 +170,12 @@ export class OpenSlideXWorkspace {
     return presentation;
   }
 
-  async importMdx(file: File) {
+  async importMdx(file: File, htmlSidecars: WorkspaceHtmlSidecar[] = []) {
     const imported = await readWorkspaceImport(
       file,
       (source) => listSlideXAssetReferences(source).map((reference) => reference.source),
-      (source) => this.recoverWorkspaceAsset(source)
+      (source) => this.recoverWorkspaceAsset(source),
+      { htmlSidecars }
     );
     const source = imported.source;
 
@@ -203,7 +204,7 @@ export class OpenSlideXWorkspace {
       }
       const commands = [];
       for (const asset of imported.assets) {
-        if (asset.mediaType === "image/svg+xml" || asset.mediaType === "text/html") {
+        if (asset.preserveOriginal || asset.mediaType === "image/svg+xml" || asset.mediaType === "text/html") {
           await writeFile(path.join(target, asset.source), asset.bytes, { flag: "wx" }).catch(async (error: NodeJS.ErrnoException) => {
             if (error.code !== "EEXIST") throw error;
           });

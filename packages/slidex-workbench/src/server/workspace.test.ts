@@ -532,13 +532,63 @@ test("local workspace preserves external HTTP(S) libraries, images, and video wi
   assert.equal(await readFile(path.join(projectRoot, "assets", htmlAsset), "utf8"), html);
 });
 
+test("local workspace converts selected HTML PNG sidecars to WebP and packages SVG into deck assets", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const png = await tinyPng();
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e3120b"/></svg>`;
+  const html = `<!doctype html><html><body><section class="slide is-active" data-slidex-slide-index="0"><img src="assets/cover.png"><img src="./icons/mark.svg"></section></body></html>`;
+  const presentation = await workspace.importMdx(new File([html], "sidecars.html", { type: "text/html" }), [
+    { file: new File([png], "cover.png", { type: "image/png" }), path: "assets/cover.png" },
+    { file: new File([svg], "mark.svg", { type: "image/svg+xml" }), path: "icons/mark.svg" }
+  ]);
+  const projectRoot = path.join(workspaceRoot, presentation.id);
+  const assets = await readdir(path.join(projectRoot, "assets"));
+  const pngAsset = assets.find((name) => /^html-asset-[a-f0-9]{16}\.webp$/.test(name));
+  const svgAsset = assets.find((name) => /^html-asset-[a-f0-9]{16}\.svg$/.test(name));
+  const document = parseMotionDoc(await readFile(path.join(projectRoot, "presentation.mdx"), "utf8"));
+  const htmlSource = String(document.scenes[0]?.blocks[0]?.props.src ?? "");
+
+  assert.ok(pngAsset);
+  assert.ok(svgAsset);
+  assert.equal((await sharp(await readFile(path.join(projectRoot, "assets", pngAsset))).metadata()).format, "webp");
+  assert.equal(await readFile(path.join(projectRoot, "assets", svgAsset), "utf8"), svg);
+  const canonical = await readFile(path.join(projectRoot, htmlSource), "utf8");
+  assert.match(canonical, new RegExp(`src="${pngAsset}"`));
+  assert.match(canonical, new RegExp(`src="${svgAsset}"`));
+  if (process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    const thumbnail = await (await workspace.project(presentation.id)).renderHtmlThumbnail(htmlSource, 1);
+    assert.ok(thumbnail.byteLength > 100);
+  }
+});
+
+test("local workspace packages an absolute PNG path and rewrites it to a deck WebP asset", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const absolutePng = path.join(root, "absolute cover.png");
+  await writeFile(absolutePng, await tinyPng());
+  const html = `<!doctype html><html><body><section class="slide"><img src="${absolutePng}"></section></body></html>`;
+  const presentation = await workspace.importMdx(new File([html], "absolute.html", { type: "text/html" }));
+  const projectRoot = path.join(workspaceRoot, presentation.id);
+  const document = parseMotionDoc(await readFile(path.join(projectRoot, "presentation.mdx"), "utf8"));
+  const htmlSource = String(document.scenes[0]?.blocks[0]?.props.src ?? "");
+  const canonical = await readFile(path.join(projectRoot, htmlSource), "utf8");
+  const webp = canonical.match(/html-asset-[a-f0-9]{16}\.webp/)?.[0];
+
+  assert.ok(webp);
+  assert.doesNotMatch(canonical, new RegExp(absolutePng.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.equal((await sharp(path.join(projectRoot, "assets", webp)).metadata()).format, "webp");
+});
+
 test("local workspace rejects unresolved relative HTML sidecars", async (context) => {
   const { root, workspace } = await fixture();
   context.after(async () => rm(root, { force: true, recursive: true }));
 
   await assert.rejects(
     workspace.importMdx(new File(["<!doctype html><html><body><img src=\"./tree.svg\"></body></html>"], "external.html", { type: "text/html" })),
-    /relative or unsupported resource.*absolute HTTP\(S\).*inline/i
+    /relative or unsupported resource.*complete HTML presentation folder.*htmlAssetRoot/i
   );
 });
 
@@ -687,6 +737,24 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   const importedPayload = await imported.json();
   assert.equal(importedPayload.presentation.title, "Imported through API");
   assert.equal(await readFile(path.join(workspaceRoot, importedPayload.presentation.id, "presentation.mdx"), "utf8"), importedSource);
+
+  const htmlSidecarForm = new FormData();
+  htmlSidecarForm.set("file", new File([
+    `<!doctype html><html><body><img src="assets/from-folder.png"></body></html>`
+  ], "folder-import.html", { type: "text/html" }));
+  htmlSidecarForm.append("asset", new File([await tinyPng()], "from-folder.png", { type: "image/png" }));
+  htmlSidecarForm.append("assetPath", "assets/from-folder.png");
+  const htmlSidecarImport = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/presentations/import`, {
+    body: htmlSidecarForm,
+    headers: { origin: `http://127.0.0.1:${uiPort}` },
+    method: "POST"
+  });
+  assert.equal(htmlSidecarImport.status, 201);
+  const htmlSidecarPayload = await htmlSidecarImport.json();
+  const htmlSidecarRoot = path.join(workspaceRoot, htmlSidecarPayload.presentation.id);
+  const htmlSidecarDocument = parseMotionDoc(await readFile(path.join(htmlSidecarRoot, "presentation.mdx"), "utf8"));
+  const htmlSidecarSource = String(htmlSidecarDocument.scenes[0]?.blocks[0]?.props.src ?? "");
+  assert.match(await readFile(path.join(htmlSidecarRoot, htmlSidecarSource), "utf8"), /html-asset-[a-f0-9]{16}\.webp/);
 
   const relaxedImportForm = new FormData();
   relaxedImportForm.set("file", new File([

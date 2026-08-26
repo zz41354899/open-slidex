@@ -28,6 +28,22 @@ test("HTML page source locations recognize every OpenSlideX HTML export slide", 
   assert.equal(htmlPageSourceSelection(source, 2)?.source, `<section class="slide slide-transition-none" data-slidex-slide-index="1">Two</section>`);
 });
 
+test("HTML page source locations use plain slide classes as a generic deck fallback", () => {
+  const source = `<!doctype html><html><body>${Array.from({ length: 52 }, (_, index) =>
+    `<section class="slide${index === 0 ? " active" : ""}" id="slide-${index + 1}">${index + 1}</section>`
+  ).join("\n")}</body></html>`;
+
+  const pages = htmlPageSourceLocations(source);
+  assert.equal(pages.length, 52);
+  assert.deepEqual(pages.map(({ page }) => page), Array.from({ length: 52 }, (_, index) => index + 1));
+  assert.match(htmlPageSourceSelection(source, 52)?.source ?? "", /id="slide-52"/);
+});
+
+test("explicit page declarations take priority over nested generic slide classes", () => {
+  const source = `<html><body><main data-slidex-page="1"><div class="slide">Decoration</div></main><main data-slidex-page="2"></main></body></html>`;
+  assert.deepEqual(htmlPageSourceLocations(source).map(({ page }) => page), [1, 2]);
+});
+
 test("HTML page source locations point at the opening tag for editor focus", () => {
   const source = `<html><body><section class="gcard page" id="g1">One</section></body></html>`;
   const [page] = htmlPageSourceLocations(source);

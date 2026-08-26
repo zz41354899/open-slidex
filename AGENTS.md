@@ -53,9 +53,11 @@ Never create or use a repository-root presentation source.
 - For browser-native HTML, load `slidex-html-authoring`. Use
   `open_slidex_read` with `sourceFormat: "html"` to list or chunk-read the
   canonical source, then `open_slidex_edit` with `target: "html"` and the latest
-  revision to create or replace it. Inline resources and HTTP(S) libraries,
-  fonts, images, media, frames, workers, and connections run in an opaque-origin
-  sandbox; unresolved local sidecars do not. Never author `HtmlEmbedBlock`.
+  revision to create or replace it. Pass `htmlAssetRoot` for relative local
+  images; absolute local image paths are packaged directly, PNG is converted to
+  WebP, and saved HTML is rewritten to the deck's `assets/`. Inline resources
+  and HTTP(S) libraries, fonts, images, media, frames, workers, and connections
+  run in an opaque-origin sandbox. Never author `HtmlEmbedBlock`.
 - Submit one complete deck or one complete slide to `open_slidex_edit` with the
   latest revision. Patch a rejected candidate from its node-specific findings.
 - Use `open_slidex_review` only for review-only work. An accepted edit already

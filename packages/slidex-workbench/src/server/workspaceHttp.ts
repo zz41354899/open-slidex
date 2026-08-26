@@ -162,7 +162,18 @@ async function routeWorkspaceRequest(
     if (!isWorkspaceImportFile(file)) {
       throw Object.assign(new Error("Choose one .mdx or .html file."), { status: 400 });
     }
-    const presentation = await input.workspace.importMdx(file);
+    const sidecarFiles = form.getAll("asset");
+    const sidecarPaths = form.getAll("assetPath");
+    if (sidecarFiles.length !== sidecarPaths.length || !sidecarFiles.every(isWorkspaceImportFile) || !sidecarPaths.every((value) => typeof value === "string")) {
+      throw Object.assign(new Error("Each HTML sidecar must include a file and its path inside the selected folder."), { status: 400 });
+    }
+    if (sidecarFiles.length && !/\.html$/i.test(file.name)) {
+      throw Object.assign(new Error("HTML sidecars can be imported only with an .html presentation."), { status: 400 });
+    }
+    const presentation = await input.workspace.importMdx(file, sidecarFiles.map((sidecar, index) => ({
+      file: sidecar,
+      path: String(sidecarPaths[index])
+    })));
     const editorUrl = await input.workspace.open(presentation.id);
     sendJson(outgoing, { editorUrl, presentation }, 201);
     return;
@@ -328,9 +339,9 @@ async function jsonBody<T>(request: Request) {
 
 async function multipartBody(request: Request) {
   const length = Number(request.headers.get("content-length") ?? 0);
-  // The client accepts a 50 MB file. Reserve a small amount for multipart boundaries
-  // so a file at that limit reaches the import validator instead of failing early.
-  if (length > MAX_WORKSPACE_IMPORT_FILE_BYTES + 64 * 1024) {
+  // HTML folder import may carry source-local images. The source remains capped at
+  // 50 MB and every sidecar is independently validated before it is persisted.
+  if (length > MAX_WORKSPACE_IMPORT_FILE_BYTES * 2 + 128 * 1024) {
     throw Object.assign(new Error("The OpenSlideX import upload is too large."), { status: 413 });
   }
   return request.formData().catch(() => {

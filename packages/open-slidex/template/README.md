@@ -49,7 +49,8 @@ local media import, review, and revision-safe MDX/HTML edit. For browser-native
 HTML, `open_slidex_read` preserves canonical bytes and reports online
 dependencies; `open_slidex_edit` creates or replaces that source. HTTP(S)
 libraries, styles, fonts, images, media, frames, workers, and connections run
-inside an opaque-origin sandbox. Relative local sidecars still need a remote
-`<base href>` or inlining. `open_slidex_source_import` recovers
+inside an opaque-origin sandbox. Folder import packages relative local images,
+converts PNG to WebP, and rewrites them into the deck's `assets/`; MCP HTML
+edits use `htmlAssetRoot` for the same result. `open_slidex_source_import` recovers
 text geometry and typography hints, converts supported embedded images to
 portable WebP, and returns native reviewable `Text` and `ImageBlock` evidence.
