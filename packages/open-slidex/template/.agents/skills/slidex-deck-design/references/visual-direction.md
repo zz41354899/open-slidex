@@ -28,15 +28,15 @@ Write a one-sentence visual concept that connects tone to form, for example:
 - For company profiles or sectioned reports, a contents page and concise
   organization/topic introduction are valid orientation devices. Keep their
   hierarchy editorial rather than turning them into navigation chrome.
-- For the bundled eight-style system, use the clean Japanese company-profile
-  direction: white canvas, cyan-blue accent, strong black display type,
-  restrained corners, compact metadata, and precisely aligned image crops.
-  Differentiate styles through composition and narrative purpose, not by
-  switching to unrelated dark, vintage, luxury, or decorative color worlds.
+- Let the selected core reference own the starting visual system: audited
+  cyan for financial reporting, precise cyan for data, warm editorial for
+  narrative, vivid violet for product, executive blue for strategy, or organic
+  green for learning. Do not add a separate style specimen or mix palettes from
+  multiple references unless the user's brand system requires it.
 - Use a verified `https://images.unsplash.com/...` URL when the user approves
   remote photography. Never persist a local absolute filesystem path; import
   local media into the deck when offline portability is required.
-- In style-driven work, use `Shape` only as the background of a semantic card
+- In reference-driven work, use `Shape` only as the background of a semantic card
   whose Text or data children share a named group. Do not draw decorative
   lines, circles, abstract artwork, fake icons, or charts from Shape layers.
   Use imagery, the slide background, whitespace, native Chart/Table, and type

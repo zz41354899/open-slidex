@@ -4,6 +4,10 @@ Use this route for a 24-32 page board update, earnings review, investment memo,
 consulting recommendation, or financial weekly. Thirty pages is a useful
 planning target, not a quota. Remove pages that do not earn a decision.
 
+Inspect [the complete native reference](consulting-financial-report.mdx) for
+all 30 editable pages. Its figures are illustrative and must be replaced with
+verified project evidence.
+
 ## Thirty-page decision arc
 
 1. Cover: period, entity, decision context.
@@ -70,3 +74,8 @@ For a requested animated deck, route next to `slidex-motion-direction` and read
 `references/long-deck-motion.md`. Every page receives at least a deliberate
 transition; only evidence that benefits from sequence receives additional
 entrances or chart motion.
+
+For browser-native HTML composition, also read
+`slidex-html-authoring/references/ref-idaeo-nov.md`. It preserves the design
+grammar learned from the local IDAEO and Nov references without copying their
+private source content into the published package.

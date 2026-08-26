@@ -26,4 +26,10 @@ Turn a supplied local PPTX source into a coherent editable MotionDoc deck. Prese
 
 ## Commit one validated result
 
-Plan the complete target deck before writing. For a redesign, read one recommended twelve-page style specimen plus the closest narrative example, then preserve the source slide count unless the user requests restructuring. Submit one complete deck to `open_slidex_edit` with its latest `expectedRevision`; repair a rejected candidate from its node-specific visual QA findings. Do not persist PowerPoint XML, Base64, foreign components, or absolute local paths inside `presentation.mdx`.
+Plan the complete target deck before writing. For a redesign, use
+`open_slidex_read.templateQuery` to choose exactly one of the six thirty-page
+core references, then preserve the source slide count unless the user requests
+restructuring. Submit one complete deck to `open_slidex_edit` with its latest
+`expectedRevision`; repair a rejected candidate from its node-specific visual
+QA findings. Do not persist PowerPoint XML, Base64, foreign components, or
+absolute local paths inside `presentation.mdx`.

@@ -5,11 +5,15 @@ pattern, but mixed structures should still feel like one story.
 
 | Pattern | Best for | Default arc | Native example |
 | --- | --- | --- | --- |
+| Consulting financial report | board update, consulting, investment, earnings, financial weekly | decision -> actuals -> drivers -> scenarios -> recommendation -> control | `consulting-financial-report.mdx` |
 | Editorial story | keynote, vision, brand, narrative report | hook -> tension -> evidence -> pattern -> decisive close | `editorial-story.mdx` |
 | Data brief | KPI, research, status, operations | observation -> comparison -> trend -> owner and action | `data-brief.mdx` |
 | Product launch | product, sales, feature announcement | promise -> old friction -> transformation -> action | `product-launch.mdx` |
 | Strategy proposal | recommendation, board memo, investment, plan | decision -> options and tradeoffs -> sequence -> approval | `strategy-proposal.mdx` |
 | Training workshop | lesson, onboarding, enablement | observable objective -> model -> worked structure -> practice | `training-workshop.mdx` |
+
+These are the only six core MDX references. Each contains 30 editable slides;
+choose one primary reference rather than mixing multiple visual systems.
 
 ## Slide jobs
 

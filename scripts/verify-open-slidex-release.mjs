@@ -69,6 +69,13 @@ try {
   }
   for (const reference of [
     "slidex-deck-design/references/consulting-financial-report.md",
+    "slidex-deck-design/references/consulting-financial-report.mdx",
+    "slidex-deck-design/references/data-brief.mdx",
+    "slidex-deck-design/references/editorial-story.mdx",
+    "slidex-deck-design/references/product-launch.mdx",
+    "slidex-deck-design/references/strategy-proposal.mdx",
+    "slidex-deck-design/references/training-workshop.mdx",
+    "slidex-deck-design/references/template-catalog.json",
     "slidex-html-authoring/references/ref-idaeo-nov.md",
     "slidex-motion-direction/references/long-deck-motion.md"
   ]) {
@@ -79,6 +86,7 @@ try {
     assert.doesNotMatch(filePath, /(?:^|\/)\.DS_Store$/);
     assert.doesNotMatch(filePath, /onboarding-export\.mp4$/);
     assert.doesNotMatch(filePath, /deckPlan(?:Materializer|Template|V1)/);
+    assert.doesNotMatch(filePath, /slidex-deck-design\/references\/style-(?:catalog|selection|s\d{2})/);
   }
   assert.ok(!packedFiles.has("runtime/workbench/sdk/cli.js"), "the runtime must not duplicate the full SDK");
   assert.ok(!packedFiles.has("runtime/workbench/sdk/pptx-browser.js"), "the runtime must not duplicate the full SDK");

@@ -33,8 +33,8 @@ MotionDoc and does not produce a finished deck by itself.
 
 ## Quality handoff
 
-After inspection, classify the story, choose one narrative pattern, use MCP
-style recommendations, and read one twelve-page style specimen plus one
-narrative example. Borrow hierarchy, grids, image rhythm, cards, and evidence
-treatments—not the sample wording. Preserve supported content, label gaps, and
-submit the complete native deck through the rendered quality gate.
+After inspection, classify the story and use MCP `templateQuery` to choose
+exactly one of the six thirty-page core references. Borrow hierarchy, grids,
+image rhythm, cards, and evidence treatments—not the sample wording. Preserve
+supported content, label gaps, and submit the complete native deck through the
+rendered quality gate.
