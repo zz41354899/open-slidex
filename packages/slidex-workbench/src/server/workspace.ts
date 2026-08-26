@@ -31,6 +31,7 @@ import {
 } from "@open-slidex/sdk/node";
 
 import { SlideXProject } from "./project";
+import { assertSandboxedHtml } from "./htmlImportPolicy";
 import { renderOfficialTemplateCover } from "./templateCover";
 import { readWorkspaceImport } from "./workspaceImport";
 
@@ -78,6 +79,8 @@ export type RenameWorkspacePresentationInput = {
 export type DeleteWorkspacePresentationInput = {
   confirmationTitle?: unknown;
 };
+
+const PRESENTATION_COVER_RENDER_VERSION = 2;
 
 export class OpenSlideXWorkspace {
   private readonly presentationCoverCache = new Map<string, { revision: string; svg: string }>();
@@ -171,7 +174,7 @@ export class OpenSlideXWorkspace {
     const imported = await readWorkspaceImport(
       file,
       (source) => listSlideXAssetReferences(source).map((reference) => reference.source),
-      (source) => this.recoverWorkspaceImageAsset(source)
+      (source) => this.recoverWorkspaceAsset(source)
     );
     const source = imported.source;
 
@@ -195,8 +198,17 @@ export class OpenSlideXWorkspace {
     try {
       await resetGeneratedProjectState(target);
       await replaceProjectName(target, id);
+      if (imported.html) {
+        await writeFile(path.join(target, imported.html.source), imported.html.bytes);
+      }
       const commands = [];
       for (const asset of imported.assets) {
+        if (asset.mediaType === "image/svg+xml" || asset.mediaType === "text/html") {
+          await writeFile(path.join(target, asset.source), asset.bytes, { flag: "wx" }).catch(async (error: NodeJS.ErrnoException) => {
+            if (error.code !== "EEXIST") throw error;
+          });
+          continue;
+        }
         const stored = await importOpenSlideXImageAsset({
           bytes: asset.bytes,
           fileName: asset.fileName,
@@ -221,7 +233,7 @@ export class OpenSlideXWorkspace {
     }
 
     const presentation = await this.presentationSummary(id);
-    if (!presentation) throw new Error("The MDX presentation was imported but could not be opened.");
+    if (!presentation) throw new Error("The presentation was imported but could not be opened.");
     return presentation;
   }
 
@@ -333,23 +345,35 @@ export class OpenSlideXWorkspace {
     await mkdir(coverRoot, { recursive: true });
 
     const metadata = await readCoverMetadata(metadataPath);
-    if (metadata?.revision === input.revision) {
+    if (
+      metadata?.renderVersion === PRESENTATION_COVER_RENDER_VERSION &&
+      metadata.revision === input.revision
+    ) {
       const cachedPng = await readFile(coverPath).catch(() => null);
       if (cachedPng) return buildEmbeddedPngCoverSvg(cachedPng, input.title);
     }
 
     const temporaryPath = `${coverPath}.${process.pid}.${Date.now()}.tmp.png`;
     try {
-      await renderSlideXDocument({
-        mode: "slide",
-        outputPath: temporaryPath,
-        projectRoot: input.root,
-        slideIndex: 0,
-        source: input.source,
-        title: input.title
-      });
+      const htmlCover = firstHtmlCover(input.source);
+      if (htmlCover) {
+        const png = await new SlideXProject(input.root).renderHtmlThumbnail(htmlCover.source, htmlCover.page);
+        await writeFile(temporaryPath, png);
+      } else {
+        await renderSlideXDocument({
+          mode: "slide",
+          outputPath: temporaryPath,
+          projectRoot: input.root,
+          slideIndex: 0,
+          source: input.source,
+          title: input.title
+        });
+      }
       await rename(temporaryPath, coverPath);
-      await writeFile(metadataPath, `${JSON.stringify({ revision: input.revision })}\n`, "utf8");
+      await writeFile(metadataPath, `${JSON.stringify({
+        renderVersion: PRESENTATION_COVER_RENDER_VERSION,
+        revision: input.revision
+      })}\n`, "utf8");
       return buildEmbeddedPngCoverSvg(await readFile(coverPath), input.title);
     } catch {
       await rm(temporaryPath, { force: true });
@@ -394,12 +418,19 @@ export class OpenSlideXWorkspace {
   }
 
   /**
-   * Standalone MDX exports retain local asset paths. If they came from this
-   * Workspace, safely reuse an available or recoverable WebP instead of
-   * forcing the user to build a ZIP merely to round-trip their own deck.
+   * Lightweight MDX exports retain local asset paths. Reuse a typed asset from
+   * another active or recoverable deck so HTML can round-trip without Base64
+   * or a second archive format.
    */
-  private async recoverWorkspaceImageAsset(source: string) {
-    if (!isOpenSlideXLocalAssetSource(source) || !source.toLowerCase().endsWith(".webp")) return undefined;
+  private async recoverWorkspaceAsset(source: string) {
+    if (!isOpenSlideXLocalAssetSource(source)) return undefined;
+    const extension = path.posix.extname(source).toLowerCase();
+    const mediaType = extension === ".webp"
+      ? "image/webp"
+      : extension === ".html" || extension === ".htm"
+        ? "text/html"
+        : undefined;
+    if (!mediaType) return undefined;
     const fileName = path.posix.basename(source);
     for (const projectRoot of await this.workspaceProjectRoots()) {
       const candidate = path.join(projectRoot, "assets", fileName);
@@ -409,11 +440,20 @@ export class OpenSlideXWorkspace {
       ]);
       if (!canonicalProjectRoot || !canonicalAssetPath.startsWith(`${canonicalProjectRoot}${path.sep}`)) continue;
       const assetStats = await lstat(canonicalAssetPath).catch(() => null);
-      if (!assetStats?.isFile() || assetStats.size > 25 * 1024 * 1024) continue;
+      const maximumBytes = mediaType === "text/html" ? 50 * 1024 * 1024 : 25 * 1024 * 1024;
+      if (!assetStats?.isFile() || assetStats.size > maximumBytes) continue;
+      const bytes = new Uint8Array(await readFile(canonicalAssetPath));
+      if (mediaType === "text/html") {
+        try {
+          assertSandboxedHtml(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+        } catch {
+          continue;
+        }
+      }
       return {
-        bytes: new Uint8Array(await readFile(canonicalAssetPath)),
+        bytes,
         fileName,
-        mediaType: "image/webp",
+        mediaType,
         source
       };
     }
@@ -443,11 +483,25 @@ async function readCoverMetadata(filePath: string) {
   const contents = await readFile(filePath, "utf8").catch(() => "");
   if (!contents) return null;
   try {
-    const value = JSON.parse(contents) as { revision?: unknown };
-    return typeof value.revision === "string" ? { revision: value.revision } : null;
+    const value = JSON.parse(contents) as { renderVersion?: unknown; revision?: unknown };
+    return typeof value.revision === "string" ? {
+      renderVersion: typeof value.renderVersion === "number" ? value.renderVersion : 1,
+      revision: value.revision
+    } : null;
   } catch {
     return null;
   }
+}
+
+function firstHtmlCover(source: string) {
+  const firstScene = parseMotionDoc(source).scenes[0];
+  const block = firstScene?.blocks.find((candidate) => candidate.type === "HtmlEmbedBlock");
+  if (!block || typeof block.props.src !== "string") return null;
+  const page = Number(block.props.page ?? 1);
+  return {
+    page: Number.isInteger(page) && page > 0 ? page : 1,
+    source: block.props.src
+  };
 }
 
 function buildEmbeddedPngCoverSvg(png: Buffer, title: string) {

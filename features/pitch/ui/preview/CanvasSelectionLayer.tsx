@@ -56,6 +56,7 @@ type CanvasSelectionLayerProps = {
   onEndInteraction: (event: PointerEvent<HTMLDivElement>, blockId: string) => void;
   onEndMarquee: (event: PointerEvent<HTMLDivElement>) => void;
   onBeginTextEdit: (blockIndex: number) => void;
+  onEndTextEdit: () => void;
   onBeginBlockTransform: () => void;
   onImageCropRectChange: (rect: ImageCropRect) => void;
   onSelectBlock: (index: number) => void;
@@ -86,6 +87,7 @@ export function CanvasSelectionLayer({
   onEndInteraction,
   onEndMarquee,
   onBeginTextEdit,
+  onEndTextEdit,
   onBeginBlockTransform,
   onImageCropRectChange,
   onSelectBlock,
@@ -232,6 +234,25 @@ export function CanvasSelectionLayer({
               }
               if (!isImageCropActive) onStartMove(event, blockIndex, frame);
             }}
+            onKeyDown={(event) => {
+              if (
+                !isTextBlock
+                || !isSelected
+                || !isPrimarySelection
+                || (event.key !== "Enter" && event.key !== "F2")
+              ) return;
+              event.preventDefault();
+              event.stopPropagation();
+              if (isGroupedSelection && activeGroupId) {
+                setGroupFocus({ blockIndex, groupId: activeGroupId });
+              }
+              onSelectBlock(blockIndex);
+              onBeginTextEdit(blockIndex);
+              const frameControl = event.currentTarget;
+              window.requestAnimationFrame(() => {
+                frameControl.querySelector<HTMLElement>("[data-text-frame-editor]")?.focus({ preventScroll: true });
+              });
+            }}
             role="button"
             style={{
               height: `${frame.h}%`,
@@ -273,13 +294,14 @@ export function CanvasSelectionLayer({
                 toolbarAlignment={frame.x + frame.w / 2 >= 50 ? "right" : "left"}
                 toolbarPlacement={frame.y < 11 ? "below" : "above"}
                 onBeginTextEdit={() => onBeginTextEdit(blockIndex)}
-                onRequestEdit={isGroupedSelection && activeGroupId
-                  ? () => {
-                      setGroupFocus({ blockIndex, groupId: activeGroupId });
-                      onSelectBlock(blockIndex);
-                      onBeginTextEdit(blockIndex);
-                    }
-                  : undefined}
+                onEndTextEdit={onEndTextEdit}
+                onRequestEdit={() => {
+                  if (isGroupedSelection && activeGroupId) {
+                    setGroupFocus({ blockIndex, groupId: activeGroupId });
+                  }
+                  onSelectBlock(blockIndex);
+                  onBeginTextEdit(blockIndex);
+                }}
                 onSelectBlock={onSelectBlock}
                 onUpdateBlock={onUpdateBlock}
                 resizeDuringEdit={isGroupedSelection}

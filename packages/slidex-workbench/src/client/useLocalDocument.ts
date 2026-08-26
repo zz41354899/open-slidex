@@ -28,6 +28,19 @@ export function shouldValidateDeferredSource(
   return Boolean(projectId) && deferredSource === currentSource;
 }
 
+export function canBeginExternalDocumentMutation(input: {
+  externalMutationInFlight: boolean;
+  saveInFlight: boolean;
+  saveState: SaveState;
+  savedSource: string;
+  source: string;
+}) {
+  return !input.externalMutationInFlight
+    && !input.saveInFlight
+    && input.saveState === "saved"
+    && input.source === input.savedSource;
+}
+
 export async function readInitialDocument(
   read: () => Promise<DocumentSnapshot>,
   wait: (delay: number) => Promise<void> = waitForDocumentRetry
@@ -59,6 +72,8 @@ export function useLocalDocument() {
   const savedSourceRef = useRef("");
   const projectIdRef = useRef("");
   const saveInFlight = useRef(false);
+  const externalMutationInFlight = useRef(false);
+  const [externalMutationVersion, setExternalMutationVersion] = useState(0);
   const saveStateRef = useRef<SaveState>("loading");
 
   const setState = useCallback((state: SaveState) => {
@@ -120,6 +135,74 @@ export function useLocalDocument() {
     localStorage.removeItem(`slidex-workbench:draft:${next.projectId}`);
   }, [setState]);
 
+  const beginExternalMutation = useCallback(() => {
+    if (!canBeginExternalDocumentMutation({
+      externalMutationInFlight: externalMutationInFlight.current,
+      saveInFlight: saveInFlight.current,
+      saveState: saveStateRef.current,
+      savedSource: savedSourceRef.current,
+      source: sourceRef.current
+    })) return null;
+
+    externalMutationInFlight.current = true;
+    return {
+      expectedRevision: revisionRef.current,
+      source: sourceRef.current
+    };
+  }, []);
+
+  const cancelExternalMutation = useCallback(() => {
+    if (!externalMutationInFlight.current) return;
+    externalMutationInFlight.current = false;
+    setExternalMutationVersion((version) => version + 1);
+  }, []);
+
+  const acceptExternalMutation = useCallback((
+    next: DocumentSnapshot,
+    rebaseDraft?: (currentSource: string) => string,
+    currentDraftSource = sourceRef.current
+  ) => {
+    if (!externalMutationInFlight.current) {
+      throw new Error("No external document mutation is active.");
+    }
+
+    const currentSource = currentDraftSource;
+    let nextSource = next.source;
+    let rebaseError: unknown;
+    if (rebaseDraft && currentSource !== savedSourceRef.current) {
+      try {
+        nextSource = rebaseDraft(currentSource);
+      } catch (error) {
+        nextSource = currentSource;
+        rebaseError = error;
+      }
+    }
+
+    externalMutationInFlight.current = false;
+    revisionRef.current = next.revision;
+    savedSourceRef.current = next.source;
+    sourceRef.current = nextSource;
+    projectIdRef.current = next.projectId;
+    setSnapshot(next);
+    setSource(nextSource);
+    const nextValidation = nextSource === next.source ? next.validation : validateSource(nextSource);
+    setValidation(nextValidation);
+    if (rebaseError) {
+      setState("conflict");
+      setMessage("The HTML source was saved, but newer Canvas edits could not be rebased. Your browser draft was preserved.");
+    } else {
+      setState(nextValidation.isValid ? (nextSource === next.source ? "saved" : "dirty") : "invalid");
+      setMessage("");
+    }
+    if (nextSource === next.source) {
+      localStorage.removeItem(`slidex-workbench:draft:${next.projectId}`);
+    }
+    setExternalMutationVersion((version) => version + 1);
+
+    if (rebaseError) throw rebaseError;
+    return nextSource;
+  }, [setState]);
+
   useEffect(() => {
     let cancelled = false;
     void readInitialDocument(readDocument)
@@ -172,7 +255,8 @@ export function useLocalDocument() {
     if (
       !currentValidation.isValid ||
       saveStateRef.current === "conflict" ||
-      saveInFlight.current
+      saveInFlight.current ||
+      externalMutationInFlight.current
     ) {
       if (!currentValidation.isValid) setState("invalid");
       return;
@@ -221,7 +305,7 @@ export function useLocalDocument() {
     if (saveState !== "dirty") return;
     const timeout = window.setTimeout(() => void commit(), 500);
     return () => window.clearTimeout(timeout);
-  }, [commit, saveState, source]);
+  }, [commit, externalMutationVersion, saveState, source]);
 
   useEffect(() => {
     function saveShortcut(event: KeyboardEvent) {
@@ -237,7 +321,7 @@ export function useLocalDocument() {
   useEffect(() => {
     const events = new EventSource(localWorkbenchApiPath("/api/v1/events"));
     const onChange = () => {
-      if (saveInFlight.current || !revisionRef.current) return;
+      if (saveInFlight.current || externalMutationInFlight.current || !revisionRef.current) return;
       void readDocument().then((remote) => {
         if (remote.revision === revisionRef.current) return;
         if (sourceRef.current === savedSourceRef.current) {
@@ -282,7 +366,10 @@ export function useLocalDocument() {
   }, []);
 
   return {
+    acceptExternalMutation,
     applySource,
+    beginExternalMutation,
+    cancelExternalMutation,
     clearMessage: () => setMessage(""),
     commit,
     downloadDraft,

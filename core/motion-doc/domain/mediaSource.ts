@@ -1,5 +1,5 @@
 const absoluteProtocolPattern = /^[a-zA-Z][a-zA-Z\d+.-]*:/;
-const embeddedMediaPattern = /^data:(?:image\/(?:avif|gif|jpeg|png|webp)|video\/(?:mp4|ogg|quicktime|webm));base64,[A-Za-z0-9+/]+={0,2}$/i;
+const embeddedMediaPattern = /^data:(?:image\/(?:avif|gif|jpeg|png|svg\+xml|webp)|video\/(?:mp4|ogg|quicktime|webm));base64,[A-Za-z0-9+/]+={0,2}$/i;
 const controlCharacterPattern = /[\u0000-\u001f\u007f]/;
 const localHttpHosts = new Set(["127.0.0.1", "::1", "localhost"]);
 
@@ -26,4 +26,9 @@ export function sanitizeMotionDocMediaSource(value: string) {
   }
 
   return "";
+}
+
+/** HTML remains a real assets/*.html file; document-capable data URLs are never persisted. */
+export function sanitizeMotionDocHtmlSource(value: string) {
+  return sanitizeMotionDocMediaSource(value);
 }

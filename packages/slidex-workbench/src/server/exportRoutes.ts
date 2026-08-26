@@ -9,6 +9,7 @@ export async function exportRoutes(context: WorkbenchRouteContext) {
     const body = await jsonBody<{
       fileName: string;
       format: "html" | "mdx" | "pptx";
+      htmlMode?: "original" | "player";
       overwrite?: boolean;
       source: string;
       target: "download" | "dist";
@@ -23,6 +24,7 @@ export async function exportRoutes(context: WorkbenchRouteContext) {
     const result = await project.export({
       fileName: body.fileName,
       format: body.format,
+      htmlMode: body.htmlMode,
       overwrite: body.overwrite === true,
       source: body.source,
       target: body.target

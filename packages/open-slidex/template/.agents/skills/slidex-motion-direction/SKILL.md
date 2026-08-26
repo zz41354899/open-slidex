@@ -19,9 +19,11 @@ motion. It contains the valid vocabulary, timing ranges, and pattern selection.
 2. State what the motion explains in one sentence.
 3. Use at most two entrance families on a normal slide and preserve a complete
    static final frame.
-4. Submit the complete updated slide through `open_slidex_edit`.
-5. Inspect the accepted preview and verify reduced-motion, raster, and PPTX
+4. For a native `SvgBlock` scene, use `sharedScene`, `stage`, and
+   `stageDuration` only after its script-free SVG and static final state pass.
+5. Submit the complete updated slide through `open_slidex_edit`.
+6. Inspect the accepted preview and verify reduced-motion, raster, and PPTX
    output do not hide information.
 
-Never use unsupported motion names, removed components, or motion to conceal an
-overcrowded static layout.
+Never embed animation code, use unsupported motion names or removed components,
+or use motion to conceal an overcrowded static layout.

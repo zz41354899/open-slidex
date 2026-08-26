@@ -91,12 +91,14 @@ export type MotionDocAddBlockOptions = {
 
 const supportedComponentTags = new Set([
   "Chart",
+  "HtmlEmbedBlock",
   "ImageBlock",
   "Scene",
   "Shape",
   "Slide",
   "Table",
   "Text",
+  "SvgBlock",
   "VideoBlock"
 ]);
 
@@ -562,6 +564,9 @@ function validateMotionDocSource(
   document: ParsedMotionDoc
 ): MotionDocValidationIssue[] {
   const issues: MotionDocValidationIssue[] = [];
+  const blockIds = new Set<string>();
+  const sharedHtmlSources = new Map<string, string>();
+  const sharedSvgSources = new Map<string, string>();
   const executableSource = stripMarkdownCode(source);
   const openingSlideCount = [...source.matchAll(/<(?:Slide|Scene)\b/g)].length;
   const closingSlideCount = [...source.matchAll(/<\/(?:Slide|Scene)>/g)].length;
@@ -648,6 +653,18 @@ function validateMotionDocSource(
     scene.blocks.forEach((block, blockIndex) => {
       if (!("props" in block)) return;
 
+      const blockId = typeof block.props.id === "string" ? block.props.id.trim() : "";
+      if (blockId) {
+        if (blockIds.has(blockId)) {
+          issues.push({
+            message: `Block id must be unique across the deck: ${blockId}.`,
+            path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.id`,
+            severity: "error"
+          });
+        }
+        blockIds.add(blockId);
+      }
+
       for (const [alias, canonical] of Object.entries(nonCanonicalMotionDocPropAliases)) {
         if (block.props[alias] === undefined) continue;
         issues.push({
@@ -701,7 +718,7 @@ function validateMotionDocSource(
       }
 
       if (
-        (block.type === "ImageBlock" || block.type === "VideoBlock") &&
+        (block.type === "ImageBlock" || block.type === "VideoBlock" || block.type === "SvgBlock" || block.type === "HtmlEmbedBlock") &&
         !block.props.src
       ) {
         issues.push({
@@ -716,6 +733,64 @@ function validateMotionDocSource(
           issues.push({
             message,
             path: `scenes[${sceneIndex}].blocks[${blockIndex}].props`,
+            severity: "error"
+          });
+        }
+      }
+
+      if (block.type === "SvgBlock") {
+        const sharedScene = typeof block.props.sharedScene === "string" ? block.props.sharedScene.trim() : "";
+        const source = typeof block.props.src === "string" ? block.props.src.trim() : "";
+        if (sharedScene) {
+          const priorSource = sharedSvgSources.get(sharedScene);
+          if (priorSource && priorSource !== source) {
+            issues.push({
+              message: `SvgBlock declarations using sharedScene="${sharedScene}" must use the same src.`,
+              path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.src`,
+              severity: "error"
+            });
+          } else if (source) {
+            sharedSvgSources.set(sharedScene, source);
+          }
+        }
+        const stage = Number(block.props.stage ?? 0);
+        if (!Number.isInteger(stage) || stage < 0) {
+          issues.push({
+            message: "SvgBlock stage must be a non-negative integer.",
+            path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.stage`,
+            severity: "error"
+          });
+        }
+        const stageDuration = Number(block.props.stageDuration ?? 0.6);
+        if (!Number.isFinite(stageDuration) || stageDuration < 0 || stageDuration > 30) {
+          issues.push({
+            message: "SvgBlock stageDuration must be between 0 and 30 seconds.",
+            path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.stageDuration`,
+            severity: "error"
+          });
+        }
+      }
+
+      if (block.type === "HtmlEmbedBlock") {
+        const sharedScene = typeof block.props.sharedScene === "string" ? block.props.sharedScene.trim() : "";
+        const source = typeof block.props.src === "string" ? block.props.src.trim() : "";
+        if (sharedScene) {
+          const priorSource = sharedHtmlSources.get(sharedScene);
+          if (priorSource && priorSource !== source) {
+            issues.push({
+              message: `HtmlEmbedBlock declarations using sharedScene="${sharedScene}" must use the same src.`,
+              path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.src`,
+              severity: "error"
+            });
+          } else if (source) {
+            sharedHtmlSources.set(sharedScene, source);
+          }
+        }
+        const page = Number(block.props.page ?? 1);
+        if (!Number.isInteger(page) || page < 1) {
+          issues.push({
+            message: "HtmlEmbedBlock page must be a positive integer.",
+            path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.page`,
             severity: "error"
           });
         }

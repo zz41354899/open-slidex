@@ -8,6 +8,7 @@ import {
   writeFile
 } from "node:fs/promises";
 import { execFile } from "node:child_process";
+import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -15,7 +16,7 @@ import { promisify } from "node:util";
 
 import sharp from "sharp";
 
-import { blankPresentationMdx } from "./index";
+import { blankPresentationMdx, buildMotionDocHtml } from "./index";
 import {
   analyzeSlideXDocumentQuality,
   closeSlideXChromiumPool,
@@ -23,6 +24,7 @@ import {
   importSlideXImageAsset,
   importSlideXVideoAsset,
   renderSlideXDocument,
+  renderSlideXHtmlThumbnail,
   SlideXFileDocumentAdapter,
   SlideXImageAssetError,
   SlideXRevisionConflictError
@@ -42,6 +44,136 @@ test.after(async () => {
   await closeSlideXChromiumPool();
   const packagedRuntime = await packagedSdkRuntime();
   await packagedRuntime.closeSlideXChromiumPool();
+});
+
+test("HTML thumbnails load external scripts, images, and video URLs", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+
+  const hits = new Set<string>();
+  const server = createServer((request, response) => {
+    const pathname = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
+    hits.add(pathname);
+    response.setHeader("Cache-Control", "no-store");
+    if (pathname === "/runtime.js") {
+      response.setHeader("Content-Type", "application/javascript; charset=utf-8");
+      response.end(`
+        document.body.style.backgroundColor = "rgb(0, 255, 0)";
+        document.querySelector("video")?.load();
+      `);
+      return;
+    }
+    if (pathname === "/image.svg") {
+      response.setHeader("Content-Type", "image/svg+xml");
+      response.end('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="#2563eb"/></svg>');
+      return;
+    }
+    if (pathname === "/clip.mp4") {
+      response.setHeader("Accept-Ranges", "bytes");
+      response.setHeader("Content-Type", "video/mp4");
+      response.end(Buffer.from("external-video-request"));
+      return;
+    }
+    response.statusCode = 404;
+    response.end("Not found");
+  });
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-network-html-"));
+  const outputPath = path.join(root, "external-resources.png");
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject);
+      server.listen(0, "127.0.0.1", resolve);
+    });
+    const address = server.address();
+    assert.ok(address && typeof address === "object");
+    const origin = `http://127.0.0.1:${address.port}`;
+
+    await renderSlideXHtmlThumbnail({
+      html: `<!doctype html>
+        <html>
+          <head><style>html,body{width:100%;height:100%;margin:0}body{background:#f00}</style></head>
+          <body>
+            <img src="${origin}/image.svg" alt="External image">
+            <video src="${origin}/clip.mp4" poster="${origin}/image.svg" muted playsinline preload="auto"></video>
+            <script src="${origin}/runtime.js"></script>
+          </body>
+        </html>`,
+      outputPath,
+      page: 1
+    });
+
+    assert.ok(hits.has("/runtime.js"), "expected the external script request");
+    assert.ok(hits.has("/image.svg"), "expected the external image request");
+    assert.ok(hits.has("/clip.mp4"), "expected the external video request");
+    const stats = await sharp(outputPath).stats();
+    assert.ok(stats.channels[1].mean > 245, "expected the external script to update the rendered page");
+    assert.ok(stats.channels[0].mean < 20, "expected the original red fallback to be replaced");
+  } finally {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("HTML thumbnails select the requested MDX-exported page in a full 16:9 projection frame", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-native-html-page-"));
+  const outputPath = path.join(root, "page-2.png");
+  try {
+    const html = buildMotionDocHtml(`# Native HTML pages
+
+<Slide background="#ef4444"><Text id="one" x={10} y={10} w={80} h={20}>One</Text></Slide>
+
+<Slide background="#2563eb"><Text id="two" x={10} y={10} w={80} h={20}>Two</Text></Slide>
+`);
+    await renderSlideXHtmlThumbnail({ html, outputPath, page: 2 });
+    const metadata = await sharp(outputPath).metadata();
+    const stats = await sharp(outputPath).stats();
+    const [red, green, blue] = stats.channels;
+
+    assert.equal(metadata.width, 1920);
+    assert.equal(metadata.height, 1080);
+    assert.ok(blue!.mean > red!.mean && blue!.mean > green!.mean, "expected the requested blue second slide");
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("HTML thumbnails select Gamma-style data-page slides without resetting to the cover", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-gamma-html-page-"));
+  const firstPath = path.join(root, "page-1.png");
+  const thirdPath = path.join(root, "page-3.png");
+  try {
+    const html = `<!doctype html><html><head><style>
+      html,body{margin:0;width:100%;height:100%}.gcard.page{display:none;width:1920px;height:1080px}
+      .gcard.page.active,.gcard.page[data-on="1"]{display:block}.gcard.page[data-on="0"]{display:none}
+    </style></head><body>
+      <section class="gcard page active" data-page="1" style="background:#ef4444"></section>
+      <section class="gcard page" data-page="2" style="background:#22c55e"></section>
+      <section class="gcard page" data-page="3" style="background:#2563eb"></section>
+      <script>(()=>{const pages=[...document.querySelectorAll('.gcard.page')];let index=0;const show=next=>{index=Math.max(0,Math.min(pages.length-1,next));pages.forEach((page,i)=>page.classList.toggle('active',i===index));history.replaceState(null,'','#'+(index+1))};addEventListener('hashchange',()=>show(Number(location.hash.slice(1))-1||0));show(0)})()</script>
+    </body></html>`;
+
+    await renderSlideXHtmlThumbnail({ html, outputPath: firstPath, page: 1 });
+    await renderSlideXHtmlThumbnail({ html, outputPath: thirdPath, page: 3 });
+    const [first, third] = await Promise.all([sharp(firstPath).stats(), sharp(thirdPath).stats()]);
+    assert.ok(first.channels[0]!.mean > first.channels[2]!.mean, "expected the red cover thumbnail");
+    assert.ok(third.channels[2]!.mean > third.channels[0]!.mean, "expected the blue third-page thumbnail");
+    assert.notDeepEqual(await readFile(firstPath), await readFile(thirdPath));
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
 });
 
 test("Paper shader rendering freezes a real frame instead of a flat fallback", async (context) => {
@@ -356,6 +488,28 @@ test("MDX export embeds project images into one portable source file", async () 
     const portableMdx = await readFile(outputPath, "utf8");
     assert.match(portableMdx, /src="data:image\/webp;base64,/);
     assert.doesNotMatch(portableMdx, /assets\/portable\.webp/);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("MDX export never Base64-wraps an HTML document asset", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-html-reference-"));
+  const assetsRoot = path.join(root, "assets");
+  const outputPath = path.join(root, "referenced.mdx");
+  try {
+    await mkdir(assetsRoot, { recursive: true });
+    await writeFile(path.join(assetsRoot, "source.html"), "<!doctype html><html><body>Large HTML</body></html>", "utf8");
+    await exportSlideXDocument({
+      format: "mdx",
+      outputPath,
+      projectRoot: root,
+      source: `# Referenced HTML\n\n<Slide><HtmlEmbedBlock src="assets/source.html" page={1} /></Slide>\n`
+    });
+
+    const exported = await readFile(outputPath, "utf8");
+    assert.match(exported, /src="assets\/source\.html"/);
+    assert.doesNotMatch(exported, /data:text\/html;base64/i);
   } finally {
     await rm(root, { force: true, recursive: true });
   }

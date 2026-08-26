@@ -1,5 +1,6 @@
 import type { CSSProperties, DragEventHandler, MouseEventHandler, PointerEventHandler, ReactNode, RefObject } from "react";
 import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
+import { sceneContainsHtmlRuntime } from "@/features/pitch/application/htmlRuntimePolicy";
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH
@@ -14,6 +15,7 @@ import type { InsertSlidePlacement } from "@/features/pitch/application/motionDo
 import { CanvasSlideAddControls } from "@/features/pitch/ui/preview/CanvasChrome";
 import { PreviewPane } from "@/features/pitch/ui/preview/PreviewPane";
 import { ViewportDeferredPreview } from "@/features/pitch/ui/preview/ViewportDeferredPreview";
+import { HtmlPageThumbnail } from "@/features/pitch/ui/preview/HtmlPageThumbnail";
 
 type CanvasSlideFrameProps = {
   actualScale: number;
@@ -24,6 +26,7 @@ type CanvasSlideFrameProps = {
   children: ReactNode;
   frameOverrides?: BlockFrameOverrides;
   hiddenBlockIndices: number[];
+  hideSharedHtmlBlocks: boolean;
   isActive: boolean;
   isMouseOverCanvas: boolean;
   locale: string;
@@ -36,6 +39,7 @@ type CanvasSlideFrameProps = {
   onToolDragOver?: DragEventHandler<HTMLDivElement>;
   onToolDrop?: DragEventHandler<HTMLDivElement>;
   replayNonce: number;
+  previewSuspended: boolean;
   rootRef: RefObject<HTMLDivElement | null>;
   shaderMaxPixelCount: number;
   shaderPlaybackActive: boolean;
@@ -53,6 +57,7 @@ export function CanvasSlideFrame({
   children,
   frameOverrides,
   hiddenBlockIndices,
+  hideSharedHtmlBlocks,
   isActive,
   isMouseOverCanvas,
   locale,
@@ -65,15 +70,22 @@ export function CanvasSlideFrame({
   onToolDragOver,
   onToolDrop,
   replayNonce,
+  previewSuspended,
   rootRef,
   shaderMaxPixelCount,
   shaderPlaybackActive,
   slide,
   scene
 }: CanvasSlideFrameProps) {
+  const containsHtmlRuntime = sceneContainsHtmlRuntime(scene);
+  const htmlBlock = scene?.blocks.find((block) => block.type === "HtmlEmbedBlock");
+  const htmlPage = htmlBlock?.type === "HtmlEmbedBlock" && Number.isInteger(Number(htmlBlock.props.page))
+    ? Math.max(1, Number(htmlBlock.props.page))
+    : slide.index + 1;
+
   return (
     <div
-      className={`relative flex shrink-0 flex-col gap-2 transition-opacity ${isActive ? "z-10" : "z-0 opacity-80 hover:opacity-100"}`}
+      className={`relative flex shrink-0 flex-col gap-2 transition-opacity ${isActive ? "z-30" : "z-0 opacity-80 hover:opacity-100"}`}
       data-slide-frame-index={slide.index}
       onPointerDown={onFramePointerDown}
       ref={isActive ? activeSlideFrameRef : undefined}
@@ -89,13 +101,13 @@ export function CanvasSlideFrame({
           contentVisibility: "auto"
         }}
       >
-        {isActive && !isMouseOverCanvas ? <CanvasSlideAddControls onInsertSlideNearActive={onInsertSlideNearActive} orientation="vertical" /> : null}
+        {isActive && !isMouseOverCanvas && !hideSharedHtmlBlocks ? <CanvasSlideAddControls onInsertSlideNearActive={onInsertSlideNearActive} orientation="vertical" /> : null}
         <div
           aria-current={isActive ? "true" : undefined}
           aria-label={locale === "zh-TW"
             ? `第 ${slide.index + 1} 張投影片畫布，16:9，${CANVAS_WIDTH} × ${CANVAS_HEIGHT}`
             : `Slide ${slide.index + 1} canvas, 16:9 ${CANVAS_WIDTH} by ${CANVAS_HEIGHT}`}
-          className={`group relative shrink-0 bg-black shadow-xl ring-1 transition-shadow duration-200 ${isActive ? "overflow-visible" : "overflow-hidden"} ${
+          className={`group relative shrink-0 shadow-xl ring-1 transition-shadow duration-200 ${hideSharedHtmlBlocks && containsHtmlRuntime && isActive ? "bg-transparent" : "bg-black"} ${isActive ? "overflow-visible" : "overflow-hidden"} ${
             isActive
               ? "ring-neutral-500/55 shadow-[0_18px_54px_rgba(0,0,0,0.48)]"
               : "ring-neutral-800/80 hover:ring-white/20"
@@ -117,12 +129,20 @@ export function CanvasSlideFrame({
               width: CANVAS_WIDTH
             }}
           >
-            <ViewportDeferredPreview eager={isActive} rootMargin={MAIN_CANVAS_PRELOAD_MARGIN} rootRef={rootRef}>
+            <ViewportDeferredPreview
+              eager={isActive}
+              renderWhenVisible={!containsHtmlRuntime || hideSharedHtmlBlocks}
+              rootMargin={MAIN_CANVAS_PRELOAD_MARGIN}
+              rootRef={rootRef}
+              suspended={previewSuspended}
+            >
               <PreviewPane
                 activeSlideIndex={slide.index}
                 allowOverflow={isActive}
                 frameOverrides={isActive ? frameOverrides : undefined}
                 hiddenBlockIndices={isActive ? hiddenBlockIndices : emptyBlockIndices}
+                hideSharedHtmlBlocks={hideSharedHtmlBlocks}
+                hideHtmlSourceTextBlocks={hideSharedHtmlBlocks}
                 imageFetchPriority={isActive ? "high" : "low"}
                 imageLoading={isActive ? "eager" : "lazy"}
                 onShaderFrameCapture={isActive ? onShaderFrameCapture : undefined}
@@ -130,8 +150,17 @@ export function CanvasSlideFrame({
                 scene={scene}
                 shaderMaxPixelCount={isActive ? shaderMaxPixelCount : MAIN_CANVAS_INACTIVE_SHADER_MAX_PIXEL_COUNT}
                 shaderPlaybackActive={isActive && shaderPlaybackActive}
+                transparentCanvas={hideSharedHtmlBlocks && containsHtmlRuntime && isActive}
               />
             </ViewportDeferredPreview>
+            {hideSharedHtmlBlocks && containsHtmlRuntime && !isActive ? (
+              <div
+                className="pointer-events-none absolute inset-0 z-10 overflow-hidden"
+                data-html-canvas-placeholder
+              >
+                <HtmlPageThumbnail page={htmlPage} source={String(htmlBlock?.props.src ?? "")} />
+              </div>
+            ) : null}
           </div>
           {children}
         </div>

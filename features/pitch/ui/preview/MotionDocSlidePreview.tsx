@@ -1,6 +1,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
+import { isHtmlSourceTextBlock } from "@/core/motion-doc/domain/htmlPresentation";
 import {
   THUMBNAIL_SHADER_MAX_PIXEL_COUNT,
   THUMBNAIL_SHADER_MIN_PIXEL_RATIO
@@ -10,6 +11,7 @@ import {
   CANVAS_WIDTH
 } from "@/features/pitch/application/previewCanvas";
 import { PreviewPane } from "@/features/pitch/ui/preview/PreviewPane";
+import { HtmlPageThumbnail } from "@/features/pitch/ui/preview/HtmlPageThumbnail";
 
 type MotionDocSlidePreviewProps = {
   activeSlideIndex: number;
@@ -29,6 +31,12 @@ export function MotionDocSlidePreview({
   const frameRef = useRef<HTMLDivElement | null>(null);
   const [shouldRender, setShouldRender] = useState(eager);
   const [scale, setScale] = useState<number | null>(null);
+  const htmlBlock = scene.blocks.find((block) => block.type === "HtmlEmbedBlock");
+  const isPureHtmlSlide = htmlBlock?.type === "HtmlEmbedBlock"
+    && scene.blocks.every((block) => block.type === "HtmlEmbedBlock" || isHtmlSourceTextBlock(block));
+  const htmlPage = htmlBlock?.type === "HtmlEmbedBlock" && Number.isInteger(Number(htmlBlock.props.page))
+    ? Math.max(1, Number(htmlBlock.props.page))
+    : activeSlideIndex + 1;
 
   useEffect(() => {
     if (eager) {
@@ -96,9 +104,10 @@ export function MotionDocSlidePreview({
           width: CANVAS_WIDTH
         }}
       >
-        {shouldRender ? (
+        {shouldRender && !isPureHtmlSlide ? (
           <PreviewPane
             activeSlideIndex={activeSlideIndex}
+            hideHtmlEmbedBlocks={Boolean(htmlBlock)}
             imageFetchPriority={eager ? "high" : "low"}
             imageLoading={eager ? "eager" : "lazy"}
             replayNonce={replayNonce}
@@ -109,6 +118,11 @@ export function MotionDocSlidePreview({
           />
         ) : null}
       </div>
+      {isPureHtmlSlide ? (
+        <HtmlPageThumbnail eager={eager} page={htmlPage} source={String(htmlBlock.props.src ?? "")} />
+      ) : htmlBlock ? (
+        <span className="absolute bottom-1 right-1 rounded border border-white/[0.14] bg-black/70 px-1 py-0.5 text-[7px] font-semibold tracking-[0.12em] text-white/70" data-html-thumbnail-static>HTML</span>
+      ) : null}
     </div>
   );
 }

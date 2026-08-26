@@ -1,7 +1,7 @@
 
 import { Bot, ChevronRight, Copy, Group, Layers, Plus, Trash2 } from "lucide-react";
 import type { KeyboardEvent, MouseEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LayerRow } from "@/features/pitch/ui/LayerRow";
 import { motionDocBlockKey } from "@/core/motion-doc/application/motionDocBlockIdentity";
 import type { MotionDocBlock, MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
@@ -17,6 +17,7 @@ import type { RemoteMcpOperation } from "@/features/pitch/domain/remoteMcpOperat
 
 export function LayerSidebar({
   activeSlideIndex,
+  authoringDisabled = false,
   copySlide,
   deleteBlock,
   deleteSlide,
@@ -44,6 +45,7 @@ export function LayerSidebar({
   toggleBlockPositionLock
 }: {
   activeSlideIndex: number;
+  authoringDisabled?: boolean;
   copySlide: (index: number) => void;
   deleteBlock: (index: number) => void;
   deleteSlide: (index: number) => void;
@@ -75,7 +77,12 @@ export function LayerSidebar({
   const [draggedSlideIndex, setDraggedSlideIndex] = useState<number | null>(null);
   const [dragOverSlideIndex, setDragOverSlideIndex] = useState<number | null>(null);
 
+  useEffect(() => {
+    if (authoringDisabled) setActiveTab("slides");
+  }, [authoringDisabled]);
+
   function handleSlideShortcut(event: KeyboardEvent<HTMLDivElement>, slideIndex: number) {
+    if (authoringDisabled) return;
     if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "c") return;
 
     event.preventDefault();
@@ -90,7 +97,9 @@ export function LayerSidebar({
       <EditorPanelTabs
         ariaLabel={tx("Slides & Layers")}
         onChange={setActiveTab}
-        options={[{ label: tx("Slides"), value: "slides" }, { label: tx("Layers"), value: "layers" }]}
+        options={authoringDisabled
+          ? [{ label: tx("Slides"), value: "slides" }]
+          : [{ label: tx("Slides"), value: "slides" }, { label: tx("Layers"), value: "layers" }]}
         value={activeTab}
       />
 
@@ -98,7 +107,7 @@ export function LayerSidebar({
         <div className="flex flex-col p-3">
 
           {/* New Slide Button */}
-          <div className="mb-6 grid grid-cols-[1fr_auto] gap-2">
+          {!authoringDisabled ? <div className="mb-6 grid grid-cols-[1fr_auto] gap-2">
             <button
               className="group flex items-center justify-between rounded-[1rem] border border-white/[0.04] bg-white/[0.02] p-3.5 text-left text-neutral-400 shadow-[inset_0_1px_1px_0_rgba(255,255,255,0.05)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white/[0.06] hover:text-white active:scale-[0.96]"
               data-slide-library-trigger={templateLibraryEnabled ? "" : undefined}
@@ -129,7 +138,7 @@ export function LayerSidebar({
             >
               <Copy size={15} />
             </button>
-          </div>
+          </div> : null}
 
           {/* Section Indicator */}
           <div className="mb-2 flex items-center justify-between px-1.5">
@@ -149,7 +158,7 @@ export function LayerSidebar({
                 <div className="flex flex-col" key={slide.index}>
 
                   {/* Scene Row item (Layers Tab) */}
-                  {activeTab === "layers" && (
+                  {!authoringDisabled && activeTab === "layers" && (
                     <div
                       className={`group/item flex cursor-pointer items-center justify-between rounded-[0.85rem] px-3 py-2.5 transition-all duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] relative ${
                         isActive
@@ -191,12 +200,14 @@ export function LayerSidebar({
                     <div
                       aria-label={locale === "zh-TW" ? `第 ${slide.index + 1} 張投影片` : `Slide ${slide.index + 1}`}
                       data-slide-thumbnail-index={slide.index}
-                      draggable
+                      draggable={!authoringDisabled}
                       onDragStart={(e) => {
+                        if (authoringDisabled) return;
                         e.dataTransfer.effectAllowed = "move";
                         setDraggedSlideIndex(slide.index);
                       }}
                       onDragOver={(e) => {
+                        if (authoringDisabled) return;
                         e.preventDefault();
                         if (draggedSlideIndex !== null && draggedSlideIndex !== slide.index) {
                           setDragOverSlideIndex(slide.index);
@@ -206,6 +217,7 @@ export function LayerSidebar({
                         setDragOverSlideIndex(null);
                       }}
                       onDrop={(e) => {
+                        if (authoringDisabled) return;
                         e.preventDefault();
                         if (draggedSlideIndex !== null && draggedSlideIndex !== slide.index) {
                           reorderSlide(draggedSlideIndex, slide.index);
@@ -224,7 +236,9 @@ export function LayerSidebar({
                       onKeyDown={(event) => handleSlideShortcut(event, slide.index)}
                       role="button"
                       tabIndex={0}
-                      title={locale === "zh-TW" ? "點選後可用 ⌘C／⌘V 複製貼上投影片" : "Select, then use Cmd/Ctrl+C and Cmd/Ctrl+V to copy and paste"}
+                      title={authoringDisabled
+                        ? (locale === "zh-TW" ? "點選以預覽這一頁 HTML" : "Select to preview this HTML page")
+                        : (locale === "zh-TW" ? "點選後可用 ⌘C／⌘V 複製貼上投影片" : "Select, then use Cmd/Ctrl+C and Cmd/Ctrl+V to copy and paste")}
                     >
                       {isActive && <div className="absolute left-0 top-3 bottom-8 w-[3px] rounded-r bg-[#8ea5ff] z-10" />}
                       <div className={`relative aspect-video w-full overflow-hidden rounded-lg border shadow-sm transition-colors ${isActive ? "border-white/20 bg-black/60" : "border-white/5 bg-black/40 hover:border-white/10"}`}>
@@ -247,7 +261,7 @@ export function LayerSidebar({
                       <span className={`absolute bottom-1.5 left-2.5 text-[14px] font-medium ${isActive ? "text-[#8ea5ff]" : "text-neutral-500"}`}>
                         {slide.index + 1}
                       </span>
-                      <button
+                      {!authoringDisabled ? <button
                         aria-label={locale === "zh-TW" ? `複製第 ${slide.index + 1} 張投影片` : `Duplicate slide ${slide.index + 1}`}
                         className="absolute bottom-1 right-8 z-20 flex h-6 w-6 items-center justify-center rounded-md text-neutral-500 opacity-0 transition hover:bg-white/[0.08] hover:text-white focus-visible:opacity-100 group-hover:opacity-100"
                         onClick={(event) => {
@@ -258,8 +272,8 @@ export function LayerSidebar({
                         type="button"
                       >
                         <Copy size={12} />
-                      </button>
-                      {scenes.length > 1 && (
+                      </button> : null}
+                      {!authoringDisabled && scenes.length > 1 && (
                         <button
                           aria-label={locale === "zh-TW" ? `刪除第 ${slide.index + 1} 張投影片` : `Delete slide ${slide.index + 1}`}
                           className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.1] bg-black/70 text-red-300 shadow-lg backdrop-blur transition active:scale-95 active:bg-red-500/20 sm:right-2 sm:top-auto sm:bottom-1.5 sm:h-auto sm:w-auto sm:rounded-none sm:border-0 sm:bg-transparent sm:text-black/40 sm:opacity-0 sm:shadow-none sm:backdrop-blur-none sm:hover:text-white sm:group-hover:opacity-100"
@@ -276,7 +290,7 @@ export function LayerSidebar({
                   )}
 
                   {/* Active layers child lists */}
-                  {activeTab === "layers" && isActive && currentSlide && currentSlide.blocks.length > 0 && (
+                  {!authoringDisabled && activeTab === "layers" && isActive && currentSlide && currentSlide.blocks.length > 0 && (
                     <div className="ml-3 mt-2 animate-[bubble-appear_0.2s_ease-out]">
                       <div className="flex flex-col gap-1 border-l border-white/[0.07] pl-2.5">
                         {layerTreeEntries(currentSlide.blocks).map((entry) => {

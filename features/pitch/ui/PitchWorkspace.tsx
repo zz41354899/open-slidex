@@ -21,6 +21,11 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
   const [fitScale, setFitScale] = useState(1);
   const visibleRemoteMcpOperations = useVisibleRemoteMcpOperations(remoteMcp?.activities ?? []);
   const canvasViewMode = view.canvasViewMode;
+  const exportOptions = commands.openExportWithFormat ? [
+    { description: tx("Interactive presentation"), id: "html" as const, label: "HTML" },
+    { description: tx("Editable PowerPoint"), id: "pptx" as const, label: "PowerPoint" },
+    { description: tx("Canonical source"), id: "mdx" as const, label: "MDX" }
+  ].filter((option) => !view.exportFormats || view.exportFormats.includes(option.id)) : undefined;
 
   useMobileEdgePanels({
     isLeftPanelOpen: view.isMobileSidebarOpen,
@@ -55,11 +60,7 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
         badge={view.headerBadge}
         brand={view.headerBrand}
         centerContent={view.headerTools}
-        exportOptions={commands.openExportWithFormat ? [
-          { description: tx("Interactive presentation"), id: "html", label: "HTML" },
-          { description: tx("Editable PowerPoint"), id: "pptx", label: "PowerPoint" },
-          { description: tx("Canonical source"), id: "mdx", label: "MDX" }
-        ] : undefined}
+        exportOptions={exportOptions}
         exportInteraction={view.exportInteraction}
         exportMenuRef={view.exportMenuRef}
         homeHref={view.homeHref}
@@ -71,7 +72,7 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
         onPlay={commands.openPresentationPreview}
         onProjectNameChange={view.onProjectNameChange}
         onReplay={view.onReplayAnimations}
-        onRedo={view.interactionDisabled ? undefined : commands.redoLastChange}
+        onRedo={view.interactionDisabled || view.authoringDisabled ? undefined : commands.redoLastChange}
         onToggleInspector={() => {
           view.setIsMobileInspectorOpen((value) => !value);
           view.setIsMobileSidebarOpen(false);
@@ -80,10 +81,11 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
           view.setIsMobileSidebarOpen((value) => !value);
           view.setIsMobileInspectorOpen(false);
         }}
-        onUndo={view.interactionDisabled ? () => undefined : commands.undoLastChange}
+        onUndo={view.interactionDisabled || view.authoringDisabled ? () => undefined : commands.undoLastChange}
         projectName={`${document.projectName === "Untitled presentation" ? tx("Untitled presentation") : document.projectName}${document.isProjectDirty ? ` - ${tx("Edited")}` : ""}`}
         projectNameEditValue={document.projectName}
         setZoomLevel={setZoomLevel}
+        showFitScale={canvasViewMode !== "grid"}
         variant={view.headerVariant}
         zoomLevel={zoomLevel}
       />
@@ -113,6 +115,7 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
             isGridVisible={view.isCanvasGridVisible}
             isSafeAreaVisible={view.isCanvasSafeAreaVisible}
             interactionDisabled={view.interactionDisabled === true}
+            previewSuspended={view.canvasPreviewSuspended === true}
             isSnapEnabled={view.isCanvasSnapEnabled}
             onAddBlock={commands.addBlockToActiveSlide}
             onBeginBlockTransform={commands.beginBlockTransform}
@@ -159,6 +162,7 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
             selectedBlockIndices={selection.selectedBlockIndices}
             selectedBlocksLocked={selection.selectedBlocksLocked}
             showDesktopBlockDock={view.localAssetsOnly !== true}
+            singleSlidePreview={view.singleSlideCanvas === true}
             slideRows={document.slideRows}
             zoomLevel={zoomLevel}
           />

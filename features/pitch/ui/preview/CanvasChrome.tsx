@@ -22,6 +22,7 @@ type CanvasSlideNavProps = {
   onNextSlide: () => void;
   onPreviousSlide: () => void;
   sceneCount: number;
+  singleSlidePreview?: boolean;
 };
 
 export function CanvasSlideNav({
@@ -30,12 +31,13 @@ export function CanvasSlideNav({
   onCanvasViewModeChange,
   onNextSlide,
   onPreviousSlide,
-  sceneCount
+  sceneCount,
+  singleSlidePreview = false
 }: CanvasSlideNavProps) {
   const { tx } = usePitchI18n();
   return (
     <div className="absolute left-1/2 top-3 z-10 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-white/[0.04] bg-neutral-950/60 p-1 shadow-lg shadow-black/40 backdrop-blur-xl sm:top-5 transition-all duration-300">
-      <CanvasViewSwitch mode={canvasViewMode} onChange={onCanvasViewModeChange} />
+      <CanvasViewSwitch mode={canvasViewMode} onChange={onCanvasViewModeChange} singleSlidePreview={singleSlidePreview} />
       <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-white/[0.08]" />
       <button
         aria-label={tx("Previous slide")}

@@ -1,6 +1,7 @@
 export const openSlideXProjectSkillNames = [
   "slidex-source-import",
   "slidex-mdx-authoring",
+  "slidex-html-authoring",
   "slidex-deck-design",
   "slidex-motion-direction",
   "slidex-deck-qa"
@@ -11,6 +12,7 @@ export type OpenSlideXProjectSkillName = (typeof openSlideXProjectSkillNames)[nu
 export const openSlideXGuidanceIntents = [
   "import",
   "authoring",
+  "html",
   "design",
   "create",
   "redesign",
@@ -22,6 +24,7 @@ export type OpenSlideXGuidanceIntent = (typeof openSlideXGuidanceIntents)[number
 
 export const openSlideXGuidanceSkillsByIntent = {
   authoring: ["slidex-mdx-authoring"],
+  html: ["slidex-html-authoring"],
   import: [
     "slidex-source-import",
     "slidex-mdx-authoring",

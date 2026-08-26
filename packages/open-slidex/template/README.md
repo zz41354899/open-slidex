@@ -27,9 +27,9 @@ validated SDK source commands. Only valid source is autosaved with revision
 protection; invalid work remains a recoverable browser draft.
 
 Use Workspace to create or import a deck. Its local media, source, and exports
-live with that deck. The five focused skills in `.agents/skills/` are copied
-into every new deck and define source conversion, the MDX contract, art
-direction, motion vocabulary, and required visual QA loop. Their `references/` directories cover
+live with that deck. The six focused skills in `.agents/skills/` are copied
+into every new deck and define source conversion, native MDX, browser HTML,
+art direction, motion vocabulary, and required visual QA. Their `references/` directories cover
 prompt, notes, document, research, data, and redesign workflows plus five
 verified narrative examples and eight curated native style specimens. For creation
 or redesign, MCP can rank those styles from a report or summary and return one
@@ -44,7 +44,12 @@ Configure the user-level Workspace MCP once from OpenSlideX Workspace Settings.
 It is restricted to `open-slidex-workspace/`; the desktop agent lists and
 selects one inner deck before it reads or edits that deck's `presentation.mdx`.
 The generated command uses `open-slidex@latest`; Workspace MCP exposes six
-tools: workspace selection, progressive read, PPTX source import, local media
-import, review, and revision-safe edit. `open_slidex_source_import` recovers
+tools: workspace selection, progressive MDX/HTML read, PPTX source import,
+local media import, review, and revision-safe MDX/HTML edit. For browser-native
+HTML, `open_slidex_read` preserves canonical bytes and reports online
+dependencies; `open_slidex_edit` creates or replaces that source. HTTP(S)
+libraries, styles, fonts, images, media, frames, workers, and connections run
+inside an opaque-origin sandbox. Relative local sidecars still need a remote
+`<base href>` or inlining. `open_slidex_source_import` recovers
 text geometry and typography hints, converts supported embedded images to
 portable WebP, and returns native reviewable `Text` and `ImageBlock` evidence.

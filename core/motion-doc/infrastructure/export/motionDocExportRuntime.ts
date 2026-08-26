@@ -63,6 +63,7 @@ export function makeMotionDocExportRuntime() {
         const current = document.querySelector("[data-current]");
         const playButton = document.querySelector('[data-action="play"]');
         const fullscreenButton = document.querySelector('[data-action="fullscreen"]');
+        const dotButtons = Array.from(document.querySelectorAll("[data-slide-target]"));
         const player = document.querySelector(".player");
         const stage = document.querySelector(".stage");
         const viewport = document.querySelector(".viewport");
@@ -88,6 +89,171 @@ export function makeMotionDocExportRuntime() {
             iframe.src = source;
           });
         }
+
+        function sanitizeSvgMarkup(markup) {
+          const parsed = new DOMParser().parseFromString(markup, "image/svg+xml");
+          const svg = parsed.documentElement;
+          if (!svg || svg.localName !== "svg" || parsed.querySelector("parsererror")) return null;
+          svg.querySelectorAll("script,foreignObject,iframe,object,embed,audio,video,animate,animateMotion,animateTransform,set,mpath").forEach((node) => node.remove());
+          svg.querySelectorAll("*").forEach((node) => {
+            Array.from(node.attributes).forEach((attribute) => {
+              const name = attribute.name.toLowerCase();
+              const value = attribute.value.trim();
+              if (name.startsWith("on") || /javascript\\s*:/i.test(value)) node.removeAttribute(attribute.name);
+              if ((name === "href" || name === "xlink:href") && value && !value.startsWith("#")) node.removeAttribute(attribute.name);
+            });
+          });
+          svg.querySelectorAll("style").forEach((node) => {
+            if (/@import|url\\(\\s*[\"']?(?!#)/i.test(node.textContent || "")) node.remove();
+          });
+          svg.setAttribute("width", "100%");
+          svg.setAttribute("height", "100%");
+          if (!svg.getAttribute("preserveAspectRatio")) svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+          return svg;
+        }
+
+        async function hydrateSvgBlocks() {
+          const surfaces = Array.from(document.querySelectorAll(".block-svg-stage[data-svg-src]"));
+          await Promise.all(surfaces.map(async (surface) => {
+            const source = surface.dataset.svgSrc;
+            if (!source) return;
+            try {
+              const response = await fetch(source);
+              if (!response.ok) return;
+              const svg = sanitizeSvgMarkup(await response.text());
+              if (!svg) return;
+              surface.replaceChildren(document.importNode(svg, true));
+              surface.dataset.svgReady = "true";
+            } catch {}
+          }));
+        }
+
+        function svgGeometryLength(element) {
+          try { return Math.max(1, element.getTotalLength()); } catch { return 1; }
+        }
+
+        const svgSwayAnimations = new WeakMap();
+
+        function applySvgStage(surface, stage, duration, easing, replay) {
+          if (!surface || surface.dataset.svgReady !== "true") return;
+          const safeStage = Number.isFinite(Number(stage)) ? Number(stage) : 0;
+          const safeDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : Math.min(Math.max(Number(duration) || 0, 0), 30);
+          const safeEasing = /^(?:linear|ease|ease-in|ease-out|ease-in-out|cubic-bezier\\([\\d.,\\s-]+\\))$/.test(easing || "") ? easing : "ease-in-out";
+          const targets = Array.from(surface.querySelectorAll("[data-stage]"));
+          const paintMotion = (element, motions, visible, delay) => {
+            element.style.transition = safeDuration > 0
+              ? "opacity " + safeDuration + "s " + safeEasing + " " + delay + "s, transform " + safeDuration + "s " + safeEasing + " " + delay + "s, stroke-dashoffset " + safeDuration + "s " + safeEasing + " " + delay + "s"
+              : "none";
+            if (motions.has("draw") && typeof element.getTotalLength === "function") {
+              const length = svgGeometryLength(element);
+              element.style.strokeDasharray = String(length);
+              element.style.strokeDashoffset = visible ? "0" : String(length);
+            }
+            if (motions.has("reveal") || motions.has("scale")) element.style.opacity = visible ? "1" : "0";
+            if (motions.has("scale")) {
+              element.style.transformBox = "fill-box";
+              element.style.transformOrigin = "center";
+              element.style.transform = visible ? "scale(1)" : "scale(.82)";
+            }
+            svgSwayAnimations.get(element)?.cancel();
+            svgSwayAnimations.delete(element);
+            if (motions.has("sway") && visible && safeDuration > 0) {
+              const animation = element.animate?.([{ rotate: "-1.25deg" }, { rotate: "1.25deg" }, { rotate: "-1.25deg" }], {
+                duration: 3600,
+                easing: "ease-in-out",
+                iterations: Infinity
+              });
+              if (animation) svgSwayAnimations.set(element, animation);
+            }
+          };
+          const paint = (hideCurrent) => targets.forEach((element) => {
+            const threshold = Number(element.dataset.stage || 0);
+            const visible = safeStage >= threshold && !(hideCurrent && safeStage === threshold);
+            const motions = new Set((element.dataset.motion || "reveal").split(/[\\s,]+/).filter(Boolean));
+            if (motions.has("stagger")) {
+              const children = Array.from(element.children).filter((child) => child instanceof SVGElement);
+              const childMotions = new Set(motions);
+              childMotions.delete("stagger");
+              if (!childMotions.size) childMotions.add("reveal");
+              element.style.opacity = "1";
+              element.style.transition = "none";
+              children.forEach((child, childIndex) => {
+                const delay = childIndex * Math.min(.12, safeDuration / Math.max(children.length, 1));
+                paintMotion(child, childMotions, visible, delay);
+              });
+              return;
+            }
+            paintMotion(element, motions, visible, 0);
+          });
+          if (!replay || safeDuration <= 0) return paint(false);
+          paint(true);
+          requestAnimationFrame(() => requestAnimationFrame(() => paint(false)));
+        }
+
+        function renderSvgScenes(slideIndex, replay) {
+          const activeSlide = slides[slideIndex];
+          activeSlide?.querySelectorAll(".block-svg-stage").forEach((surface) => {
+            applySvgStage(surface, surface.dataset.svgStage, surface.dataset.svgStageDuration, surface.dataset.svgEasing, replay);
+          });
+          document.querySelectorAll(".shared-svg-scene").forEach((scene) => {
+            let declarations = [];
+            try { declarations = JSON.parse(scene.dataset.svgSharedDeclarations || "[]"); } catch {}
+            const declaration = declarations.find((item) => Number(item.slideIndex) === slideIndex);
+            scene.classList.toggle("is-active", Boolean(declaration));
+            if (!declaration) return;
+            const duration = Math.min(Math.max(Number(declaration.stageDuration) || .6, 0), 30);
+            const requestedEasing = declaration.easing || "ease-in-out";
+            const easing = /^(?:linear|ease|ease-in|ease-out|ease-in-out|cubic-bezier\\([\\d.,\\s-]+\\))$/.test(requestedEasing) ? requestedEasing : "ease-in-out";
+            scene.style.transition = "left " + duration + "s " + easing + ", top " + duration + "s " + easing + ", width " + duration + "s " + easing + ", height " + duration + "s " + easing + ", opacity 120ms ease-out";
+            scene.style.left = declaration.x + "%";
+            scene.style.top = declaration.y + "%";
+            scene.style.width = declaration.w + "%";
+            scene.style.height = declaration.h + "%";
+            const surface = scene.querySelector(".block-svg-stage");
+            applySvgStage(surface, declaration.stage, duration, easing, replay);
+          });
+        }
+
+        function postHtmlPage(frame, page, replay) {
+          frame?.contentWindow?.postMessage({ page: Math.max(1, Math.floor(Number(page) || 1)), replay: Boolean(replay), type: "open-slidex:html-page" }, "*");
+        }
+
+        function renderHtmlScenes(slideIndex, replay) {
+          const activeSlide = slides[slideIndex];
+          activeSlide?.querySelectorAll(".block-html-embed").forEach((frame) => postHtmlPage(frame, frame.dataset.htmlPage, replay));
+          document.querySelectorAll(".shared-html-scene").forEach((scene) => {
+            let declarations = [];
+            try { declarations = JSON.parse(scene.dataset.htmlSharedDeclarations || "[]"); } catch {}
+            const declaration = declarations.find((item) => Number(item.slideIndex) === slideIndex);
+            scene.classList.toggle("is-active", Boolean(declaration));
+            if (!declaration) return;
+            scene.style.left = declaration.x + "%";
+            scene.style.top = declaration.y + "%";
+            scene.style.width = declaration.w + "%";
+            scene.style.height = declaration.h + "%";
+            postHtmlPage(scene.querySelector(".block-html-embed"), declaration.page, replay);
+          });
+        }
+
+        window.addEventListener("message", (event) => {
+          const frames = Array.from(document.querySelectorAll(".block-html-embed"));
+          const frame = frames.find((candidate) => candidate.contentWindow === event.source);
+          if (!frame || !event.data) return;
+          if (event.data.type === "open-slidex:html-ready") {
+            renderHtmlScenes(index, false);
+            return;
+          }
+          if (event.data.type !== "open-slidex:html-page-change" || !Number.isInteger(event.data.page)) return;
+          const scene = frame.closest(".shared-html-scene");
+          if (!scene) return;
+          let declarations = [];
+          try { declarations = JSON.parse(scene.dataset.htmlSharedDeclarations || "[]"); } catch {}
+          const declaration = declarations.find((item) => Number(item.page) === event.data.page);
+          if (declaration && Number(declaration.slideIndex) !== index) {
+            stop();
+            render(Number(declaration.slideIndex));
+          }
+        });
 
         function croppedImageDimensions(fit, frameAspectRatio, imageAspectRatio) {
           if (!imageAspectRatio || fit === "fill") return { height: 100, width: 100 };
@@ -199,9 +365,19 @@ export function makeMotionDocExportRuntime() {
 
         function render(nextIndex, replay = false) {
           if (slides.length === 0) return;
-          index = (nextIndex + slides.length) % slides.length;
-          slides.forEach((slide) => slide.classList.remove("is-active"));
+          const previousIndex = index;
+          const nextResolvedIndex = (nextIndex + slides.length) % slides.length;
+          const previousSlide = slides[previousIndex];
+          const forward = nextResolvedIndex >= previousIndex;
+          index = nextResolvedIndex;
+          slides.forEach((slide) => slide.classList.remove("is-active", "is-leaving"));
           const activeSlide = slides[index];
+
+          if (!replay && previousSlide && previousSlide !== activeSlide && !activeSlide.classList.contains("slide-transition-none")) {
+            previousSlide.classList.add("is-leaving");
+            window.setTimeout(() => previousSlide.classList.remove("is-leaving"), Math.max(180, Number(activeSlide.style.getPropertyValue("--slide-transition-duration").replace("s", "")) * 1000 || 720));
+          }
+          document.documentElement.dataset.slideDirection = forward ? "forward" : "backward";
 
           if (replay) {
             activeSlide.getBoundingClientRect();
@@ -209,6 +385,9 @@ export function makeMotionDocExportRuntime() {
 
           activeSlide.classList.add("is-active");
           layoutCroppedImages(activeSlide);
+          renderHtmlScenes(index, replay);
+          renderSvgScenes(index, replay);
+          dotButtons.forEach((button, buttonIndex) => button.setAttribute("aria-current", String(buttonIndex === index)));
           if (current) current.textContent = String(index + 1);
           if (progress) progress.style.setProperty("--progress", slides.length <= 1 ? "100%" : ((index + 1) / slides.length * 100).toFixed(2) + "%");
         }
@@ -248,11 +427,19 @@ export function makeMotionDocExportRuntime() {
         function updateFullscreenButton() {
           updateFrameScale();
           if (!fullscreenButton) return;
-          fullscreenButton.textContent = document.fullscreenElement ? "×" : "⛶";
+          fullscreenButton.innerHTML = document.fullscreenElement
+            ? '<svg viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 0 1-2 2H3M16 3v3a2 2 0 0 0 2 2h3M8 21v-3a2 2 0 0 0-2-2H3M16 21v-3a2 2 0 0 1 2-2h3"/></svg>'
+            : '<svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
           fullscreenButton.setAttribute("aria-label", document.fullscreenElement ? "Exit fullscreen" : "Enter fullscreen");
         }
 
         document.addEventListener("click", (event) => {
+          const dot = event.target.closest("[data-slide-target]");
+          if (dot) {
+            stop();
+            render(Number(dot.dataset.slideTarget));
+            return;
+          }
           const button = event.target.closest("[data-action]");
           if (!button) return;
           const action = button.dataset.action;
@@ -273,6 +460,11 @@ export function makeMotionDocExportRuntime() {
           }
           if (action === "fullscreen") {
             toggleFullscreen().catch(() => {});
+          }
+          if (action === "theme") {
+            const nextTheme = player?.dataset.playerTheme === "light" ? "dark" : "light";
+            if (player) player.dataset.playerTheme = nextTheme;
+            try { localStorage.setItem("slidex-player-theme", nextTheme); } catch {}
           }
         });
 
@@ -304,9 +496,11 @@ export function makeMotionDocExportRuntime() {
           }
         });
 
+        try { if (player) player.dataset.playerTheme = localStorage.getItem("slidex-player-theme") || "dark"; } catch { if (player) player.dataset.playerTheme = "dark"; }
         updateFrameScale();
         render(0);
         updateFullscreenButton();
+        const svgHydration = hydrateSvgBlocks().then(() => render(index));
 
         // ── Shader Background System ──
         const SHADER_VERTEX = \`${runtimeVertexShader}\`;
@@ -1292,7 +1486,11 @@ export function makeMotionDocExportRuntime() {
             : 1;
           document.documentElement.classList.add('motion-doc-static-export');
           document.body.dataset.motionExportPrepared = 'false';
+          await svgHydration;
           slides.forEach((slide) => slide.classList.add('is-active'));
+          document.querySelectorAll('.slide .block-svg-stage').forEach((surface) => {
+            applySvgStage(surface, surface.dataset.svgStage, 0, surface.dataset.svgEasing, false);
+          });
           updateFrameScale();
 
           if (document.fonts && document.fonts.ready) {

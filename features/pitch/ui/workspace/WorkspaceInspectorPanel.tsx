@@ -17,6 +17,27 @@ export function WorkspaceInspectorPanel(props: WorkspaceInspectorPanelProps) {
   const { view } = props;
   const { tx } = usePitchI18n();
 
+  if (view.inspectorOverride && !view.hideInspector) {
+    return (
+      <>
+        {view.isMobileInspectorOpen ? (
+          <button
+            aria-label={tx("Close options")}
+            className="fixed inset-0 z-[79] bg-black/65 backdrop-blur-sm md:hidden"
+            onClick={() => view.setIsMobileInspectorOpen(false)}
+            type="button"
+          />
+        ) : null}
+        <div
+          className={`${view.isMobileInspectorOpen ? "fixed" : "hidden"} inset-y-0 right-0 z-[80] h-dvh md:relative md:inset-auto md:z-10 md:flex md:h-full`}
+          data-workspace-inspector-override
+        >
+          {view.inspectorOverride}
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {!view.hideInspector ? (

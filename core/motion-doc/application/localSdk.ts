@@ -259,7 +259,7 @@ export function getSlideXCatalog(input: {
   const catalog = {
     blocks: {
       addable: ["Text", "Image", "Video", "Chart", "Table", "ShapeRectangle"],
-      authorableTags: ["Text", "ImageBlock", "VideoBlock", "Chart", "Table", "Shape"],
+      authorableTags: ["Text", "ImageBlock", "VideoBlock", "SvgBlock", "Chart", "Table", "Shape"],
       nodeIdentity: "Every editable block has a stable id prop exposed as nodeId.",
       rule: "MCP authoring exactly matches the Workspace toolbar. Removed component tags are rejected during parsing."
     },

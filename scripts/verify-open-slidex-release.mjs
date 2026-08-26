@@ -15,6 +15,7 @@ const packageRoot = path.join(repositoryRoot, "packages/open-slidex");
 const expectedSkills = [
   "slidex-deck-design",
   "slidex-deck-qa",
+  "slidex-html-authoring",
   "slidex-mdx-authoring",
   "slidex-motion-direction",
   "slidex-source-import"
@@ -57,7 +58,8 @@ try {
     "runtime/workbench/sdk/index.js",
     "runtime/workbench/sdk/node.js",
     "template/AGENTS.md",
-    "template/package.json"
+    "template/package.json",
+    "template/README.md"
   ]) {
     assert.ok(packedFiles.has(required), `packed release is missing ${required}`);
   }
@@ -115,9 +117,20 @@ try {
     [...expectedSkills].sort()
   );
 
+  await execFileAsync(
+    npmCommand(),
+    ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--package-lock=false", "--no-save", archivePath],
+    { cwd: starterRoot, env: npmEnvironment, maxBuffer: 20 * 1024 * 1024 }
+  );
+  const starterCliPath = path.join(starterRoot, "node_modules/open-slidex/dist/cli.mjs");
+  const { stdout: starterVersionOutput } = await execFileAsync(process.execPath, [starterCliPath, "--version"], {
+    cwd: starterRoot
+  });
+  assert.equal(starterVersionOutput.trim(), packageManifest.version);
+
   const workspaceRoot = path.join(starterRoot, "open-slidex-workspace");
   const transport = new StdioClientTransport({
-    args: [cliPath, "mcp", "--workspace", workspaceRoot],
+    args: [starterCliPath, "mcp", "--workspace", workspaceRoot],
     command: process.execPath,
     cwd: starterRoot,
     stderr: "pipe"
@@ -131,6 +144,9 @@ try {
   assert.match(instructions, /open_slidex_read/);
   assert.match(instructions, /expectedRevision/);
   assert.match(instructions, /rendered QA/);
+  assert.match(instructions, /SvgBlock/);
+  assert.match(instructions, /opaque-origin/);
+  assert.doesNotMatch(instructions, /open_slidex_html/);
   assert.doesNotMatch(instructions, /30 style/i);
 
   const tools = await client.listTools();
@@ -145,6 +161,11 @@ try {
     "providerAssetId",
     "query"
   ]);
+  const read = tools.tools.find((tool) => tool.name === "open_slidex_read");
+  assert.match(read?.description ?? "", /canonical browser-native HTML/);
+  assert.match(String(read?.inputSchema?.properties?.sourceFormat?.description ?? ""), /HTML/);
+  const edit = tools.tools.find((tool) => tool.name === "open_slidex_edit");
+  assert.match(edit?.description ?? "", /browser-native HTML/);
   for (const tool of tools.tools) {
     for (const [propertyName, property] of Object.entries(tool.inputSchema?.properties ?? {})) {
       assert.ok(
@@ -160,7 +181,7 @@ try {
   assert.deepEqual(listed.presentations, []);
 
   process.stdout.write(
-    `OpenSlideX ${packageManifest.version} release smoke passed: packed, clean-installed, initialized, and connected to ${expectedTools.length} MCP tools.\n`
+    `OpenSlideX ${packageManifest.version} release smoke passed: packed, clean-installed, starter-installed, initialized, and connected to ${expectedTools.length} MCP tools.\n`
   );
 } finally {
   await client?.close().catch(() => undefined);

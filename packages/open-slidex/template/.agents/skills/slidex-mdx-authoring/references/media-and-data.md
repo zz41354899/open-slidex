@@ -13,6 +13,17 @@ Read this file only when the deck uses media, charts, tables, or imported data.
 - Keep image treatment consistent: crop logic, radius, border, and color grade
   should belong to one visual system.
 
+## SVG scenes
+
+- Store SVG sources as verified, script-free `assets/*.svg` files and author
+  them only through native `SvgBlock` layers.
+- Declarative `data-stage` and `data-motion` markers may describe state changes.
+  Scripts, event handlers, SMIL, embedded documents or media, and external
+  references are invalid.
+- Every layer in one `sharedScene` must reuse the same `src`; advance it with a
+  nonnegative integer `stage` and an optional 0-30 second `stageDuration`.
+- Preserve a complete static final state for reduced motion and export.
+
 ## Charts
 
 Valid chart types are `bar`, `line`, `area`, `pie`, `donut`, and `scatter`.

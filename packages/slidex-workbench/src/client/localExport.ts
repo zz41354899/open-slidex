@@ -6,6 +6,15 @@ export const localExportOptions = [
   { description: "Portable source with images", id: "mdx", label: "MDX" }
 ] as const satisfies readonly { description: string; id: ExportFormat; label: string }[];
 
+export type LocalExportMode = "html-source" | "native";
+
+/** HTML-backed decks preserve their source file and never offer a lossy PPTX path. */
+export function localExportOptionsForMode(mode: LocalExportMode) {
+  return mode === "html-source"
+    ? localExportOptions.filter((option) => option.id !== "pptx")
+    : [...localExportOptions];
+}
+
 export function localExportFileName(value: string) {
   return value
     .normalize("NFKD")

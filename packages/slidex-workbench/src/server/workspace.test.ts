@@ -9,9 +9,9 @@ import {
   closeSlideXChromiumPool,
   exportSlideXDocument
 } from "@open-slidex/sdk/node";
-import JSZip from "jszip";
 import sharp from "sharp";
 
+import { htmlPresentationAsset } from "@/core/motion-doc/domain/htmlPresentation";
 import { OpenSlideXWorkspace } from "./workspace";
 import { startWorkspaceServer } from "./workspaceHttp";
 
@@ -214,6 +214,42 @@ test("local workspace renders and caches the presentation's real shader cover", 
   await access(path.join(workspace.stateRoot, "covers", `${presentation.id}.png`));
 });
 
+test("local workspace renders an HTML presentation cover and replaces a stale blank cache", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+  const { root, workspace } = await fixture();
+  context.after(async () => {
+    await closeSlideXChromiumPool();
+    await rm(root, { force: true, recursive: true });
+  });
+  const html = `<!doctype html><html><head><style>html,body{margin:0;width:100%;height:100%}body{display:grid;place-items:center;background:#083344;color:#fef3c7;font:700 120px system-ui}</style></head><body><main data-slidex-page="1">HTML cover</main></body></html>`;
+  const presentation = await workspace.importMdx(new File([html], "html-cover.html", { type: "text/html" }));
+  const document = await (await workspace.project(presentation.id)).open();
+  const coverRoot = path.join(workspace.stateRoot, "covers");
+  await mkdir(coverRoot, { recursive: true });
+  await sharp({
+    create: { background: "white", channels: 3, height: 1080, width: 1920 }
+  }).png().toFile(path.join(coverRoot, `${presentation.id}.png`));
+  await writeFile(
+    path.join(coverRoot, `${presentation.id}.json`),
+    `${JSON.stringify({ revision: document.revision })}\n`,
+    "utf8"
+  );
+
+  const cover = await workspace.presentationCover(presentation.id);
+  const encodedPng = cover.match(/href="data:image\/png;base64,([^"]+)"/)?.[1];
+  assert.ok(encodedPng);
+  const stats = await sharp(Buffer.from(encodedPng, "base64")).stats();
+
+  assert.ok(stats.channels.some((channel) => channel.stdev > 8));
+  assert.match(
+    await readFile(path.join(coverRoot, `${presentation.id}.json`), "utf8"),
+    /"renderVersion":2/
+  );
+});
+
 test("local workspace imports only valid MotionDoc MDX into an isolated project", async (context) => {
   const { root, workspace, workspaceRoot } = await fixture();
   context.after(async () => rm(root, { force: true, recursive: true }));
@@ -227,39 +263,76 @@ test("local workspace imports only valid MotionDoc MDX into an isolated project"
   assert.equal(stored, source);
   await assert.rejects(
     workspace.importMdx(new File([source], "launch.pptx", { type: "application/vnd.openxmlformats-officedocument.presentationml.presentation" })),
-    /\.mdx.*\.zip.*\.slidex/i
+    /\.mdx.*\.html/i
   );
+  await assert.rejects(workspace.importMdx(new File([source], "launch.zip", { type: "application/zip" })), /\.mdx.*\.html/i);
+  await assert.rejects(workspace.importMdx(new File([source], "launch.slidex", { type: "application/zip" })), /\.mdx.*\.html/i);
   await assert.rejects(
     workspace.importMdx(new File(["# Empty"], "empty.mdx", { type: "text/mdx" })),
     /valid <Slide>/i
   );
 });
 
-test("local workspace imports a project bundle with referenced images", async (context) => {
+test("local workspace preserves a sandboxed HTML import byte-for-byte", async (context) => {
   const { root, workspace, workspaceRoot } = await fixture();
   context.after(async () => rm(root, { force: true, recursive: true }));
 
-  const source = `# Imported with image
-
-<Slide>
-  <ImageBlock src="assets/photo.png" alt="Imported image" x={10} y={10} w={80} h={80} />
-</Slide>
-`;
-  const archive = new JSZip();
-  archive.file("portable-deck/presentation.mdx", source);
-  archive.file("portable-deck/assets/photo.png", await tinyPng());
-  const bytes = await archive.generateAsync({ type: "uint8array" });
-
-  const imported = await workspace.importMdx(new File([Buffer.from(bytes)], "portable-deck.slidex", { type: "application/zip" }));
+  const bytes = Buffer.from("<!doctype html>\n<html><body><svg><path d=\"M0 0L10 10\"/></svg><div style=\"background-image:url(&quot;data:image/webp;base64,UklGRkAQAABXRUJQ&quot;)\"></div><button>Next</button><script>document.body.dataset.ready='yes'</script></body></html>\n", "utf8");
+  const imported = await workspace.importMdx(new File([bytes], "IDAEO.html", { type: "text/html" }));
   const projectRoot = path.join(workspaceRoot, imported.id);
   const stored = await readFile(path.join(projectRoot, "presentation.mdx"), "utf8");
-  const assets = (await readdir(path.join(projectRoot, "assets"))).filter((name) => name.endsWith(".webp"));
+  const assets = (await readdir(path.join(projectRoot, "assets"))).filter((name) => name.endsWith(".html"));
 
-  assert.equal(imported.title, "Imported with image");
+  assert.equal(imported.title, "IDAEO");
   assert.equal(assets.length, 1);
-  assert.match(assets[0]!, /^photo-[a-f0-9]{16}\.webp$/);
-  assert.match(stored, new RegExp(`src="assets/${assets[0]}"`));
-  assert.equal((await readFile(path.join(projectRoot, "assets", assets[0]!))).subarray(0, 4).toString("ascii"), "RIFF");
+  assert.match(stored, new RegExp(`<HtmlEmbedBlock[^>]+src="assets/${assets[0]}"`));
+  assert.doesNotMatch(stored, /;base64,/i);
+  assert.deepEqual(await readFile(path.join(projectRoot, "assets", assets[0]!)), bytes);
+});
+
+test("local workspace maps a multi-page HTML shell to shared first-class slides", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const html = `<!doctype html><html><body><div class="gleft">
+    <section class="gcard page" id="g1" data-stage="1"></section>
+    <section class="gcard page" id="g2" data-stage="2"></section>
+    <section class="gcard page" id="g3" data-stage="3"></section>
+  </div></body></html>`;
+  const imported = await workspace.importMdx(new File([html], "mapped.html", { type: "text/html" }));
+  const projectRoot = path.join(workspaceRoot, imported.id);
+  const stored = await readFile(path.join(projectRoot, "presentation.mdx"), "utf8");
+  const document = parseMotionDoc(stored);
+
+  assert.equal(document.scenes.length, 3);
+  assert.deepEqual(document.scenes.map((scene) => scene.blocks[0]?.props.page), [1, 2, 3]);
+  assert.equal(new Set(document.scenes.map((scene) => scene.blocks[0]?.props.sharedScene)).size, 1);
+  assert.equal(new Set(document.scenes.map((scene) => scene.blocks[0]?.props.id)).size, 3);
+});
+
+test("local workspace maps every MDX-exported HTML slide and preserves its nonce CSP", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const html = `<!doctype html><html><head>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'nonce-slidex-a292d497'">
+  </head><body><main class="player" data-slide-count="3">
+    <section class="slide is-active" data-slidex-slide-index="0">One</section>
+    <section class="slide" data-slidex-slide-index="1">Two</section>
+    <section class="slide" data-slidex-slide-index="2">Three</section>
+    <script nonce="slidex-a292d497">window.runtimeReady=true</script>
+  </main></body></html>`;
+  const imported = await workspace.importMdx(new File([html], "mdx-export.html", { type: "text/html" }));
+  const projectRoot = path.join(workspaceRoot, imported.id);
+  const stored = await readFile(path.join(projectRoot, "presentation.mdx"), "utf8");
+  const document = parseMotionDoc(stored);
+  const htmlAssets = (await readdir(path.join(projectRoot, "assets"))).filter((name) => name.endsWith(".html"));
+
+  assert.equal(document.scenes.length, 3);
+  assert.deepEqual(document.scenes.map((scene) => scene.blocks[0]?.props.page), [1, 2, 3]);
+  assert.equal(new Set(document.scenes.map((scene) => scene.blocks[0]?.props.sharedScene)).size, 1);
+  assert.equal(htmlAssets.length, 1);
+  assert.equal(await readFile(path.join(projectRoot, "assets", htmlAssets[0]!), "utf8"), html);
 });
 
 test("local workspace extracts Base64 images from a standalone MDX import", async (context) => {
@@ -313,6 +386,68 @@ test("portable MDX export carries project images through Workspace import", asyn
   const storedAssets = (await readdir(path.join(importedRoot, "assets"))).filter((name) => name.endsWith(".webp"));
   assert.equal(storedAssets.length, 1);
   assert.match(storedSource, new RegExp(`src="assets/${storedAssets[0]}"`));
+});
+
+test("portable MDX export restores safe SvgBlock assets", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const original = await workspace.create({ locale: "en", title: "Portable SVG" });
+  const originalRoot = path.join(workspaceRoot, original.id);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg"><path data-stage="1" data-motion="draw" d="M0 0L100 100"/></svg>`;
+  await writeFile(path.join(originalRoot, "assets", "tree.svg"), svg, "utf8");
+  const originalSource = `# Portable SVG\n\n<Slide><SvgBlock id="tree" src="assets/tree.svg" sharedScene="tree" stage={1} x={10} y={10} w={80} h={80} /></Slide>\n`;
+  const exportPath = path.join(root, "portable-svg.mdx");
+  await exportSlideXDocument({ format: "mdx", outputPath: exportPath, projectRoot: originalRoot, source: originalSource });
+  const portableSource = await readFile(exportPath, "utf8");
+  assert.match(portableSource, /data:image\/svg\+xml;base64,/);
+
+  const imported = await workspace.importMdx(new File([portableSource], "portable-svg.mdx", { type: "text/mdx" }));
+  const importedRoot = path.join(workspaceRoot, imported.id);
+  const storedSource = await readFile(path.join(importedRoot, "presentation.mdx"), "utf8");
+  const storedAssets = (await readdir(path.join(importedRoot, "assets"))).filter((name) => name.endsWith(".svg"));
+  assert.equal(storedAssets.length, 1);
+  assert.match(storedSource, new RegExp(`src="assets/${storedAssets[0]}"`));
+  assert.equal(await readFile(path.join(importedRoot, "assets", storedAssets[0]!), "utf8"), svg);
+});
+
+test("MDX export keeps interactive HTML as an asset reference without Base64 inflation", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const original = await workspace.create({ locale: "en", title: "Portable HTML" });
+  const originalRoot = path.join(workspaceRoot, original.id);
+  const html = `<!doctype html>\n<html><body><svg><animate attributeName="opacity" values="0;1" /></svg><script>document.body.dataset.ready='yes'</script></body></html>\n`;
+  await writeFile(path.join(originalRoot, "assets", "source.html"), html, "utf8");
+  const originalSource = `# Portable HTML\n\n<Slide><HtmlEmbedBlock id="html" src="assets/source.html" page={1} /></Slide>\n`;
+  const exportPath = path.join(root, "portable-html.mdx");
+  await exportSlideXDocument({ format: "mdx", outputPath: exportPath, projectRoot: originalRoot, source: originalSource });
+  const portableSource = await readFile(exportPath, "utf8");
+  assert.doesNotMatch(portableSource, /data:text\/html;base64,/i);
+  assert.doesNotMatch(portableSource, /;base64,/i);
+  assert.match(portableSource, /src="assets\/source\.html"/);
+  assert.ok(Buffer.byteLength(portableSource, "utf8") < Buffer.byteLength(html, "utf8"));
+
+  const imported = await workspace.importMdx(new File([portableSource], "portable-html.mdx", { type: "text/mdx" }));
+  const importedRoot = path.join(workspaceRoot, imported.id);
+  const importedSource = await readFile(path.join(importedRoot, "presentation.mdx"), "utf8");
+  const importedHtmlSource = htmlPresentationAsset(parseMotionDoc(importedSource));
+
+  assert.ok(importedHtmlSource);
+  assert.equal(importedHtmlSource, "assets/source.html");
+  assert.equal(await readFile(path.join(importedRoot, importedHtmlSource), "utf8"), html);
+});
+
+test("a lightweight HTML manifest MDX still opens in HTML source mode when its sibling asset is missing", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const source = `# HTML manifest\n\n<Slide><HtmlEmbedBlock id="html" src="assets/missing-source.html" page={1} /></Slide>\n`;
+  const imported = await workspace.importMdx(new File([source], "html-manifest.mdx", { type: "text/mdx" }));
+  const stored = await readFile(path.join(workspaceRoot, imported.id, "presentation.mdx"), "utf8");
+
+  assert.match(stored, /src="assets\/missing-source\.html"/);
+  assert.equal(htmlPresentationAsset(parseMotionDoc(stored)), "assets/missing-source.html");
 });
 
 test("local workspace extracts Base64 shape images from JSX literal expressions", async (context) => {
@@ -382,25 +517,28 @@ test("local workspace imports MDX with unavailable local assets as editable plac
   assert.match(standaloneSource, /<VideoBlock\s*\/>/);
   assert.match(standaloneSource, /<Shape\s*\/>/);
 
-  const archive = new JSZip();
-  archive.file("presentation.mdx", source);
-  const bytes = await archive.generateAsync({ type: "uint8array" });
-  const importedBundle = await workspace.importMdx(new File([Buffer.from(bytes)], "missing.zip", { type: "application/zip" }));
-  const bundleSource = await readFile(path.join(workspace.root, importedBundle.id, "presentation.mdx"), "utf8");
-  assert.doesNotMatch(bundleSource, /assets\/(?:background|missing|poster|shape)\./);
 });
 
-test("local workspace rejects unsafe project bundle paths", async (context) => {
+test("local workspace preserves external HTTP(S) libraries, images, and video without rewriting", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const html = `<!doctype html><html><head><script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script></head><body><img src="https://images.unsplash.com/photo.jpg"><video src="https://media.example.com/launch.mp4"></video></body></html>`;
+  const imported = await workspace.importMdx(new File([html], "online.html", { type: "text/html" }));
+  const projectRoot = path.join(workspaceRoot, imported.id);
+  const htmlAsset = (await readdir(path.join(projectRoot, "assets"))).find((name) => name.endsWith(".html"));
+
+  assert.ok(htmlAsset);
+  assert.equal(await readFile(path.join(projectRoot, "assets", htmlAsset), "utf8"), html);
+});
+
+test("local workspace rejects unresolved relative HTML sidecars", async (context) => {
   const { root, workspace } = await fixture();
   context.after(async () => rm(root, { force: true, recursive: true }));
 
-  const archive = new JSZip();
-  archive.file("../presentation.mdx", blankPresentationMdx);
-  const bytes = await archive.generateAsync({ type: "uint8array" });
-
   await assert.rejects(
-    workspace.importMdx(new File([Buffer.from(bytes)], "unsafe.slidex", { type: "application/zip" })),
-    /unsafe path/i
+    workspace.importMdx(new File(["<!doctype html><html><body><img src=\"./tree.svg\"></body></html>"], "external.html", { type: "text/html" })),
+    /relative or unsupported resource.*absolute HTTP\(S\).*inline/i
   );
 });
 
@@ -569,7 +707,7 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   assert.equal(missingImport.status, 400);
   assert.deepEqual(await missingImport.json(), {
     code: "invalid_request",
-    message: "Choose one .mdx file or .zip/.slidex OpenSlideX project bundle."
+    message: "Choose one .mdx or .html file."
   });
 
   const embeddedImage = Buffer.concat([await tinyPng(), Buffer.alloc(2.5 * 1024 * 1024)]);
@@ -607,6 +745,100 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   });
   assert.equal(deleted.status, 200);
   assert.equal((await deleted.json()).deleted, true);
+});
+
+test("workspace editor proxy replaces source, rejects Canvas patches, and thumbnails imported HTML through public routes", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  const uiPort = 4321;
+  const originalHtml = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="script-src 'nonce-slidex-a292d497'; style-src 'unsafe-inline'"></head><body><main class="player"><section class="slide is-active" data-slidex-slide-index="0">First</section><section class="slide" data-slidex-slide-index="1">Second</section><script nonce="slidex-a292d497">window.runtimeReady=true</script></main></body></html>`;
+  const imported = await workspace.importMdx(new File([originalHtml], "editable.html", { type: "text/html" }));
+  const projectRoot = path.join(workspaceRoot, imported.id);
+  const originalDocument = parseMotionDoc(await readFile(path.join(projectRoot, "presentation.mdx"), "utf8"));
+  const originalSource = String(originalDocument.scenes[0]?.blocks[0]?.props.src ?? "");
+  const replacementHtml = originalHtml.replace("First", "Updated on Canvas");
+  const running = await startWorkspaceServer({ port: 0, uiPort, workspace });
+  context.after(async () => {
+    await running.close();
+    await rm(root, { force: true, recursive: true });
+  });
+
+  const editorPrefix = `http://127.0.0.1:${running.port}/api/v1/workspace/presentations/${imported.id}/editor`;
+  const snapshotResponse = await fetch(`${editorPrefix}/api/v1/document`, {
+    headers: { origin: `http://127.0.0.1:${uiPort}` }
+  });
+  assert.equal(snapshotResponse.status, 200);
+  const snapshot = await snapshotResponse.json();
+  const bridgedResponse = await fetch(`${editorPrefix}/${originalSource}?slidexBridge=1&slidexEdit=1`, {
+    headers: { origin: `http://127.0.0.1:${uiPort}` }
+  });
+  assert.equal(bridgedResponse.status, 200);
+  assert.equal(bridgedResponse.headers.get("cache-control"), "no-store");
+  const playbackPolicy = bridgedResponse.headers.get("content-security-policy") ?? "";
+  assert.match(playbackPolicy, /script-src[^;]+https:/);
+  assert.match(playbackPolicy, /connect-src[^;]+wss:/);
+  assert.match(playbackPolicy, /img-src[^;]+https:/);
+  assert.match(playbackPolicy, /media-src[^;]+https:/);
+  const bridgedHtml = await bridgedResponse.text();
+  assert.match(bridgedHtml, /data-open-slidex-playback-bridge/);
+  assert.match(bridgedHtml, /data-open-slidex-playback-bridge nonce="slidex-a292d497"/);
+  assert.match(bridgedHtml, /data-open-slidex-native-projection/);
+  assert.doesNotMatch(bridgedHtml, /data-open-slidex-canvas-editor-bridge/);
+  const updateUrl = `${editorPrefix}/api/v1/assets/html?expectedRevision=${encodeURIComponent(snapshot.revision)}&source=${encodeURIComponent(originalSource)}`;
+  const updateResponse = await fetch(updateUrl, {
+    body: replacementHtml,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      origin: `http://127.0.0.1:${uiPort}`
+    },
+    method: "PUT"
+  });
+
+  assert.equal(updateResponse.status, 200);
+  const update = await updateResponse.json();
+  assert.match(update.source, /^assets\/source-[a-f0-9]{16}\.html$/);
+  assert.equal(await readFile(path.join(projectRoot, update.source), "utf8"), replacementHtml);
+  assert.match(await readFile(path.join(projectRoot, "presentation.mdx"), "utf8"), new RegExp(`src="${update.source}"`));
+
+  const patchResponse = await fetch(`${editorPrefix}/api/v1/assets/html`, {
+    body: JSON.stringify({
+      expectedRevision: update.document.revision,
+      patches: [{
+        before: "Updated on Canvas",
+        selector: "html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1) > section:nth-of-type(1)",
+        text: "Native Text layer",
+        textNode: 0
+      }],
+      source: update.source
+    }),
+    headers: {
+      "content-type": "application/json",
+      origin: `http://127.0.0.1:${uiPort}`
+    },
+    method: "PATCH"
+  });
+  assert.equal(patchResponse.status, 404);
+  assert.equal((await patchResponse.json()).code, "not_found");
+  assert.equal(await readFile(path.join(projectRoot, update.source), "utf8"), replacementHtml);
+
+  const thumbnailResponse = await fetch(
+    `${editorPrefix}/api/v1/assets/html-thumbnail?page=1&source=${encodeURIComponent(update.source)}`,
+    { headers: { origin: `http://127.0.0.1:${uiPort}` } }
+  );
+  assert.equal(thumbnailResponse.status, 200);
+  assert.equal(thumbnailResponse.headers.get("cache-control"), "no-store");
+  assert.equal(thumbnailResponse.headers.get("content-type"), "image/png");
+  assert.ok((await thumbnailResponse.arrayBuffer()).byteLength > 10_000);
+
+  const staleResponse = await fetch(updateUrl, {
+    body: replacementHtml.replace("Second", "Stale write"),
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      origin: `http://127.0.0.1:${uiPort}`
+    },
+    method: "PUT"
+  });
+  assert.equal(staleResponse.status, 409);
+  assert.equal((await staleResponse.json()).code, "revision_conflict");
 });
 
 test("local workspace prepares legacy decks before opening their editor API", async (context) => {

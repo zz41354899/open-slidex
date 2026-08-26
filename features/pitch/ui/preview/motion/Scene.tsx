@@ -47,6 +47,7 @@ type SceneProps = {
   textColor?: string;
   theme?: string;
   transitionDuration?: number;
+  transparentBackground?: boolean;
 };
 
 export function Scene({
@@ -87,7 +88,8 @@ export function Scene({
   textAlign = "left",
   textColor,
   theme = "dark",
-  transitionDuration
+  transitionDuration,
+  transparentBackground = false
 }: SceneProps) {
   const localBackgroundImage = usePreviewMediaSource(backgroundImage);
   const slideMotion = normalizeSlideMotion({ slideTransition, transitionDuration });
@@ -125,7 +127,7 @@ export function Scene({
           "--slide-fg": themeColors.foreground,
           "--slide-muted": themeColors.muted,
           "--slide-text-align": textAlign,
-          background: slideCanvasBackground(themeColors),
+          background: transparentBackground ? "transparent" : slideCanvasBackground(themeColors),
           borderRadius: 0,
           display: "flex",
           flexDirection: "column",

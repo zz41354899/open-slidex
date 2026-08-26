@@ -48,6 +48,7 @@ export type EditorHeaderProps = {
   projectNameEditValue?: string;
   redoDisabled?: boolean;
   setZoomLevel: (value: EditorZoomLevel) => void;
+  showFitScale?: boolean;
   undoDisabled?: boolean;
   variant?: "default" | "local";
   zoomLevel: EditorZoomLevel;
@@ -81,6 +82,7 @@ export function EditorHeader({
   projectNameEditValue,
   redoDisabled,
   setZoomLevel,
+  showFitScale = true,
   undoDisabled,
   variant = "default",
   zoomLevel
@@ -224,7 +226,7 @@ export function EditorHeader({
         </div>
         <div className={styles.zoom} ref={zoomRef}>
           <button aria-expanded={zoomOpen} className={styles.zoomButton} data-canvas-zoom-trigger onClick={() => setZoomOpen((value) => !value)} type="button">
-            <span>{zoomLabel(zoomLevel, actualScale, labels.fitToScreen)}</span>
+            <span>{zoomLabel(zoomLevel, actualScale, labels.fitToScreen, showFitScale)}</span>
             <ChevronDown size={14} />
           </button>
           {zoomOpen ? (
@@ -330,8 +332,9 @@ export function EditorInspectorHeader({ actions, subtitle, title }: { actions?: 
   );
 }
 
-function zoomLabel(level: EditorZoomLevel, actualScale: number, fitLabel: string) {
+function zoomLabel(level: EditorZoomLevel, actualScale: number, fitLabel: string, showFitScale: boolean) {
   if (level !== "fit") return `${Math.round(level * 100)}%`;
+  if (!showFitScale) return fitLabel.replace(/ to screen$/i, "");
   const percent = actualScale * 100;
   return `${fitLabel.replace(/ to screen$/i, "")} ${percent < 10 ? Math.round(percent * 10) / 10 : Math.round(percent)}%`;
 }

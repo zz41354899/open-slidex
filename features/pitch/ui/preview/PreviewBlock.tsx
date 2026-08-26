@@ -22,6 +22,7 @@ import { blockFrame } from "@/features/pitch/application/previewCanvas";
 import { ImageBlock, ShapeBlock, Text, VideoBlock } from "@/features/pitch/ui/preview/motion-blocks";
 import { TableBlock } from "@/features/pitch/ui/preview/motion/TableBlock";
 import { ChartBlock } from "@/features/pitch/ui/preview/motion/ChartBlock";
+import { HtmlEmbedBlock, SvgStageBlock } from "@/features/pitch/ui/preview/motion/EmbeddedBlocks";
 
 export type PreviewBlockItem = {
   block: MotionDocBlock;
@@ -233,6 +234,21 @@ export const PreviewBlock = memo(function PreviewBlock({
         poster={stringProp(block.props.poster)}
         radius={spacingProp(block.props.radius ?? block.props.borderRadius)}
         src={String(block.props.src ?? "")}
+      />
+    );
+  }
+
+  if (block.type === "HtmlEmbedBlock") {
+    return <HtmlEmbedBlock page={numberProp(block.props.page)} src={String(block.props.src ?? "")} />;
+  }
+
+  if (block.type === "SvgBlock") {
+    return (
+      <SvgStageBlock
+        easing={stringProp(block.props.easing)}
+        src={String(block.props.src ?? "")}
+        stage={numberProp(block.props.stage)}
+        stageDuration={numberProp(block.props.stageDuration)}
       />
     );
   }

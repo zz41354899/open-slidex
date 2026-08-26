@@ -89,6 +89,13 @@ export const motionDocExportStyles = `      :root {
       }
       .slide.is-active {
         display: flex;
+        z-index: 2;
+      }
+      .slide.is-leaving {
+        animation: slide-exit-soft var(--slide-transition-duration, 0.72s) cubic-bezier(0.4, 0, 1, 1) both;
+        display: flex;
+        pointer-events: none;
+        z-index: 1;
       }
       .slide-content {
         position: relative;
@@ -577,6 +584,59 @@ export const motionDocExportStyles = `      :root {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
       }
+      .slide-dots {
+        align-items: flex-end;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        position: absolute;
+        right: 22px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 101;
+      }
+      .slide-dot-button {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        color: rgba(255,255,255,.48);
+        cursor: pointer;
+        display: flex;
+        gap: 9px;
+        justify-content: flex-end;
+        min-height: 24px;
+        padding: 3px;
+      }
+      .slide-dot-label {
+        background: rgba(14,14,16,.72);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 7px;
+        font-size: 11px;
+        max-width: 210px;
+        opacity: 0;
+        overflow: hidden;
+        padding: 5px 8px;
+        text-overflow: ellipsis;
+        transform: translateX(7px);
+        transition: opacity 180ms ease, transform 260ms cubic-bezier(.16,1,.3,1);
+        white-space: nowrap;
+      }
+      .slide-dot-mark {
+        background: rgba(255,255,255,.28);
+        border-radius: 999px;
+        height: 7px;
+        transition: background 180ms ease, height 260ms cubic-bezier(.16,1,.3,1), transform 260ms cubic-bezier(.16,1,.3,1);
+        width: 7px;
+      }
+      .slide-dot-button:hover .slide-dot-label,
+      .slide-dot-button:focus-visible .slide-dot-label { opacity: 1; transform: none; }
+      .slide-dot-button[aria-current="true"] .slide-dot-mark { background: #8ea5ff; height: 18px; }
+      .player[data-player-theme="light"] .controls,
+      .player[data-player-theme="light"] .slide-dot-label { background: rgba(250,250,252,.76); border-color: rgba(17,24,39,.1); color: #374151; }
+      .player[data-player-theme="light"] .control-button { color: #52525b; }
+      .player[data-player-theme="light"] .control-button:hover { background: rgba(17,24,39,.08); color: #111827; }
+      .player[data-player-theme="light"] .counter { color: #71717a; }
+      .player[data-player-theme="light"] .counter [data-current] { color: #18181b; }
       .controls {
         position: absolute;
         left: 50%;
@@ -673,12 +733,17 @@ export const motionDocExportStyles = `      :root {
         .controls {
           grid-template-columns: 1fr;
         }
+        .slide-dots { display: none; }
         .counter {
           text-align: center;
         }
         .button-group {
           justify-content: center;
         }
+      }
+      @keyframes slide-exit-soft {
+        from { opacity: 1; transform: scale(1); filter: blur(0); }
+        to { opacity: 0; transform: scale(.992); filter: blur(3px); }
       }
       .block-chart {
         align-items: stretch;
@@ -896,6 +961,28 @@ export const motionDocExportStyles = `      :root {
       .motion-chart--editor-static * {
         animation: none !important;
       }
+      .block-html-unsupported {
+        align-items: center;
+        background: #111827;
+        color: #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        height: 100%;
+        justify-content: center;
+        padding: 32px;
+        text-align: center;
+        width: 100%;
+      }
+      .block-html-unsupported span { color: #9ca3af; font-size: 14px; }
+      .block-html-embed { background: #fff; border: 0; display: block; height: 100%; width: 100%; }
+      .shared-html-layer { inset: 0; overflow: hidden; pointer-events: none; position: absolute; z-index: 85; }
+      .shared-html-scene { opacity: 0; pointer-events: none; position: absolute; visibility: hidden; }
+      .shared-html-scene.is-active { opacity: 1; pointer-events: auto; visibility: visible; }
+      .block-svg-stage, .block-svg-stage > svg { display: block; height: 100%; width: 100%; }
+      .shared-svg-layer { inset: 0; overflow: hidden; pointer-events: none; position: absolute; z-index: 80; }
+      .shared-svg-scene { opacity: 0; position: absolute; visibility: hidden; }
+      .shared-svg-scene.is-active { opacity: 1; visibility: visible; }
       @media print {
         @page {
           size: ${MOTION_DOC_CANVAS_WIDTH}px ${MOTION_DOC_CANVAS_HEIGHT}px;

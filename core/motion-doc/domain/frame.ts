@@ -28,7 +28,7 @@ export function defaultBlockWidth(type: MotionDocBlock["type"]) {
   if (type === "Shape") return widthPercentForPhysicalAspectRatio(28);
   if (type === "Table") return 56;
   if (type === "Chart") return 78;
-  if (type === "ImageBlock" || type === "VideoBlock") return 80;
+  if (type === "ImageBlock" || type === "VideoBlock" || type === "SvgBlock" || type === "HtmlEmbedBlock") return 80;
 
   return 40;
 }
@@ -42,13 +42,13 @@ export function defaultBlockHeight(type: MotionDocBlock["type"]) {
   if (type === "Shape") return 28;
   if (type === "Table") return 30;
   if (type === "Chart") return 52;
-  if (type === "ImageBlock" || type === "VideoBlock") return 54;
+  if (type === "ImageBlock" || type === "VideoBlock" || type === "SvgBlock" || type === "HtmlEmbedBlock") return 54;
 
   return 32;
 }
 
 export function defaultBlockX(type: MotionDocBlock["type"]) {
-  if (type === "ImageBlock" || type === "VideoBlock") return 10;
+  if (type === "ImageBlock" || type === "VideoBlock" || type === "SvgBlock" || type === "HtmlEmbedBlock") return 10;
   if (type === "Table") return 22;
   if (type === "Chart") return 11;
   if (type === "Shape") return 34;
@@ -60,7 +60,7 @@ export function defaultBlockY(type: MotionDocBlock["type"]) {
   if (type === "Shape") return 30;
   if (type === "Table") return 34;
   if (type === "Chart") return 25;
-  if (type === "ImageBlock" || type === "VideoBlock") return 20;
+  if (type === "ImageBlock" || type === "VideoBlock" || type === "SvgBlock" || type === "HtmlEmbedBlock") return 20;
 
   return 38;
 }

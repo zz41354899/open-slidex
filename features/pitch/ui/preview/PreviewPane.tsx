@@ -2,6 +2,7 @@
 import { memo, useMemo } from "react";
 import type { CSSProperties } from "react";
 import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
+import { isHtmlSourceTextBlock } from "@/core/motion-doc/domain/htmlPresentation";
 import { parseMotionDoc } from "@/core/motion-doc/domain/motionDocParser";
 import { motionDocBlockKey } from "@/core/motion-doc/application/motionDocBlockIdentity";
 import type { BlockFrameOverrides } from "@/features/pitch/application/pitchGeometry";
@@ -26,6 +27,10 @@ type PreviewPaneProps = {
   hiddenBlockIndices?: number[];
   imageFetchPriority?: "auto" | "high" | "low";
   imageLoading?: "eager" | "lazy";
+  hideHtmlEmbedBlocks?: boolean;
+  hideHtmlSourceTextBlocks?: boolean;
+  hideSharedSvgBlocks?: boolean;
+  hideSharedHtmlBlocks?: boolean;
   onShaderFrameCapture?: (frame: number) => void;
   replayNonce: number;
   scene?: MotionDocScene;
@@ -33,6 +38,7 @@ type PreviewPaneProps = {
   shaderMinPixelRatio?: number;
   shaderPlaybackActive?: boolean;
   source?: string;
+  transparentCanvas?: boolean;
 };
 
 export const PreviewPane = memo(function PreviewPane({
@@ -43,13 +49,18 @@ export const PreviewPane = memo(function PreviewPane({
   hiddenBlockIndices = [],
   imageFetchPriority = "high",
   imageLoading = "eager",
+  hideHtmlEmbedBlocks = false,
+  hideHtmlSourceTextBlocks = false,
+  hideSharedSvgBlocks = false,
+  hideSharedHtmlBlocks = false,
   onShaderFrameCapture,
   replayNonce,
   scene,
   shaderMaxPixelCount,
   shaderMinPixelRatio,
   shaderPlaybackActive = true,
-  source
+  source,
+  transparentCanvas = false
 }: PreviewPaneProps) {
   const { tx } = usePitchI18n();
   const document = useMemo(() => scene ? null : parseMotionDoc(source ?? ""), [scene, source]);
@@ -70,7 +81,14 @@ export const PreviewPane = memo(function PreviewPane({
     block,
     blockKey: motionDocBlockKey(block, originalIndex),
     originalIndex
-  }));
+  })).filter(({ block }) => {
+    if (hideHtmlEmbedBlocks && block.type === "HtmlEmbedBlock") return false;
+    if (hideHtmlSourceTextBlocks && isHtmlSourceTextBlock(block)) return false;
+    const shared = typeof block.props.sharedScene === "string" && block.props.sharedScene.trim();
+    if (hideSharedSvgBlocks && block.type === "SvgBlock" && shared) return false;
+    if (hideSharedHtmlBlocks && block.type === "HtmlEmbedBlock" && shared) return false;
+    return true;
+  });
   const imageItems = blockItems.filter(({ block }) => block.type === "ImageBlock");
   const contentItems = blockItems.filter(({ block }) => block.type !== "ImageBlock");
   const hasPositionedBlocks = activeSlide.blocks.some(isPositionedBlock);
@@ -119,6 +137,7 @@ export const PreviewPane = memo(function PreviewPane({
         textColor={stringProp(activeSlide.props.textColor ?? activeSlide.props.foreground ?? activeSlide.props.color)}
         theme={stringProp(activeSlide.props.theme)}
         transitionDuration={numberProp(activeSlide.props.transitionDuration)}
+        transparentBackground={transparentCanvas}
       >
         {shouldSplit ? (
           <>

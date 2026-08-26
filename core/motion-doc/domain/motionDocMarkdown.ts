@@ -31,8 +31,6 @@ type MutableTextResult = {
 
 const markdownIdPattern =
   /<!--\s*slidex-block-id\s*:\s*([A-Za-z0-9._:-]+)\s*-->/;
-const trailingMarkdownIdPattern =
-  /<!--\s*slidex-block-id\s*:\s*([A-Za-z0-9._:-]+)\s*-->\s*$/;
 const slideXMarkerPattern =
   /^\s*<!--\s*slidex-(?:block|note)-id\s*:\s*[A-Za-z0-9._:-]+\s*-->\s*$/;
 
@@ -391,8 +389,7 @@ function markdownNodeId(node: Content, source: string) {
   const end = node.position?.end.offset;
   if (start === undefined || end === undefined) return undefined;
 
-  return source.slice(0, start).match(trailingMarkdownIdPattern)?.[1]
-    ?? source.slice(start, end).match(markdownIdPattern)?.[1];
+  return source.slice(start, end).match(markdownIdPattern)?.[1];
 }
 
 function mergeTextRanges(

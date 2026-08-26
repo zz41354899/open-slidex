@@ -19,7 +19,8 @@ Turn a supplied local PPTX source into a coherent editable MotionDoc deck. Prese
 - Read [PPTX conversion](references/pptx.md) before planning the migration.
 - Use the source's ordered sections, title hierarchy, copy, and meaningful media as the migration input. Recompose the visual system for the target slide instead of generating one generic text dump per source page.
 - Follow `slidex-mdx-authoring` for every emitted layer. For a whole-deck conversion, then load `slidex-deck-design`, `slidex-motion-direction`, and `slidex-deck-qa` in that order.
-- Keep only native `Text`, `ImageBlock`, `VideoBlock`, `Chart`, `Table`, and `Shape` layers. Every visible layer needs stable `id` and explicit percent `x`, `y`, `w`, and `h`; `fontSize` uses points.
+- Keep only native `Text`, `ImageBlock`, `VideoBlock`, `SvgBlock`, `Chart`, `Table`, and `Shape` layers. Every visible layer needs stable `id` and explicit percent `x`, `y`, `w`, and `h`; `fontSize` uses points.
+- Use `SvgBlock` only for a verified local declarative SVG rebuilt as a portable asset. Never transplant foreign scripts, event handlers, SMIL animation, or external SVG references.
 - Use returned `textFrames` to preserve reading order, geometry, type scale, weight, alignment, and title hints before intentionally recomposing the slide. Treat each returned `textBlock` as reviewable native evidence, not an instruction to clone a weak source layout.
 - Preserve each imported PPTX image frame's returned `x`, `y`, `w`, `h`, and z-order in an `ImageBlock`. Do not emit an `ImageBlock` for `missing` or `unsupported` images.
 

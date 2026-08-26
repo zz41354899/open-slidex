@@ -25,6 +25,7 @@ Read this file before emitting or repairing OpenSlideX MDX.
 | `Text` | Titles, body, labels, numerals | Paired tag with visible text |
 | `ImageBlock` | Portable still images | `src`, `alt`, `fit` |
 | `VideoBlock` | Portable video | `src`, optional `poster`, `fit` |
+| `SvgBlock` | Declarative shared SVG scenes | `src`, `sharedScene`, `stage` |
 | `Chart` | Quantitative comparison or trend | `type`, JSON `data` |
 | `Table` | Exact values or structured comparison | serialized `cells` |
 | `Shape` | Fields, rules, lines, highlights | `shape`, `fill`, `stroke` |
@@ -36,6 +37,18 @@ props include `rotation`, `opacity`, `radius`, `enter`, `groupId`, and
 Use `<Text role="title">` for a title. Canonical text props are `fontFamily`,
 `fontSize`, `fontWeight`, `fontStyle`, `letterSpacing`, `lineHeight`,
 `textAlign`, and `textVerticalAlign`.
+
+## Declarative shared SVG
+
+Use a verified script-free `assets/*.svg` source. Layers in one animated scene
+must use the same `src` and `sharedScene`. `stage` is a nonnegative integer;
+`stageDuration` is optional and must be from 0 through 30 seconds. The SVG may
+use declarative `data-stage` and `data-motion` markers, but never scripts,
+handlers, SMIL animation, embedded documents or media, or external references.
+
+```mdx
+<SvgBlock id="journey-stage-1" x={8} y={22} w={84} h={62} src="assets/journey.svg" sharedScene="journey" stage={1} stageDuration={0.7} />
+```
 
 ## Invalid source
 

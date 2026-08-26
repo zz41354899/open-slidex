@@ -84,6 +84,16 @@ file and restored to `assets/*.webp` when that MDX is imported into a Workspace.
 Older MDX files that contain only missing asset paths still import with editable
 empty media frames instead of failing the complete presentation.
 
+Workspace import accepts `.mdx` and complete `.html` files up to 50 MB. HTML
+bytes are kept unchanged and run in an opaque-origin sandbox. Inline resources
+work offline; HTTP(S) libraries, styles, fonts, images, media, frames, workers,
+and connections stay browser-native and require network access. Relative
+sidecars require a remote `<base href>` or must be inlined. Native MDX may use `SvgBlock`
+with local `assets/*.svg`, `sharedScene`, and integer `stage` props for
+script-free stage animation that remains mounted across slide changes.
+Portable MDX and PowerPoint do not retain `HtmlEmbedBlock` JavaScript;
+downloading HTML from an imported HTML deck returns the original file.
+
 `npm run dev` always opens `/workspace`. A fresh install starts with an empty
 library; creating or importing a deck adds an isolated child folder and then
 opens the Workbench. The Workbench includes slide and layer navigation, a left-side tool rail,
@@ -157,7 +167,10 @@ After restarting a direct project MCP client:
 
 1. Call `open_slidex_read` and keep the returned source and `revision`.
 2. Submit one complete deck or slide to `open_slidex_edit`.
-3. Use `open_slidex_review` only for read-only checks.
+3. For a browser-native HTML deck, call `open_slidex_read` with
+   `sourceFormat: "html"`; then call `open_slidex_edit` with `target: "html"`,
+   its canonical `htmlSource`, and the latest `expectedRevision`.
+4. Use `open_slidex_review` only for read-only checks.
 
 For a multi-deck Workspace MCP, use `open_slidex_workspace` to list and select
 a presentation. Workspace scope loads six tools total:
@@ -165,11 +178,11 @@ a presentation. Workspace scope loads six tools total:
 | Tool | Purpose |
 | --- | --- |
 | `open_slidex_workspace` | List local decks and select the target deck. |
-| `open_slidex_read` | Read current MotionDoc, guided skill resources or local knowledge, and rank eight curated native styles from `styleQuery`. |
+| `open_slidex_read` | Read current MotionDoc, canonical browser-native HTML, guided skill resources or local knowledge, and rank eight curated native styles from `styleQuery`. |
 | `open_slidex_source_import` | Inspect local PPTX text and image evidence, preserve geometry and type hints, and import embedded images as WebP. |
 | `open_slidex_media` | Search trusted images or import approved local media as WebP. |
 | `open_slidex_review` | Run read-only structural and rendered visual QA. |
-| `open_slidex_edit` | Apply a revision-safe complete deck or slide edit with validation and rendered QA. |
+| `open_slidex_edit` | Apply a revision-safe complete native deck or slide edit with rendered QA, or create/replace canonical browser-native HTML. |
 
 For a PPTX migration, put the source file inside the selected deck,
 inspect it with `open_slidex_source_import`, then author native MotionDoc MDX.

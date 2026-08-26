@@ -1,12 +1,11 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
 
-import JSZip, { type JSZipObject } from "jszip";
+import { analyzeHtmlPresentation, assertSandboxedHtml } from "./htmlImportPolicy";
+import { assertSafeMotionDocSvg } from "@/core/motion-doc/domain/svgPolicy";
 
 const MAX_WORKSPACE_MDX_BYTES = 2 * 1024 * 1024;
 export const MAX_WORKSPACE_IMPORT_FILE_BYTES = 50 * 1024 * 1024;
-const MAX_WORKSPACE_BUNDLE_ENTRIES = 512;
-const MAX_WORKSPACE_BUNDLE_UNCOMPRESSED_BYTES = 100 * 1024 * 1024;
 
 export type WorkspaceImportAsset = {
   bytes: Uint8Array;
@@ -17,7 +16,8 @@ export type WorkspaceImportAsset = {
 
 export type WorkspaceImportPayload = {
   assets: WorkspaceImportAsset[];
-  kind: "bundle" | "mdx";
+  html?: { bytes: Uint8Array; fileName: string; source: string };
+  kind: "html" | "mdx";
   source: string;
 };
 
@@ -43,82 +43,49 @@ export async function readWorkspaceImport(
       source: stripUnavailableAssetReferences(embedded.source, unresolvedReferences)
     };
   }
-
-  if (extension !== ".zip" && extension !== ".slidex") {
-    throw badRequest("Import a .mdx file or a .zip/.slidex OpenSlideX project bundle.");
+  if (extension !== ".html") {
+    throw badRequest("Import an .mdx or .html file.");
   }
   if (!file.size || file.size > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
-    throw badRequest("The OpenSlideX project bundle must be between 1 byte and 50 MB.");
+    throw badRequest("The HTML import must be between 1 byte and 50 MB.");
   }
-
-  let archive: JSZip;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let html: string;
   try {
-    archive = await JSZip.loadAsync(await file.arrayBuffer(), { createFolders: false });
+    html = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   } catch {
-    throw badRequest("The OpenSlideX project bundle is not a valid ZIP archive.");
+    throw badRequest("The HTML import must use UTF-8 encoding.");
   }
-
-  const entries = Object.values(archive.files);
-  if (entries.length > MAX_WORKSPACE_BUNDLE_ENTRIES) {
-    throw badRequest(`The OpenSlideX project bundle contains more than ${MAX_WORKSPACE_BUNDLE_ENTRIES} entries.`);
-  }
-  let totalUncompressedBytes = 0;
-  for (const entry of entries) {
-    assertSafeArchiveEntry(entry);
-    totalUncompressedBytes += uncompressedSize(entry);
-    if (totalUncompressedBytes > MAX_WORKSPACE_BUNDLE_UNCOMPRESSED_BYTES) {
-      throw badRequest("The expanded OpenSlideX project bundle exceeds 100 MB.");
-    }
-  }
-
-  const presentationEntries = entries.filter((entry) => !entry.dir && /(?:^|\/)presentation\.mdx$/i.test(entry.name));
-  if (presentationEntries.length !== 1) {
-    throw badRequest("The OpenSlideX project bundle must contain exactly one presentation.mdx file.");
-  }
-  const presentationEntry = presentationEntries[0]!;
-  if (uncompressedSize(presentationEntry) > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
-    throw badRequest("The bundled presentation.mdx must not exceed 50 MB before embedded images are extracted.");
-  }
-  const rawSource = await presentationEntry.async("string");
-  if (!rawSource) {
-    throw badRequest("presentation.mdx must be between 1 byte and 2 MB.");
-  }
-  const embedded = extractEmbeddedImageAssets(rawSource);
-  const source = embedded.source;
-  assertCanonicalMdxSize(source);
-
-  const prefix = presentationEntry.name.slice(0, -"presentation.mdx".length);
-  const references = unique(referencedSources(source));
-  const assets: WorkspaceImportAsset[] = [...embedded.assets];
-  const embeddedSources = new Set(embedded.assets.map((asset) => asset.source));
-  const unavailableReferences: string[] = [];
-  for (const sourcePath of references) {
-    if (embeddedSources.has(sourcePath)) continue;
-    const entryPath = `${prefix}${sourcePath}`;
-    const entry = archive.file(entryPath);
-    if (!entry || entry.dir) {
-      unavailableReferences.push(sourcePath);
-      continue;
-    }
-    if (uncompressedSize(entry) > 25 * 1024 * 1024) {
-      throw badRequest(`The referenced asset exceeds 25 MB: ${sourcePath}`);
-    }
-    const bytes = await entry.async("uint8array");
-    if (bytes.byteLength > 25 * 1024 * 1024) {
-      throw badRequest(`The referenced asset exceeds 25 MB: ${sourcePath}`);
-    }
-    assets.push({
-      bytes,
-      fileName: path.posix.basename(sourcePath),
-      source: sourcePath
-    });
-  }
-
+  assertSandboxedHtml(html);
+  const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
+  const fileName = `source-${hash}.html`;
+  const assetSource = `assets/${fileName}`;
+  const title = file.name.replace(/\.html$/i, "").trim() || "Imported HTML";
+  const pages = analyzeHtmlPresentation(html);
   return {
-    assets,
-    kind: "bundle",
-    source: stripUnavailableAssetReferences(source, unavailableReferences)
+    assets: [],
+    html: { bytes, fileName, source: assetSource },
+    kind: "html",
+    source: createHtmlPresentationMdx(title, assetSource, hash, pages)
   };
+}
+
+export function createHtmlPresentationMdx(
+  title: string,
+  assetSource: string,
+  hash: string,
+  pages: ReturnType<typeof analyzeHtmlPresentation>
+) {
+  if (pages.length < 2) {
+    return `# ${escapeMdxText(title)}\n\n<Slide duration={5}>\n  <HtmlEmbedBlock id="html-embed-${hash}" src="${assetSource}" page={1} x={0} y={0} w={100} h={100} />\n</Slide>\n`;
+  }
+  const sharedScene = `html-${hash}`;
+  const slides = pages.map((record, index) => (
+    `<Slide duration={5} slideTransition="none">\n` +
+    `  <HtmlEmbedBlock id="html-embed-${hash}-${index + 1}" src="${assetSource}" sharedScene="${sharedScene}" page={${record.page}} x={0} y={0} w={100} h={100} />\n` +
+    `</Slide>`
+  ));
+  return `# ${escapeMdxText(title)}\n\n${slides.join("\n\n")}\n`;
 }
 
 async function readMdxFile(file: File) {
@@ -137,10 +104,7 @@ export function extractEmbeddedImageAssets(source: string) {
   const store = (prop: string, rawSubtype: string, payload: string) => {
     const subtype = rawSubtype.toLowerCase() === "jpg" ? "jpeg" : rawSubtype.toLowerCase();
     const normalizedPayload = payload.replace(/\s+/g, "");
-    const bytes = decodeBase64Image(normalizedPayload);
-    if (bytes.byteLength > 25 * 1024 * 1024) {
-      throw badRequest("An embedded Base64 image exceeds 25 MB.");
-    }
+    const bytes = decodeBase64(normalizedPayload, 25 * 1024 * 1024, "image");
     const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
     const extension = subtype === "jpeg" ? "jpg" : subtype;
     const assetSource = `assets/embedded-${hash}.${extension}`;
@@ -154,25 +118,57 @@ export function extractEmbeddedImageAssets(source: string) {
     }
     return `${prop}="${assetSource}"`;
   };
+  const storeSvg = (prop: string, payload: string) => {
+    const normalizedPayload = payload.replace(/\s+/g, "");
+    const bytes = decodeBase64(normalizedPayload, 10 * 1024 * 1024, "SVG");
+    let svg: string;
+    try { svg = new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { throw badRequest("An embedded SVG must use UTF-8 encoding."); }
+    try { assertSafeMotionDocSvg(svg); } catch (error) { throw badRequest(error instanceof Error ? error.message : "The embedded SVG is unsafe."); }
+    const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
+    const assetSource = `assets/embedded-${hash}.svg`;
+    if (!assets.has(assetSource)) assets.set(assetSource, { bytes, fileName: `embedded-${hash}.svg`, mediaType: "image/svg+xml", source: assetSource });
+    return `${prop}="${assetSource}"`;
+  };
+  const storeHtml = (prop: string, payload: string) => {
+    const normalizedPayload = payload.replace(/\s+/g, "");
+    const bytes = decodeBase64(normalizedPayload, MAX_WORKSPACE_IMPORT_FILE_BYTES, "HTML source");
+    let html: string;
+    try { html = new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { throw badRequest("An embedded HTML source must use UTF-8 encoding."); }
+    assertSandboxedHtml(html);
+    const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
+    const assetSource = `assets/embedded-${hash}.html`;
+    if (!assets.has(assetSource)) assets.set(assetSource, { bytes, fileName: `embedded-${hash}.html`, mediaType: "text/html", source: assetSource });
+    return `${prop}="${assetSource}"`;
+  };
   const expressionLiteralPattern = /\b(backgroundImage|poster|shapeImageSrc|src)\s*=\s*\{\s*(["'`])data:image\/(avif|gif|jpe?g|png|webp);base64,([A-Za-z0-9+/=\r\n\t ]+)\2\s*\}/gi;
   const directLiteralPattern = /\b(backgroundImage|poster|shapeImageSrc|src)\s*=\s*(["'])data:image\/(avif|gif|jpe?g|png|webp);base64,([A-Za-z0-9+/=\r\n\t ]+)\2/gi;
   const rawExpressionPattern = /\b(backgroundImage|poster|shapeImageSrc|src)\s*=\s*\{\s*data:image\/(avif|gif|jpe?g|png|webp);base64,([A-Za-z0-9+/=\r\n\t ]+)\s*\}/gi;
+  const svgExpressionLiteralPattern = /\b(src)\s*=\s*\{\s*(["'`])data:image\/svg\+xml;base64,([A-Za-z0-9+/=\r\n\t ]+)\2\s*\}/gi;
+  const svgDirectLiteralPattern = /\b(src)\s*=\s*(["'])data:image\/svg\+xml;base64,([A-Za-z0-9+/=\r\n\t ]+)\2/gi;
+  const htmlExpressionLiteralPattern = /\b(src)\s*=\s*\{\s*(["'`])data:text\/html(?:;charset=utf-8)?;base64,([A-Za-z0-9+/=\r\n\t ]+)\2\s*\}/gi;
+  const htmlDirectLiteralPattern = /\b(src)\s*=\s*(["'])data:text\/html(?:;charset=utf-8)?;base64,([A-Za-z0-9+/=\r\n\t ]+)\2/gi;
   const rewritten = source
+    .replace(htmlExpressionLiteralPattern, (_attribute, prop: string, _quote: string, payload: string) => storeHtml(prop, payload))
+    .replace(htmlDirectLiteralPattern, (_attribute, prop: string, _quote: string, payload: string) => storeHtml(prop, payload))
+    .replace(svgExpressionLiteralPattern, (_attribute, prop: string, _quote: string, payload: string) => storeSvg(prop, payload))
+    .replace(svgDirectLiteralPattern, (_attribute, prop: string, _quote: string, payload: string) => storeSvg(prop, payload))
     .replace(expressionLiteralPattern, (_attribute, prop: string, _quote: string, subtype: string, payload: string) => store(prop, subtype, payload))
     .replace(directLiteralPattern, (_attribute, prop: string, _quote: string, subtype: string, payload: string) => store(prop, subtype, payload))
     .replace(rawExpressionPattern, (_attribute, prop: string, subtype: string, payload: string) => store(prop, subtype, payload));
   return { assets: [...assets.values()], source: rewritten };
 }
 
-function decodeBase64Image(payload: string) {
+function decodeBase64(payload: string, maxBytes: number, label: string) {
   if (
     !payload ||
-    payload.length > Math.ceil(25 * 1024 * 1024 / 3) * 4 + 4 ||
+    payload.length > Math.ceil(maxBytes / 3) * 4 + 4 ||
     !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(payload)
   ) {
-    throw badRequest("An embedded image contains invalid Base64 data.");
+    throw badRequest(`An embedded ${label} contains invalid or oversized Base64 data.`);
   }
-  return new Uint8Array(Buffer.from(payload, "base64"));
+  const bytes = new Uint8Array(Buffer.from(payload, "base64"));
+  if (bytes.byteLength > maxBytes) throw badRequest(`An embedded ${label} exceeds ${Math.floor(maxBytes / 1024 / 1024)} MB.`);
+  return bytes;
 }
 
 function assertCanonicalMdxSize(source: string) {
@@ -181,38 +177,12 @@ function assertCanonicalMdxSize(source: string) {
   }
 }
 
-function assertSafeArchiveEntry(entry: JSZipObject) {
-  const originalName = (entry as JSZipObject & { unsafeOriginalName?: string }).unsafeOriginalName ?? entry.name;
-  const normalized = originalName.replace(/\/$/, "");
-  if (
-    !normalized ||
-    normalized.includes("\\") ||
-    normalized.includes("\0") ||
-    normalized.startsWith("/") ||
-    /^[A-Za-z]:/.test(normalized) ||
-    normalized.split("/").some((part) => !part || part === "." || part === "..")
-  ) {
-    throw badRequest("The OpenSlideX project bundle contains an unsafe path.");
-  }
-  const permissions = typeof entry.unixPermissions === "string"
-    ? Number.parseInt(entry.unixPermissions, 8)
-    : entry.unixPermissions;
-  if (typeof permissions === "number" && (permissions & 0o170000) === 0o120000) {
-    throw badRequest("The OpenSlideX project bundle must not contain symbolic links.");
-  }
-}
-
-function uncompressedSize(entry: JSZipObject) {
-  if (entry.dir) return 0;
-  const value = (entry as JSZipObject & { _data?: { uncompressedSize?: number } })._data?.uncompressedSize;
-  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
-    throw badRequest(`The project bundle has invalid size metadata: ${entry.name}`);
-  }
-  return value;
-}
-
 function unique(values: string[]) {
   return [...new Set(values)];
+}
+
+function escapeMdxText(value: string) {
+  return value.replace(/[{}]/g, (character) => character === "{" ? "&#123;" : "&#125;").replace(/[\r\n]+/g, " ");
 }
 
 /**
@@ -223,6 +193,10 @@ function unique(values: string[]) {
 function stripUnavailableAssetReferences(source: string, references: string[]) {
   let nextSource = source;
   for (const reference of unique(references)) {
+    // Keep the lightweight HTML manifest intact even when a standalone MDX is
+    // moved without its sibling asset. The dedicated HTML workspace can then
+    // report the missing file without falling back to the heavy native Canvas.
+    if (/\.html?$/i.test(reference)) continue;
     const escaped = reference.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const prop = "(?:src|poster|backgroundImage|shapeImageSrc)";
     const expression = new RegExp(`\\s+\\b${prop}\\s*=\\s*\\{\\s*([\"'])${escaped}\\1\\s*\\}`, "g");

@@ -29,6 +29,7 @@ export function PitchHeader({
   projectName,
   projectNameEditValue,
   setZoomLevel,
+  showFitScale,
   variant,
   zoomLevel
 }: {
@@ -56,6 +57,7 @@ export function PitchHeader({
   projectName: string;
   projectNameEditValue?: string;
   setZoomLevel: (value: EditorZoomLevel) => void;
+  showFitScale?: boolean;
   variant?: "default" | "local";
   zoomLevel: EditorZoomLevel;
 }) {
@@ -104,6 +106,7 @@ export function PitchHeader({
       projectName={projectName}
       projectNameEditValue={projectNameEditValue}
       setZoomLevel={setZoomLevel}
+      showFitScale={showFitScale}
       variant={variant}
       zoomLevel={zoomLevel}
     />

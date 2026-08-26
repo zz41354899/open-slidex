@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { canvasSlideRowsForRender } from "../../../../features/pitch/application/canvasSlideRender";
+import {
+  canvasSlideRowsForRender,
+  singleCanvasSlideRowForRender
+} from "../../../../features/pitch/application/canvasSlideRender";
 import { parseMotionDoc } from "../../../../core/motion-doc/domain/motionDocParser";
 import { appendBlockToSlide, replaceSlideSource } from "../../../../features/pitch/application/motionDocCommands";
 
@@ -12,6 +15,13 @@ test("the canvas keeps every slide mounted while editing another slide", () => {
     canvasSlideRowsForRender(rows).map((row) => row.index),
     [0, 1, 2, 3, 4, 5]
   );
+});
+
+test("HTML source mode renders only the selected slide on its single-page stage", () => {
+  const rows = Array.from({ length: 6 }, (_, index) => ({ duration: 5, index, layers: 0, title: `Slide ${index + 1}` }));
+
+  assert.deepEqual(singleCanvasSlideRowForRender(rows, 3).map((row) => row.index), [3]);
+  assert.deepEqual(singleCanvasSlideRowForRender(rows, 99), []);
 });
 
 test("editing a middle slide preserves source-backed slides before and after it", () => {

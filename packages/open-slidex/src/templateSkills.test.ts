@@ -18,7 +18,7 @@ import { parseMotionDoc, summarizeMotionDoc } from "@open-slidex/sdk";
 
 const execFileAsync = promisify(execFile);
 
-test("starter ships the five focused OpenSlideX skills", async () => {
+test("starter ships the six focused OpenSlideX skills", async () => {
   const skillsUrl = new URL("../template/.agents/skills/", import.meta.url);
   const bundledSkillsUrl = new URL(
     "../../slidex-workbench/skills/",
@@ -30,6 +30,8 @@ test("starter ships the five focused OpenSlideX skills", async () => {
     .map((entry) => entry.name)
     .sort();
 
+  assert.equal(openSlideXProjectSkillNames.length, 6);
+  assert.ok(openSlideXProjectSkillNames.includes("slidex-html-authoring" as never));
   assert.deepEqual(entries, [...openSlideXProjectSkillNames].sort());
 
   for (const skillName of openSlideXProjectSkillNames) {
@@ -191,6 +193,42 @@ test("skill entrypoints are discoverable and every bundled reference is reachabl
   }
 });
 
+test("canonical skills expose the current SvgBlock and browser-native HTML architecture", async () => {
+  const skillsUrl = new URL("../../slidex-workbench/skills/", import.meta.url);
+  const readSkillFile = (skill: string, relativePath = "SKILL.md") =>
+    readFile(new URL(`${skill}/${relativePath}`, skillsUrl), "utf8");
+
+  const [sourceImport, mdxAuthoring, htmlAuthoring, htmlRuntime, motionDocContract, mediaAndData, motionDirection, motionPatterns, reviewMatrix] = await Promise.all([
+    readSkillFile("slidex-source-import"),
+    readSkillFile("slidex-mdx-authoring"),
+    readSkillFile("slidex-html-authoring"),
+    readSkillFile("slidex-html-authoring", "references/browser-runtime.md"),
+    readSkillFile("slidex-mdx-authoring", "references/motiondoc-contract.md"),
+    readSkillFile("slidex-mdx-authoring", "references/media-and-data.md"),
+    readSkillFile("slidex-motion-direction"),
+    readSkillFile("slidex-motion-direction", "references/motion-patterns.md"),
+    readSkillFile("slidex-deck-qa", "references/review-matrix.md")
+  ]);
+
+  for (const source of [sourceImport, mdxAuthoring, motionDocContract]) {
+    assert.match(source, /`SvgBlock`/, "native authoring guidance must include SvgBlock");
+  }
+  assert.match(motionDocContract, /`sharedScene`/);
+  assert.match(motionDocContract, /`stage`/);
+  assert.match(mediaAndData, /script-free/i);
+  assert.match(mediaAndData, /assets\/\*\.svg/);
+  assert.match(motionDirection, /`SvgBlock`/);
+  assert.match(motionPatterns, /`sharedScene`/);
+  assert.match(motionPatterns, /`stage`/);
+  assert.match(reviewMatrix, /`HtmlEmbedBlock`/);
+  assert.match(htmlAuthoring, /`open_slidex_read`/);
+  assert.match(htmlAuthoring, /`open_slidex_edit`/);
+  assert.match(htmlRuntime, /opaque-origin/);
+  assert.match(reviewMatrix, /`open_slidex_read`/);
+  assert.match(reviewMatrix, /`open_slidex_edit`/);
+  assert.match(reviewMatrix, /opaque-origin/);
+});
+
 test("agent guides keep source import conditional and the full-design skill order focused", async () => {
   const guides = [
     new URL("../../../AGENTS.md", import.meta.url),
@@ -206,6 +244,12 @@ test("agent guides keep source import conditional and the full-design skill orde
   for (const guideUrl of guides) {
     const guide = await readFile(guideUrl, "utf8");
     assert.match(guide, /For a supplied `\.pptx`, first load `slidex-source-import`/);
+    assert.match(guide, /For browser-native HTML, load `slidex-html-authoring`/);
+    assert.match(guide, /`open_slidex_read` with `sourceFormat: "html"`/);
+    assert.match(guide, /`open_slidex_edit` with `target: "html"`/);
+    assert.match(guide, /HTTP\(S\) libraries,\s+fonts, images, media, frames, workers/);
+    assert.match(guide, /opaque-origin\s+sandbox/);
+    assert.match(guide, /unresolved local sidecars do\s+not/);
     const workflow = guide.split("Apply the project-local skills in this order for a full creation or redesign:")[1] ?? "";
     const orderedSkills = [...workflow.matchAll(/^\d+\. `([^`]+)`$/gm)].map((match) => match[1]);
     assert.deepEqual(orderedSkills, expectedOrder);
@@ -319,6 +363,11 @@ test("starter contains the local Workbench and SDK without project-scoped MCP", 
   );
   assert.match(starterReadme, /does not need a project-level `vite\.config\.mjs`/);
   assert.match(starterReadme, /ships the tested Vite configuration/);
+  assert.match(starterReadme, /Workspace MCP exposes six\s+tools/);
+  assert.match(starterReadme, /`open_slidex_read` preserves canonical bytes/);
+  assert.match(starterReadme, /`open_slidex_edit` creates or replaces that source/);
+  assert.match(starterReadme, /HTTP\(S\)\s+libraries, styles, fonts, images, media, frames, workers/);
+  assert.match(starterReadme, /opaque-origin sandbox/);
 });
 
 async function relativeFiles(root: URL, prefix = ""): Promise<string[]> {
@@ -342,6 +391,10 @@ test("published README documents single-package install and workspace-global MCP
   assert.match(readme, /open-slidex mcp --workspace/);
   assert.match(readme, /Workspace Settings/);
   assert.match(readme, /six tools total/);
+  assert.match(readme, /`open_slidex_read` with\s+`sourceFormat: "html"`/);
+  assert.match(readme, /`open_slidex_edit` with `target: "html"`/);
+  assert.match(readme, /HTTP\(S\) libraries, styles, fonts, images, media, frames, workers/);
+  assert.match(readme, /opaque-origin sandbox/);
   assert.match(readme, /open_slidex_source_import/);
   assert.match(readme, /Installation does not download Chromium/);
   assert.doesNotMatch(readme, /Installation attempts to download/);

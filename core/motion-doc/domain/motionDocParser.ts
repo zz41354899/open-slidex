@@ -4,7 +4,10 @@ import type {
   ParsedMotionDoc
 } from "@/core/motion-doc/domain/motionDocTypes";
 import { parseMotionDocMarkdown } from "@/core/motion-doc/domain/motionDocMarkdown";
-import { sanitizeMotionDocMediaSource } from "@/core/motion-doc/domain/mediaSource";
+import {
+  sanitizeMotionDocHtmlSource,
+  sanitizeMotionDocMediaSource
+} from "@/core/motion-doc/domain/mediaSource";
 import { sanitizeMotionDocVideoSource } from "@/core/motion-doc/domain/videoSource";
 
 const mediaSourcePropNames = new Set(["backgroundImage", "poster", "shapeImageSrc", "src"]);
@@ -15,7 +18,7 @@ export function parseMotionDoc(source: string): ParsedMotionDoc {
   if (removedComponent) {
     throw new Error(
       `Unsupported MotionDoc component: ${removedComponent}. ` +
-      "Rebuild it with Text, ImageBlock, VideoBlock, Chart, Table, or Shape."
+      "Rebuild it with Text, ImageBlock, VideoBlock, SvgBlock, Chart, Table, or Shape."
     );
   }
   const firstSlideOffset = source.search(/<(?:Slide|Scene)\b/);
@@ -49,7 +52,7 @@ export function parseMotionDoc(source: string): ParsedMotionDoc {
 function parseSceneBlocks(sceneSource: string): MotionDocBlock[] {
   const blocks: MotionDocBlock[] = [];
   const blockPattern =
-    /<(Text)\b([^>]*)>([\s\S]*?)<\/\1>|<(Chart|ImageBlock|VideoBlock|Shape|Table)\b([\s\S]*?)\/>/g;
+    /<(Text)\b([^>]*)>([\s\S]*?)<\/\1>|<(Chart|HtmlEmbedBlock|ImageBlock|VideoBlock|SvgBlock|Shape|Table)\b([\s\S]*?)\/>/g;
   let cursor = 0;
 
   for (const match of sceneSource.matchAll(blockPattern)) {
@@ -60,9 +63,11 @@ function parseSceneBlocks(sceneSource: string): MotionDocBlock[] {
     const pairedType = match[1] as "Text" | undefined;
     const selfClosingType = match[4] as
       | "Chart"
+      | "HtmlEmbedBlock"
       | "ImageBlock"
       | "Shape"
       | "Table"
+      | "SvgBlock"
       | "VideoBlock"
       | undefined;
     cursor = matchStart + match[0].length;
@@ -77,7 +82,7 @@ function parseSceneBlocks(sceneSource: string): MotionDocBlock[] {
     }
 
     if (selfClosingType) {
-      const props = parseProps(match[5] ?? "");
+      const props = parseProps(match[5] ?? "", selfClosingType === "HtmlEmbedBlock");
       if (selfClosingType === "VideoBlock") {
         delete props.sourceType;
         if (typeof props.src === "string") props.src = sanitizeMotionDocVideoSource(props.src);
@@ -95,7 +100,7 @@ function parseSceneBlocks(sceneSource: string): MotionDocBlock[] {
   return blocks;
 }
 
-function parseProps(rawProps: string): MotionDocProps {
+function parseProps(rawProps: string, allowEmbeddedHtml = false): MotionDocProps {
   const props: MotionDocProps = {};
   for (const attribute of scanMdxAttributes(rawProps)) {
     const { key } = attribute;
@@ -105,7 +110,9 @@ function parseProps(rawProps: string): MotionDocProps {
     const numericValue = Number(value);
 
     props[key] = mediaSourcePropNames.has(key)
-      ? sanitizeMotionDocMediaSource(value)
+      ? allowEmbeddedHtml && key === "src"
+        ? sanitizeMotionDocHtmlSource(value)
+        : sanitizeMotionDocMediaSource(value)
       : key !== "text" && Number.isFinite(numericValue) && value.trim() !== "" ? numericValue : value;
   }
 

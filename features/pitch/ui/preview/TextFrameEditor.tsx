@@ -18,10 +18,11 @@ import {
   MoreHorizontal,
   Plus
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type {
   ClipboardEvent as ReactClipboardEvent,
   CompositionEvent,
+  FocusEvent as ReactFocusEvent,
   KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent
 } from "react";
@@ -79,6 +80,7 @@ import {
   restoreEditorTextSelection,
   type TextSelectionRange
 } from "@/features/pitch/ui/preview/textEditorDom";
+import { shouldFocusTextEditor } from "@/features/pitch/ui/preview/textEditorActivation";
 import styles from "@/features/pitch/ui/preview/TextFrameEditor.module.css";
 
 type TextFrameEditorProps = {
@@ -88,6 +90,7 @@ type TextFrameEditorProps = {
   inheritedTextColor?: string;
   isEditingEnabled?: boolean;
   onBeginTextEdit: () => void;
+  onEndTextEdit?: () => void;
   onRequestEdit?: () => void;
   onSelectBlock: (index: number) => void;
   onUpdateBlock: BlockUpdater;
@@ -104,6 +107,7 @@ export function TextFrameEditor({
   inheritedTextColor = "#ffffff",
   isEditingEnabled = true,
   onBeginTextEdit,
+  onEndTextEdit,
   onRequestEdit,
   onSelectBlock,
   onUpdateBlock,
@@ -115,7 +119,9 @@ export function TextFrameEditor({
   const { locale } = usePitchI18n();
   const editorRef = useRef<HTMLDivElement | null>(null);
   const editStartedRef = useRef(false);
-  const editingEnabledRef = useRef(isEditingEnabled);
+  const editorSessionRef = useRef(false);
+  const endTextEditingSessionRef = useRef<() => void>(() => undefined);
+  const editingEnabledRef = useRef<boolean | undefined>(undefined);
   const isComposingRef = useRef(false);
   const textChangedDuringEditRef = useRef(false);
   const lastTextRef = useRef(block.text);
@@ -129,23 +135,7 @@ export function TextFrameEditor({
     .flatMap((range) => range.fontFamily ? [range.fontFamily] : []);
   useDynamicFonts(inlineFontFamilies);
 
-  useEffect(() => {
-    if (isEditingEnabled && !editingEnabledRef.current) {
-      editStartedRef.current = true;
-      textChangedDuringEditRef.current = false;
-      editorRef.current?.focus();
-    }
-
-    if (!isEditingEnabled) {
-      editStartedRef.current = false;
-      textChangedDuringEditRef.current = false;
-      setSelectedTextRange(null);
-    }
-
-    editingEnabledRef.current = isEditingEnabled;
-  }, [isEditingEnabled]);
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     const editor = editorRef.current;
     const textStyleRanges = stringValue(block.props[TEXT_STYLE_RANGES_PROP], "");
 
@@ -171,7 +161,33 @@ export function TextFrameEditor({
     restoreEditorTextSelection(editor, selectionToRestore);
   }, [block.props, block.text, canvasScale, selectedTextRange]);
 
+  useLayoutEffect(() => {
+    const previousEnabled = editingEnabledRef.current;
+    editingEnabledRef.current = isEditingEnabled;
+
+    if (shouldFocusTextEditor(previousEnabled, isEditingEnabled)) {
+      textChangedDuringEditRef.current = false;
+      const editor = editorRef.current;
+      editor?.focus({ preventScroll: true });
+      if (editor && !editorTextSelection(editor)) {
+        restoreEditorTextSelection(editor, {
+          end: lastTextRef.current.length,
+          start: lastTextRef.current.length
+        });
+      }
+    }
+
+    if (!isEditingEnabled) {
+      editStartedRef.current = false;
+      editorSessionRef.current = false;
+      textChangedDuringEditRef.current = false;
+      setSelectedTextRange(null);
+    }
+  }, [isEditingEnabled]);
+
   useEffect(() => {
+    if (!isEditingEnabled) return;
+
     function preserveEditorSelection() {
       const editor = editorRef.current;
       const selection = window.getSelection();
@@ -193,7 +209,7 @@ export function TextFrameEditor({
 
     document.addEventListener("selectionchange", preserveEditorSelection);
     return () => document.removeEventListener("selectionchange", preserveEditorSelection);
-  }, []);
+  }, [isEditingEnabled]);
 
   function beginTextEdit() {
     if (editStartedRef.current) {
@@ -234,12 +250,37 @@ export function TextFrameEditor({
     textChangedDuringEditRef.current = false;
   }
 
+  function handleEditorBlur(event: ReactFocusEvent<HTMLDivElement>) {
+    const nextTarget = event.relatedTarget;
+    if (nextTarget instanceof Element && nextTarget.closest("[data-text-edit-control]")) {
+      return;
+    }
+    endTextEditingSession();
+  }
+
+  function requestTextEdit() {
+    if (!editStartedRef.current) onRequestEdit?.();
+    editorRef.current?.focus({ preventScroll: true });
+  }
+
+  function endTextEditingSession() {
+    if (!editorSessionRef.current) return;
+    finishTextEdit();
+    editorSessionRef.current = false;
+    onEndTextEdit?.();
+  }
+
   function updateTextSelection() {
     setSelectedTextRange(editorTextSelection(editorRef.current));
   }
 
   function handleEditorKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
     event.stopPropagation();
+    if (event.key === "Escape" && !event.nativeEvent.isComposing) {
+      event.preventDefault();
+      event.currentTarget.blur();
+      return;
+    }
     if (
       (event.metaKey || event.ctrlKey) &&
       !event.altKey &&
@@ -370,6 +411,23 @@ export function TextFrameEditor({
     onUpdateBlock(blockIndex, nextProps, pasted.text, { transient: true });
   }
 
+  endTextEditingSessionRef.current = endTextEditingSession;
+  useEffect(() => {
+    if (!isEditingEnabled) return;
+
+    function endSessionOnOutsidePointer(event: globalThis.PointerEvent) {
+      if (!editorSessionRef.current) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (editorRef.current?.contains(target)) return;
+      if (target.closest("[data-text-edit-control]")) return;
+      endTextEditingSessionRef.current();
+    }
+
+    document.addEventListener("pointerdown", endSessionOnOutsidePointer, true);
+    return () => document.removeEventListener("pointerdown", endSessionOnOutsidePointer, true);
+  }, [isEditingEnabled]);
+
   return (
     <>
       {showToolbar ? (
@@ -392,10 +450,11 @@ export function TextFrameEditor({
         }`}
         onClick={(event) => {
           event.stopPropagation();
-          if (!isEditingEnabled) onRequestEdit?.();
+          if (!isEditingEnabled) requestTextEdit();
         }}
         onDoubleClick={(event) => {
           event.stopPropagation();
+          requestTextEdit();
         }}
         onPointerDown={(event) => {
           event.stopPropagation();
@@ -414,8 +473,9 @@ export function TextFrameEditor({
             : `Edit ${block.type} text`}
           className={`${styles.editor} w-full outline-none`}
           contentEditable={isEditingEnabled ? "plaintext-only" : false}
+          data-text-frame-editor
           onBeforeInput={beginTextEdit}
-          onBlur={finishTextEdit}
+          onBlur={handleEditorBlur}
           onCompositionEnd={(event: CompositionEvent<HTMLDivElement>) => {
             isComposingRef.current = false;
             syncText(event.currentTarget.textContent ?? "", resizeDuringEdit);
@@ -425,6 +485,9 @@ export function TextFrameEditor({
             isComposingRef.current = true;
           }}
           onCopy={handleCopy}
+          onFocus={() => {
+            editorSessionRef.current = true;
+          }}
           onInput={(event) => {
             if (isComposingRef.current) {
               if ((event.currentTarget.textContent ?? "") !== lastTextRef.current) {

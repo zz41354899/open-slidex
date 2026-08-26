@@ -5,6 +5,8 @@ import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "@/features/pitch/application/previewCanvas";
 import { PresentationThumbnailRail } from "@/features/pitch/ui/PresentationThumbnailRail";
 import { PreviewPane } from "@/features/pitch/ui/preview/PreviewPane";
+import { SharedHtmlSceneLayer } from "@/features/pitch/ui/preview/SharedHtmlSceneLayer";
+import { SharedSvgSceneLayer } from "@/features/pitch/ui/preview/SharedSvgSceneLayer";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 
 type PresentationPreviewModalProps = {
@@ -232,7 +234,9 @@ export function PresentationPreviewModal({
                     width: CANVAS_WIDTH
                   }}
                 >
-                  <PreviewPane activeSlideIndex={slideIndex} replayNonce={replayNonce} scene={activeScene} />
+                  <PreviewPane activeSlideIndex={slideIndex} hideHtmlSourceTextBlocks hideSharedHtmlBlocks hideSharedSvgBlocks replayNonce={replayNonce} scene={activeScene} />
+                  <SharedHtmlSceneLayer activeSlideIndex={slideIndex} onRequestSlide={goToSlide} replayNonce={replayNonce} scenes={scenes} />
+                  <SharedSvgSceneLayer activeSlideIndex={slideIndex} replayNonce={replayNonce} scenes={scenes} />
                 </div>
               </div>
             </div>

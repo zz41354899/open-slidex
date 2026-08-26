@@ -160,7 +160,7 @@ async function routeWorkspaceRequest(
     const form = await multipartBody(request);
     const file = form.get("file");
     if (!isWorkspaceImportFile(file)) {
-      throw Object.assign(new Error("Choose one .mdx file or .zip/.slidex OpenSlideX project bundle."), { status: 400 });
+      throw Object.assign(new Error("Choose one .mdx or .html file."), { status: 400 });
     }
     const presentation = await input.workspace.importMdx(file);
     const editorUrl = await input.workspace.open(presentation.id);

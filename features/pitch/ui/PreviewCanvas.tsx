@@ -10,6 +10,12 @@ import type { MotionDocProps, MotionDocScene } from "@/core/motion-doc/domain/mo
 import { motionDocBlockKey } from "@/core/motion-doc/application/motionDocBlockIdentity";
 import type { CanvasTool } from "@/features/pitch/application/canvasTools";
 import {
+  CANVAS_KEYBOARD_INTENT_EVENT,
+  canvasKeyboardIntentFromUnknown,
+  type CanvasKeyboardIntent
+} from "@/features/pitch/application/canvasKeyboard";
+import { nextCanvasZoomScale } from "@/features/pitch/application/canvasZoom";
+import {
   MAIN_CANVAS_INACTIVE_SHADER_MAX_PIXEL_COUNT,
   MAIN_CANVAS_PRELOAD_MARGIN,
   mainCanvasShaderMaxPixelCount
@@ -39,7 +45,10 @@ import {
 } from "@/features/pitch/application/previewCanvas";
 import { canGroupBlocks, isPositionLocked, type AddBlockOptions, type InsertSlidePlacement } from "@/features/pitch/application/motionDocCommands";
 import type { SlideRow } from "@/features/pitch/application/slideRows";
-import { canvasSlideRowsForRender } from "@/features/pitch/application/canvasSlideRender";
+import {
+  canvasSlideRowsForRender,
+  singleCanvasSlideRowForRender
+} from "@/features/pitch/application/canvasSlideRender";
 import { CanvasBlockDock, CanvasSlideNav } from "@/features/pitch/ui/preview/CanvasChrome";
 import { MobileEdgePanelHandles } from "@/features/pitch/ui/preview/MobileCanvasChrome";
 import { CanvasContextMenu } from "@/features/pitch/ui/preview/CanvasContextMenu";
@@ -62,6 +71,8 @@ import { useRemoteMcpCanvasCursor } from "@/features/pitch/ui/hooks/useRemoteMcp
 import type { BlockUpdater } from "@/features/pitch/application/pitchCommandTypes";
 import type { AddBlockType } from "@/features/pitch/ui/pitchOptions";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
+import { sharedHtmlDeckRuntime } from "@/features/pitch/application/htmlRuntimePolicy";
+import { SharedHtmlCanvasOverlay } from "@/features/pitch/ui/preview/SharedHtmlCanvasOverlay";
 
 type PreviewCanvasProps = {
   assistantActivities: readonly AssistantCanvasActivity[];
@@ -79,6 +90,7 @@ type PreviewCanvasProps = {
   isGridVisible: boolean;
   isSafeAreaVisible: boolean;
   interactionDisabled: boolean;
+  previewSuspended?: boolean;
   isSnapEnabled: boolean;
   onAddBlock: (type: AddBlockType, options?: AddBlockOptions) => void;
 
@@ -118,6 +130,7 @@ type PreviewCanvasProps = {
   selectedBlockIndices: number[];
   selectedBlocksLocked: boolean;
   showDesktopBlockDock?: boolean;
+  singleSlidePreview?: boolean;
   slideRows: SlideRow[];
 };
 
@@ -137,6 +150,7 @@ export function PreviewCanvas({
   isGridVisible,
   isSafeAreaVisible,
   interactionDisabled,
+  previewSuspended = false,
   isSnapEnabled,
   onAddBlock,
 
@@ -176,24 +190,33 @@ export function PreviewCanvas({
   selectedBlockIndices,
   selectedBlocksLocked,
   showDesktopBlockDock = true,
+  singleSlidePreview = false,
   slideRows
 }: PreviewCanvasProps) {
+  const selectedBlock = selectedBlockIndex === null ? undefined : activeSlide?.blocks[selectedBlockIndex];
   const { locale } = usePitchI18n();
   const canvasRef = useRef<HTMLDivElement | null>(null);
+  const canvasStripRef = useRef<HTMLDivElement | null>(null);
   const activeSlideFrameRef = useRef<HTMLDivElement | null>(null);
   const activeCanvasToolRef = useRef<CanvasTool>(activeCanvasTool);
   const previousActiveSlideIndexRef = useRef(activeSlideIndex);
   const requestedSlideFocusRef = useRef(false);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const scrollPositionsRef = useRef(initialCanvasScrollPositions());
-  const canvasInteraction = useCanvasInteractionEngine();
+  const controlledCanvasSelection = useMemo(() => ({
+    primaryIndex: selectedBlockIndex,
+    selectedIndices: selectedBlockIndices.length > 0
+      ? selectedBlockIndices
+      : selectedBlockIndex === null ? emptyBlockIndices : [selectedBlockIndex]
+  }), [selectedBlockIndex, selectedBlockIndices]);
+  const canvasInteraction = useCanvasInteractionEngine(controlledCanvasSelection);
   const transientFramePreview = useTransientFramePreview({
     blocks: activeSlide?.blocks ?? emptyBlocks,
     onCommit: onUpdateBlockFrames
   });
-  const { syncSelection } = canvasInteraction;
   const [canvasViewportOffset, setCanvasViewportOffset] = useState({ x: 0, y: 0 });
   const [isMouseOverCanvas, setIsMouseOverCanvas] = useState(false);
+  const [isTemporaryHandActive, setIsTemporaryHandActive] = useState(false);
   const [imageCropTarget, setImageCropTarget] = useState<{ blockIndex: number; cropRect: ImageCropRect; slideIndex: number } | null>(null);
   const { closeContextMenu, contextMenu, openContextMenu } = useCanvasContextMenu();
   const { actualScale, canvasFrameStyle, canvasStripSidePadding } = useCanvasViewportMetrics({
@@ -226,8 +249,9 @@ export function PreviewCanvas({
     ? imageCropTarget.blockIndex
     : null;
   const imageCropRect = imageCropBlockIndex === null ? null : imageCropTarget?.cropRect ?? null;
+  const canvasInputTool: CanvasTool = isTemporaryHandActive ? "hand" : activeCanvasTool;
   const canvasPanZoom = useCanvasPanZoom({
-    activeCanvasTool,
+    activeCanvasTool: canvasInputTool,
     actualScale,
     canvasRef,
     canvasViewportOffset,
@@ -247,12 +271,29 @@ export function PreviewCanvas({
     isPanningCanvas,
     setZoomDirection,
     updateCanvasPan,
+    zoomCanvasFromBridge,
     zoomDirection
   } = canvasPanZoom;
+  const canvasKeyboardActionsRef = useRef({
+    actualScale,
+    fitCanvasToViewport,
+    interactionDisabled,
+    onCanvasToolChange,
+    onSetZoomLevel,
+    zoomCanvasFromBridge
+  });
+  canvasKeyboardActionsRef.current = {
+    actualScale,
+    fitCanvasToViewport,
+    interactionDisabled,
+    onCanvasToolChange,
+    onSetZoomLevel,
+    zoomCanvasFromBridge
+  };
   const gridColor = gridLineColor(activeSlide);
-  const viewportCursorClass = activeCanvasTool === "hand"
+  const viewportCursorClass = canvasInputTool === "hand"
     ? isPanningCanvas ? "cursor-grabbing" : "cursor-grab"
-    : activeCanvasTool === "zoom" ? zoomDirection === "out" ? "cursor-zoom-out" : "cursor-zoom-in" : "";
+    : canvasInputTool === "zoom" ? zoomDirection === "out" ? "cursor-zoom-out" : "cursor-zoom-in" : "";
   const activeShaderMaxPixelCount = mainCanvasShaderMaxPixelCount(
     actualScale,
     typeof window === "undefined" ? 1 : window.devicePixelRatio
@@ -278,24 +319,22 @@ export function PreviewCanvas({
     () => canvasSlideRowsForRender(slideRows),
     [slideRows]
   );
+  const sharedHtmlRuntime = useMemo(() => sharedHtmlDeckRuntime(scenes), [scenes]);
+  const canvasSlideRows = useMemo(
+    () => singleSlidePreview && sharedHtmlRuntime
+      ? singleCanvasSlideRowForRender(renderedSlideRows, activeSlideIndex)
+      : renderedSlideRows,
+    [activeSlideIndex, renderedSlideRows, sharedHtmlRuntime, singleSlidePreview]
+  );
   useEffect(() => {
-    activeCanvasToolRef.current = activeCanvasTool;
-  }, [activeCanvasTool]);
+    activeCanvasToolRef.current = canvasInputTool;
+  }, [canvasInputTool]);
 
   useEffect(() => {
     if (activeCanvasTool !== "select" && canvasShapeTool) {
       onCanvasShapeToolChange(null);
     }
   }, [activeCanvasTool, canvasShapeTool, onCanvasShapeToolChange]);
-
-  useEffect(() => {
-    syncSelection({
-      primaryIndex: selectedBlockIndex,
-      selectedIndices: selectedBlockIndices.length > 0
-        ? selectedBlockIndices
-        : selectedBlockIndex === null ? [] : [selectedBlockIndex]
-    });
-  }, [selectedBlockIndex, selectedBlockIndices, syncSelection]);
 
   useEffect(() => {
     const transform = canvasInteraction.transform;
@@ -306,7 +345,39 @@ export function PreviewCanvas({
     if (transformStillExists) return;
     transientFramePreview.reset();
     canvasInteraction.clearInteraction();
-  }, [activeSlide?.blocks, canvasInteraction, transientFramePreview]);
+  }, [activeSlide?.blocks, canvasInteraction.clearInteraction, canvasInteraction.transform, transientFramePreview.reset]);
+
+  useEffect(() => {
+    const handleKeyboardIntent = (event: Event) => {
+      const intent = canvasKeyboardIntentFromUnknown((event as CustomEvent<CanvasKeyboardIntent>).detail);
+      if (!intent) return;
+      const actions = canvasKeyboardActionsRef.current;
+      if (actions.interactionDisabled) {
+        setIsTemporaryHandActive(false);
+        return;
+      }
+      if (intent.kind === "tool") {
+        actions.onCanvasToolChange(intent.tool);
+        return;
+      }
+      if (intent.kind === "temporary-hand") {
+        setIsTemporaryHandActive(intent.active);
+        return;
+      }
+      if (intent.kind === "wheel-zoom") {
+        actions.zoomCanvasFromBridge(intent);
+        return;
+      }
+      if (intent.command === "fit") {
+        actions.fitCanvasToViewport();
+        return;
+      }
+      actions.onSetZoomLevel(nextCanvasZoomScale(actions.actualScale, intent.command));
+    };
+
+    window.addEventListener(CANVAS_KEYBOARD_INTENT_EVENT, handleKeyboardIntent);
+    return () => window.removeEventListener(CANVAS_KEYBOARD_INTENT_EVENT, handleKeyboardIntent);
+  }, []);
 
   useEffect(() => {
     if (activeCanvasTool !== "zoom") {
@@ -389,13 +460,27 @@ export function PreviewCanvas({
   }
 
   function handleCanvasDoubleClick(event: MouseEvent<HTMLDivElement>) {
-    if (activeCanvasTool !== "select") {
+    if (canvasInputTool !== "select") {
       return;
     }
 
     if ((event.target as HTMLElement).closest("button")) {
       return;
     }
+
+    const frameControl = (event.target as HTMLElement).closest<HTMLElement>("[data-frame-control][data-block-index]");
+    const blockIndex = Number(frameControl?.dataset.blockIndex);
+    const block = Number.isInteger(blockIndex) ? activeSlide?.blocks[blockIndex] : undefined;
+    if (!frameControl || !block || !isEditableTextBlock(block)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    onSelectBlock(blockIndex);
+    canvasInteraction.beginEditingText(blockIndex);
+    onBeginBlockTransform();
+    window.requestAnimationFrame(() => {
+      frameControl.querySelector<HTMLElement>("[data-text-frame-editor]")?.focus({ preventScroll: true });
+    });
   }
 
   function handleToolDragOver(event: DragEvent<HTMLDivElement>) {
@@ -424,7 +509,7 @@ export function PreviewCanvas({
   }
 
   function startMove(event: PointerEvent<HTMLDivElement>, blockIndex: number, frame: MotionDocFrame) {
-    if (activeCanvasTool !== "select") {
+    if (canvasInputTool !== "select") {
       return;
     }
 
@@ -497,7 +582,7 @@ export function PreviewCanvas({
     frame: MotionDocFrame,
     blockIndices: readonly number[] = [blockIndex]
   ) {
-    if (activeCanvasTool !== "select") {
+    if (canvasInputTool !== "select") {
       return;
     }
 
@@ -551,7 +636,7 @@ export function PreviewCanvas({
   }
 
   function startRotate(event: PointerEvent<HTMLElement>, blockIndex: number, frame: MotionDocFrame) {
-    if (activeCanvasTool !== "select" || event.button !== 0) return;
+    if (canvasInputTool !== "select" || event.button !== 0) return;
     const block = activeSlide?.blocks[blockIndex];
     if (!block || isPositionLocked(block)) return;
 
@@ -667,7 +752,7 @@ export function PreviewCanvas({
   }
 
   function startMarquee(event: PointerEvent<HTMLDivElement>) {
-    if (activeCanvasTool !== "select") {
+    if (canvasInputTool !== "select") {
       return;
     }
 
@@ -715,10 +800,7 @@ export function PreviewCanvas({
       return;
     }
 
-    canvasInteraction.select({
-      primaryIndex: selectedIndices[0] ?? null,
-      selectedIndices
-    });
+    canvasInteraction.clearInteraction();
     onSelectBlocks(selectedIndices, { additive: selection.additive });
   }
 
@@ -750,7 +832,7 @@ export function PreviewCanvas({
   }
 
   function handleSlideFramePointerDown(event: PointerEvent<HTMLDivElement>, slideIndex: number) {
-    if (event.button !== 0 || activeCanvasTool !== "select") {
+    if (event.button !== 0 || canvasInputTool !== "select") {
       return;
     }
 
@@ -768,7 +850,7 @@ export function PreviewCanvas({
         isFrameControl: Boolean(target?.closest("[data-frame-control]"))
       })) {
         scrollSlideFrameIntoView(event.currentTarget, scrollAreaRef.current);
-        if (activeCanvasTool === "select") {
+        if (canvasInputTool === "select") {
           canvasInteraction.clearInteraction();
           onClearSelection();
         }
@@ -793,13 +875,13 @@ export function PreviewCanvas({
       event.preventDefault();
       return;
     }
-    if (activeCanvasTool === "zoom") {
+    if (canvasInputTool === "zoom") {
       event.preventDefault();
       event.stopPropagation();
       return;
     }
 
-    if (activeCanvasTool !== "select") {
+    if (canvasInputTool !== "select") {
       return;
     }
 
@@ -842,7 +924,9 @@ export function PreviewCanvas({
   return (
     <div
       className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-[#212121]"
+      data-canvas-input-tool={canvasInputTool}
       data-canvas-mode={canvasViewMode}
+      data-canvas-single-slide={singleSlidePreview ? "true" : undefined}
       id="canvas-v4"
       onContextMenuCapture={handleCanvasContextMenu}
     >
@@ -857,6 +941,7 @@ export function PreviewCanvas({
         onNextSlide={onNextSlide}
         onPreviousSlide={onPreviousSlide}
         sceneCount={sceneCount}
+        singleSlidePreview={singleSlidePreview}
       />
       <RemoteMcpActivityRail activities={remoteMcpOperations} />
       {remoteMcpActivityWarning ? (
@@ -871,7 +956,7 @@ export function PreviewCanvas({
         onPointerCancelCapture={endCanvasPan}
         onPointerDownCapture={handleCanvasToolPointerDown}
         onPointerDown={(event) => {
-          if (activeCanvasTool === "select" && event.target === event.currentTarget) {
+          if (canvasInputTool === "select" && event.target === event.currentTarget) {
             canvasInteraction.clearInteraction();
             onClearSelection();
           }
@@ -882,19 +967,22 @@ export function PreviewCanvas({
         style={{ overflowAnchor: "none" }}
       >
         <div
-          className={`relative min-h-full min-w-full shrink-0 ${canvasViewMode === "slide"
-            ? "flex flex-col items-center gap-10 pb-24 pt-2 sm:min-h-0 sm:gap-12"
-            : "flex items-start justify-center pb-24 pt-2 sm:min-h-0"
+          className={`relative min-h-full min-w-full ${canvasViewMode === "slide"
+            ? singleSlidePreview
+              ? "shrink-0 flex flex-col items-center justify-center pb-20 pt-16 sm:min-h-full"
+              : "shrink-0 flex flex-col items-center gap-10 pb-24 pt-2 sm:min-h-0 sm:gap-12"
+            : "flex w-full max-w-full items-start justify-center pb-24 pt-2 sm:min-h-0"
           }`}
           onPointerDown={(event) => {
-            if (activeCanvasTool === "select" && event.target === event.currentTarget) {
+            if (canvasInputTool === "select" && event.target === event.currentTarget) {
               canvasInteraction.clearInteraction();
               onClearSelection();
             }
           }}
+          ref={canvasStripRef}
           style={{
-            paddingLeft: canvasStripSidePadding,
-            paddingRight: canvasStripSidePadding,
+            paddingLeft: canvasViewMode === "slide" ? canvasStripSidePadding : 0,
+            paddingRight: canvasViewMode === "slide" ? canvasStripSidePadding : 0,
             transform: `translate3d(${canvasViewportOffset.x}px, ${canvasViewportOffset.y}px, 0)`
           }}
         >
@@ -902,10 +990,12 @@ export function PreviewCanvas({
             activeSlideIndex={activeSlideIndex}
             onOpenSlide={openSlideFromGrid}
             onReorderSlide={onReorderSlide}
+            reorderDisabled={Boolean(sharedHtmlRuntime)}
             replayNonce={replayNonce}
             scenes={scenes}
             slideRows={renderedSlideRows}
-          /> : renderedSlideRows.map((slide) => {
+            zoomLevel={zoomLevel}
+          /> : canvasSlideRows.map((slide) => {
             const isActiveSlideFrame = slide.index === activeSlideIndex;
             const slideScene = scenes[slide.index];
 
@@ -918,6 +1008,7 @@ export function PreviewCanvas({
                 canvasRef={canvasRef}
                 frameOverrides={previewFrameOverrides}
                 hiddenBlockIndices={hiddenPreviewBlockIndices}
+                hideSharedHtmlBlocks={Boolean(sharedHtmlRuntime)}
                 isActive={isActiveSlideFrame}
                 isMouseOverCanvas={isMouseOverCanvas}
                 key={slide.index}
@@ -931,6 +1022,7 @@ export function PreviewCanvas({
                 onToolDragOver={handleToolDragOver}
                 onToolDrop={handleToolDrop}
                 replayNonce={replayNonce}
+                previewSuspended={previewSuspended}
                 rootRef={scrollAreaRef}
                 shaderMaxPixelCount={canvasInteraction.mode === "idle" ? activeShaderMaxPixelCount : MAIN_CANVAS_INACTIVE_SHADER_MAX_PIXEL_COUNT}
                 shaderPlaybackActive={canvasInteraction.mode === "idle"}
@@ -948,7 +1040,7 @@ export function PreviewCanvas({
                       />
                     ) : null}
                     {isActiveSlideFrame ? <CanvasSafeAreaOverlay visible={isSafeAreaVisible} /> : null}
-                    {isActiveSlideFrame && !interactionDisabled ? (
+                    {isActiveSlideFrame && !interactionDisabled && !sharedHtmlRuntime ? (
                       <CanvasSelectionLayer
                         activeSlide={activeSlide}
                         alignmentGuides={transientFramePreview.alignmentGuides}
@@ -967,6 +1059,7 @@ export function PreviewCanvas({
                           canvasInteraction.beginEditingText(blockIndex);
                           onBeginBlockTransform();
                         }}
+                        onEndTextEdit={canvasInteraction.finishEditingText}
                         onBeginBlockTransform={onBeginBlockTransform}
                         onImageCropRectChange={updateImageCropRect}
                         onStartMarquee={startMarquee}
@@ -977,12 +1070,12 @@ export function PreviewCanvas({
                         onUpdateBlock={onUpdateBlock}
                         onUpdateInteraction={updateInteraction}
                         onUpdateMarquee={updateMarquee}
-                        activeCanvasTool={activeCanvasTool}
+                        activeCanvasTool={canvasInputTool}
                         selectedBlockIndex={selectedBlockIndex}
                         selectedBlockIndices={selectedBlockIndices}
                       />
                     ) : null}
-                    {isActiveSlideFrame && canvasShapeTool && !interactionDisabled ? (
+                    {isActiveSlideFrame && canvasShapeTool && canvasInputTool === "select" && !interactionDisabled && !sharedHtmlRuntime ? (
                       <ShapeDrawOverlay
                         getCanvasPoint={getCanvasPosition}
                         onCancel={() => onCanvasShapeToolChange(null)}
@@ -991,6 +1084,15 @@ export function PreviewCanvas({
                           onCanvasShapeToolChange(null);
                         }}
                         tool={canvasShapeTool}
+                      />
+                    ) : null}
+                    {isActiveSlideFrame && !interactionDisabled && (
+                      canvasInputTool === "hand" || canvasInputTool === "zoom"
+                    ) ? (
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0 z-[55]"
+                        data-canvas-navigation-gesture-surface
                       />
                     ) : null}
                     <ActiveCanvasOverlay
@@ -1006,7 +1108,7 @@ export function PreviewCanvas({
                       slideIndex={slide.index}
                       showCursor={isActiveSlideFrame}
                     />
-                    {isActiveSlideFrame && contextMenu && !interactionDisabled ? (
+                    {isActiveSlideFrame && contextMenu && !interactionDisabled && !sharedHtmlRuntime ? (
                       <CanvasContextMenu
                         canGroup={canGroupSelection}
                         canPaste={canPasteBlock}
@@ -1031,9 +1133,21 @@ export function PreviewCanvas({
               </CanvasSlideFrame>
             );
           })}
+          {canvasViewMode === "slide" && sharedHtmlRuntime ? (
+            <SharedHtmlCanvasOverlay
+              activeSlideIndex={activeSlideIndex}
+              actualScale={actualScale}
+              canvasRef={canvasRef}
+              hostRef={canvasStripRef}
+              interactive={canvasInputTool === "select"}
+              onRequestSlide={onSelectSlide}
+              scenes={scenes}
+              suspended={previewSuspended}
+            />
+          ) : null}
         </div>
       </div>
-      {!interactionDisabled ? <CanvasBlockDock
+      {!interactionDisabled && !sharedHtmlRuntime ? <CanvasBlockDock
         activeCanvasTool={activeCanvasTool}
         onAddBlock={onAddBlock}
         onCanvasToolChange={onCanvasToolChange}

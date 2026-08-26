@@ -20,9 +20,11 @@ export type MotionDocBlockMap = {
     text: string;
   };
   Chart: MotionDocPropsBlock<"Chart">;
+  HtmlEmbedBlock: MotionDocPropsBlock<"HtmlEmbedBlock">;
   ImageBlock: MotionDocPropsBlock<"ImageBlock">;
   Shape: MotionDocPropsBlock<"Shape">;
   Table: MotionDocPropsBlock<"Table">;
+  SvgBlock: MotionDocPropsBlock<"SvgBlock">;
   VideoBlock: MotionDocPropsBlock<"VideoBlock">;
 };
 
@@ -36,7 +38,7 @@ export type MotionDocBlockOf<TType extends MotionDocBlockType> = MotionDocBlockM
 export type MotionDocBlock = MotionDocBlockMap[MotionDocBlockType];
 export type MotionDocTextBlock = MotionDocBlockOf<"Text" | "heading">;
 export type MotionDocTableBlock = MotionDocBlockOf<"Table">;
-export type MotionDocVisualBlock = MotionDocBlockOf<"Chart" | "ImageBlock" | "Shape" | "VideoBlock">;
+export type MotionDocVisualBlock = MotionDocBlockOf<"Chart" | "HtmlEmbedBlock" | "ImageBlock" | "Shape" | "SvgBlock" | "VideoBlock">;
 export type MotionDocBlockWithProps = MotionDocBlock;
 
 export type MotionDocScene = {

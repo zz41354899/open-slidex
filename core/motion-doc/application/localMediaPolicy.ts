@@ -3,6 +3,8 @@ import type { MotionDocProps } from "@/core/motion-doc/domain/motionDocTypes";
 
 const localImageAssetPattern = /^assets\/[A-Za-z0-9._-]+\.webp$/i;
 const localVideoAssetPattern = /^assets\/[A-Za-z0-9._-]+\.mp4$/i;
+const localSvgAssetPattern = /^assets\/[A-Za-z0-9._-]+\.svg$/i;
+const localHtmlAssetPattern = /^assets\/[A-Za-z0-9._-]+\.html?$/i;
 const localMediaAttributePattern = /\s+(backgroundImage|poster|shapeImageSrc|src)=("[^"]*"|'[^']*')/g;
 
 export type LocalMotionDocMediaIssue = {
@@ -14,7 +16,8 @@ export type LocalMotionDocMediaIssue = {
 
 /** OpenSlideX deck assets are root-confined, hashed WebP images or MP4 videos. */
 export function isOpenSlideXLocalAssetSource(value: unknown) {
-  return isOpenSlideXLocalImageAssetSource(value) || isOpenSlideXLocalVideoAssetSource(value);
+  return isOpenSlideXLocalImageAssetSource(value) || isOpenSlideXLocalVideoAssetSource(value) ||
+    isOpenSlideXLocalSvgAssetSource(value) || isOpenSlideXLocalHtmlAssetSource(value);
 }
 
 export function isOpenSlideXLocalImageAssetSource(value: unknown) {
@@ -23,6 +26,14 @@ export function isOpenSlideXLocalImageAssetSource(value: unknown) {
 
 export function isOpenSlideXLocalVideoAssetSource(value: unknown) {
   return typeof value === "string" && localVideoAssetPattern.test(value.trim());
+}
+
+export function isOpenSlideXLocalSvgAssetSource(value: unknown) {
+  return typeof value === "string" && localSvgAssetPattern.test(value.trim());
+}
+
+export function isOpenSlideXLocalHtmlAssetSource(value: unknown) {
+  return typeof value === "string" && localHtmlAssetPattern.test(value.trim());
 }
 
 /**
@@ -56,6 +67,10 @@ export function validateOpenSlideXLocalMedia(source: string) {
       if (block.type === "ImageBlock" || block.type === "VideoBlock") {
         collectMediaIssue(issues, block.props, "src", slideIndex, blockIndex, block.type === "VideoBlock" ? "video" : "image");
         collectMediaIssue(issues, block.props, "poster", slideIndex, blockIndex, "image");
+      } else if (block.type === "SvgBlock") {
+        collectMediaIssue(issues, block.props, "src", slideIndex, blockIndex, "svg");
+      } else if (block.type === "HtmlEmbedBlock") {
+        collectMediaIssue(issues, block.props, "src", slideIndex, blockIndex, "html");
       }
     });
   });
@@ -81,14 +96,22 @@ function collectMediaIssue(
   prop: LocalMotionDocMediaIssue["prop"],
   slideIndex: number,
   blockIndex: number | undefined,
-  kind: "image" | "video"
+  kind: "html" | "image" | "svg" | "video"
 ) {
   const value = props[prop];
   if (value === undefined || value === "") return;
-  if ((kind === "image" ? isOpenSlideXLocalImageAssetSource(value) : isOpenSlideXLocalVideoAssetSource(value)) || isHttpsMediaSource(value)) return;
+  const isAllowedLocal = kind === "image"
+    ? isOpenSlideXLocalImageAssetSource(value)
+    : kind === "video"
+      ? isOpenSlideXLocalVideoAssetSource(value)
+      : kind === "svg"
+        ? isOpenSlideXLocalSvgAssetSource(value)
+        : isOpenSlideXLocalHtmlAssetSource(value);
+  if (isAllowedLocal || ((kind === "image" || kind === "video") && isHttpsMediaSource(value))) return;
+  const expected = kind === "image" ? "assets/*.webp" : kind === "video" ? "assets/*.mp4" : kind === "svg" ? "assets/*.svg" : "assets/*.html";
   issues.push({
     ...(blockIndex === undefined ? {} : { blockIndex }),
-    message: `OpenSlideX local decks allow ${kind === "video" ? "assets/*.mp4" : "assets/*.webp"} or complete HTTPS media URLs for ${prop}.`,
+    message: `OpenSlideX local decks allow ${expected}${kind === "image" || kind === "video" ? " or complete HTTPS media URLs" : " only"} for ${prop}.`,
     prop,
     slideIndex
   });

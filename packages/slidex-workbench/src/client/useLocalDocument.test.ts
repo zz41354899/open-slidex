@@ -4,10 +4,35 @@ import test from "node:test";
 import {
   INITIAL_DOCUMENT_READ_RETRY_DELAYS_MS,
   LOCAL_DRAFT_DELAY_MS,
+  canBeginExternalDocumentMutation,
   readInitialDocument,
   scheduleLocalDraftPersist,
   shouldValidateDeferredSource
 } from "./useLocalDocument";
+
+test("an external HTML mutation starts only from the current saved revision", () => {
+  assert.equal(canBeginExternalDocumentMutation({
+    externalMutationInFlight: false,
+    saveInFlight: false,
+    saveState: "saved",
+    savedSource: "# Saved",
+    source: "# Saved"
+  }), true);
+  assert.equal(canBeginExternalDocumentMutation({
+    externalMutationInFlight: false,
+    saveInFlight: false,
+    saveState: "dirty",
+    savedSource: "# Saved",
+    source: "# Edited"
+  }), false);
+  assert.equal(canBeginExternalDocumentMutation({
+    externalMutationInFlight: true,
+    saveInFlight: false,
+    saveState: "saved",
+    savedSource: "# Saved",
+    source: "# Saved"
+  }), false);
+});
 
 test("deferred validation cannot replace loading before the first document opens", () => {
   assert.equal(shouldValidateDeferredSource("", "", ""), false);

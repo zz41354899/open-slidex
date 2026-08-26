@@ -5,23 +5,22 @@ export function useLayerSelection(activeBlocks: MotionDocBlock[]) {
   const activeBlocksRef = useRef(activeBlocks);
   activeBlocksRef.current = activeBlocks;
   const activeBlockCount = activeBlocks.length;
-  const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(null);
-  const [selectedBlockIndices, setSelectedBlockIndices] = useState<number[]>([]);
+  const [selection, setSelection] = useState<LayerSelectionState>(emptyLayerSelection);
 
   useEffect(() => {
-    setSelectedBlockIndices((current) => current.filter((index) => index >= 0 && index < activeBlockCount));
-    setSelectedBlockIndex((current) => {
-      if (current === null || current < activeBlockCount) {
-        return current;
-      }
-
-      return null;
+    setSelection((current) => {
+      const indices = current.indices.filter((index) => index >= 0 && index < activeBlockCount);
+      const primaryIndex = current.primaryIndex !== null && current.primaryIndex >= 0 && current.primaryIndex < activeBlockCount
+        ? current.primaryIndex
+        : indices[indices.length - 1] ?? null;
+      return primaryIndex === current.primaryIndex && indices.length === current.indices.length
+        ? current
+        : { indices, primaryIndex };
     });
   }, [activeBlockCount]);
 
   const selectSingleBlock = useCallback((index: number | null) => {
-    setSelectedBlockIndex(index);
-    setSelectedBlockIndices(index === null ? [] : [index]);
+    setSelection(index === null ? emptyLayerSelection : { indices: [index], primaryIndex: index });
   }, []);
 
   const clearBlockSelection = useCallback(() => {
@@ -29,15 +28,6 @@ export function useLayerSelection(activeBlocks: MotionDocBlock[]) {
   }, [selectSingleBlock]);
 
   const selectBlock = useCallback((index: number, options: { additive?: boolean; bypassGroup?: boolean; range?: boolean } = {}) => {
-    if (options.range && selectedBlockIndex !== null) {
-      const start = Math.min(selectedBlockIndex, index);
-      const end = Math.max(selectedBlockIndex, index);
-      const range = Array.from({ length: end - start + 1 }, (_, offset) => start + offset);
-      setSelectedBlockIndices(range);
-      setSelectedBlockIndex(index);
-      return;
-    }
-
     const blocks = activeBlocksRef.current;
     const block = blocks[index];
     const groupId = !options.bypassGroup && block && "props" in block && typeof block.props.groupId === "string"
@@ -49,39 +39,44 @@ export function useLayerSelection(activeBlocks: MotionDocBlock[]) {
         ))
       : [];
 
-    if (options.additive && groupedIndices.length > 0) {
-      setSelectedBlockIndices((current) => {
-        const groupIsSelected = groupedIndices.every((groupedIndex) => current.includes(groupedIndex));
+    setSelection((current) => {
+      if (options.range && current.primaryIndex !== null) {
+        const start = Math.min(current.primaryIndex, index);
+        const end = Math.max(current.primaryIndex, index);
+        return {
+          indices: Array.from({ length: end - start + 1 }, (_, offset) => start + offset),
+          primaryIndex: index
+        };
+      }
+
+      if (options.additive && groupedIndices.length > 0) {
+        const groupIsSelected = groupedIndices.every((groupedIndex) => current.indices.includes(groupedIndex));
         const nextSelection = groupIsSelected
-          ? current.filter((currentIndex) => !groupedIndices.includes(currentIndex))
-          : [...new Set([...current, ...groupedIndices])].sort((a, b) => a - b);
+          ? current.indices.filter((currentIndex) => !groupedIndices.includes(currentIndex))
+          : [...new Set([...current.indices, ...groupedIndices])].sort((a, b) => a - b);
+        return {
+          indices: nextSelection,
+          primaryIndex: nextSelection.includes(index) ? index : nextSelection[nextSelection.length - 1] ?? null
+        };
+      }
 
-        setSelectedBlockIndex(nextSelection.includes(index) ? index : nextSelection[nextSelection.length - 1] ?? null);
-        return nextSelection;
-      });
-      return;
-    }
+      if (options.additive) {
+        const nextSelection = current.indices.includes(index)
+          ? current.indices.filter((item) => item !== index)
+          : [...current.indices, index].sort((a, b) => a - b);
+        return {
+          indices: nextSelection,
+          primaryIndex: nextSelection.includes(index) ? index : nextSelection[nextSelection.length - 1] ?? null
+        };
+      }
 
-    if (options.additive) {
-      setSelectedBlockIndices((current) => {
-        const nextSelection = current.includes(index)
-          ? current.filter((item) => item !== index)
-          : [...current, index].sort((a, b) => a - b);
+      if (groupedIndices.length > 0) {
+        return { indices: groupedIndices, primaryIndex: index };
+      }
 
-        setSelectedBlockIndex(nextSelection.includes(index) ? index : nextSelection[nextSelection.length - 1] ?? null);
-        return nextSelection;
-      });
-      return;
-    }
-
-    if (groupedIndices.length > 0) {
-      setSelectedBlockIndices(groupedIndices);
-      setSelectedBlockIndex(index);
-      return;
-    }
-
-    selectSingleBlock(index);
-  }, [selectSingleBlock, selectedBlockIndex]);
+      return { indices: [index], primaryIndex: index };
+    });
+  }, []);
 
   const selectBlocks = useCallback((indices: number[], options: { additive?: boolean } = {}) => {
     const uniqueIndices = indices
@@ -89,25 +84,32 @@ export function useLayerSelection(activeBlocks: MotionDocBlock[]) {
       .sort((a, b) => a - b);
 
     if (options.additive) {
-      setSelectedBlockIndices((current) => {
-        const nextSelection = [...new Set([...current, ...uniqueIndices])].sort((a, b) => a - b);
-        setSelectedBlockIndex(nextSelection[nextSelection.length - 1] ?? null);
-        return nextSelection;
+      setSelection((current) => {
+        const indices = [...new Set([...current.indices, ...uniqueIndices])].sort((a, b) => a - b);
+        return { indices, primaryIndex: indices[indices.length - 1] ?? null };
       });
       return;
     }
 
-    setSelectedBlockIndices(uniqueIndices);
-    setSelectedBlockIndex(uniqueIndices[uniqueIndices.length - 1] ?? null);
+    setSelection({
+      indices: uniqueIndices,
+      primaryIndex: uniqueIndices[uniqueIndices.length - 1] ?? null
+    });
   }, []);
 
   return {
     clearBlockSelection,
     selectBlock,
     selectBlocks,
-    selectedBlockIndex,
-    selectedBlockIndices,
-    selectSingleBlock,
-    setSelectedBlockIndex
+    selectedBlockIndex: selection.primaryIndex,
+    selectedBlockIndices: selection.indices,
+    selectSingleBlock
   };
 }
+
+type LayerSelectionState = {
+  indices: number[];
+  primaryIndex: number | null;
+};
+
+const emptyLayerSelection: LayerSelectionState = { indices: [], primaryIndex: null };

@@ -32,3 +32,12 @@ Unknown values are invalid. Use `grow` for bars, `draw` for line or area,
 
 Motion must never be the only carrier of information. Reduced motion, raster,
 and PPTX must show the complete final state.
+
+## Shared SVG stages
+
+Use `SvgBlock` for a declarative SVG scene whose layers share one `src` and
+`sharedScene`. Advance the scene with a nonnegative integer `stage`; use
+`stageDuration` only for deliberate state timing. The asset may contain
+`data-stage` and `data-motion` markers, but never JavaScript, event handlers, or
+SMIL animation. Reduced motion, raster, and PPTX must show the static final
+state without depending on intermediate stages.

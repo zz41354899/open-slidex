@@ -5,13 +5,17 @@ import type { SlideRow } from "@/features/pitch/application/slideRows";
 import { SlideThumbnailPreview } from "@/features/pitch/ui/preview/SlideThumbnailPreview";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 
+const gridSlideWidth = 320;
+
 type CanvasGridViewProps = {
   activeSlideIndex: number;
   onOpenSlide: (slideIndex: number) => void;
   onReorderSlide: (fromIndex: number, toIndex: number) => void;
+  reorderDisabled?: boolean;
   replayNonce: number;
   scenes: MotionDocScene[];
   slideRows: readonly SlideRow[];
+  zoomLevel: number | "fit";
 };
 
 /**
@@ -23,13 +27,16 @@ export function CanvasGridView({
   activeSlideIndex,
   onOpenSlide,
   onReorderSlide,
+  reorderDisabled = false,
   replayNonce,
   scenes,
-  slideRows
+  slideRows,
+  zoomLevel
 }: CanvasGridViewProps) {
   const { locale } = usePitchI18n();
   const [draggedSlideIndex, setDraggedSlideIndex] = useState<number | null>(null);
   const [dropSlideIndex, setDropSlideIndex] = useState<number | null>(null);
+  const fixedSlideWidth = zoomLevel === "fit" ? null : Math.round(gridSlideWidth * zoomLevel);
 
   function beginDrag(event: DragEvent<HTMLDivElement>, slideIndex: number) {
     event.dataTransfer.effectAllowed = "move";
@@ -48,7 +55,19 @@ export function CanvasGridView({
   }
 
   return (
-    <div className="grid w-full max-w-[1500px] grid-cols-1 gap-5 pb-24 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" data-canvas-grid-view>
+    <div
+      className={`grid w-full gap-5 pb-24 ${fixedSlideWidth === null
+        ? "max-w-[1500px]"
+        : "max-w-none justify-center"
+      }`}
+      data-canvas-grid-view
+      data-grid-zoom={zoomLevel}
+      style={{
+        gridTemplateColumns: fixedSlideWidth === null
+          ? "repeat(auto-fit, minmax(min(100%, 280px), 1fr))"
+          : `repeat(auto-fill, ${fixedSlideWidth}px)`
+      }}
+    >
       {slideRows.map((slide) => {
         const isActive = slide.index === activeSlideIndex;
         const isDropTarget = dropSlideIndex === slide.index && draggedSlideIndex !== slide.index;
@@ -61,7 +80,7 @@ export function CanvasGridView({
               isActive ? "border-[#8ea5ff]/80 ring-1 ring-[#8ea5ff]/30" : "border-white/[0.08] hover:border-white/[0.24] hover:bg-[#161616]"
             } ${isDropTarget ? "-translate-y-1 border-dashed border-[#8ea5ff]" : ""}`}
             data-grid-slide-index={slide.index}
-            draggable
+            draggable={!reorderDisabled}
             key={slide.index}
             onClick={() => onOpenSlide(slide.index)}
             onDragEnd={() => {
@@ -70,11 +89,16 @@ export function CanvasGridView({
             }}
             onDragLeave={() => setDropSlideIndex(null)}
             onDragOver={(event) => {
+              if (reorderDisabled) return;
               event.preventDefault();
               if (draggedSlideIndex !== null && draggedSlideIndex !== slide.index) setDropSlideIndex(slide.index);
             }}
-            onDragStart={(event) => beginDrag(event, slide.index)}
-            onDrop={(event) => completeDrop(event, slide.index)}
+            onDragStart={(event) => {
+              if (!reorderDisabled) beginDrag(event, slide.index);
+            }}
+            onDrop={(event) => {
+              if (!reorderDisabled) completeDrop(event, slide.index);
+            }}
             onKeyDown={(event) => {
               if (event.key !== "Enter" && event.key !== " ") return;
               event.preventDefault();
@@ -82,7 +106,9 @@ export function CanvasGridView({
             }}
             role="button"
             tabIndex={0}
-            title={locale === "zh-TW" ? "點選編輯；拖曳重新排序" : "Click to edit; drag to reorder"}
+            title={reorderDisabled
+              ? (locale === "zh-TW" ? "點選以預覽這一頁 HTML" : "Select to preview this HTML page")
+              : (locale === "zh-TW" ? "點選編輯；拖曳重新排序" : "Click to edit; drag to reorder")}
           >
             <div className="relative aspect-video overflow-hidden rounded-lg bg-black ring-1 ring-white/[0.08]">
               <SlideThumbnailPreview

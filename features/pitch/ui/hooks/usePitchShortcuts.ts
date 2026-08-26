@@ -1,4 +1,9 @@
 import { useEffect, useRef } from "react";
+import {
+  canvasKeyboardZoomCommand,
+  emitCanvasKeyboardIntent,
+  isCanvasSpaceKey
+} from "@/features/pitch/application/canvasKeyboard";
 import { canvasToolFromShortcut, type CanvasTool } from "@/features/pitch/application/canvasTools";
 import {
   arrowDelta,
@@ -8,7 +13,6 @@ import {
 import { clipboardImageFile } from "@/features/pitch/infrastructure/pitchClipboard";
 
 type UsePitchShortcutsArgs = {
-  activeCanvasTool: CanvasTool;
   activeSlideIndex: number;
   blocked: boolean;
   closeCodeEditor: () => void;
@@ -33,6 +37,7 @@ type UsePitchShortcutsArgs = {
   isMobileSidebarOpen: boolean;
   isPresentationPreviewOpen: boolean;
   isTemplateModalOpen: boolean;
+  navigationOnly?: boolean;
   newProject: () => void;
   nudgeSelectedBlocks: (delta: { x: number; y: number }) => void;
   pasteCopiedBlock: (data?: DataTransfer | null) => void | Promise<void>;
@@ -47,7 +52,6 @@ type UsePitchShortcutsArgs = {
 };
 
 export function usePitchShortcuts({
-  activeCanvasTool,
   activeSlideIndex,
   blocked,
   closeCodeEditor,
@@ -71,6 +75,7 @@ export function usePitchShortcuts({
   isMobileSidebarOpen,
   isPresentationPreviewOpen,
   isTemplateModalOpen,
+  navigationOnly = false,
   nudgeSelectedBlocks,
   pasteCopiedBlock,
   pasteSlide,
@@ -82,12 +87,7 @@ export function usePitchShortcuts({
   undoLastChange,
   ungroupSelectedBlocks
 }: UsePitchShortcutsArgs) {
-  const canvasToolRef = useRef<CanvasTool>(activeCanvasTool);
-  const spaceRestoreToolRef = useRef<CanvasTool | null>(null);
-
-  useEffect(() => {
-    canvasToolRef.current = activeCanvasTool;
-  }, [activeCanvasTool]);
+  const temporaryHandActiveRef = useRef(false);
 
   useEffect(() => {
     function isModalOrPanelOpen() {
@@ -106,32 +106,18 @@ export function usePitchShortcuts({
       });
     }
 
-    function restoreSpaceTool() {
-      const restoreTool = spaceRestoreToolRef.current;
-
-      if (!restoreTool) {
-        return;
-      }
-
-      spaceRestoreToolRef.current = null;
-      canvasToolRef.current = restoreTool;
-      setActiveCanvasTool(restoreTool);
-    }
-
     function handleKeyUp(event: KeyboardEvent) {
-      if (!isSpaceKey(event)) {
-        return;
-      }
-
-      if (spaceRestoreToolRef.current) {
+      if (isCanvasSpaceKey(event) && temporaryHandActiveRef.current) {
         event.preventDefault();
+        temporaryHandActiveRef.current = false;
+        emitCanvasKeyboardIntent({ active: false, kind: "temporary-hand" });
       }
-
-      restoreSpaceTool();
     }
 
     function handleWindowBlur() {
-      restoreSpaceTool();
+      if (!temporaryHandActiveRef.current) return;
+      temporaryHandActiveRef.current = false;
+      emitCanvasKeyboardIntent({ active: false, kind: "temporary-hand" });
     }
 
     function handleKeyDown(event: KeyboardEvent) {
@@ -176,18 +162,42 @@ export function usePitchShortcuts({
         return;
       }
 
-      if (blocked) return;
+      if (blocked && !navigationOnly) return;
 
-      if (isSpaceKey(event)) {
+      if (isCanvasSpaceKey(event)) {
         event.preventDefault();
-
-        if (!spaceRestoreToolRef.current) {
-          const currentTool = canvasToolRef.current;
-          spaceRestoreToolRef.current = currentTool;
-          canvasToolRef.current = "hand";
-          setActiveCanvasTool("hand");
+        if (!temporaryHandActiveRef.current) {
+          temporaryHandActiveRef.current = true;
+          emitCanvasKeyboardIntent({ active: true, kind: "temporary-hand" });
         }
+        return;
+      }
 
+      const zoomCommand = canvasKeyboardZoomCommand(event);
+      if (zoomCommand) {
+        event.preventDefault();
+        emitCanvasKeyboardIntent({ command: zoomCommand, kind: "zoom" });
+        return;
+      }
+
+      const nextCanvasTool = !event.metaKey && !event.ctrlKey && !event.altKey
+        ? canvasToolFromShortcut(event.key)
+        : null;
+
+      if (nextCanvasTool) {
+        event.preventDefault();
+        setActiveCanvasTool(nextCanvasTool);
+        return;
+      }
+
+      if (navigationOnly) {
+        if (event.key === "ArrowLeft" || event.key === "<") {
+          event.preventDefault();
+          goToPreviousSlide();
+        } else if (event.key === "ArrowRight" || event.key === ">") {
+          event.preventDefault();
+          goToNextSlide();
+        }
         return;
       }
 
@@ -232,17 +242,6 @@ export function usePitchShortcuts({
       if ((event.key === "Delete" || event.key === "Backspace") && (selectedBlockIndex !== null || selectedBlockIndices.length > 0)) {
         event.preventDefault();
         deleteSelectedBlocks();
-        return;
-      }
-
-      const nextCanvasTool = !event.metaKey && !event.ctrlKey && !event.altKey
-        ? canvasToolFromShortcut(event.key)
-        : null;
-
-      if (nextCanvasTool) {
-        event.preventDefault();
-        canvasToolRef.current = nextCanvasTool;
-        setActiveCanvasTool(nextCanvasTool);
         return;
       }
 
@@ -335,6 +334,7 @@ export function usePitchShortcuts({
     isMobileSidebarOpen,
     isPresentationPreviewOpen,
     isTemplateModalOpen,
+    navigationOnly,
     nudgeSelectedBlocks,
     pasteCopiedBlock,
     pasteSlide,
@@ -346,8 +346,4 @@ export function usePitchShortcuts({
     undoLastChange,
     ungroupSelectedBlocks
   ]);
-}
-
-function isSpaceKey(event: KeyboardEvent) {
-  return event.code === "Space" || event.key === " " || event.key === "Spacebar";
 }

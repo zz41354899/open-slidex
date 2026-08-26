@@ -134,9 +134,15 @@ export type PitchWorkspaceCommands = {
 export type PitchWorkspaceView = {
   accessMode: "authenticated" | "guest";
   activeCanvasTool: CanvasTool;
+  /** Keeps navigation and playback available while disabling native slide/layer authoring. */
+  authoringDisabled?: boolean;
   canvasViewMode: CanvasViewMode;
   canvasShapeTool: CanvasShapeTool | null;
+  /** Unmounts expensive Canvas media while a dedicated playback surface owns rendering. */
+  canvasPreviewSuspended?: boolean;
   commentsEnabled: boolean;
+  /** Restricts the shared Header menu for document-specific export modes. */
+  exportFormats?: readonly ("html" | "mdx" | "pptx")[];
   exportInteraction?: "format-menu" | "split";
   headerBadge?: EditorHeaderBadge | null;
   headerBrand?: ReactNode;
@@ -156,9 +162,11 @@ export type PitchWorkspaceView = {
   isMobileInspectorOpen: boolean;
   isMobileSidebarOpen: boolean;
   inspectorExtension?: ReactNode;
+  /** Replaces the complete inspector surface for a dedicated document mode. */
+  inspectorOverride?: ReactNode;
   /** Resolves canonical local asset paths for the active editor runtime. */
   assetUrl?: (source: string) => string;
-  /** Local Workbench renders only root-confined assets/*.webp media. */
+  /** Local Workbench renders only policy-approved root-confined assets and safe HTTPS raster/video media. */
   localAssetsOnly?: boolean;
   /** Local Workbench enables chart animation only during an explicit replay. */
   localChartAnimationsActive?: boolean;
@@ -177,6 +185,8 @@ export type PitchWorkspaceView = {
   setIsExportMenuOpen: Dispatch<SetStateAction<boolean>>;
   setIsMobileInspectorOpen: Dispatch<SetStateAction<boolean>>;
   setIsMobileSidebarOpen: Dispatch<SetStateAction<boolean>>;
+  /** HTML source mode presents one active iframe-backed slide while retaining grid overview. */
+  singleSlideCanvas?: boolean;
 };
 
 export type PitchWorkspaceProps = {

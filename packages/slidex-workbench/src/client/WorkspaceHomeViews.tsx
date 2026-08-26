@@ -34,7 +34,7 @@ export function HomeView(props: {
       onClick: props.onTemplates
     },
     {
-      body: zh ? "支援 Base64 圖片 MDX 與完整專案封裝。" : "Import MDX with Base64 images or a complete project bundle.",
+      body: zh ? "匯入可編輯 MDX，或隔離播放含線上素材的 HTML。" : "Import editable MDX or play HTML with online resources in isolation.",
       icon: Upload,
       label: zh ? "匯入 OpenSlideX 簡報" : "Import OpenSlideX presentation",
       onClick: props.onImport

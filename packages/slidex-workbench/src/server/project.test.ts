@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import {
   access,
   mkdtemp,
@@ -11,6 +12,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { parseMotionDoc } from "@open-slidex/sdk";
 import { SlideXRevisionConflictError } from "@open-slidex/sdk/node";
 import sharp from "sharp";
 
@@ -250,6 +252,217 @@ test("Workbench project exports a just-pasted image as portable MDX while materi
     assert.doesNotMatch(exported, /data:image\/png;base64/i);
     assert.match(exported, /src="data:image\/webp;base64,/i);
     assert.doesNotMatch(exported, new RegExp(`src="assets/${assets[0]}"`));
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("Workbench project downloads the original HTML bytes", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-html-"));
+  try {
+    const html = Buffer.from("<!doctype html>\r\n<html><body><script>document.body.dataset.ok='1'</script></body></html>\r\n", "utf8");
+    const htmlSource = `# HTML source\n\n<Slide><HtmlEmbedBlock id="html" src="assets/original.html" x={0} y={0} w={100} h={100} /></Slide>\n`;
+    await writeFile(path.join(root, "presentation.mdx"), htmlSource, "utf8");
+    const project = new SlideXProject(root);
+    await project.prepare();
+    await writeFile(path.join(project.assetsRoot, "original.html"), html);
+
+    const result = await project.export({
+      fileName: "original",
+      format: "html",
+      overwrite: false,
+      source: htmlSource,
+      target: "download"
+    });
+    assert.ok("bytes" in result);
+    assert.deepEqual(result.bytes, html);
+    await assert.rejects(
+      project.export({
+        fileName: "original",
+        format: "pptx",
+        overwrite: false,
+        source: htmlSource,
+        target: "download"
+      }),
+      /HTML source presentations can export only HTML or MDX/i
+    );
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("Workbench project downloads original HTML bytes for mapped shared pages", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-mapped-html-"));
+  try {
+    const html = Buffer.from("<!doctype html>\n<html><body>Mapped</body></html>\n", "utf8");
+    const source = `# HTML source\n\n<Slide><HtmlEmbedBlock id="html-1" src="assets/original.html" sharedScene="html-original" page={1} x={0} y={0} w={100} h={100} /></Slide>\n\n<Slide><HtmlEmbedBlock id="html-2" src="assets/original.html" sharedScene="html-original" page={2} x={0} y={0} w={100} h={100} /></Slide>\n`;
+    await writeFile(path.join(root, "presentation.mdx"), source, "utf8");
+    const project = new SlideXProject(root);
+    await project.prepare();
+    await writeFile(path.join(project.assetsRoot, "original.html"), html);
+
+    const result = await project.export({ fileName: "mapped", format: "html", overwrite: false, source, target: "download" });
+    assert.ok("bytes" in result);
+    assert.deepEqual(result.bytes, html);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("untouched native HTML Text layers keep the original HTML bytes exact", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-untouched-html-text-"));
+  try {
+    const html = Buffer.from("<!doctype html>\r\n<html><body><h1>Original &amp;   copy</h1></body></html>\r\n", "utf8");
+    const source = `# HTML source
+
+<Slide>
+  <HtmlEmbedBlock id="html-1" src="assets/original.html" sharedScene="html-original" page={1} x={0} y={0} w={100} h={100} />
+  <Text id="html-text-1" htmlSourceOriginalText="Original &amp; copy" htmlSourcePage={1} htmlSourceSelector="html:nth-of-type(1) &gt; body:nth-of-type(1) &gt; h1:nth-of-type(1)" htmlSourceTag="h1" htmlSourceTextNode={0} x={5} y={5} w={40} h={10}>Original &amp; copy</Text>
+</Slide>
+`;
+    await writeFile(path.join(root, "presentation.mdx"), source, "utf8");
+    const project = new SlideXProject(root);
+    await project.prepare();
+    await writeFile(path.join(project.assetsRoot, "original.html"), html);
+
+    const result = await project.export({ fileName: "untouched", format: "html", overwrite: false, source, target: "download" });
+    assert.ok("bytes" in result);
+    assert.deepEqual(result.bytes, html);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("legacy Canvas Text overlays cannot override the canonical HTML source", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-native-html-text-"));
+  try {
+    const html = Buffer.from("<!doctype html>\r\n<html><body><h1>Original copy</h1><script>document.body.dataset.ok='1'</script></body></html>\r\n", "utf8");
+    const source = `# HTML source
+
+<Slide>
+  <HtmlEmbedBlock id="html-1" src="assets/original.html" sharedScene="html-original" page={1} x={0} y={0} w={100} h={100} />
+  <Text id="html-text-1" htmlSourceOriginalText="Original copy" htmlSourcePage={1} htmlSourceSelector="html:nth-of-type(1) &gt; body:nth-of-type(1) &gt; h1:nth-of-type(1)" htmlSourceTag="h1" htmlSourceTextNode={0} x={5} y={5} w={40} h={10}>Edited copy</Text>
+</Slide>
+`;
+    await writeFile(path.join(root, "presentation.mdx"), source, "utf8");
+    const project = new SlideXProject(root);
+    await project.prepare();
+    await writeFile(path.join(project.assetsRoot, "original.html"), html);
+
+    const result = await project.export({ fileName: "edited", format: "html", overwrite: false, source, target: "download" });
+    assert.ok("bytes" in result);
+    assert.deepEqual(
+      result.bytes,
+      html
+    );
+
+    const opened = await project.open();
+    const directEdit = "<!doctype html>\r\n<html><body><h1>Direct source edit</h1><script>document.body.dataset.ok='1'</script></body></html>\r\n";
+    const replaced = await project.replaceHtmlAsset({
+      expectedRevision: opened.revision,
+      html: directEdit,
+      source: "assets/original.html"
+    });
+    assert.doesNotMatch(replaced.document.source, /htmlSourceSelector|htmlSourceOriginalText/);
+    assert.match(replaced.source, /^assets\/source-[a-f0-9]{16}\.html$/);
+    const exported = await project.export({
+      fileName: "direct-source-edit",
+      format: "html",
+      htmlMode: "original",
+      overwrite: false,
+      source: replaced.document.source,
+      target: "download"
+    });
+    assert.ok("bytes" in exported);
+    assert.ok(exported.bytes);
+    assert.equal(exported.bytes.toString("utf8"), directEdit);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("Workbench project edits HTML through content-addressed revision-safe replacement", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-edit-html-"));
+  try {
+    const original = `<!doctype html><html><body><section class="gcard page" id="g1"></section><section class="gcard page" id="g2"></section></body></html>`;
+    const updated = `<!doctype html><html><body><section class="gcard page" id="g1">Edited</section><section class="gcard page" id="g2"></section><section class="gcard page" id="g3"></section></body></html>`;
+    const source = `# Editable HTML\n\n<Slide><HtmlEmbedBlock id="html-1" src="assets/original.html" sharedScene="html-original" page={1} /></Slide>\n\n<Slide><HtmlEmbedBlock id="html-2" src="assets/original.html" sharedScene="html-original" page={2} /></Slide>\n`;
+    await writeFile(path.join(root, "presentation.mdx"), source, "utf8");
+    const project = new SlideXProject(root);
+    await project.prepare();
+    await writeFile(path.join(project.assetsRoot, "original.html"), original, "utf8");
+    const opened = await project.open();
+
+    const result = await project.replaceHtmlAsset({ expectedRevision: opened.revision, html: updated, source: "assets/original.html" });
+    assert.notEqual(result.document.revision, opened.revision);
+    assert.match(result.source, /^assets\/source-[a-f0-9]{16}\.html$/);
+    assert.equal(parseMotionDoc(result.document.source).scenes.length, 3);
+    assert.equal(await readFile(path.join(root, result.source), "utf8"), updated);
+    await assert.rejects(access(path.join(project.assetsRoot, "original.html")));
+
+    const exported = await project.export({
+      fileName: "updated-original",
+      format: "html",
+      htmlMode: "original",
+      overwrite: false,
+      source: result.document.source,
+      target: "download"
+    });
+    assert.ok("bytes" in exported);
+    assert.deepEqual(exported.bytes, Buffer.from(updated, "utf8"));
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("concurrent identical HTML saves cannot delete the winning content-addressed asset", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-concurrent-html-"));
+  try {
+    const original = `<!doctype html><html><body><main data-slidex-page="1">Original</main></body></html>`;
+    const updated = `<!doctype html><html><body><main data-slidex-page="1">Updated</main></body></html>`;
+    const source = `# Concurrent HTML\n\n<Slide><HtmlEmbedBlock id="html-1" src="assets/original.html" page={1} /></Slide>\n`;
+    await writeFile(path.join(root, "presentation.mdx"), source, "utf8");
+    const project = new SlideXProject(root);
+    await project.prepare();
+    await writeFile(path.join(project.assetsRoot, "original.html"), original, "utf8");
+    const opened = await project.open();
+
+    const results = await Promise.allSettled([
+      project.replaceHtmlAsset({ expectedRevision: opened.revision, html: updated, source: "assets/original.html" }),
+      project.replaceHtmlAsset({ expectedRevision: opened.revision, html: updated, source: "assets/original.html" })
+    ]);
+    assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
+    assert.equal(results.filter((result) => result.status === "rejected").length, 1);
+
+    const saved = await project.open();
+    const htmlSource = String(parseMotionDoc(saved.source).scenes[0]?.blocks[0]?.props.src ?? "");
+    assert.match(htmlSource, /^assets\/source-[a-f0-9]{16}\.html$/);
+    assert.equal(await readFile(path.join(root, htmlSource), "utf8"), updated);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("saving unchanged HTML restores its missing content-addressed asset", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-restore-html-"));
+  try {
+    const html = `<!doctype html><html><body><main data-slidex-page="1">Restored</main></body></html>`;
+    const hash = createHash("sha256").update(html).digest("hex").slice(0, 16);
+    const htmlSource = `assets/source-${hash}.html`;
+    const source = `# Missing HTML\n\n<Slide><HtmlEmbedBlock id="html-1" src="${htmlSource}" page={1} /></Slide>\n`;
+    await writeFile(path.join(root, "presentation.mdx"), source, "utf8");
+    const project = new SlideXProject(root);
+    await project.prepare();
+    const opened = await project.open();
+
+    const result = await project.replaceHtmlAsset({
+      expectedRevision: opened.revision,
+      html,
+      source: htmlSource
+    });
+
+    assert.equal(result.source, htmlSource);
+    assert.equal(await readFile(path.join(root, htmlSource), "utf8"), html);
   } finally {
     await rm(root, { force: true, recursive: true });
   }

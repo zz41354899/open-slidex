@@ -25,6 +25,9 @@ export async function embedSlideXProjectMedia(
     });
     resolveInsideRoot(resolvedRoot, absolutePath);
     const mimeType = mediaMimeType(absolutePath);
+    // HTML stays as a real sibling asset. Encoding a complete document into
+    // MDX or another HTML file duplicates it and can inflate exports by 33%+.
+    if (mimeType === "text/html") continue;
     if (options.includeVideo === false && mimeType.startsWith("video/")) continue;
     const buffer = await readFile(absolutePath);
     const start = (match.index ?? 0) + match[0].lastIndexOf(mediaSource);
@@ -48,6 +51,8 @@ function mediaMimeType(filePath: string) {
   const mimeTypes: Record<string, string> = {
     ".avif": "image/avif",
     ".gif": "image/gif",
+    ".htm": "text/html",
+    ".html": "text/html",
     ".jpeg": "image/jpeg",
     ".jpg": "image/jpeg",
     ".mov": "video/quicktime",

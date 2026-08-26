@@ -99,10 +99,12 @@ type SourceBlockIdentityCandidate = {
 
 const sourceBlockTagNames = new Set([
   "Chart",
+  "HtmlEmbedBlock",
   "ImageBlock",
   "Shape",
   "Table",
   "Text",
+  "SvgBlock",
   "VideoBlock"
 ]);
 

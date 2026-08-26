@@ -17,7 +17,7 @@ export function WorkspaceLayerSidebar(props: WorkspaceLayerSidebarProps) {
   const { locale, tx } = usePitchI18n();
   const [isSlideLibraryOpen, setIsSlideLibraryOpen] = useState(false);
   const templateLibraryEnabled = view.accessMode === "authenticated";
-  const resolvedTemplateLibraryEnabled = view.templateLibraryEnabled ?? templateLibraryEnabled;
+  const resolvedTemplateLibraryEnabled = !view.authoringDisabled && (view.templateLibraryEnabled ?? templateLibraryEnabled);
 
   function addBlankSlide() {
     props.commands.insertSlideNearActive("after");
@@ -134,6 +134,7 @@ function LayerSidebarContent({
   return (
     <LayerSidebar
       activeSlideIndex={document.activeSlideIndex}
+      authoringDisabled={view.authoringDisabled === true}
       copySlide={commands.copySlide}
       deleteBlock={commands.deleteBlock}
       deleteSlide={commands.deleteSlide}

@@ -138,6 +138,9 @@ test("Workspace MCP prints user-level configuration and selects a presentation",
     assert.match(instructions, /open_slidex_read/);
     assert.match(instructions, /expectedRevision/);
     assert.match(instructions, /open_slidex_edit/);
+    assert.doesNotMatch(instructions, /open_slidex_html/);
+    assert.match(instructions, /SvgBlock/);
+    assert.match(instructions, /opaque-origin/);
     assert.match(instructions, /rendered QA/);
     assert.doesNotMatch(instructions, /30 style/i);
     assert.match(instructions, /\.$/);
@@ -217,6 +220,125 @@ test("Workspace MCP lists a not-yet-created starter workspace without failing", 
   }
 });
 
+test("MCP reads, replaces, and creates browser-native HTML presentations with revision safety", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-html-mcp-"));
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const server = createOpenSlideXMcpServer(root);
+  const client = new Client({ name: "open-slidex-html-test", version: "1.0.0" });
+  const originalSource = "assets/source-original.html";
+  const originalHtml = `<!doctype html><html><body><section class="gcard page">One</section><section class="gcard page">Two</section></body></html>`;
+
+  try {
+    await mkdir(path.join(root, "assets"), { recursive: true });
+    await mkdir(path.join(root, ".agents", "skills", "slidex-html-authoring"), { recursive: true });
+    await writeFile(
+      path.join(root, ".agents", "skills", "slidex-html-authoring", "SKILL.md"),
+      "---\nname: slidex-html-authoring\ndescription: Browser-native HTML guidance.\n---\n",
+      "utf8"
+    );
+    await writeFile(path.join(root, originalSource), originalHtml, "utf8");
+    await writeFile(path.join(root, "presentation.mdx"), `# HTML benchmark
+
+<Slide slideTransition="none"><HtmlEmbedBlock id="page-1" src="${originalSource}" sharedScene="benchmark" page={1} x={0} y={0} w={100} h={100} /></Slide>
+
+<Slide slideTransition="none"><HtmlEmbedBlock id="page-2" src="${originalSource}" sharedScene="benchmark" page={2} x={0} y={0} w={100} h={100} /></Slide>
+`, "utf8");
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+    const listed = structured(await client.callTool({
+      arguments: { sourceFormat: "html" },
+      name: "open_slidex_read"
+    }));
+    const htmlAssets = listed.htmlAssets as Array<Record<string, unknown>>;
+    assert.deepEqual((listed.guidance as { recommended?: unknown[] }).recommended, ["slidex-html-authoring"]);
+    assert.equal(htmlAssets.length, 1);
+    assert.equal(htmlAssets[0]?.source, originalSource);
+    assert.deepEqual(htmlAssets[0]?.pages, [1, 2]);
+    assert.deepEqual(htmlAssets[0]?.slideIndices, [0, 1]);
+    assert.equal(htmlAssets[0]?.status, "ready");
+    assert.deepEqual(htmlAssets[0]?.networkResources, {
+      origins: [],
+      referenceCount: 0,
+      requiresNetwork: false
+    });
+
+    const firstChunk = structured(await client.callTool({
+      arguments: { htmlMaxChars: 1_000, sourceFormat: "html" },
+      name: "open_slidex_read"
+    }));
+    assert.equal(firstChunk.html, originalHtml);
+    assert.equal(firstChunk.nextCursor, undefined);
+    assert.match(String(firstChunk.contentHash), /^[a-f0-9]{64}$/);
+
+    const replacementHtml = `<!doctype html><html><body>
+      <section class="gcard page">Alpha</section>
+      <section class="gcard page">Beta</section>
+      <section class="gcard page">Gamma</section>
+    </body></html>`;
+    const replaced = structured(await client.callTool({
+      arguments: {
+        expectedRevision: listed.revision,
+        htmlSource: originalSource,
+        source: replacementHtml,
+        target: "html"
+      },
+      name: "open_slidex_edit"
+    }));
+    assert.equal(replaced.pageCount, 3);
+    assert.match(String(replaced.source), /^assets\/source-[a-f0-9]{16}\.html$/);
+    assert.notEqual(replaced.revision, listed.revision);
+    const replacedDocument = await readFile(path.join(root, "presentation.mdx"), "utf8");
+    assert.equal((replacedDocument.match(/<Slide\b/g) ?? []).length, 3);
+    assert.equal(await readFile(path.join(root, String(replaced.source)), "utf8"), replacementHtml);
+    await assert.rejects(readFile(path.join(root, originalSource), "utf8"), /ENOENT/);
+
+    const stale = await client.callTool({
+      arguments: {
+        expectedRevision: listed.revision,
+        htmlSource: replaced.source,
+        source: replacementHtml.replace("Alpha", "Stale"),
+        target: "html"
+      },
+      name: "open_slidex_edit"
+    });
+    assert.equal(stale.isError, true);
+    assert.equal(structured(stale).code, "revision_conflict");
+
+    const rejectedRelative = await client.callTool({
+      arguments: {
+        expectedRevision: replaced.revision,
+        source: `<!doctype html><html><body><img src="./external.svg"></body></html>`,
+        target: "html"
+      },
+      name: "open_slidex_edit"
+    });
+    assert.equal(rejectedRelative.isError, true);
+    assert.match(String(structured(rejectedRelative).message), /relative or unsupported resource/i);
+
+    const created = structured(await client.callTool({
+      arguments: {
+        expectedRevision: replaced.revision,
+        source: `<!doctype html><html><head><script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script></head><body><h1>AI authored HTML</h1><img src="https://images.unsplash.com/photo.jpg"><video src="https://media.example.com/demo.mp4"></video><script>document.body.dataset.ready='yes'</script></body></html>`,
+        target: "html",
+        title: "AI HTML deck"
+      },
+      name: "open_slidex_edit"
+    }));
+    assert.equal(created.title, "AI HTML deck");
+    assert.equal(created.pageCount, 1);
+    assert.deepEqual(created.networkResources, {
+      origins: ["https://cdn.jsdelivr.net", "https://images.unsplash.com", "https://media.example.com"],
+      referenceCount: 3,
+      requiresNetwork: true
+    });
+    assert.match(await readFile(path.join(root, "presentation.mdx"), "utf8"), /^# AI HTML deck/);
+  } finally {
+    await client.close().catch(() => undefined);
+    await server.close().catch(() => undefined);
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
 test("MCP performs a real open, CAS edit, render, asset import, and knowledge query", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-mcp-"));
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -257,7 +379,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     }));
     assert.match(String(opened.revision), /^sha256:/);
     const authoringContract = opened.authoringContract as Record<string, unknown>;
-    assert.deepEqual(authoringContract.allowed, ["Text", "ImageBlock", "VideoBlock", "Chart", "Table", "Shape"]);
+    assert.deepEqual(authoringContract.allowed, ["Text", "ImageBlock", "VideoBlock", "SvgBlock", "Chart", "Table", "Shape"]);
     assert.deepEqual(authoringContract.removed, ["Card", "Group", "Icon", "Metric", "Notes", "Stack", "Title"]);
 
     const importedPptx = structured(await client.callTool({
@@ -367,7 +489,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     const guidance = context.guidance as Record<string, unknown>;
     assert.equal(guidance.mode, "manifest");
     assert.equal(guidance.intent, "redesign");
-    assert.equal((guidance.skills as unknown[]).length, 5);
+    assert.equal((guidance.skills as unknown[]).length, 6);
     assert.equal((guidance.recommended as unknown[]).length, 4);
     const knowledge = context.knowledge as Record<string, unknown>;
     const results = knowledge.results as Array<Record<string, unknown>>;

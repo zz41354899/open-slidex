@@ -80,10 +80,10 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
   const chooseImportFile = useCallback((file?: File) => {
     setImportError("");
     if (!file) return;
-    const extension = file.name.toLowerCase().match(/\.(mdx|slidex|zip)$/)?.[1];
+    const extension = file.name.toLowerCase().match(/\.(mdx|html)$/)?.[1];
     if (!extension) {
       setImportFile(undefined);
-      setImportError(zh ? "只支援 .mdx、.zip 或 .slidex。" : "Use an .mdx, .zip, or .slidex file.");
+      setImportError(zh ? "只支援 .mdx 或 .html。" : "Use an .mdx or .html file.");
       return;
     }
     const maximumBytes = 50 * 1024 * 1024;

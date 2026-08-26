@@ -3,8 +3,10 @@ import { useEffect, useRef, useState, type ReactNode, type RefObject } from "rea
 type ViewportDeferredPreviewProps = {
   children: ReactNode;
   eager?: boolean;
+  renderWhenVisible?: boolean;
   rootMargin?: string;
   rootRef?: RefObject<Element | null>;
+  suspended?: boolean;
 };
 
 /**
@@ -15,13 +17,19 @@ type ViewportDeferredPreviewProps = {
 export function ViewportDeferredPreview({
   children,
   eager = false,
+  renderWhenVisible = true,
   rootMargin = "480px 0px",
-  rootRef
+  rootRef,
+  suspended = false
 }: ViewportDeferredPreviewProps) {
   const frameRef = useRef<HTMLDivElement | null>(null);
   const [shouldRender, setShouldRender] = useState(eager);
 
   useEffect(() => {
+    if (suspended || !renderWhenVisible) {
+      setShouldRender(false);
+      return;
+    }
     if (eager) {
       setShouldRender(true);
       return;
@@ -39,15 +47,17 @@ export function ViewportDeferredPreview({
     );
     observer.observe(frame);
     return () => observer.disconnect();
-  }, [eager, rootMargin, rootRef]);
+  }, [eager, renderWhenVisible, rootMargin, rootRef, suspended]);
+
+  const renderPreview = !suspended && (eager || (renderWhenVisible && shouldRender));
 
   return (
     <div
       className="absolute inset-0"
-      data-viewport-preview-rendered={shouldRender ? "true" : "false"}
+      data-viewport-preview-rendered={renderPreview ? "true" : "false"}
       ref={frameRef}
     >
-      {shouldRender ? children : null}
+      {renderPreview ? children : null}
     </div>
   );
 }

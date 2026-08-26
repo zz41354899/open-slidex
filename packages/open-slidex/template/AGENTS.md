@@ -20,8 +20,9 @@ Never create or use an outer `presentation.mdx`.
 ## MotionDoc contract
 
 - Every visible object must be a native, serializable MotionDoc layer.
-- The only visual component tags are `Text`, `ImageBlock`, `VideoBlock`,
-  `Chart`, `Table`, and `Shape`.
+- The native visual component tags are `Text`, `ImageBlock`, `VideoBlock`,
+  `SvgBlock`, `Chart`, `Table`, and `Shape`. Workspace HTML imports may also
+  contain the generated, non-authorable `HtmlEmbedBlock` wrapper.
 - `Card`, `Metric`, `Stack`, `Group`, `Title`, `Icon`, and `Notes` are removed
   components. They are invalid and must not be authored, parsed, migrated
   silently, or retained for compatibility. Rebuild visible meaning from native
@@ -49,6 +50,12 @@ Never create or use an outer `presentation.mdx`.
   composition principles, never sample claims.
 - Put user notes, documents, datasets, and research under the selected deck's
   `knowledge/`. Search first, then read only the returned source resources.
+- For browser-native HTML, load `slidex-html-authoring`. Use
+  `open_slidex_read` with `sourceFormat: "html"` to list or chunk-read the
+  canonical source, then `open_slidex_edit` with `target: "html"` and the latest
+  revision to create or replace it. Inline resources and HTTP(S) libraries,
+  fonts, images, media, frames, workers, and connections run in an opaque-origin
+  sandbox; unresolved local sidecars do not. Never author `HtmlEmbedBlock`.
 - Submit one complete deck or one complete slide to `open_slidex_edit` with the
   latest revision. Patch a rejected candidate from its node-specific findings.
 - Use `open_slidex_review` only for review-only work. An accepted edit already

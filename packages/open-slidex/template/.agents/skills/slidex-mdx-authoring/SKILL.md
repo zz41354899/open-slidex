@@ -12,20 +12,25 @@ for a focused edit.
 ## Load only what the task needs
 
 - Before emitting MDX, read [the MotionDoc contract](references/motiondoc-contract.md).
-- For images, video, charts, tables, or imported data, also read
+- For images, video, SVG scenes, charts, tables, or imported data, also read
   [media and data](references/media-and-data.md).
 - For a full creation or redesign, activate `slidex-deck-design` before writing.
 
 ## Non-negotiable rules
 
-- Author only `Text`, `ImageBlock`, `VideoBlock`, `Chart`, `Table`, and `Shape`.
+- Author only `Text`, `ImageBlock`, `VideoBlock`, `SvgBlock`, `Chart`, `Table`, and `Shape`.
 - Never emit `Card`, `Metric`, `Stack`, `Group`, `Title`, `Icon`, or `Notes`.
 - Never add imports, exports, scripts, handlers, raw HTML, visible Markdown,
   arbitrary JSX, or executable JavaScript.
+- Never author `HtmlEmbedBlock`. Use `slidex-html-authoring` with
+  `open_slidex_read` and `open_slidex_edit` for browser-native HTML; the server
+  maintains the generated wrapper separately from native MDX.
 - Give every visible layer a stable unique `id` and explicit percentage
   `x`, `y`, `w`, and `h`. Use points for `fontSize`.
 - Keep media portable: use relative `assets/...` paths or verified HTTPS media.
   Never persist Base64, blob URLs, invented URLs, or absolute local paths.
+- Keep `SvgBlock` sources under verified `assets/*.svg`. Reuse the same source
+  for every layer in one `sharedScene`.
 
 ## Edit transaction
 

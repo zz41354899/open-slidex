@@ -29,24 +29,29 @@ import {
   validateOpenSlideXLocalMedia,
   type SlideXDocument
 } from "@open-slidex/sdk";
+import { assertSafeMotionDocSvg } from "@/core/motion-doc/domain/svgPolicy";
+import { htmlPresentationAsset } from "@/core/motion-doc/domain/htmlPresentation";
 import {
   exportSlideXDocument,
   importOpenSlideXImageAsset,
   importOpenSlideXVideoAsset,
+  renderSlideXHtmlThumbnail,
   renderSlideXDocument,
   resolveInsideRoot,
   SlideXFileDocumentAdapter,
   SlideXRevisionConflictError
 } from "@open-slidex/sdk/node";
 
-import { extractEmbeddedImageAssets } from "./workspaceImport";
+import { analyzeHtmlPresentation, assertSandboxedHtml } from "./htmlImportPolicy";
+import { createHtmlPresentationMdx, extractEmbeddedImageAssets, MAX_WORKSPACE_IMPORT_FILE_BYTES } from "./workspaceImport";
 import { renderOfficialTemplateCover } from "./templateCover";
 
 export type ProjectSnapshot = ReturnType<SlideXProject["snapshot"]>;
+const HTML_THUMBNAIL_RENDER_VERSION = "v3";
 
 export class OpenSlideXLocalMediaError extends Error {
   constructor(readonly issues: ReturnType<typeof validateOpenSlideXLocalMedia>["issues"]) {
-    super("OpenSlideX local decks allow imported assets/*.webp or complete HTTPS media URLs.");
+    super("OpenSlideX local decks allow typed assets in assets/ and complete HTTPS raster or video media URLs.");
     this.name = "OpenSlideXLocalMediaError";
   }
 }
@@ -58,6 +63,8 @@ export class SlideXProject {
   readonly projectId: string;
   readonly root: string;
   readonly stateRoot: string;
+  private readonly htmlThumbnailRenders = new Map<string, Promise<Buffer>>();
+  private htmlThumbnailRenderQueue: Promise<void> = Promise.resolve();
 
   constructor(root: string) {
     this.root = path.resolve(root);
@@ -174,6 +181,25 @@ export class SlideXProject {
   async importAsset(file: File, expectedRevision: string) {
     await this.assertRevision(expectedRevision);
     const bytes = new Uint8Array(await file.arrayBuffer());
+    if (isSvgUpload(file)) {
+      if (!bytes.byteLength || bytes.byteLength > 10 * 1024 * 1024) {
+        throw new Error("SVG assets must be between 1 byte and 10 MB.");
+      }
+      let source: string;
+      try {
+        source = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+      } catch {
+        throw new Error("SVG assets must use UTF-8 encoding.");
+      }
+      assertSafeMotionDocSvg(source);
+      const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
+      const base = safeExportName(file.name.replace(/\.svg$/i, "")) || "scene";
+      const name = `${base.slice(0, 56)}-${hash}.svg`;
+      await writeFile(path.join(this.assetsRoot, name), bytes, { flag: "wx" }).catch(async (error: NodeJS.ErrnoException) => {
+        if (error.code !== "EEXIST") throw error;
+      });
+      return { bytes: bytes.byteLength, mimeType: "image/svg+xml", name, source: `assets/${name}`, usedBy: [] };
+    }
     if (isMp4Upload(file)) {
       const asset = await importOpenSlideXVideoAsset({
         bytes,
@@ -219,6 +245,68 @@ export class SlideXProject {
     }
   }
 
+  async replaceHtmlAsset(input: {
+    expectedRevision: string;
+    html: string;
+    source: string;
+  }) {
+    const current = await this.assertRevision(input.expectedRevision);
+    const fromName = assetName(input.source);
+    if (!/\.html?$/i.test(fromName)) throw badRequest("Only an imported HTML source can be edited here.");
+    if (!input.html || Buffer.byteLength(input.html, "utf8") > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
+      throw Object.assign(new Error("The HTML source must be between 1 byte and 50 MB."), { status: 413 });
+    }
+    assertSandboxedHtml(input.html);
+    const document = parseMotionDoc(current.source);
+    const referenced = document.scenes.some((scene) => scene.blocks.some(
+      (block) => block.type === "HtmlEmbedBlock" && block.props.src === input.source
+    ));
+    if (!referenced) throw badRequest("The selected HTML source is no longer referenced by presentation.mdx.");
+
+    const bytes = Buffer.from(input.html, "utf8");
+    const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
+    const nextName = `source-${hash}.html`;
+    const nextSource = `assets/${nextName}`;
+    const pureHtmlSource = originalHtmlAsset(document) === input.source;
+    const pages = analyzeHtmlPresentation(input.html);
+    if (nextSource === input.source) {
+      await writeFile(resolveInsideRoot(this.assetsRoot, nextName), bytes, { flag: "wx" }).catch(async (error: NodeJS.ErrnoException) => {
+        if (error.code !== "EEXIST") throw error;
+      });
+      const nextDocument = pureHtmlSource
+        ? await this.adapter.save({
+            expectedRevision: input.expectedRevision,
+            source: createHtmlPresentationMdx(document.title, nextSource, hash, pages),
+            title: document.title
+          })
+        : current;
+      return { document: this.snapshot(nextDocument), source: nextSource };
+    }
+
+    const nextPath = resolveInsideRoot(this.assetsRoot, nextName);
+    await writeFile(nextPath, bytes, { flag: "wx" }).catch(async (error: NodeJS.ErrnoException) => {
+      if (error.code !== "EEXIST") throw error;
+    });
+    try {
+      const nextDocument = pureHtmlSource
+        ? await this.adapter.save({
+            expectedRevision: input.expectedRevision,
+            source: createHtmlPresentationMdx(document.title, nextSource, hash, pages),
+            title: document.title
+          })
+        : await this.adapter.edit(input.expectedRevision, [
+            { from: input.source, to: nextSource, type: "asset.repath" }
+          ]);
+      await unlink(resolveInsideRoot(this.assetsRoot, fromName)).catch(() => undefined);
+      return { document: this.snapshot(nextDocument), source: nextSource };
+    } catch (error) {
+      // The path is content-addressed and may already have been committed by a
+      // concurrent save with identical HTML. Removing it here can leave the
+      // winning document revision pointing at a missing canonical asset.
+      throw error;
+    }
+  }
+
   async deleteAsset(source: string, expectedRevision: string) {
     const name = assetName(source);
     const document = await this.adapter.open();
@@ -242,11 +330,54 @@ export class SlideXProject {
 
   async readAsset(name: string) {
     const safeName = assetName(`assets/${name}`);
-    return readFile(resolveInsideRoot(this.assetsRoot, safeName));
+    try {
+      return await readFile(resolveInsideRoot(this.assetsRoot, safeName));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        throw Object.assign(new Error("The requested local asset was not found."), { status: 404 });
+      }
+      throw error;
+    }
   }
 
   assetMimeType(name: string) {
     return assetMimeType(assetName(`assets/${name}`));
+  }
+
+  async renderHtmlThumbnail(source: string, page: number) {
+    const name = assetName(source);
+    if (!/\.html?$/i.test(name)) throw badRequest("HTML thumbnails require an imported HTML source.");
+    if (!Number.isInteger(page) || page < 1 || page > 200) throw badRequest("HTML thumbnail page must be between 1 and 200.");
+    const bytes = await this.readAsset(name);
+    const html = bytes.toString("utf8");
+    assertSandboxedHtml(html);
+    const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 24);
+    const cacheRoot = path.join(this.stateRoot, "html-thumbnails", HTML_THUMBNAIL_RENDER_VERSION, hash);
+    const outputPath = path.join(cacheRoot, `page-${page}.png`);
+    const cached = await stat(outputPath).catch(() => null);
+    if (cached?.isFile()) return readFile(outputPath);
+
+    const key = `${hash}:${page}`;
+    const existing = this.htmlThumbnailRenders.get(key);
+    if (existing) return existing;
+    const render = this.htmlThumbnailRenderQueue.then(async () => {
+      await mkdir(cacheRoot, { recursive: true });
+      const temporaryPath = `${outputPath}.${process.pid}.${Date.now()}.tmp.png`;
+      try {
+        await renderSlideXHtmlThumbnail({ html, outputPath: temporaryPath, page });
+        await rename(temporaryPath, outputPath);
+        return readFile(outputPath);
+      } finally {
+        await rm(temporaryPath, { force: true }).catch(() => undefined);
+      }
+    });
+    this.htmlThumbnailRenderQueue = render.then(() => undefined, () => undefined);
+    this.htmlThumbnailRenders.set(key, render);
+    try {
+      return await render;
+    } finally {
+      if (this.htmlThumbnailRenders.get(key) === render) this.htmlThumbnailRenders.delete(key);
+    }
   }
 
   async writeCurrent(input: {
@@ -294,6 +425,7 @@ export class SlideXProject {
   async export(input: {
     fileName: string;
     format: "html" | "mdx" | "pptx";
+    htmlMode?: "original" | "player";
     overwrite: boolean;
     source: string;
     target: "download" | "dist";
@@ -305,6 +437,20 @@ export class SlideXProject {
     const source = await this.importEmbeddedImageAssets(input.source);
     assertOpenSlideXLocalMedia(source);
     const fileName = safeExportName(input.fileName);
+    const parsedDocument = parseMotionDoc(source);
+    const htmlSource = originalHtmlAsset(parsedDocument);
+    if (htmlSource && input.format === "pptx") {
+      throw badRequest("HTML source presentations can export only HTML or MDX.");
+    }
+    const originalHtml = input.format === "html" && input.htmlMode !== "player" ? htmlSource : undefined;
+    if (originalHtml) {
+      const bytes = await this.readAsset(originalHtml.slice("assets/".length));
+      if (input.target === "download") return { bytes, output: `${fileName}.html` };
+      const outputPath = path.join(this.distRoot, `${fileName}.html`);
+      if (!input.overwrite && await exists(outputPath)) throw new Error(`dist/${fileName}.html already exists.`);
+      await writeFile(outputPath, bytes);
+      return { output: `dist/${fileName}.html` };
+    }
     const root =
       input.target === "download"
         ? await mkdtemp(path.join(os.tmpdir(), "slidex-export-"))
@@ -331,6 +477,15 @@ export class SlideXProject {
     const embedded = extractEmbeddedImageAssets(source);
     const commands = [];
     for (const asset of embedded.assets) {
+      if (asset.mediaType === "text/html" || asset.mediaType === "image/svg+xml") {
+        await writeFile(path.join(this.assetsRoot, asset.fileName), asset.bytes, { flag: "wx" }).catch(async (error: NodeJS.ErrnoException) => {
+          if (error.code !== "EEXIST") throw error;
+        });
+        if (asset.source !== `assets/${asset.fileName}`) {
+          commands.push({ from: asset.source, to: `assets/${asset.fileName}`, type: "asset.repath" } as const);
+        }
+        continue;
+      }
       const stored = await importOpenSlideXImageAsset({
         bytes: asset.bytes,
         fileName: asset.fileName,
@@ -378,6 +533,14 @@ export class SlideXProject {
   }
 }
 
+function originalHtmlAsset(document: ReturnType<typeof parseMotionDoc>) {
+  return htmlPresentationAsset(document);
+}
+
+function badRequest(message: string) {
+  return Object.assign(new Error(message), { status: 400 });
+}
+
 function assertOpenSlideXLocalMedia(source: string) {
   const result = validateOpenSlideXLocalMedia(source);
   if (!result.isValid) throw new OpenSlideXLocalMediaError(result.issues);
@@ -395,17 +558,18 @@ export function safeExportName(value: unknown) {
 }
 
 function assetName(source: string) {
-  if (!/^assets\/[A-Za-z0-9._-]+\.(?:webp|mp4)$/i.test(source)) {
-    throw new Error("Asset paths must use assets/<name>.webp or assets/<name>.mp4.");
+  if (!/^assets\/[A-Za-z0-9._-]+\.(?:webp|mp4|svg|html?)$/i.test(source)) {
+    throw new Error("Asset paths must use a supported file in assets/.");
   }
   return source.slice("assets/".length);
 }
 
 function normalizedAssetName(value: string) {
   const name = value.startsWith("assets/") ? value.slice(7) : value;
-  const extension = path.extname(name).toLowerCase() === ".mp4" ? ".mp4" : ".webp";
+  const requestedExtension = path.extname(name).toLowerCase();
+  const extension = [".mp4", ".svg", ".html", ".htm"].includes(requestedExtension) ? requestedExtension : ".webp";
   const base = name
-    .replace(/\.(?:webp|mp4)$/i, "")
+    .replace(/\.(?:webp|mp4|svg|html?)$/i, "")
     .normalize("NFKD")
     .replace(/[^A-Za-z0-9._-]+/g, "-")
     .replace(/^-+|-+$/g, "")
@@ -415,15 +579,23 @@ function normalizedAssetName(value: string) {
 }
 
 function isAssetFileName(value: string) {
-  return /^[A-Za-z0-9._-]+\.(?:webp|mp4)$/i.test(value);
+  return /^[A-Za-z0-9._-]+\.(?:webp|mp4|svg|html?)$/i.test(value);
 }
 
 function assetMimeType(value: string) {
-  return value.toLowerCase().endsWith(".mp4") ? "video/mp4" : "image/webp";
+  const extension = path.extname(value).toLowerCase();
+  if (extension === ".mp4") return "video/mp4";
+  if (extension === ".svg") return "image/svg+xml";
+  if (extension === ".html" || extension === ".htm") return "text/html; charset=utf-8";
+  return "image/webp";
 }
 
 function isMp4Upload(file: File) {
   return file.type.toLowerCase().split(";", 1)[0] === "video/mp4" || file.name.toLowerCase().endsWith(".mp4");
+}
+
+function isSvgUpload(file: File) {
+  return file.type.toLowerCase().split(";", 1)[0] === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg");
 }
 
 function exists(filePath: string) {

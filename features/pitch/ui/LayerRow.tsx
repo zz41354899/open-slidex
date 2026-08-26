@@ -1,5 +1,5 @@
 
-import { ChevronUp, ChevronDown, GripVertical, Image as ImageIcon, Link2, Lock, MousePointer2, PlaySquare, Shapes, Table2, Trash2 } from "lucide-react";
+import { ChevronUp, ChevronDown, CodeXml, FileCode2, GripVertical, Image as ImageIcon, Link2, Lock, MousePointer2, PlaySquare, Shapes, Table2, Trash2 } from "lucide-react";
 import { useState, type MouseEvent, type PointerEvent } from "react";
 import type { MotionDocBlock } from "@/core/motion-doc/domain/motionDocTypes";
 import { isPositionLocked } from "@/features/pitch/application/motionDocCommands";
@@ -18,6 +18,8 @@ export function BlockLayerIcon({ block, className = "" }: { block: MotionDocBloc
   if (block.type === "Text") return <LayerTextIcon className={className} label={block.props.role === "title" ? "H" : "T"} />;
   if (block.type === "ImageBlock") return <ImageIcon className={className} size={12} />;
   if (block.type === "VideoBlock") return <PlaySquare className={className} size={12} />;
+  if (block.type === "SvgBlock") return <CodeXml className={className} size={12} />;
+  if (block.type === "HtmlEmbedBlock") return <FileCode2 className={className} size={12} />;
   if (block.type === "Shape") return <Shapes className={className} size={12} />;
   if (block.type === "Table") return <Table2 className={className} size={12} />;
 

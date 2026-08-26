@@ -1,18 +1,21 @@
 
-import { Grid2X2, Rows3 } from "lucide-react";
+import { Grid2X2, RectangleHorizontal, Rows3 } from "lucide-react";
 import type { CanvasViewMode } from "@/features/pitch/application/canvasViewMode";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 
 export function CanvasViewSwitch({
   mode,
-  onChange
+  onChange,
+  singleSlidePreview = false
 }: {
   mode: CanvasViewMode;
   onChange: (mode: CanvasViewMode) => void;
+  singleSlidePreview?: boolean;
 }) {
   const { tx } = usePitchI18n();
-  const slideLabel = tx("Vertical slide view");
+  const slideLabel = tx(singleSlidePreview ? "Single slide view" : "Vertical slide view");
   const gridLabel = tx("Slide grid view");
+  const SlideIcon = singleSlidePreview ? RectangleHorizontal : Rows3;
 
   return (
     <div aria-label={tx("Canvas view")} className="flex items-center rounded-lg border border-white/[0.08] bg-black/20 p-0.5" role="group">
@@ -25,7 +28,7 @@ export function CanvasViewSwitch({
         title={slideLabel}
         type="button"
       >
-        <Rows3 size={14} />
+        <SlideIcon size={14} />
       </button>
       <button
         aria-label={gridLabel}

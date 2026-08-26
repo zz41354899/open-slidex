@@ -80,8 +80,11 @@ or CLI bridge.
 
 Generated MCP configuration uses `open-slidex@latest`, so a client restart
 loads the newest published server without editing the config. Workspace scope
-exposes six workflow tools: workspace selection, progressive source/resource
-read, PPTX source import, media, review, and edit. Source import inspects PPTX
+exposes seven workflow tools: workspace selection, progressive source/resource
+read, browser-native HTML, PPTX source import, media, review, and edit.
+`open_slidex_html` preserves canonical HTML bytes and reports online
+dependencies while HTTP(S) libraries, styles, fonts, images, media, frames,
+workers, and connections run in an opaque-origin sandbox. Source import inspects PPTX
 text geometry, typography hints, reading order, and embedded images safely;
 `import-media` converts supported images to portable WebP and returns the
 original frame geometry for native `ImageBlock` layers. Narrative and visual

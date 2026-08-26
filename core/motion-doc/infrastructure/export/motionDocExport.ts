@@ -45,6 +45,8 @@ export const MOTION_DOC_PNG_WIDTH = MOTION_DOC_CANVAS_WIDTH;
 type RenderSceneHtmlOptions = {
   active?: boolean;
   rasterMode?: boolean;
+  sharedHtmlOverlay?: boolean;
+  sharedSvgOverlay?: boolean;
   slideIndex?: number;
 };
 
@@ -63,8 +65,11 @@ export function buildMotionDocHtml(source: string, customTitle?: string) {
   const document = parseMotionDoc(source);
   const displayTitle = customTitle || document.title;
   const slidesHtml = document.scenes
-    .map((scene, slideIndex) => renderSceneHtml(scene, { slideIndex }))
+    .map((scene, slideIndex) => renderSceneHtml(scene, { sharedHtmlOverlay: true, sharedSvgOverlay: true, slideIndex }))
     .join("\n");
+  const sharedHtml = renderSharedHtmlScenes(document.scenes);
+  const sharedSvgHtml = renderSharedSvgScenes(document.scenes);
+  const slideDots = document.scenes.map((scene, slideIndex) => `<button aria-label="${escapeAttribute(`Go to slide ${slideIndex + 1}: ${sceneLabel(scene)}`)}" class="slide-dot-button" data-slide-target="${slideIndex}" type="button"><span class="slide-dot-label">${escapeHtml(sceneLabel(scene))}</span><span class="slide-dot-mark"></span></button>`).join("");
   const fontStylesheetLinks = motionDocFontStylesheetLinks(document);
 
   return `<!DOCTYPE html>
@@ -78,15 +83,17 @@ export function buildMotionDocHtml(source: string, customTitle?: string) {
     <style>${motionDocExportStyles}</style>
   </head>
   <body>
-    <script id="slidex-motion-doc-source" nonce="${security.nonce}" type="application/json">${serializeMotionDocSource(source)}</script>
     <main class="player" data-slide-count="${document.scenes.length}">
       <div class="stage">
         <div class="viewport" aria-live="polite">
           <div class="frame">
             ${slidesHtml}
+            ${sharedHtml}
+            ${sharedSvgHtml}
           </div>
         </div>
       </div>
+      <nav class="slide-dots" aria-label="Slide navigator">${slideDots}</nav>
       <nav class="controls" aria-label="Slide controls">
         <div class="button-group">
           <button class="control-button" data-action="prev" type="button" aria-label="Previous slide" title="Previous"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
@@ -97,6 +104,7 @@ export function buildMotionDocHtml(source: string, customTitle?: string) {
         <div class="counter" aria-hidden="true"><span data-current>1</span> / <span data-total>${document.scenes.length}</span></div>
         <div class="progress" aria-hidden="true"><span></span></div>
         <div class="button-group">
+          <button class="control-button" data-action="theme" type="button" aria-label="Toggle player theme" title="Theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg></button>
           <button class="control-button" data-action="fullscreen" type="button" aria-label="Toggle fullscreen" title="Fullscreen"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
         </div>
       </nav>
@@ -104,6 +112,14 @@ export function buildMotionDocHtml(source: string, customTitle?: string) {
     <script nonce="${security.nonce}">${makeMotionDocExportRuntime()}</script>
   </body>
 </html>`;
+}
+
+function sceneLabel(scene: MotionDocScene) {
+  const title = scene.blocks.find((block) => (
+    block.type === "heading" || (block.type === "Text" && block.props.role === "title")
+  ));
+  const text = title && "text" in title ? title.text.replace(/\s+/g, " ").trim() : "";
+  return text ? text.slice(0, 52) : "Slide";
 }
 
 export function buildMotionDocPreviewHtml(
@@ -283,26 +299,32 @@ export function buildMotionDocPreviewHtml(
     .replace("</body>", `${previewRuntime}</body>`);
 }
 
-function serializeMotionDocSource(source: string) {
-  return JSON.stringify(source).replaceAll("<", "\\u003c");
-}
-
 function exportRuntimeSecurity(source: string) {
   // The downloadable file is static: an unpredictable nonce would only make
-  // otherwise identical exports differ. The MotionDoc source is serialized
-  // safely, so a stable per-source nonce retains the CSP boundary while making
-  // HTML output reproducible.
+  // otherwise identical exports differ. A stable per-source nonce retains the
+  // CSP boundary while making HTML output reproducible.
   const nonce = `slidex-${stableNonce(source)}`;
+  // A sandboxed data: iframe inherits the parent's CSP. Imported browser-native
+  // HTML therefore needs its inline code and HTTP(S) libraries, media, workers,
+  // and connections. The iframe still has no same-origin capability, so these
+  // resources cannot directly control the OpenSlideX parent document.
+  const scriptPolicy = /<HtmlEmbedBlock\b/.test(source)
+    ? "script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' http: https: data: blob:"
+    : `script-src 'nonce-${nonce}'`;
   const policy = [
     "default-src 'none'",
-    "connect-src https:",
-    "font-src https: data:",
-    "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
-    "img-src https: blob: data: 'self'",
-    "media-src https: blob: data: 'self'",
-    "object-src 'none'",
-    `script-src 'nonce-${nonce}'`,
-    "style-src 'unsafe-inline' https://fonts.googleapis.com"
+    "base-uri http: https:",
+    "connect-src http: https: ws: wss: data: blob:",
+    "font-src http: https: data: blob:",
+    "form-action http: https:",
+    "frame-src 'self' http: https: data: blob:",
+    "img-src 'self' http: https: data: blob:",
+    "manifest-src http: https: data: blob:",
+    "media-src 'self' http: https: data: blob:",
+    "object-src http: https: data: blob:",
+    scriptPolicy,
+    "style-src 'unsafe-inline' http: https: data: blob:",
+    "worker-src http: https: data: blob:"
   ].join("; ");
 
   return { nonce, policy };
@@ -577,9 +599,14 @@ function renderSceneHtml(scene: MotionDocScene, options: RenderSceneHtmlOptions 
   const imageBlocks = blocks.filter((block) => block.type === "ImageBlock");
   const contentBlocks = blocks.filter((block) => block.type !== "ImageBlock");
   const shouldSplit = !hasPositionedBlocks && layout !== "default" && imageBlocks.length > 0;
+  const renderedBlocks = blocks.filter((block) => {
+    if (options.sharedSvgOverlay && block.type === "SvgBlock" && stringProp(block.props.sharedScene)) return false;
+    if (options.sharedHtmlOverlay && block.type === "HtmlEmbedBlock" && stringProp(block.props.sharedScene)) return false;
+    return true;
+  });
   const contentHtml = shouldSplit
     ? renderSplitSceneContent(contentBlocks, imageBlocks, layout, options)
-    : blocks.map((block, index) => renderBlock(block, index, options)).join("");
+    : renderedBlocks.map((block, index) => renderBlock(block, index, options)).join("");
   const contentClass = [
     "slide-content",
     hasPositionedBlocks ? "slide-content--freeform" : "",
@@ -622,6 +649,73 @@ function renderSplitSceneContent(
   const imageHtml = imageBlocks.map((block, index) => renderBlock(block, contentBlocks.length + index, options)).join("");
 
   return `<div class="slide-split-pane slide-split-pane--content" style="order:${textOrder}">${contentHtml}</div><div class="slide-split-pane slide-split-pane--media" style="order:${imageOrder}">${imageHtml}</div>`;
+}
+
+function renderSharedSvgScenes(scenes: MotionDocScene[]) {
+  const groups = new Map<string, Array<{ block: Extract<MotionDocBlock, { type: "SvgBlock" }>; slideIndex: number }>>();
+  scenes.forEach((scene, slideIndex) => scene.blocks.forEach((block) => {
+    if (block.type !== "SvgBlock") return;
+    const sharedScene = stringProp(block.props.sharedScene);
+    if (!sharedScene) return;
+    const entries = groups.get(sharedScene) ?? [];
+    entries.push({ block, slideIndex });
+    groups.set(sharedScene, entries);
+  }));
+  if (!groups.size) return "";
+  const layers = [...groups.entries()].map(([sharedScene, entries]) => {
+    const first = entries[0]!.block;
+    const declarations = entries.map(({ block, slideIndex }) => ({
+      easing: stringProp(block.props.easing) ?? "ease-in-out",
+      h: motionDocBlockFrame(block).h,
+      slideIndex,
+      stage: numberProp(block.props.stage, 0),
+      stageDuration: numberProp(block.props.stageDuration, 0.6),
+      w: motionDocBlockFrame(block).w,
+      x: motionDocBlockFrame(block).x,
+      y: motionDocBlockFrame(block).y
+    }));
+    const frame = motionDocBlockFrame(first);
+    return `<div class="shared-svg-scene" data-svg-shared-scene="${escapeAttribute(sharedScene)}" data-svg-shared-declarations="${escapeAttribute(JSON.stringify(declarations))}" style="${escapeAttribute(inlineCss({
+      height: `${frame.h}%`,
+      left: `${frame.x}%`,
+      top: `${frame.y}%`,
+      width: `${frame.w}%`
+    }))}">${renderSvgStageSurface(first)}</div>`;
+  }).join("");
+  return `<div class="shared-svg-layer" aria-hidden="true">${layers}</div>`;
+}
+
+function renderSharedHtmlScenes(scenes: MotionDocScene[]) {
+  const groups = new Map<string, Array<{ block: Extract<MotionDocBlock, { type: "HtmlEmbedBlock" }>; slideIndex: number }>>();
+  scenes.forEach((scene, slideIndex) => scene.blocks.forEach((block) => {
+    if (block.type !== "HtmlEmbedBlock") return;
+    const sharedScene = stringProp(block.props.sharedScene);
+    if (!sharedScene) return;
+    const entries = groups.get(sharedScene) ?? [];
+    entries.push({ block, slideIndex });
+    groups.set(sharedScene, entries);
+  }));
+  if (!groups.size) return "";
+  const layers = [...groups.entries()].map(([sharedScene, entries]) => {
+    const first = entries[0]!.block;
+    const declarations = entries.map(({ block, slideIndex }) => ({
+      h: motionDocBlockFrame(block).h,
+      page: Math.max(1, Math.floor(numberProp(block.props.page, 1))),
+      slideIndex,
+      w: motionDocBlockFrame(block).w,
+      x: motionDocBlockFrame(block).x,
+      y: motionDocBlockFrame(block).y
+    }));
+    const frame = motionDocBlockFrame(first);
+    return `<div class="shared-html-scene" data-html-shared-scene="${escapeAttribute(sharedScene)}" data-html-shared-declarations="${escapeAttribute(JSON.stringify(declarations))}" style="${escapeAttribute(inlineCss({
+      height: `${frame.h}%`, left: `${frame.x}%`, top: `${frame.y}%`, width: `${frame.w}%`
+    }))}">${renderHtmlEmbedSurface(first)}</div>`;
+  }).join("");
+  return `<div class="shared-html-layer">${layers}</div>`;
+}
+
+function renderSvgStageSurface(block: Extract<MotionDocBlock, { type: "SvgBlock" }>) {
+  return `<div class="block-svg-stage" data-svg-easing="${escapeAttribute(stringProp(block.props.easing) ?? "ease-in-out")}" data-svg-src="${escapeAttribute(stringProp(block.props.src) ?? "")}" data-svg-stage="${numberProp(block.props.stage, 0)}" data-svg-stage-duration="${numberProp(block.props.stageDuration, 0.6)}"></div>`;
 }
 
 function renderBlock(block: MotionDocBlock, blockIndex: number, options: RenderSceneHtmlOptions = {}) {
@@ -751,6 +845,18 @@ function renderBlock(block: MotionDocBlock, blockIndex: number, options: RenderS
     );
   }
 
+  if (block.type === "HtmlEmbedBlock") {
+    if (!options.rasterMode) return renderMotionBlock(block, renderHtmlEmbedSurface(block));
+    return renderMotionBlock(
+      block,
+      `<div class="block-html-unsupported" role="note"><strong>Interactive HTML is available only in the local OpenSlideX Workbench.</strong><span>Download the original HTML to retain its JavaScript animation and controls.</span></div>`
+    );
+  }
+
+  if (block.type === "SvgBlock") {
+    return renderMotionBlock(block, renderSvgStageSurface(block));
+  }
+
   if (block.type === "VideoBlock") {
     const fit = fitProp(block.props.fit);
     const poster = stringProp(block.props.poster);
@@ -816,6 +922,10 @@ function renderBlock(block: MotionDocBlock, blockIndex: number, options: RenderS
   }
 
   return "";
+}
+
+function renderHtmlEmbedSurface(block: Extract<MotionDocBlock, { type: "HtmlEmbedBlock" }>) {
+  return `<iframe allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen class="block-html-embed" data-html-page="${Math.max(1, Math.floor(numberProp(block.props.page, 1)))}" referrerpolicy="strict-origin-when-cross-origin" sandbox="allow-downloads allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-presentation allow-scripts" src="${escapeAttribute(stringProp(block.props.src) ?? "")}" title="Imported HTML presentation"></iframe>`;
 }
 
 function renderCroppedImageMedia(

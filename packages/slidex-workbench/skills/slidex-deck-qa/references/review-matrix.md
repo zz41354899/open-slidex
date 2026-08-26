@@ -7,6 +7,10 @@ Run an evidence pass and a visual pass. Fix blockers before polish.
 - Any `Card`, `Metric`, `Stack`, `Group`, `Title`, `Icon`, or `Notes` tag.
 - Raw HTML, arbitrary JSX, visible Markdown, executable expressions, missing
   IDs, or missing explicit geometry on visible layers.
+- An authored `HtmlEmbedBlock`; browser-native HTML must be read with
+  `open_slidex_read` and written with `open_slidex_edit`, which generates its
+  wrapper. An unsafe `SvgBlock` asset
+  with scripts, handlers, SMIL, embedded content, or external references.
 - Clipped or overflowing text, unintended overlap, off-canvas layers, broken
   assets, stretched media, unreadable contrast, or unsupported motion.
 - A factual claim, metric, quotation, citation, or customer presented without
@@ -21,6 +25,16 @@ Run an evidence pass and a visual pass. Fix blockers before polish.
 - Research: method, units, dates, limitations, and attribution survive.
 - Data: values, denominator, period, category, and missing values are correct.
 - Existing deck: unrelated user content and assets remain unchanged.
+
+## Browser-native HTML pass
+
+- Read the canonical source through `open_slidex_read` with
+  `sourceFormat: "html"`; do not infer it from the generated wrapper. Write it
+  through `open_slidex_edit` with `target: "html"`.
+- Confirm scripts and HTTP(S) resources run only inside the opaque-origin
+  sandbox. Libraries, fonts, images, video, frames, workers, and connections
+  may require network access at playback time.
+- Inline required local resources. Unresolved local sidecars are not portable.
 
 ## Visual pass
 

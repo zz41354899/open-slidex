@@ -24,7 +24,7 @@ test("guidance manifest exposes metadata and routes resources without eager cont
       "slidex-motion-direction",
       "slidex-deck-qa"
     ]);
-    assert.equal(manifest.skills.length, 5);
+    assert.equal(manifest.skills.length, 6);
     assert.equal("content" in manifest.skills[0]!, false);
     const designSkill = manifest.skills.find((skill) => skill.skill === "slidex-deck-design");
     assert.ok(designSkill);
@@ -45,6 +45,8 @@ test("guidance manifest exposes metadata and routes resources without eager cont
       "slidex-motion-direction",
       "slidex-deck-qa"
     ]);
+    const html = await readOpenSlideXProjectGuidanceManifest(root, "html");
+    assert.deepEqual(html.recommended, ["slidex-html-authoring"]);
   } finally {
     await rm(root, { force: true, recursive: true });
   }

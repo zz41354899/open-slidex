@@ -1,6 +1,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Dispatch, type PointerEvent, type RefObject, type SetStateAction } from "react";
 import type { CanvasTool } from "@/features/pitch/application/canvasTools";
+import type { CanvasKeyboardWheelZoomIntent } from "@/features/pitch/application/canvasKeyboard";
 import {
   canvasZoomAnchorFromPoint,
   canvasZoomScaleFromWheel,
@@ -193,6 +194,26 @@ export function useCanvasPanZoom({
     const viewportHeight = scrollAreaRef.current?.clientHeight ?? window.innerHeight;
     const targetScale = canvasZoomScaleFromWheel(baseScale, event.deltaY, event.deltaMode, viewportHeight);
     bufferCanvasZoomAtPoint(event, targetScale);
+  }
+
+  function zoomCanvasFromBridge(intent: CanvasKeyboardWheelZoomIntent) {
+    const canvas = canvasRef.current;
+    if (!canvas || intent.deltaY === 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const direction = intent.deltaY > 0 ? "out" : "in";
+    setZoomDirection(direction);
+    const baseScale = zoomAnimationFrameRef.current === null ? actualScale : zoomTargetScaleRef.current;
+    const viewportHeight = scrollAreaRef.current?.clientHeight ?? window.innerHeight;
+    const targetScale = canvasZoomScaleFromWheel(
+      baseScale,
+      intent.deltaY,
+      intent.deltaMode,
+      viewportHeight
+    );
+    bufferCanvasZoomAtPoint({
+      clientX: rect.left + rect.width * intent.xRatio,
+      clientY: rect.top + rect.height * intent.yRatio
+    }, targetScale);
   }
 
   function startCanvasPan(event: PointerEvent<HTMLDivElement>) {
@@ -420,6 +441,7 @@ export function useCanvasPanZoom({
     isPanningCanvas,
     setZoomDirection,
     updateCanvasPan,
+    zoomCanvasFromBridge,
     zoomDirection
   };
 }

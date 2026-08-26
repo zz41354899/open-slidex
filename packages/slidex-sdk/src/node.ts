@@ -214,7 +214,7 @@ export async function exportSlideXDocument(input: ExportSlideXDocumentInput) {
   }
   await mkdir(path.dirname(outputPath), { recursive: true });
 
-  const portableSource = input.projectRoot
+  let portableSource = input.projectRoot
     ? await embedSlideXProjectMedia(input.source, input.projectRoot, {
         // Standalone MDX imports currently materialize embedded images. Keep
         // video paths as editable placeholders unless a project bundle carries
@@ -254,6 +254,128 @@ export type RenderSlideXDocumentInput = {
   title?: string;
   signal?: AbortSignal;
 };
+
+export type RenderSlideXHtmlThumbnailInput = {
+  html: string;
+  outputPath: string;
+  page: number;
+  signal?: AbortSignal;
+};
+
+/** Renders one sandbox-compatible HTML page with its browser-native network resources. */
+export async function renderSlideXHtmlThumbnail(input: RenderSlideXHtmlThumbnailInput) {
+  input.signal?.throwIfAborted();
+  if (!input.html.trim()) throw new Error("The HTML source is empty.");
+  if (!Number.isInteger(input.page) || input.page < 1) throw new Error("HTML thumbnail page must be a positive integer.");
+  await mkdir(path.dirname(input.outputPath), { recursive: true });
+
+  return withSlideXChromiumPage({
+    viewport: { height: MOTION_DOC_PNG_HEIGHT, width: MOTION_DOC_PNG_WIDTH }
+  }, async (page) => {
+    await page.route("**/*", async (route) => {
+      const url = route.request().url();
+      if (/^(?:about:|blob:|data:|https?:)/i.test(url)) await route.continue();
+      else await route.abort("blockedbyclient");
+    });
+    await page.setContent(input.html, { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => undefined);
+    await page.evaluate(async (requestedPage) => {
+      const pageNumber = Math.max(1, Math.floor(requestedPage));
+      const oldURL = location.href;
+      const explicit = [...document.querySelectorAll<HTMLElement>("[data-slidex-page]")]
+        .filter((element) => element !== document.documentElement);
+      const gamma = [...document.querySelectorAll<HTMLElement>(".gcard.page")]
+        .filter((element) => !explicit.includes(element));
+      [...explicit, ...gamma].forEach((element, index) => {
+        const value = Number(element.dataset.slidexPage ?? element.dataset.page ?? index + 1);
+        const active = value === pageNumber;
+        element.dataset.on = active ? "1" : "0";
+        element.setAttribute("aria-hidden", active ? "false" : "true");
+        if (element.matches(".gcard.page")) element.classList.toggle("active", active);
+      });
+      const nativeSlides = [...document.querySelectorAll<HTMLElement>("[data-slidex-slide-index]")];
+      const nativeTarget = nativeSlides.find((element) => Number(element.dataset.slidexSlideIndex) + 1 === pageNumber);
+      if (nativeTarget) {
+        const targetIndex = pageNumber - 1;
+        const dot = document.querySelector<HTMLElement>(`[data-slide-target="${targetIndex}"]`);
+        dot?.click();
+        nativeSlides.forEach((element) => {
+          element.classList.toggle("is-active", element === nativeTarget);
+          element.classList.remove("is-leaving");
+        });
+        document.documentElement.style.height = "100%";
+        document.body.style.height = "100%";
+        document.body.style.minHeight = "0";
+        document.body.style.overflow = "hidden";
+        const player = document.querySelector<HTMLElement>(".player");
+        const stage = document.querySelector<HTMLElement>(".stage");
+        const viewport = document.querySelector<HTMLElement>(".viewport");
+        if (player) {
+          player.style.height = "100%";
+          player.style.minHeight = "0";
+          player.style.width = "100%";
+        }
+        if (stage) {
+          stage.style.height = "100%";
+          stage.style.minHeight = "0";
+          stage.style.padding = "0";
+          stage.style.width = "100%";
+        }
+        if (viewport) {
+          viewport.style.setProperty("border-radius", "0", "important");
+          viewport.style.setProperty("box-shadow", "none", "important");
+          viewport.style.setProperty("height", "100%", "important");
+          viewport.style.setProperty("width", "100%", "important");
+        }
+        document.querySelectorAll<HTMLElement>(".controls,.slide-dots").forEach((element) => {
+          element.style.setProperty("display", "none", "important");
+        });
+        window.dispatchEvent(new Event("resize"));
+      }
+      document.documentElement.dataset.slidexPage = String(pageNumber);
+      const hash = /^#\d+$/.test(location.hash) ? `#${pageNumber}` : `#p${pageNumber}`;
+      if (location.hash !== hash) history.replaceState(null, "", hash);
+      window.dispatchEvent(new HashChangeEvent("hashchange", { oldURL, newURL: location.href }));
+      await Promise.race([
+        document.fonts.ready.catch(() => undefined),
+        new Promise<void>((resolve) => setTimeout(resolve, 3_000))
+      ]);
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+      const activeCard = document.querySelector<HTMLElement>(
+        `.gcard.page[data-on="1"],[data-slidex-page="${pageNumber}"][data-on="1"]`
+      );
+      const stage = Number(activeCard?.dataset.stage ?? 4);
+      const benchmarkWindow = window as Window & {
+        IDATree?: { apply?: (stage: number) => void; stop?: () => void };
+      };
+      if (typeof benchmarkWindow.IDATree?.apply === "function") benchmarkWindow.IDATree.apply(stage);
+      benchmarkWindow.IDATree?.stop?.();
+      document.getAnimations().forEach((animation) => {
+        try { animation.finish(); animation.pause(); } catch { /* Animation may be infinite. */ }
+      });
+      document.querySelectorAll<SVGSVGElement>("svg").forEach((svg) => {
+        try {
+          svg.setCurrentTime?.(1_000_000);
+          svg.pauseAnimations?.();
+        } catch { /* Unsupported SVG animation API. */ }
+      });
+      const freeze = document.createElement("style");
+      freeze.dataset.openSlidexThumbnail = "";
+      freeze.textContent = "*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}";
+      (document.head || document.documentElement).appendChild(freeze);
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    }, input.page);
+    input.signal?.throwIfAborted();
+    await page.screenshot({ path: input.outputPath, type: "png" });
+    return {
+      height: MOTION_DOC_PNG_HEIGHT,
+      outputPath: input.outputPath,
+      page: input.page,
+      width: MOTION_DOC_PNG_WIDTH
+    };
+  }, input.signal);
+}
 
 export async function renderSlideXDocument(input: RenderSlideXDocumentInput) {
   input.signal?.throwIfAborted();

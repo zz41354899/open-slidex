@@ -5,6 +5,7 @@ import { MotionDocEditor } from "@open-slidex/editor-ui";
 import { defaultMdx } from "@/core/motion-doc/presets/defaultMdx";
 import { getSelectionMdx } from "@/core/motion-doc/application/motionDocSerialize";
 import { motionDocBlockKey } from "@/core/motion-doc/application/motionDocBlockIdentity";
+import { htmlSourceWorkspace } from "@/features/pitch/application/htmlRuntimePolicy";
 import { useLayerSelection } from "@/features/pitch/ui/hooks/useLayerSelection";
 import { useMotionDocDocument } from "@/features/pitch/ui/hooks/useMotionDocDocument";
 import { usePitchCommands } from "@/features/pitch/ui/hooks/usePitchCommands";
@@ -24,12 +25,15 @@ import {
   prepareExportDestination,
   renderMontage,
   updateContext,
+  updateHtmlAsset,
   uploadAsset
 } from "./api";
 import slidexWordmark from "./assets/slidex-wordmark.png";
 import { ChartInspector } from "./ChartInspector";
+import { HtmlCanvasToolbar } from "./HtmlCanvasToolbar";
+import { HtmlWorkspaceEditor, type HtmlWorkspaceSaveReason } from "./HtmlWorkspaceEditor";
 import { LocalWorkbenchToolbar, type LocalToolMenuId } from "./LocalWorkbenchToolbar";
-import { localExportFileName } from "./localExport";
+import { localExportFileName, localExportOptionsForMode } from "./localExport";
 import { normalizePresentationTitle, renamePresentationSource } from "./presentationTitle";
 import type { Selection } from "./domain";
 import { useLocalWorkbenchShortcuts } from "./useLocalWorkbenchShortcuts";
@@ -39,7 +43,13 @@ type LocalDocumentState = ReturnType<typeof useLocalDocument>;
 const slidexWordmarkSource = slidexWordmark;
 
 export function LocalMotionDocEditor({ documentState }: { documentState: LocalDocumentState }) {
-  const { tx } = usePitchI18n();
+  const { locale, tx } = usePitchI18n();
+  const {
+    acceptExternalMutation: acceptExternalDocumentMutation,
+    applySource: applyDocumentSource,
+    beginExternalMutation: beginExternalDocumentMutation,
+    cancelExternalMutation: cancelExternalDocumentMutation
+  } = documentState;
   const [source, setSource] = useState(documentState.source);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
@@ -137,6 +147,41 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
       ? `${window.location.origin}/workspace`
       : ""
   );
+  const htmlWorkspace = useMemo(() => htmlSourceWorkspace(sliderDocument), [sliderDocument]);
+  const hasOriginalHtml = Boolean(htmlWorkspace);
+  const availableExportFormats = useMemo(
+    () => localExportOptionsForMode(hasOriginalHtml ? "html-source" : "native").map((option) => option.id),
+    [hasOriginalHtml]
+  );
+  const setWorkspaceActiveSlideIndex = useCallback<typeof setActiveSlideIndex>((next) => {
+    if (hasOriginalHtml) setCanvasViewMode("slide");
+    setActiveSlideIndex(next);
+  }, [hasOriginalHtml, setCanvasViewMode]);
+
+  const saveHtmlSource = useCallback(async (
+    sourcePath: string,
+    html: string,
+    reason: HtmlWorkspaceSaveReason = "manual"
+  ) => {
+    const mutation = beginExternalDocumentMutation();
+    if (!mutation) {
+      throw new Error(tx("Wait for presentation.mdx to finish saving before editing HTML"));
+    }
+    let externalMutationActive = true;
+    try {
+      const result = await updateHtmlAsset(sourcePath, html, mutation.expectedRevision);
+      syncedRevisionRef.current = result.document.revision;
+      const nextSource = acceptExternalDocumentMutation(result.document);
+      externalMutationActive = false;
+      setSource(nextSource);
+      clearBlockSelection();
+      if (reason === "manual") setNotice(tx("HTML source saved"));
+      return { source: result.source };
+    } catch (error) {
+      if (externalMutationActive) cancelExternalDocumentMutation();
+      throw error;
+    }
+  }, [acceptExternalDocumentMutation, beginExternalDocumentMutation, cancelExternalDocumentMutation, clearBlockSelection, setNotice, tx]);
 
   const restoreSavedCanvas = useCallback(async () => {
     const next = await documentState.reload("Restored the saved Canvas and discarded the invalid browser draft.");
@@ -166,7 +211,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     if (chartReplayTimerRef.current !== null) window.clearTimeout(chartReplayTimerRef.current);
   }, []);
 
-  const runExport = useCallback(async (format: "html" | "mdx" | "pptx") => {
+  const executeExport = useCallback(async (format: "html" | "mdx" | "pptx", htmlMode?: "original" | "player") => {
     if (exportInFlightRef.current) return;
     exportInFlightRef.current = true;
     const label = format === "pptx" ? "PowerPoint" : format.toUpperCase();
@@ -182,6 +227,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
       const result = await exportDocument({
         fileName,
         format,
+        htmlMode,
         overwrite: false,
         source,
         target: "download"
@@ -194,13 +240,27 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     }
   }, [projectName, setNotice, source, tx]);
 
+  const runExport = useCallback(async (format: "html" | "mdx" | "pptx") => {
+    if (hasOriginalHtml && format === "pptx") {
+      setIsExportMenuOpen(false);
+      setNotice(tx("HTML source presentations can export only HTML or MDX"));
+      return;
+    }
+    if (format === "html") {
+      setIsExportMenuOpen(false);
+      await executeExport("html", hasOriginalHtml ? "original" : "player");
+      return;
+    }
+    await executeExport(format);
+  }, [executeExport, hasOriginalHtml, setIsExportMenuOpen, setNotice, tx]);
+
   useEffect(() => {
     document.title = `${projectName} — SlideX`;
   }, [projectName]);
 
   useEffect(() => {
-    if (source !== documentState.source) documentState.applySource(source);
-  }, [documentState, source]);
+    if (source !== documentState.source) applyDocumentSource(source);
+  }, [applyDocumentSource, documentState.source, source]);
 
   useEffect(() => {
     const nextRevision = documentState.snapshot?.revision;
@@ -216,6 +276,13 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
   useEffect(() => {
     setActiveSlideIndex((current) => Math.min(current, Math.max(sliderDocument.scenes.length - 1, 0)));
   }, [sliderDocument.scenes.length]);
+
+  useEffect(() => {
+    if (!htmlWorkspace) return;
+    clearBlockSelection();
+    setCanvasShapeTool(null);
+    setIsCodeEditorOpen(false);
+  }, [clearBlockSelection, htmlWorkspace?.source, setCanvasShapeTool, setIsCodeEditorOpen]);
 
   const assetAdapter = useMemo<SlideXEditorAssetAdapter>(() => ({
     async import(file) {
@@ -244,7 +311,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     selectedBlockIndex,
     selectedBlockIndices,
     selectSingleBlock,
-    setActiveSlideIndex,
+    setActiveSlideIndex: setWorkspaceActiveSlideIndex,
     setNotice,
     setSelectedTemplateId,
     setSource,
@@ -289,9 +356,8 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
   }, [clearBlockSelection, pushUndoSnapshot, setNotice, tx]);
 
   usePitchShortcuts({
-    activeCanvasTool,
     activeSlideIndex,
-    blocked: false,
+    blocked: Boolean(htmlWorkspace),
     closeCodeEditor: () => setIsCodeEditorOpen(false),
     closeExportMenu: () => setIsExportMenuOpen(false),
     closeMobileInspector: () => setIsMobileInspectorOpen(false),
@@ -313,6 +379,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     isMobileSidebarOpen,
     isPresentationPreviewOpen,
     isTemplateModalOpen: false,
+    navigationOnly: Boolean(htmlWorkspace),
     newProject,
     nudgeSelectedBlocks: pitchCommands.nudgeSelectedBlocks,
     pasteCopiedBlock: pitchCommands.pasteCopiedBlock,
@@ -327,7 +394,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
   });
 
   useLocalWorkbenchShortcuts({
-    blocked: isCodeEditorOpen || isPresentationPreviewOpen || shortcutHelpOpen,
+    blocked: Boolean(htmlWorkspace) || isCodeEditorOpen || isPresentationPreviewOpen || shortcutHelpOpen,
     onAddChart: () => pitchCommands.addBlockToActiveSlide("Chart"),
     onAddText: () => pitchCommands.addBlockToActiveSlide("Text"),
     onRedo: redoLastChange,
@@ -341,6 +408,20 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
       <ChartInspector block={selectedBlock} onPreviewMotion={triggerChartReplay} update={(props) => pitchCommandActions.updateBlock(selectedBlockIndex, props)} />
     ) : undefined
   ), [pitchCommandActions.updateBlock, selectedBlock, selectedBlockIndex, triggerChartReplay]);
+
+  const activeHtmlPage = htmlWorkspace
+    ? Number(activeSlide?.blocks.find((block) => block.type === "HtmlEmbedBlock")?.props.page ?? activeSlideIndex + 1)
+    : activeSlideIndex + 1;
+  const inspectorOverride = htmlWorkspace ? (
+    <HtmlWorkspaceEditor
+      activePage={Number.isInteger(activeHtmlPage) && activeHtmlPage > 0 ? activeHtmlPage : activeSlideIndex + 1}
+      onCloseMobile={() => setIsMobileInspectorOpen(false)}
+      onSave={saveHtmlSource}
+      pageCount={htmlWorkspace.pageCount}
+      sourcePath={htmlWorkspace.source}
+    />
+  ) : undefined;
+  const inspectorExtension = htmlWorkspace ? undefined : chartInspector;
 
   const editorProps = useMemo<ComponentProps<typeof MotionDocEditor>>(() => ({
     commands: {
@@ -389,7 +470,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           renameBlock: pitchCommandActions.renameBlock,
           reorderBlock: pitchCommandActions.reorderBlock,
           reorderSlide: pitchCommandActions.reorderSlide,
-          setActiveSlideIndex,
+          setActiveSlideIndex: setWorkspaceActiveSlideIndex,
           toggleBlockPositionLock: pitchCommandActions.toggleBlockPositionLock,
           toggleSelectedBlocksPositionLock: pitchCommandActions.toggleSelectedBlocksPositionLock,
           undoLastChange,
@@ -457,10 +538,13 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     view: {
           accessMode: "guest",
           activeCanvasTool,
+          authoringDisabled: Boolean(htmlWorkspace),
           assetUrl: localWorkbenchAssetUrl,
+          canvasPreviewSuspended: isPresentationPreviewOpen,
           canvasViewMode,
           canvasShapeTool,
           commentsEnabled: false,
+          exportFormats: availableExportFormats,
           exportInteraction: "format-menu",
           exportMenuRef,
           headerBadge: null,
@@ -475,30 +559,33 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
                 <img alt="SlideX" src={slidexWordmarkSource} />
               </button>
             : <span className="slidex-header-brand"><img alt="SlideX" src={slidexWordmarkSource} /></span>,
-          headerTools: <LocalWorkbenchToolbar
-            activeCanvasTool={activeCanvasTool}
-            disabled={false}
-            onAddBlock={pitchCommandActions.addBlockToActiveSlide}
-            onCanvasToolChange={setActiveCanvasTool}
-            onSelectShapeTool={(tool) => {
-              setActiveCanvasTool("select");
-              setCanvasShapeTool(tool);
-            }}
-            openTool={openTool}
-            setOpenTool={setOpenTool}
-            shortcutHelpOpen={shortcutHelpOpen}
-            setShortcutHelpOpen={setShortcutHelpOpen}
-          />,
+          headerTools: htmlWorkspace ? (
+            <HtmlCanvasToolbar activeTool={activeCanvasTool} onToolChange={setActiveCanvasTool} />
+          ) : <LocalWorkbenchToolbar
+              activeCanvasTool={activeCanvasTool}
+              disabled={false}
+              onAddBlock={pitchCommandActions.addBlockToActiveSlide}
+              onCanvasToolChange={setActiveCanvasTool}
+              onSelectShapeTool={(tool) => {
+                setActiveCanvasTool("select");
+                setCanvasShapeTool(tool);
+              }}
+              openTool={openTool}
+              setOpenTool={setOpenTool}
+              shortcutHelpOpen={shortcutHelpOpen}
+              setShortcutHelpOpen={setShortcutHelpOpen}
+            />,
           headerVariant: "local",
           homeHref: "#",
-          inspectorExtension: chartInspector,
+          inspectorExtension,
+          inspectorOverride,
           localAssetsOnly: true,
           localChartAnimationsActive,
           interactionDisabled: false,
           isCanvasGridVisible,
           isCanvasSafeAreaVisible,
           isCanvasSnapEnabled,
-          isCodeEditorOpen,
+          isCodeEditorOpen: htmlWorkspace ? false : isCodeEditorOpen,
           isExportMenuOpen,
           isMobileInspectorOpen,
           isMobileSidebarOpen,
@@ -515,6 +602,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           setIsExportMenuOpen,
           setIsMobileInspectorOpen,
           setIsMobileSidebarOpen,
+          singleSlideCanvas: Boolean(htmlWorkspace),
           templateLibraryEnabled: false
     }
   }), [
@@ -542,10 +630,13 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     activeSlideShaderSpeed,
     activeSlideTextColor,
     activeSlideTheme,
+    availableExportFormats,
     canvasShapeTool,
     canvasSource,
     canvasViewMode,
-    chartInspector,
+    htmlWorkspace,
+    inspectorExtension,
+    inspectorOverride,
     clearBlockSelection,
     commitSource,
     documentState.saveState,
@@ -560,7 +651,9 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     imageSourceRequiresAbsoluteUrl,
     isMobileInspectorOpen,
     isMobileSidebarOpen,
+    isPresentationPreviewOpen,
     localChartAnimationsActive,
+    locale,
     newProject,
     notice,
     openTool,
@@ -580,7 +673,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     selectBlocks,
     selectSingleBlock,
     setActiveCanvasTool,
-    setActiveSlideIndex,
+    setWorkspaceActiveSlideIndex,
     setCanvasShapeTool,
     setCanvasViewMode,
     setIsCanvasGridVisible,

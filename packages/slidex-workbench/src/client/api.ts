@@ -193,6 +193,25 @@ export function deleteAsset(source: string, expectedRevision: string) {
   });
 }
 
+export async function updateHtmlAsset(source: string, html: string, expectedRevision: string) {
+  const query = new URLSearchParams({ expectedRevision, source });
+  try {
+    return await requestJson<{ document: DocumentSnapshot; source: string }>(`/api/v1/assets/html?${query}`, {
+      body: html,
+      headers: { "content-type": "text/html; charset=utf-8" },
+      method: "PUT"
+    });
+  } catch (error) {
+    if ((error as { status?: number })?.status === 404) {
+      throw Object.assign(
+        new Error("The running Workspace server does not include HTML editing yet. Restart OpenSlideX after rebuilding the runtime."),
+        { code: "html_editor_unavailable", status: 404 }
+      );
+    }
+    throw error;
+  }
+}
+
 export type ExportFormat = "html" | "mdx" | "pptx";
 
 type LocalWritableFile = {
@@ -250,6 +269,7 @@ export async function prepareExportDestination(
 export async function exportDocument(input: {
   fileName: string;
   format: ExportFormat;
+  htmlMode?: "original" | "player";
   overwrite: boolean;
   source: string;
   target: "download" | "dist";

@@ -11,3 +11,9 @@ import type { SlideRow } from "@/features/pitch/application/slideRows";
 export function canvasSlideRowsForRender(slideRows: readonly SlideRow[]) {
   return slideRows;
 }
+
+/** HTML source mode owns one persistent iframe, so its slide stage needs only the active frame shell. */
+export function singleCanvasSlideRowForRender(slideRows: readonly SlideRow[], activeSlideIndex: number) {
+  const active = slideRows.find((slide) => slide.index === activeSlideIndex);
+  return active ? [active] : [];
+}

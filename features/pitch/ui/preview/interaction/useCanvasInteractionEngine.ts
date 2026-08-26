@@ -1,5 +1,5 @@
 
-import { useCallback, useReducer, useRef } from "react";
+import { useCallback, useMemo, useReducer, useRef } from "react";
 import {
   interactionFrameUpdates,
   type CanvasInteraction,
@@ -16,7 +16,7 @@ export type CanvasInteractionMode =
   | "resizing"
   | "selected";
 
-type CanvasSelectionSnapshot = {
+export type CanvasSelectionSnapshot = {
   primaryIndex: number | null;
   selectedIndices: readonly number[];
 };
@@ -35,9 +35,8 @@ type CanvasInteractionAction =
   | { type: "begin-rotating"; interaction: CanvasInteraction }
   | { type: "cancel-marquee"; pointerId: number }
   | { type: "clear" }
+  | { type: "finish-editing-text" }
   | { type: "finish-transform" }
-  | { type: "select"; snapshot: CanvasSelectionSnapshot }
-  | { type: "sync-selection"; snapshot: CanvasSelectionSnapshot }
   | { type: "update-marquee"; current: MarqueeSelection["current"]; pointerId: number };
 
 const initialCanvasInteractionState: CanvasInteractionState = {
@@ -48,12 +47,16 @@ const initialCanvasInteractionState: CanvasInteractionState = {
   transform: null
 };
 
-export function useCanvasInteractionEngine() {
+export function useCanvasInteractionEngine(selection: CanvasSelectionSnapshot) {
   const [state, dispatch] = useReducer(canvasInteractionReducer, initialCanvasInteractionState);
   const transformRef = useRef<CanvasInteraction | null>(null);
+  const controlledState = useMemo(
+    () => controlledCanvasInteractionState(state, selection),
+    [selection.primaryIndex, selection.selectedIndices, state]
+  );
 
   return {
-    ...state,
+    ...controlledState,
     beginDragging: useCallback((interaction: CanvasInteraction) => {
       transformRef.current = interaction;
       dispatch({ interaction, type: "begin-dragging" });
@@ -90,15 +93,12 @@ export function useCanvasInteractionEngine() {
       transformRef.current = null;
       dispatch({ type: "finish-transform" });
     }, []),
+    finishEditingText: useCallback(() => {
+      transformRef.current = null;
+      dispatch({ type: "finish-editing-text" });
+    }, []),
     isTransformingBlock: useCallback((blockId: string) => {
       return transformRef.current?.blockId === blockId;
-    }, []),
-    select: useCallback((snapshot: CanvasSelectionSnapshot) => {
-      transformRef.current = null;
-      dispatch({ snapshot, type: "select" });
-    }, []),
-    syncSelection: useCallback((snapshot: CanvasSelectionSnapshot) => {
-      dispatch({ snapshot, type: "sync-selection" });
     }, []),
     updateMarquee: useCallback((pointerId: number, current: MarqueeSelection["current"]) => {
       dispatch({ current, pointerId, type: "update-marquee" });
@@ -171,50 +171,68 @@ function canvasInteractionReducer(
         return state;
       }
 
-      return {
-        ...state,
-        marqueeSelection: null,
-        mode: modeFromSelection(state),
-        transform: null
-      };
+      return initialCanvasInteractionState;
     case "finish-transform":
-      return {
-        ...state,
-        mode: modeFromSelection(state),
-        transform: null
-      };
-    case "select":
-      return {
-        marqueeSelection: null,
-        mode: modeFromSnapshot(action.snapshot),
-        primaryIndex: action.snapshot.primaryIndex,
-        selectedIndices: action.snapshot.selectedIndices,
-        transform: null
-      };
-    case "sync-selection":
-      if (state.mode === "dragging" || state.mode === "resizing" || state.mode === "rotating" || state.mode === "marqueeSelecting") {
-        return state;
-      }
-
-      if (state.mode === "editingText" && action.snapshot.selectedIndices.includes(state.primaryIndex ?? -1)) {
-        return {
-          ...state,
-          primaryIndex: action.snapshot.primaryIndex,
-          selectedIndices: action.snapshot.selectedIndices
-        };
-      }
-
-      return {
-        ...state,
-        mode: modeFromSnapshot(action.snapshot),
-        primaryIndex: action.snapshot.primaryIndex,
-        selectedIndices: action.snapshot.selectedIndices
-      };
+      return initialCanvasInteractionState;
+    case "finish-editing-text":
+      return finishedCanvasTextEditingState(state);
     case "clear":
       return initialCanvasInteractionState;
     default:
       return state;
   }
+}
+
+export function finishedCanvasTextEditingState(
+  state: CanvasInteractionState
+): CanvasInteractionState {
+  if (state.mode !== "editingText") return state;
+  return {
+    ...state,
+    marqueeSelection: null,
+    mode: modeFromSnapshot(state),
+    transform: null
+  };
+}
+
+/** Derives ordinary selection from the parent without dispatching from an effect. */
+export function controlledCanvasInteractionState(
+  state: CanvasInteractionState,
+  snapshot: CanvasSelectionSnapshot
+): CanvasInteractionState {
+  if (state.mode === "dragging" || state.mode === "resizing" || state.mode === "rotating" || state.mode === "marqueeSelecting") {
+    return state;
+  }
+
+  if (state.mode === "editingText" && snapshot.selectedIndices.includes(state.primaryIndex ?? -1)) {
+    if (sameSelectionSnapshot(state, snapshot)) return state;
+    return {
+      ...state,
+      primaryIndex: snapshot.primaryIndex,
+      selectedIndices: snapshot.selectedIndices
+    };
+  }
+
+  const mode = modeFromSnapshot(snapshot);
+  if (
+    state.mode === mode
+    && state.marqueeSelection === null
+    && state.transform === null
+    && sameSelectionSnapshot(state, snapshot)
+  ) return state;
+  return {
+    marqueeSelection: null,
+    mode,
+    primaryIndex: snapshot.primaryIndex,
+    selectedIndices: snapshot.selectedIndices,
+    transform: null
+  };
+}
+
+function sameSelectionSnapshot(left: CanvasSelectionSnapshot, right: CanvasSelectionSnapshot) {
+  return left.primaryIndex === right.primaryIndex
+    && left.selectedIndices.length === right.selectedIndices.length
+    && left.selectedIndices.every((index, offset) => index === right.selectedIndices[offset]);
 }
 
 function blockIndicesFromTransform(interaction: CanvasInteraction) {
@@ -229,8 +247,4 @@ function blockIndicesFromTransform(interaction: CanvasInteraction) {
 
 function modeFromSnapshot(snapshot: CanvasSelectionSnapshot): CanvasInteractionMode {
   return snapshot.primaryIndex === null && snapshot.selectedIndices.length === 0 ? "idle" : "selected";
-}
-
-function modeFromSelection(state: CanvasSelectionSnapshot): CanvasInteractionMode {
-  return modeFromSnapshot(state);
 }

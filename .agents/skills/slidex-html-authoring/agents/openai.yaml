@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSlideX HTML Authoring"
+  short_description: "Read and write sandboxed browser-native HTML decks"
+  default_prompt: "Use $slidex-html-authoring to read or edit canonical OpenSlideX HTML safely."

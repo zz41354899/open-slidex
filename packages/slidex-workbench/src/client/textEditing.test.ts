@@ -27,6 +27,7 @@ import {
   renderEditableText,
   restoreEditorTextSelection
 } from "../../../../features/pitch/ui/preview/textEditorDom";
+import { shouldFocusTextEditor } from "../../../../features/pitch/ui/preview/textEditorActivation";
 import {
   loadRecentFonts,
   rememberRecentFont
@@ -241,4 +242,11 @@ test("recent fonts are deduplicated and most-recent first", () => {
   } finally {
     Object.assign(globalThis, { window: previousWindow });
   }
+});
+
+test("a Text editor focuses when it mounts already enabled and when editing is re-enabled", () => {
+  assert.equal(shouldFocusTextEditor(undefined, true), true);
+  assert.equal(shouldFocusTextEditor(true, true), false);
+  assert.equal(shouldFocusTextEditor(true, false), false);
+  assert.equal(shouldFocusTextEditor(false, true), true);
 });

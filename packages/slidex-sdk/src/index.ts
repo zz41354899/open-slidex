@@ -39,6 +39,8 @@ export { materializeFreeformSource } from "@/core/motion-doc/application/motionD
 export {
   isOpenSlideXCompatibleMediaSource,
   isOpenSlideXLocalAssetSource,
+  isOpenSlideXLocalHtmlAssetSource,
+  isOpenSlideXLocalSvgAssetSource,
   stripNonLocalMotionDocMedia,
   validateOpenSlideXLocalMedia,
   type LocalMotionDocMediaIssue

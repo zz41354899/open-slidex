@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { access, mkdir, readFile, readdir, realpath, stat } from "node:fs/promises";
+import { access, mkdir, readFile, readdir, realpath, stat, unlink, writeFile } from "node:fs/promises";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -45,6 +45,15 @@ import {
 } from "./trustedImages";
 import { openSlideXMcpVersion } from "./version";
 import { readOpenSlideXSourceImport } from "./sourceImport";
+import {
+  analyzeHtmlPresentation,
+  assertSandboxedHtml,
+  inspectHtmlNetworkResources
+} from "@/packages/slidex-workbench/src/server/htmlImportPolicy";
+import {
+  createHtmlPresentationMdx,
+  MAX_WORKSPACE_IMPORT_FILE_BYTES
+} from "@/packages/slidex-workbench/src/server/workspaceImport";
 
 const projectRoot = projectRootFromArgs(process.argv.slice(2));
 const adapter = new SlideXFileDocumentAdapter({ projectRoot });
@@ -54,6 +63,7 @@ const authorableMotionDocTags = new Set([
   "ImageBlock",
   "Shape",
   "Slide",
+  "SvgBlock",
   "Table",
   "Text",
   "VideoBlock"
@@ -99,10 +109,12 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     { name: "open-slidex-local", version: openSlideXMcpVersion() },
     {
       instructions: [
-        "In Workspace scope, use open_slidex_workspace to select one presentation.",
-        "Call open_slidex_read before work to get the exact source, current revision, and recommended SKILL.md entrypoints; read only the references they route to.",
-        "Before any mutation, re-read the latest revision and pass it as expectedRevision to open_slidex_edit; an accepted edit includes structural validation and rendered QA.",
-        "Use open_slidex_review for review-only work and the focused import or media tools only when their task applies."
+        "In Workspace scope, select one deck with open_slidex_workspace.",
+        "Call open_slidex_read before work for exact source, revision, and skill routes.",
+        "Read canonical HTML with open_slidex_read sourceFormat html; write it with open_slidex_edit target html.",
+        "Before mutation, re-read and pass expectedRevision to open_slidex_edit.",
+        "Native layers are Text, ImageBlock, VideoBlock, SvgBlock, Chart, Table, and Shape.",
+        "Browser HTML runs opaque-origin; native edits include rendered QA, and open_slidex_review is review-only."
       ].join(" ")
     }
   );
@@ -116,7 +128,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   if (workspace) {
     server.registerTool("open_slidex_workspace", {
       title: "Choose an OpenSlideX workspace presentation",
-      description: "List Workspace decks or select exactly one deck for all later read, edit, media, and review calls.",
+      description: "List Workspace decks or select exactly one deck for all later deck-specific calls.",
       inputSchema: {
         action: z.enum(["list", "select"]).default("list").describe(
           "Use list to discover presentations. Use select before any deck-specific tool call."
@@ -136,10 +148,22 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
 
   server.registerTool("open_slidex_read", {
     title: "Read OpenSlideX source or one project resource",
-    description: "Read the current deck or slide plus a compact guidance manifest. Search knowledge/ or rank the eight curated native presentation styles from a source brief, then load exactly one returned skill/reference/knowledge resourcePath at a time.",
+    description: "Read current MotionDoc MDX, canonical browser-native HTML, or one project resource. HTML reads preserve source bytes, page mapping, and online dependency boundaries; native reads include a compact skill manifest.",
     inputSchema: {
       intent: z.enum(openSlideXGuidanceIntents).default("authoring").describe(
-        "Task route for the manifest: import, create, redesign, design, authoring, motion, or qa."
+        "Task route for the manifest: import, create, redesign, design, authoring, html, motion, or qa."
+      ),
+      sourceFormat: z.enum(["mdx", "html"]).default("mdx").describe(
+        "Read native MotionDoc MDX or canonical browser-native HTML. HTML routes to the slidex-html-authoring skill."
+      ),
+      htmlCursor: z.number().int().min(0).default(0).describe(
+        "Character offset for an HTML chunk. Continue from nextCursor until it is absent."
+      ),
+      htmlMaxChars: z.number().int().min(1_000).max(200_000).default(60_000).describe(
+        "Maximum HTML characters returned from htmlCursor, from 1,000 through 200,000."
+      ),
+      htmlSource: z.string().regex(/^assets\/[A-Za-z0-9._-]+\.html?$/i).optional().describe(
+        "Exact canonical assets/*.html source returned by an earlier HTML read. Required only when the deck references multiple HTML sources."
       ),
       knowledgeQuery: z.string().trim().max(500).optional().describe(
         "Search terms for user files under knowledge/. Results are compact citations with readable resourcePath values."
@@ -157,7 +181,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         "Zero-based slide index for a focused source read; omit for the complete deck."
       )
     }
-  }, ({ intent, knowledgeQuery, resourceCursor, resourcePath, slideIndex, styleQuery }) => runTool(async () => {
+  }, ({ htmlCursor, htmlMaxChars, htmlSource, intent, knowledgeQuery, resourceCursor, resourcePath, slideIndex, sourceFormat, styleQuery }) => runTool(async () => {
     const { documentAdapter, root } = await projectContext();
     const guidanceRoot = await resolveAuthoringGuidanceRoot(root, configuredWorkspaceRoot);
     if (resourcePath) {
@@ -182,6 +206,60 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     if (resourceCursor !== 0) throw new Error("resourceCursor requires a knowledge resourcePath.");
 
     const document = await documentAdapter.open();
+    if (sourceFormat === "html") {
+      if (slideIndex !== undefined || knowledgeQuery || styleQuery) {
+        throw new Error("HTML source reads cannot be combined with slideIndex, knowledgeQuery, or styleQuery.");
+      }
+      const guidance = await readOpenSlideXProjectGuidanceManifest(guidanceRoot, "html").catch((error: unknown) => ({
+        error: error instanceof Error ? error.message : "HTML skill guidance is unavailable.",
+        intent: "html",
+        mode: "unavailable"
+      }));
+      const assets = listHtmlPresentationAssets(document.source);
+      const htmlAssets = await Promise.all(assets.map(async (record) => {
+        try {
+          const html = await readFile(resolveInsideRoot(root, record.source), "utf8");
+          return { ...record, networkResources: inspectHtmlNetworkResources(html), status: "ready" };
+        } catch (error) {
+          return {
+            ...record,
+            error: error instanceof Error ? error.message : "The HTML source is unavailable.",
+            status: "unavailable"
+          };
+        }
+      }));
+      const selectedSource = htmlSource ?? (assets.length === 1 ? assets[0]!.source : undefined);
+      if (!selectedSource) {
+        return {
+          guidance,
+          htmlAssets,
+          mode: "html-list",
+          revision: document.revision,
+          title: document.title
+        };
+      }
+      const record = assets.find((asset) => asset.source === selectedSource);
+      if (!record) throw new Error(`The HTML source is not referenced by presentation.mdx: ${selectedSource}`);
+      const html = await readFile(resolveInsideRoot(root, selectedSource), "utf8");
+      const chunk = html.slice(htmlCursor, htmlCursor + htmlMaxChars);
+      const nextCursor = htmlCursor + chunk.length < html.length ? htmlCursor + chunk.length : undefined;
+      return {
+        ...record,
+        bytes: Buffer.byteLength(html, "utf8"),
+        contentHash: createHash("sha256").update(html).digest("hex"),
+        cursor: htmlCursor,
+        guidance,
+        html: chunk,
+        htmlAssets,
+        htmlSource: selectedSource,
+        mode: "html",
+        networkResources: inspectHtmlNetworkResources(html),
+        nextCursor,
+        revision: document.revision,
+        title: document.title,
+        totalChars: html.length
+      };
+    }
     const [guidance, knowledge, styleRecommendations] = await Promise.all([
       readOpenSlideXProjectGuidanceManifest(guidanceRoot, intent).catch((error: unknown) => ({
         error: error instanceof Error ? error.message : "Project skill guidance is unavailable.",
@@ -200,7 +278,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     const summary = summarizeMotionDoc(document.source);
     return {
       authoringContract: {
-        allowed: ["Text", "ImageBlock", "VideoBlock", "Chart", "Table", "Shape"],
+        allowed: ["Text", "ImageBlock", "VideoBlock", "SvgBlock", "Chart", "Table", "Shape"],
         removed: removedMotionDocTags,
         geometry: "Every visible layer needs stable id plus explicit percentage x/y/w/h; fontSize uses pt.",
         rule: "Removed tags are rejected, not parsed for compatibility. Put all visible copy inside positioned Text layers."
@@ -359,7 +437,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
 
   server.registerTool("open_slidex_edit", {
       title: "Edit OpenSlideX presentation",
-      description: "Replace one complete deck or one complete slide. The server rejects removed components, validates deterministic geometry, render-checks the candidate, and atomically writes only when visual QA passes.",
+      description: "Revision-safely replace one complete native deck, one native slide, or canonical browser-native HTML. Native edits receive structural and rendered QA; HTML bytes are preserved in an opaque-origin playback asset.",
       inputSchema: {
       expectedRevision: z.string().startsWith("sha256:").describe(
         "Latest revision returned by open_slidex_read. Never reuse a stale revision."
@@ -370,18 +448,89 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       slideIndex: z.number().int().min(0).optional().describe(
         "Required when target is slide; identifies the zero-based slide to replace."
       ),
-      source: z.string().min(1).describe(
-        "One complete MotionDoc deck when target is deck, or one complete Slide block when target is slide."
+      htmlSource: z.string().regex(/^assets\/[A-Za-z0-9._-]+\.html?$/i).optional().describe(
+        "For target html, pass the exact canonical assets/*.html returned by open_slidex_read to replace it. Omit only to replace the selected deck with a new HTML presentation."
       ),
-      target: z.enum(["deck", "slide"]).describe(
-        "Choose whether source replaces the whole deck or one complete slide."
+      source: z.string().min(1).describe(
+        "One complete MotionDoc deck, one complete Slide block, or one complete UTF-8 HTML document according to target. HTML may use inline or HTTP(S) browser resources; unresolved local sidecars are rejected."
+      ),
+      target: z.enum(["deck", "slide", "html"]).describe(
+        "Choose whether source replaces the whole native deck, one complete native slide, or canonical browser-native HTML."
+      ),
+      title: z.string().trim().min(1).max(200).optional().describe(
+        "Optional presentation title when target is html and htmlSource is omitted."
       )
     }
-  }, ({ expectedRevision, rejectedCandidateId, slideIndex, source, target }, extra) => runTool(async () => {
+  }, ({ expectedRevision, htmlSource, rejectedCandidateId, slideIndex, source, target, title }, extra) => runTool(async () => {
     const { documentAdapter, root } = await projectContext();
     extra.signal.throwIfAborted();
     const current = await documentAdapter.open();
     if (current.revision !== expectedRevision) throw new SlideXRevisionConflictError(current.revision);
+    if (target === "html") {
+      if (rejectedCandidateId) throw new Error("rejectedCandidateId is only used for native rendered-QA repairs.");
+      if (slideIndex !== undefined) throw new Error("slideIndex cannot be combined with target html.");
+      if (htmlSource && title) throw new Error("title is only used when htmlSource is omitted for a new HTML deck.");
+      const bytes = Buffer.from(source, "utf8");
+      if (!bytes.byteLength || bytes.byteLength > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
+        throw new Error("The HTML source must be between 1 byte and 50 MB.");
+      }
+      assertSandboxedHtml(source);
+      const networkResources = inspectHtmlNetworkResources(source);
+      const pages = analyzeHtmlPresentation(source);
+      const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
+      const nextSource = `assets/source-${hash}.html`;
+      const nextPath = resolveInsideRoot(root, nextSource);
+      let createdAsset = false;
+      try {
+        await writeFile(nextPath, bytes, { flag: "wx" });
+        createdAsset = true;
+      } catch (error) {
+        if (!isNodeError(error) || error.code !== "EEXIST") throw error;
+      }
+
+      try {
+        let candidateSource: string;
+        let replacedSource: string | undefined;
+        if (htmlSource) {
+          const assets = listHtmlPresentationAssets(current.source);
+          const record = assets.find((asset) => asset.source === htmlSource);
+          if (!record) throw new Error(`The HTML source is not referenced by presentation.mdx: ${htmlSource}`);
+          replacedSource = htmlSource;
+          candidateSource = isPureHtmlPresentation(current.source, htmlSource)
+            ? createHtmlPresentationMdx(current.title, nextSource, hash, pages)
+            : applySlideXBatch(current.source, [{ from: htmlSource, to: nextSource, type: "asset.repath" }]).source;
+        } else {
+          candidateSource = createHtmlPresentationMdx(title ?? current.title, nextSource, hash, pages);
+        }
+
+        const candidateDocument = parseMotionDoc(candidateSource);
+        extra.signal.throwIfAborted();
+        const saved = candidateSource === current.source
+          ? current
+          : await documentAdapter.save({
+              expectedRevision,
+              source: candidateSource,
+              title: candidateDocument.title
+            });
+        if (replacedSource && replacedSource !== nextSource) {
+          await unlink(resolveInsideRoot(root, replacedSource)).catch(() => undefined);
+        }
+        return {
+          action: htmlSource ? "replace" : "create",
+          bytes: bytes.byteLength,
+          networkResources,
+          pageCount: Math.max(1, pages.length),
+          revision: saved.revision,
+          source: nextSource,
+          target: "html",
+          title: saved.title
+        };
+      } catch (error) {
+        if (createdAsset) await unlink(nextPath).catch(() => undefined);
+        throw error;
+      }
+    }
+    if (htmlSource || title) throw new Error("htmlSource and title are only used with target html.");
     pruneRejectedCandidates(rejectedCandidates);
     const rejected = rejectedCandidateId ? rejectedCandidates.get(rejectedCandidateId) : undefined;
     if (rejectedCandidateId && !rejected) {
@@ -491,11 +640,11 @@ function assertToolbarNativeSlideSource(source: string, label: string) {
     throw new Error(
       `${label} may only use Workspace toolbar layers. ` +
       `Unsupported component${forbidden.length === 1 ? "" : "s"}: ${forbidden.join(", ")}. ` +
-      "Use Text, ImageBlock, VideoBlock, Chart, Table, or Shape with explicit geometry."
+      "Use Text, ImageBlock, VideoBlock, SvgBlock, Chart, Table, or Shape with explicit geometry."
     );
   }
 
-  for (const match of source.matchAll(/<(Text|Chart|ImageBlock|Shape|Table|VideoBlock)\b([^>]*)>/g)) {
+  for (const match of source.matchAll(/<(Text|Chart|ImageBlock|Shape|SvgBlock|Table|VideoBlock)\b([^>]*)>/g)) {
     const tag = match[1];
     const attributes = match[2] ?? "";
     const missing = ["id", "x", "y", "w", "h"].filter(
@@ -511,7 +660,7 @@ function assertToolbarNativeSlideSource(source: string, label: string) {
 
   const visibleRemainder = source
     .replace(/<Text\b[^>]*>[\s\S]*?<\/Text>/g, "")
-    .replace(/<(?:Chart|ImageBlock|Shape|Table|VideoBlock)\b[^>]*\/>/g, "")
+    .replace(/<(?:Chart|ImageBlock|Shape|SvgBlock|Table|VideoBlock)\b[^>]*\/>/g, "")
     .replace(/<\/?Slide\b[^>]*>/g, "")
     .trim();
   if (visibleRemainder) {
@@ -520,6 +669,56 @@ function assertToolbarNativeSlideSource(source: string, label: string) {
       "Put visible copy inside positioned <Text> layers."
     );
   }
+}
+
+function listHtmlPresentationAssets(source: string) {
+  const records = new Map<string, {
+    blockIds: string[];
+    pages: number[];
+    sharedScenes: string[];
+    slideIndices: number[];
+    source: string;
+  }>();
+  const document = parseMotionDoc(source);
+  document.scenes.forEach((scene, slideIndex) => {
+    scene.blocks.forEach((block) => {
+      if (block.type !== "HtmlEmbedBlock") return;
+      const assetSource = typeof block.props.src === "string" ? block.props.src : "";
+      if (!/^assets\/[A-Za-z0-9._-]+\.html?$/i.test(assetSource)) return;
+      const record = records.get(assetSource) ?? {
+        blockIds: [],
+        pages: [],
+        sharedScenes: [],
+        slideIndices: [],
+        source: assetSource
+      };
+      const page = Number(block.props.page ?? 1);
+      record.blockIds.push(String(block.props.id ?? ""));
+      record.pages.push(Number.isInteger(page) && page > 0 ? page : 1);
+      record.slideIndices.push(slideIndex);
+      if (typeof block.props.sharedScene === "string" && block.props.sharedScene) {
+        record.sharedScenes.push(block.props.sharedScene);
+      }
+      records.set(assetSource, record);
+    });
+  });
+  return [...records.values()].map((record) => ({
+    ...record,
+    blockIds: [...new Set(record.blockIds.filter(Boolean))],
+    pageCount: new Set(record.pages).size,
+    pages: [...new Set(record.pages)].sort((left, right) => left - right),
+    sharedScenes: [...new Set(record.sharedScenes)],
+    slideIndices: [...new Set(record.slideIndices)].sort((left, right) => left - right)
+  }));
+}
+
+function isPureHtmlPresentation(source: string, assetSource: string) {
+  const document = parseMotionDoc(source);
+  return document.scenes.length > 0 && document.scenes.every((scene) => (
+    scene.blocks.length === 1
+    && scene.blocks[0]?.type === "HtmlEmbedBlock"
+    && scene.blocks[0].props.src === assetSource
+  ));
 }
 
 class OpenSlideXWorkspaceMcpScope {
