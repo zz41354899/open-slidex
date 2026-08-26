@@ -59,5 +59,6 @@ jobs:
         run: sha256sum open-slidex-* > SHA256SUMS.txt
       - name: Publish immutable release assets
         env:
+          GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: gh release create "${GITHUB_REF_NAME}" release-assets/* --verify-tag --generate-notes --title "OpenSlideX ${GITHUB_REF_NAME}"
