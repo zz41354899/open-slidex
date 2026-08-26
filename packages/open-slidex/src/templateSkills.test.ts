@@ -198,15 +198,20 @@ test("canonical skills expose the current SvgBlock and browser-native HTML archi
   const readSkillFile = (skill: string, relativePath = "SKILL.md") =>
     readFile(new URL(`${skill}/${relativePath}`, skillsUrl), "utf8");
 
-  const [sourceImport, mdxAuthoring, htmlAuthoring, htmlRuntime, motionDocContract, mediaAndData, motionDirection, motionPatterns, reviewMatrix] = await Promise.all([
+  const [sourceImport, mdxAuthoring, htmlAuthoring, htmlRuntime, htmlReferenceGrammar, deckDesign, financialBlueprint, motionDocContract, mediaAndData, motionDirection, motionPatterns, longDeckMotion, deckQa, reviewMatrix] = await Promise.all([
     readSkillFile("slidex-source-import"),
     readSkillFile("slidex-mdx-authoring"),
     readSkillFile("slidex-html-authoring"),
     readSkillFile("slidex-html-authoring", "references/browser-runtime.md"),
+    readSkillFile("slidex-html-authoring", "references/ref-idaeo-nov.md"),
+    readSkillFile("slidex-deck-design"),
+    readSkillFile("slidex-deck-design", "references/consulting-financial-report.md"),
     readSkillFile("slidex-mdx-authoring", "references/motiondoc-contract.md"),
     readSkillFile("slidex-mdx-authoring", "references/media-and-data.md"),
     readSkillFile("slidex-motion-direction"),
     readSkillFile("slidex-motion-direction", "references/motion-patterns.md"),
+    readSkillFile("slidex-motion-direction", "references/long-deck-motion.md"),
+    readSkillFile("slidex-deck-qa"),
     readSkillFile("slidex-deck-qa", "references/review-matrix.md")
   ]);
 
@@ -224,6 +229,15 @@ test("canonical skills expose the current SvgBlock and browser-native HTML archi
   assert.match(htmlAuthoring, /`open_slidex_read`/);
   assert.match(htmlAuthoring, /`open_slidex_edit`/);
   assert.match(htmlRuntime, /opaque-origin/);
+  assert.match(htmlReferenceGrammar, /IDAEO/);
+  assert.match(htmlReferenceGrammar, /Nov/);
+  assert.match(htmlReferenceGrammar, /16:9/);
+  assert.match(deckDesign, /consulting-financial-report\.md/);
+  assert.match(financialBlueprint, /Thirty-page decision arc/);
+  assert.match(financialBlueprint, /actual, forecast, estimate, or scenario/);
+  assert.match(motionDirection, /long-deck-motion\.md/);
+  assert.match(longDeckMotion, /Every slide receives one motion beat/);
+  assert.match(deckQa, /every slide/);
   assert.match(reviewMatrix, /`open_slidex_read`/);
   assert.match(reviewMatrix, /`open_slidex_edit`/);
   assert.match(reviewMatrix, /opaque-origin/);
@@ -251,6 +265,7 @@ test("agent guides keep source import conditional and the full-design skill orde
     assert.match(guide, /opaque-origin\s+sandbox/);
     assert.match(guide, /Pass `htmlAssetRoot` for relative local\s+images/);
     assert.match(guide, /PNG is converted to\s+WebP/);
+    assert.match(guide, /For a full HTML creation or redesign, then load `slidex-deck-design`,\s+`slidex-motion-direction`, and `slidex-deck-qa` in that order/);
     const workflow = guide.split("Apply the project-local skills in this order for a full creation or redesign:")[1] ?? "";
     const orderedSkills = [...workflow.matchAll(/^\d+\. `([^`]+)`$/gm)].map((match) => match[1]);
     assert.deepEqual(orderedSkills, expectedOrder);

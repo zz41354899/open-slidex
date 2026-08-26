@@ -67,6 +67,14 @@ try {
     assert.ok(packedFiles.has(`runtime/skills/${skill}/SKILL.md`), `runtime is missing ${skill}`);
     assert.ok(packedFiles.has(`template/.agents/skills/${skill}/SKILL.md`), `starter is missing ${skill}`);
   }
+  for (const reference of [
+    "slidex-deck-design/references/consulting-financial-report.md",
+    "slidex-html-authoring/references/ref-idaeo-nov.md",
+    "slidex-motion-direction/references/long-deck-motion.md"
+  ]) {
+    assert.ok(packedFiles.has(`runtime/skills/${reference}`), `runtime is missing ${reference}`);
+    assert.ok(packedFiles.has(`template/.agents/skills/${reference}`), `starter is missing ${reference}`);
+  }
   for (const filePath of packedFiles) {
     assert.doesNotMatch(filePath, /(?:^|\/)\.DS_Store$/);
     assert.doesNotMatch(filePath, /onboarding-export\.mp4$/);
@@ -95,6 +103,12 @@ try {
     cwd: installRoot
   });
   assert.equal(versionOutput.trim(), packageManifest.version);
+
+  const workbenchCliPath = path.join(installedPackageRoot, "runtime/workbench/cli.mjs");
+  const { stdout: workbenchVersionOutput } = await execFileAsync(process.execPath, [workbenchCliPath, "--version"], {
+    cwd: installRoot
+  });
+  assert.equal(workbenchVersionOutput.trim(), packageManifest.version);
 
   const workbenchSdk = await import(
     `${pathToFileURL(path.join(installedPackageRoot, "runtime/workbench/sdk/index.js")).href}?release-smoke=${Date.now()}`

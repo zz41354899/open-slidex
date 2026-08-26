@@ -110,12 +110,12 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     { name: "open-slidex-local", version: openSlideXMcpVersion() },
     {
       instructions: [
-        "In Workspace scope, select a deck with open_slidex_workspace.",
-        "Call open_slidex_read for source, revision, and skill routes.",
-        "For HTML, use open_slidex_read sourceFormat html and open_slidex_edit target html; htmlAssetRoot packages local images.",
-        "Before mutation, re-read and pass expectedRevision to open_slidex_edit.",
+        "Select a deck with open_slidex_workspace.",
+        "Use open_slidex_read for source, revision, and skill routes.",
+        "For HTML, read its authoring, design, motion, and QA skill chain; use sourceFormat html, target html, and htmlAssetRoot for local images.",
+        "Re-read before mutation and pass expectedRevision to open_slidex_edit.",
         "Native layers are Text, ImageBlock, VideoBlock, SvgBlock, Chart, Table, and Shape.",
-        "Browser HTML runs opaque-origin; native edits include rendered QA, and open_slidex_review is review-only."
+        "HTML runs opaque-origin; native edits include rendered QA; open_slidex_review is review-only."
       ].join(" ")
     }
   );
@@ -155,7 +155,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         "Task route for the manifest: import, create, redesign, design, authoring, html, motion, or qa."
       ),
       sourceFormat: z.enum(["mdx", "html"]).default("mdx").describe(
-        "Read native MotionDoc MDX or canonical browser-native HTML. HTML routes to the slidex-html-authoring skill."
+        "Read native MotionDoc MDX or canonical browser-native HTML. HTML routes to authoring, design, motion, and QA guidance."
       ),
       htmlCursor: z.number().int().min(0).default(0).describe(
         "Character offset for an HTML chunk. Continue from nextCursor until it is absent."

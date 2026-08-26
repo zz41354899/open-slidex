@@ -12,6 +12,9 @@ sequence, causality, feedback, or state change; otherwise use `none`.
 
 Read [motion patterns](references/motion-patterns.md) before adding or changing
 motion. It contains the valid vocabulary, timing ranges, and pattern selection.
+For an animated deck longer than 20 pages, also read
+[long-deck motion](references/long-deck-motion.md) to keep every page animated
+without producing repetitive or exhausting motion.
 
 ## Workflow
 

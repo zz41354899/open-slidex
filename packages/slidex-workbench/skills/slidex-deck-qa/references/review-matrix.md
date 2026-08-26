@@ -36,6 +36,11 @@ Run an evidence pass and a visual pass. Fix blockers before polish.
   may require network access at playback time.
 - Package required local HTML images through folder import or MCP
   `htmlAssetRoot`; verify PNG became WebP and no original local path remains.
+- Distinguish inline resources from sidecars. Inline SVG and CSS correctly stay
+  inside canonical HTML and do not require duplicate files in `assets/`.
+- Confirm detected page count equals the source deck and every mapped page has
+  a thumbnail. Check first, middle, last, and every section boundary at 16:9
+  full-screen size.
 
 ## Visual pass
 

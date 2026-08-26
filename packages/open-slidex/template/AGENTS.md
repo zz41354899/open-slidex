@@ -58,6 +58,8 @@ Never create or use an outer `presentation.mdx`.
   WebP, and saved HTML is rewritten to the deck's `assets/`. Inline resources
   and HTTP(S) libraries, fonts, images, media, frames, workers, and connections
   run in an opaque-origin sandbox. Never author `HtmlEmbedBlock`.
+  For a full HTML creation or redesign, then load `slidex-deck-design`,
+  `slidex-motion-direction`, and `slidex-deck-qa` in that order.
 - Submit one complete deck or one complete slide to `open_slidex_edit` with the
   latest revision. Patch a rejected candidate from its node-specific findings.
 - Use `open_slidex_review` only for review-only work. An accepted edit already

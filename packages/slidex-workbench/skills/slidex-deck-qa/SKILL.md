@@ -26,5 +26,10 @@ blocker and the checks relevant to the deck's source type.
 5. Do one evidence pass and one visual pass. A deck is complete only when both
    pass and the editable MDX preserves the intended hierarchy.
 
+For a deck longer than 20 pages, inspect the complete montage and every slide,
+not only a representative sample. For browser-native HTML, verify the canonical
+page count, one thumbnail per mapped page, and first, middle, last, and section
+boundary pages in full-screen playback.
+
 Never declare completion without an accepted rendered preview when visual QA is
 available.

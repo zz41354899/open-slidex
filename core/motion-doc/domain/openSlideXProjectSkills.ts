@@ -24,7 +24,12 @@ export type OpenSlideXGuidanceIntent = (typeof openSlideXGuidanceIntents)[number
 
 export const openSlideXGuidanceSkillsByIntent = {
   authoring: ["slidex-mdx-authoring"],
-  html: ["slidex-html-authoring"],
+  html: [
+    "slidex-html-authoring",
+    "slidex-deck-design",
+    "slidex-motion-direction",
+    "slidex-deck-qa"
+  ],
   import: [
     "slidex-source-import",
     "slidex-mdx-authoring",

@@ -17,6 +17,9 @@ place in the story, and remains editable with native MotionDoc layers.
    choosing a visual direction.
 2. Read [narrative patterns](references/narrative-patterns.md) and choose one
    primary deck pattern.
+   For a 24-32 page consulting, investment, earnings, or financial weekly deck,
+   read [consulting financial report](references/consulting-financial-report.md)
+   before choosing the slide outline.
 3. Read [visual direction](references/visual-direction.md) to establish the
    composition, type, color, image, and data rules.
 4. Read [style selection](references/style-selection.md). Treat the eight curated
@@ -38,6 +41,10 @@ Each resource is a twelve-page layout vocabulary, not a required output length.
 Borrow reading paths and composition principles—not sample wording, facts,
 IDs, or brand claims. The selected style specimen owns the starting visual
 DNA; explicit user brand requirements override its tokens.
+
+For browser-native HTML, use this skill only for story, evidence, and visual
+system decisions. Implement the result through `slidex-html-authoring`; do not
+translate HTML DOM into editable MotionDoc or author `HtmlEmbedBlock`.
 
 ## Design pass
 

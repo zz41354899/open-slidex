@@ -40,6 +40,10 @@ await esbuild({
   bundle: true,
   entryPoints: [path.join(packageDir, "src/cli.ts")],
   external: [
+    // `sharp` is provided by the published open-slidex package. Bundling its
+    // CommonJS dependency chain into this ESM entrypoint breaks Node's dynamic
+    // require shim before the Workbench can start.
+    "sharp",
     ...Object.keys(packageJson.dependencies ?? {}).filter((name) => name !== "@open-slidex/sdk"),
     ...Object.keys(packageJson.devDependencies ?? {})
   ],
