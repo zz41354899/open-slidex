@@ -8,11 +8,9 @@ OpenSlideX 是開源、local-first 的可編輯簡報工作區。每一份簡報
 
 ## 觀看 Workspace 示範
 
-<video src="https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4" poster="https://www.slidexdeck.com/marketing/open-slidex/slidex-poster.webp" controls muted playsinline width="100%">
-  <a href="https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4">觀看 OpenSlideX Workspace 示範</a>
-</video>
+[![OpenSlideX Workspace 示範 — 點擊播放](https://www.slidexdeck.com/marketing/open-slidex/slidex-poster.webp)](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)
 
-若目前的 README 閱讀器不支援內嵌影片，請[開啟 OpenSlideX Workspace 示範](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)。
+點擊預覽圖即可[觀看 OpenSlideX Workspace 示範](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)。
 
 ## 不需要 Node.js 或 Git 的安裝方式
 

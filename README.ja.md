@@ -8,11 +8,9 @@ OpenSlideX は、編集可能なプレゼンテーションのための、オー
 
 ## Workspace デモを見る
 
-<video src="https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4" poster="https://www.slidexdeck.com/marketing/open-slidex/slidex-poster.webp" controls muted playsinline width="100%">
-  <a href="https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4">OpenSlideX Workspace デモを見る</a>
-</video>
+[![OpenSlideX Workspace デモ — クリックして再生](https://www.slidexdeck.com/marketing/open-slidex/slidex-poster.webp)](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)
 
-README ビューアが埋め込み動画に対応していない場合は、[OpenSlideX Workspace デモを開いてください](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)。
+プレビューをクリックすると、[OpenSlideX Workspace デモを再生できます](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)。
 
 ## Node.js や Git を使わないインストール
 

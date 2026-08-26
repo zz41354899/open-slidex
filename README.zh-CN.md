@@ -8,11 +8,9 @@ OpenSlideX 是开源、local-first 的可编辑演示文稿工作区。每份演
 
 ## 观看 Workspace 演示
 
-<video src="https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4" poster="https://www.slidexdeck.com/marketing/open-slidex/slidex-poster.webp" controls muted playsinline width="100%">
-  <a href="https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4">观看 OpenSlideX Workspace 演示</a>
-</video>
+[![OpenSlideX Workspace 演示 — 点击播放](https://www.slidexdeck.com/marketing/open-slidex/slidex-poster.webp)](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)
 
-如果当前 README 阅读器不支持嵌入视频，请[打开 OpenSlideX Workspace 演示](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)。
+点击预览图即可[观看 OpenSlideX Workspace 演示](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)。
 
 ## 无需 Node.js 或 Git 的安装方式
 

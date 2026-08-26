@@ -12,11 +12,9 @@ editable in your own tools and Git workflow.
 
 ## Watch the Workspace demo
 
-<video src="https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4" poster="https://www.slidexdeck.com/marketing/open-slidex/slidex-poster.webp" controls muted playsinline width="100%">
-  <a href="https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4">Watch the OpenSlideX Workspace demo</a>
-</video>
+[![OpenSlideX Workspace demo — click to play](https://www.slidexdeck.com/marketing/open-slidex/slidex-poster.webp)](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)
 
-If your README viewer does not support embedded video, [watch the OpenSlideX Workspace demo](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4).
+Click the preview to [watch the OpenSlideX Workspace demo](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4).
 
 ## Install without Node.js or Git
 
