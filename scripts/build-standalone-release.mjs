@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import {
+  childProcessNeedsShell,
   nodeDistribution,
   parseSha256List,
   sha256File,
@@ -161,6 +162,7 @@ async function run(command, args, options = {}) {
   const result = await execFileAsync(command, args, {
     env: options.env ?? process.env,
     maxBuffer: 40 * 1024 * 1024,
+    shell: childProcessNeedsShell(process.platform, command),
     timeout: 10 * 60 * 1000,
     ...options
   });

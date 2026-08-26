@@ -3,6 +3,10 @@ import { createReadStream } from "node:fs";
 
 export const standaloneNodeVersion = "24.19.0";
 
+export function childProcessNeedsShell(platform, command) {
+  return platform === "win32" && /\.(?:cmd|bat)$/i.test(command);
+}
+
 export function standaloneTarget(platform = process.platform, architecture = process.arch) {
   if (platform === "darwin" && architecture === "arm64") return "darwin-arm64";
   if (platform === "darwin" && architecture === "x64") return "darwin-x64";

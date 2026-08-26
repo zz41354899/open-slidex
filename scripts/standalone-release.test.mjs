@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import {
+  childProcessNeedsShell,
   nodeDistribution,
   parseSha256List,
   sha256File,
@@ -25,6 +26,13 @@ test("standalone release targets use stable cross-platform asset names", () => {
   assert.equal(standaloneAssetName("darwin-arm64"), "open-slidex-darwin-arm64.tar.gz");
   assert.equal(standaloneAssetName("windows-x64"), "open-slidex-windows-x64.zip");
   assert.throws(() => standaloneTarget("linux", "x64"), /does not support/);
+});
+
+test("Windows batch commands use a shell while native executables stay direct", () => {
+  assert.equal(childProcessNeedsShell("win32", "npm.cmd"), true);
+  assert.equal(childProcessNeedsShell("win32", "setup.BAT"), true);
+  assert.equal(childProcessNeedsShell("win32", "node.exe"), false);
+  assert.equal(childProcessNeedsShell("darwin", "npm.cmd"), false);
 });
 
 test("Node distributions are pinned and checksum lists are parsed strictly", () => {
