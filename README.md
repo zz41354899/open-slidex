@@ -8,7 +8,38 @@ Create, edit, preview, and export decks without an account, background sync, or
 hidden cloud dependency. The MotionDoc format stays portable, readable, and
 editable in your own tools and Git workflow.
 
-## Quick start
+## Install without Node.js or Git
+
+The standalone installer downloads the complete OpenSlideX runtime, including
+its private Node.js executable and Chromium renderer. It does not install npm,
+Git, or system-wide Node.js and does not require administrator access.
+
+macOS:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.sh | sh
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.ps1 | iex
+```
+
+Open a new terminal after the first install, then run:
+
+```bash
+slidex             # open the local Workspace
+slidex update      # verify and install the newest release
+slidex uninstall   # remove the runtime and command, but keep presentations
+```
+
+The default presentation library is `~/Documents/OpenSlideX Workspace` on
+macOS and the current user's Documents folder on Windows. Every downloaded
+release archive is verified against the release's SHA-256 checksum before it
+can replace the active version.
+
+## Developer quick start
 
 OpenSlideX requires Node.js 22.12 or newer.
 
@@ -105,6 +136,8 @@ agent reads one specimen before composing the complete deck.
 | `npm run dev` | Open the local Workspace. |
 | `npm run mcp` | Start MCP for `open-slidex-workspace/`. |
 | `npm run build:runtime` | Rebuild the distributable runtime after SDK, Workbench, MCP, or CLI changes. |
+| `npm run build:standalone` | Build the current platform's complete Node/Chromium standalone archive. |
+| `npm run test:standalone` | Verify installer targets plus isolated install, update, launch, and uninstall behavior. |
 | `npm run styles:compile -- <style-prompt references>` | Read all 30 source style profiles, retain the eight curated directions, and sync their catalog and examples. |
 | `npm run styles:redesign` | Rebuild eight curated style specimens and five redesigned narrative examples with verified Unsplash imagery. |
 | `npm run styles:qa` | Render all 156 teaching slides and reject overflow, collision, canvas, or safety-margin defects. |
@@ -122,6 +155,8 @@ packages/slidex-sdk/            # Filesystem-safe SDK and CLI
 packages/slidex-workbench/      # Local Workspace and editor
 packages/open-slidex-mcp/       # Workspace-scoped local MCP server
 packages/open-slidex/           # npm initializer and bundled runtime
+install.sh / install.ps1        # no-Node terminal bootstrap installers
+scripts/build-standalone-release.mjs # platform archive builder
 ```
 
 Every runtime under `packages/open-slidex/runtime/` is rebuilt from source in

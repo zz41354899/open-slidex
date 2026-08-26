@@ -22,6 +22,8 @@
     "check:skills": "node --import tsx --test --test-name-pattern='skill entrypoints are discoverable' packages/open-slidex/src/templateSkills.test.ts",
     "test:source": "node --import tsx --test packages/open-slidex-mcp/src/*.test.ts && node --test scripts/*.test.mjs && node --import tsx --test --test-concurrency=1 packages/slidex-workbench/src/client/*.test.ts packages/slidex-workbench/src/server/*.test.ts packages/slidex-sdk/src/*.test.ts packages/open-slidex/src/*.test.ts",
     "test:release": "npm run build:runtime && node scripts/verify-open-slidex-release.mjs",
+    "build:standalone": "node scripts/build-standalone-release.mjs",
+    "test:standalone": "node --test scripts/standalone-release.test.mjs",
     "check:cloud-boundary": "node scripts/check-open-source-boundary.mjs",
     "check:open-source-boundary": "node scripts/check-open-source-boundary.mjs",
     "open-slidex": "node packages/open-slidex/dist/cli.mjs"
