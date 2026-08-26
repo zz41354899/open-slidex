@@ -83,7 +83,7 @@ function cover(d, title) {
   return `${open(d)}
   <ImageBlock id="${d.id}-01-image" src="${photos[d.photo]}" alt="Verified Unsplash cover photograph for ${attr(d.title)}" fit="cover" x={${imageRight ? 55 : 0}} y={0} w={45} h={100} radius={0} enter="fadeIn" />
   <Text id="${d.id}-01-label" x={${imageRight ? 7 : 54}} y={13} w={39} h={6} color="${d.accent}" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>${text(d.label)} · EDITABLE REFERENCE</Text>
-  <Text id="${d.id}-01-title" role="title" x={${imageRight ? 7 : 54}} y={31} w={39} h={29} color="${d.text}" fontFamily="Inter" fontSize={39} fontWeight={790} lineHeight={1.0} enter="rise">${text(title)}</Text>
+  <Text id="${d.id}-01-title" role="title" x={${imageRight ? 7 : 54}} y={29} w={39} h={35} color="${d.text}" fontFamily="Inter" fontSize={34} fontWeight={790} lineHeight={1.0} enter="rise">${text(title)}</Text>
   <Text id="${d.id}-01-thesis" x={${imageRight ? 7 : 54}} y={69} w={37} h={12} color="${d.muted}" fontFamily="Inter" fontSize={12} lineHeight={1.4} enter="fadeUp">${text(d.thesis)}</Text>
   <Text id="${d.id}-01-meta" x={${imageRight ? 7 : 54}} y={89} w={39} h={5} color="${d.muted}" fontFamily="Inter" fontSize={8.5}>OPENSLIDEX · 30 NATIVE EDITABLE SLIDES · 01 / 30</Text>
 </Slide>`;
@@ -110,11 +110,19 @@ function section(d, page, title) {
 function imageClaim(d, page, title) {
   const right = (page + d.photo) % 2 === 0;
   const imageIndex = (d.photo + page) % photos.length;
+  const imagePages = [4, 10, 16, 19, 25];
+  const layoutIndex = imagePages.indexOf(page);
+  const imageWidth = [45, 35, 50, 40, 30][layoutIndex] ?? 45;
+  const imageX = right ? 100 - imageWidth : 0;
+  const textX = right ? 7 : imageWidth + 7;
+  const textWidth = right ? 86 - imageWidth : 86 - imageWidth;
+  const titleY = 30 + page % 5;
+  const bodyY = 68 + page % 3;
   return `${open(d)}
-  <ImageBlock id="${d.id}-${pad(page)}-image" src="${photos[imageIndex]}" alt="Verified Unsplash contextual photograph for slide ${page}" fit="cover" x={${right ? 55 : 0}} y={0} w={45} h={100} radius={0} enter="fadeIn" />
-  <Text id="${d.id}-${pad(page)}-label" x={${right ? 7 : 54}} y={13} w={39} h={6} color="${d.accent}" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>${pad(page)} · CONTEXT</Text>
-  <Text id="${d.id}-${pad(page)}-title" role="title" x={${right ? 7 : 54}} y={33} w={39} h={28} color="${d.text}" fontFamily="Inter" fontSize={30} fontWeight={780} lineHeight={1.05} enter="rise">${text(title)}</Text>
-  <Text id="${d.id}-${pad(page)}-body" x={${right ? 7 : 54}} y={69} w={36} h={14} color="${d.muted}" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+  <ImageBlock id="${d.id}-${pad(page)}-image" src="${photos[imageIndex]}" alt="Verified Unsplash contextual photograph for slide ${page}" fit="cover" x={${imageX}} y={0} w={${imageWidth}} h={100} radius={0} enter="fadeIn" />
+  <Text id="${d.id}-${pad(page)}-label" x={${textX}} y={13} w={${textWidth}} h={6} color="${d.accent}" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>${pad(page)} · CONTEXT</Text>
+  <Text id="${d.id}-${pad(page)}-title" role="title" x={${textX}} y={${titleY}} w={${textWidth}} h={33} color="${d.text}" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">${text(title)}</Text>
+  <Text id="${d.id}-${pad(page)}-body" x={${textX}} y={${bodyY}} w={${Math.max(28, textWidth - 3)}} h={14} color="${d.muted}" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
   <Text id="${d.id}-${pad(page)}-page" x={${right ? 7 : 87}} y={90} w={6} h={4} color="${d.muted}" fontFamily="Inter" fontSize={8.5}>${pad(page)} / 30</Text>
 </Slide>`;
 }
@@ -122,9 +130,15 @@ function imageClaim(d, page, title) {
 function tableSlide(d, page, title) {
   const dark = page === 23;
   const color = dark ? "#F7FBFC" : d.text;
+  const tablePages = [5, 11, 15, 22, 23, 24, 26, 27, 29];
+  const layoutIndex = tablePages.indexOf(page);
+  const column = Math.floor(layoutIndex / 3);
+  const widthStep = layoutIndex % 3;
+  const tableX = 7 + column * 10;
+  const tableW = 86 - column * 10 - widthStep * 10;
   return `${open(d, dark)}
   ${heading(d, page, title, dark)}
-  <Table id="${d.id}-${pad(page)}-table" x={7} y={42} w={86} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace with source|Named;Secondary|Illustrative|Replace with source|Named;Boundary|Illustrative|State limitation|Named" fontSize={10} fontWeight={520} color="${color}" background="${dark ? d.dark : d.bg}" cellBackground="${dark ? "#17313A" : d.soft}" stripeBackground="${dark ? "#102731" : d.bg}" borderColor="${d.accent}" borderWidth={1} enter="fadeUp" />
+  <Table id="${d.id}-${pad(page)}-table" x={${tableX}} y={42} w={${tableW}} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="${color}" background="${dark ? d.dark : d.bg}" cellBackground="${dark ? "#17313A" : d.soft}" stripeBackground="${dark ? "#102731" : d.bg}" borderColor="${d.accent}" borderWidth={1} enter="fadeUp" />
   ${footer(d, page, dark)}
 </Slide>`;
 }
@@ -132,11 +146,18 @@ function tableSlide(d, page, title) {
 function chartSlide(d, page, title) {
   const type = page === 9 ? "donut" : page === 18 ? "bar" : page === 28 ? "area" : "line";
   const motion = type === "bar" ? "grow" : type === "donut" ? "sweep" : "draw";
+  const chartPages = [6, 9, 14, 18, 28];
+  const layoutIndex = chartPages.indexOf(page);
+  const chartX = [7, 17, 27, 37, 7][layoutIndex] ?? 7;
+  const chartY = layoutIndex === 4 ? 50 : 42;
+  const chartW = 50;
+  const chartH = layoutIndex === 4 ? 36 : 40;
+  const noteX = chartX >= 27 ? 7 : 70;
   return `${open(d)}
   ${heading(d, page, title)}
-  <Chart id="${d.id}-${pad(page)}-chart" type="${type}" x={7} y={42} w={59} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="${motion}" enter="fadeUp" />
-  <Text id="${d.id}-${pad(page)}-insight" x={73} y={45} w={18} h={22} color="${d.text}" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
-  <Text id="${d.id}-${pad(page)}-source" x={73} y={72} w={18} h={9} color="${d.muted}" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+  <Chart id="${d.id}-${pad(page)}-chart" type="${type}" x={${chartX}} y={${chartY}} w={${chartW}} h={${chartH}} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="${motion}" enter="fadeUp" />
+  <Text id="${d.id}-${pad(page)}-insight" x={${noteX}} y={45} w={18} h={22} color="${d.text}" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+  <Text id="${d.id}-${pad(page)}-source" x={${noteX}} y={72} w={18} h={9} color="${d.muted}" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
 </Slide>`;
 }
 
@@ -170,10 +191,10 @@ function metric(d, page, title) {
 function close(d, page, title) {
   const right = d.photo % 2 === 0;
   return `${open(d, true)}
-  <ImageBlock id="${d.id}-30-image" src="${photos[d.photo]}" alt="Verified Unsplash closing photograph for ${attr(d.title)}" fit="cover" x={${right ? 55 : 0}} y={0} w={45} h={100} radius={0} enter="fadeIn" />
-  <Text id="${d.id}-30-label" x={${right ? 7 : 54}} y={13} w={39} h={6} color="${d.accent}" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>30 · CLOSE</Text>
-  <Text id="${d.id}-30-title" role="title" x={${right ? 7 : 54}} y={34} w={39} h={27} color="#F7FBFC" fontFamily="Inter" fontSize={34} fontWeight={790} lineHeight={1.04} enter="rise">${text(title)}</Text>
-  <Text id="${d.id}-30-body" x={${right ? 7 : 54}} y={69} w={36} h={14} color="#C4CFD2" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Replace the teaching copy with the real commitment, owner, evidence, and next review date.</Text>
+  <ImageBlock id="${d.id}-30-image" src="${photos[d.photo]}" alt="Verified Unsplash closing photograph for ${attr(d.title)}" fit="cover" x={${right ? 45 : 0}} y={0} w={55} h={100} radius={0} enter="fadeIn" />
+  <Text id="${d.id}-30-label" x={${right ? 7 : 60}} y={13} w={33} h={6} color="${d.accent}" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>30 · CLOSE</Text>
+  <Text id="${d.id}-30-title" role="title" x={${right ? 7 : 60}} y={31} w={33} h={33} color="#F7FBFC" fontFamily="Inter" fontSize={28} fontWeight={790} lineHeight={1.04} enter="rise">${text(title)}</Text>
+  <Text id="${d.id}-30-body" x={${right ? 7 : 60}} y={69} w={32} h={14} color="#C4CFD2" fontFamily="Inter" fontSize={11} lineHeight={1.45}>Replace the teaching copy with the real commitment, owner, evidence, and next review date.</Text>
   <Text id="${d.id}-30-page" x={${right ? 7 : 87}} y={90} w={6} h={4} color="${d.accent}" fontFamily="Inter" fontSize={8.5}>30 / 30</Text>
 </Slide>`;
 }
