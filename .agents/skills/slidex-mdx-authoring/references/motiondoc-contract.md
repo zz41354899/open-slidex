@@ -38,6 +38,43 @@ Use `<Text role="title">` for a title. Canonical text props are `fontFamily`,
 `fontSize`, `fontWeight`, `fontStyle`, `letterSpacing`, `lineHeight`,
 `textAlign`, and `textVerticalAlign`.
 
+## Declarative animation
+
+Use `slideTransition="morph"` with `transitionDuration`, `morphEasing`, and
+`morphFadeUnmatched` for Shared Morph. Optional `morphShapeSoftness` (0-1) and
+`morphShapePrecision` (12-96) control shape-to-shape contour interpolation.
+`morphEasing="custom"` additionally accepts `morphCurveX1`, `morphCurveY1`,
+`morphCurveX2`, and `morphCurveY2` cubic controls. Compatible adjacent `Text`,
+`ImageBlock`, `Shape`, and `SvgBlock` layers pair through a per-slide-unique
+`sharedId`; normal `id` values remain unique across the complete deck.
+For an N-slide Morph sequence, author N-1 adjacent edges: every slide except
+the final one has `slideTransition="morph"`, and every edge has at least one
+compatible same-type `sharedId` pair. Read and replace the complete affected
+sequence when repairing it; a valid first-to-last match does not excuse an
+unpaired intermediate edge.
+On a later Morph source slide, `morphEffectMode="inherit"` reuses the first
+edge's duration, easing, curve, fade, softness, and precision in both Workbench
+preview and exported HTML. Use `morphEffectMode="custom"` or omit the prop for
+independent edge settings. This does not replace the adjacent `sharedId`
+pairing requirement.
+
+Same-slide Action Tween uses a strict version-1 JSON string in `motion`. Action
+IDs and `order` values are unique, the first action cannot be `withPrevious`,
+and the last tween `to` state must match the layer's native `x`, `y`, `w`, `h`,
+`rotation`, and `opacity`. Never combine `motion` with legacy `enter`, `delay`,
+or `duration`. The native properties always describe the complete final frame.
+An optional `exit` action may use `fadeOut`, `fadeDown`, `slideRight`,
+`zoomOut`, or `shrink`; it affects playback only and never replaces that
+native static final frame.
+For numeric Text, a tween may use `preset: "numberRange"` with a required
+`numberRange: { from, to, step }`. `step` must be positive, geometry stays
+unchanged, and the Text content must equal the final `to` value.
+
+Click interactions use a strict `interaction` JSON string with `version: 1`,
+`trigger: "click"`, and one action: `nextSlide`, `previousSlide`,
+`goToSlide` with a positive 1-based slide number, or `openUrl` with an HTTP(S),
+mailto, or local-hash URL. Never author handlers or executable code.
+
 ## Declarative shared SVG
 
 Use a verified script-free `assets/*.svg` source. Layers in one animated scene

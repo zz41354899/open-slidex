@@ -28,7 +28,7 @@ function createPackage(item: OfficialTemplateDefinition): TemplatePackageV1 {
     throw new Error(`Public template source is missing: ${item.id}`);
   }
   return {
-    assets: [],
+    assets: item.assets,
     blueprint: item.blueprint,
     catalog: item.catalog,
     compatibility: officialTemplateCompatibility,

@@ -103,7 +103,10 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
   const chooseImportFolder = useCallback((files?: FileList | null) => {
     setImportError("");
     const candidates = [...(files ?? [])];
-    const sources = candidates.filter((file) => /\.(?:mdx|html)$/i.test(file.name));
+    const mdxSources = candidates.filter((file) => /\.mdx$/i.test(file.name));
+    const sources = mdxSources.length > 0
+      ? mdxSources
+      : candidates.filter((file) => /\.html$/i.test(file.name));
     if (sources.length !== 1) {
       setImportFile(undefined);
       setImportSidecars([]);
@@ -117,11 +120,12 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
       setImportError(zh ? "匯入檔案大小必須介於 1 byte 與 50 MB 之間。" : "The import file must be between 1 byte and 50 MB.");
       return;
     }
-    const sidecars = /\.html$/i.test(source.name)
-      ? candidates
-          .filter((file) => file !== source && /\.(?:avif|gif|jpe?g|png|webp|svg)$/i.test(file.name))
-          .map((file) => ({ file, path: importFolderPath(file) }))
-      : [];
+    const sidecarPattern = /\.mdx$/i.test(source.name)
+      ? /\.(?:avif|gif|jpe?g|png|webp|svg|mp4|html?)$/i
+      : /\.(?:avif|gif|jpe?g|png|webp|svg)$/i;
+    const sidecars = candidates
+      .filter((file) => file !== source && sidecarPattern.test(file.name))
+      .map((file) => ({ file, path: importFolderPath(file) }));
     setImportFile(source);
     setImportSidecars(sidecars);
   }, [zh]);

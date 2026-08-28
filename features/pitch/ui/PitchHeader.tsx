@@ -87,7 +87,7 @@ export function PitchHeader({
         fitToScreen: tx("Fit to Screen"),
         play: tx("Play"),
         redo: tx("Redo"),
-        replayAnimations: tx("Replay animations"),
+        replayAnimations: tx("Replay actions"),
         renamePresentation: tx("Rename presentation"),
         toggleInspector: tx("Toggle properties"),
         toggleSidebar: tx("Toggle layers"),
@@ -98,7 +98,7 @@ export function PitchHeader({
       onExportOption={onExportOption}
       onPlay={onPlay}
       onProjectNameChange={onProjectNameChange}
-      onReplay={onReplay}
+      onReplay={variant === "local" ? undefined : onReplay}
       onRedo={onRedo}
       onToggleInspector={onToggleInspector}
       onToggleSidebar={onToggleSidebar}

@@ -108,6 +108,8 @@ a brief and load only one selected MDX resource.
 
 - Start a blank deck or an official template.
 - Edit a native MotionDoc MDX presentation in the local Workbench.
+- Compose curated Start, Action, and End effects—including Text number ranges and softened shape-to-shape Morph—without a video timeline.
+- Turn any native layer into a safe click area for slide navigation or links, preserving the same interaction in MDX and exported HTML.
 - Preview changes through Vite HMR.
 - Validate, render, and export local files.
 - Configure optional, workspace-scoped MCP access for supported agent clients.

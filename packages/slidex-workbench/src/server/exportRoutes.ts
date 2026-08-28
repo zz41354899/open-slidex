@@ -1,15 +1,44 @@
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 
 import { jsonBody, sendJson, type WorkbenchRouteContext } from "./httpRoute";
 
+const browserExportTtlMs = 5 * 60 * 1_000;
+const maxPreparedBrowserExports = 32;
+const preparedBrowserExports = new Map<string, {
+  bytes: Uint8Array;
+  expiresAt: number;
+  output: string;
+}>();
+
 export async function exportRoutes(context: WorkbenchRouteContext) {
   const { outgoing, project, request, url } = context;
+
+  if (url.pathname === "/api/v1/export/download" && request.method === "GET") {
+    prunePreparedBrowserExports();
+    const token = url.searchParams.get("token") ?? "";
+    const prepared = preparedBrowserExports.get(token);
+    if (!prepared) {
+      return sendJson(outgoing, { code: "export_expired", message: "This browser download has expired. Export again." }, 404);
+    }
+    preparedBrowserExports.delete(token);
+    outgoing.writeHead(200, {
+      "cache-control": "no-store",
+      "content-disposition": `attachment; filename="${prepared.output}"`,
+      "content-length": prepared.bytes.byteLength,
+      "content-type": mimeType(prepared.output),
+      "x-content-type-options": "nosniff"
+    });
+    outgoing.end(prepared.bytes);
+    return true;
+  }
 
   if (url.pathname === "/api/v1/export" && request.method === "POST") {
     const body = await jsonBody<{
       fileName: string;
       format: "html" | "mdx" | "pptx";
       htmlMode?: "original" | "player";
+      delivery?: "browser";
       overwrite?: boolean;
       source: string;
       target: "download" | "dist";
@@ -30,6 +59,27 @@ export async function exportRoutes(context: WorkbenchRouteContext) {
       target: body.target
     });
     if ("bytes" in result) {
+      if (!result.bytes || result.bytes.byteLength === 0) {
+        throw Object.assign(new Error("The export generated an empty file."), { status: 500 });
+      }
+      if (body.delivery === "browser") {
+        prunePreparedBrowserExports();
+        while (preparedBrowserExports.size >= maxPreparedBrowserExports) {
+          const oldestToken = preparedBrowserExports.keys().next().value;
+          if (!oldestToken) break;
+          preparedBrowserExports.delete(oldestToken);
+        }
+        const token = randomUUID();
+        preparedBrowserExports.set(token, {
+          bytes: result.bytes,
+          expiresAt: Date.now() + browserExportTtlMs,
+          output: result.output
+        });
+        return sendJson(outgoing, {
+          downloadUrl: `/api/v1/export/download?token=${encodeURIComponent(token)}`,
+          output: result.output
+        });
+      }
       outgoing.writeHead(200, {
         "content-disposition": `attachment; filename="${result.output}"`,
         "content-type": mimeType(result.output),
@@ -58,4 +108,11 @@ function mimeType(filePath: string) {
     ".mdx": "text/mdx; charset=utf-8",
     ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
   } as Record<string, string>)[extension] ?? "application/octet-stream";
+}
+
+function prunePreparedBrowserExports() {
+  const now = Date.now();
+  for (const [token, prepared] of preparedBrowserExports) {
+    if (prepared.expiresAt <= now) preparedBrowserExports.delete(token);
+  }
 }

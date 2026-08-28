@@ -1,0 +1,20 @@
+# Action Tween and Shared Morph acceptance
+
+<Slide duration={6} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#0B1020" theme="dark" slideTransition="morph" transitionDuration={0.72} morphEasing="easeInOut" morphFadeUnmatched="true">
+  <Text id="motion-title-a" sharedId="motion-title" role="title" x={8} y={8} w={58} h={12} fontSize={44} fontWeight={700} color="#FFFFFF">Shared Morph</Text>
+  <Text id="motion-copy-a" sharedId="motion-copy" x={8} y={23} w={42} h={10} fontSize={22} color="#B8C2E0">The content will change.</Text>
+  <ImageBlock id="motion-image-a" sharedId="motion-image" x={67} y={8} w={25} h={25} src="packages/slidex-workbench/src/client/assets/slidex-x-mark.png" alt="OpenSlideX mark" fit="contain" radius={24} />
+  <Shape id="motion-shape-a" sharedId="motion-shape" x={60} y={56} w={22} h={20} rotation={0} opacity={1} shape="rectangle" fill="#7C3AED" corner={18} motion='{"version":1,"actions":[{"id":"action-shape-enter","order":0,"type":"tween","start":"onClick","duration":0.6,"easing":"easeInOut","from":{"x":8,"y":56,"w":14,"h":14,"rotation":-12,"opacity":0.25},"to":{"x":35,"y":56,"w":18,"h":18,"rotation":0,"opacity":1},"path":{"controlX":28,"controlY":42}},{"id":"action-shape-finish","order":1,"type":"tween","start":"afterPrevious","duration":0.5,"easing":"easeOut","from":{"x":35,"y":56,"w":18,"h":18,"rotation":0,"opacity":1},"to":{"x":60,"y":56,"w":22,"h":20,"rotation":0,"opacity":1}}]}' />
+  <Text id="motion-label-a" x={8} y={82} w={32} h={8} fontSize={18} color="#A78BFA" motion='{"version":1,"actions":[{"id":"action-label","order":2,"type":"tween","start":"withPrevious","duration":0.5,"easing":"easeOut","from":{"x":8,"y":86,"w":32,"h":8,"rotation":0,"opacity":0},"to":{"x":8,"y":82,"w":32,"h":8,"rotation":0,"opacity":1}}]}'>Click, then continue automatically</Text>
+  <Shape id="motion-unmatched-a" x={8} y={40} w={22} h={8} shape="rectangle" fill="#1D2845" corner={12} />
+  <Chart id="motion-chart-a" x={35} y={37} w={20} h={14} type="bar" data='[{"label":"A","value":72},{"label":"B","value":46}]' />
+</Slide>
+
+<Slide duration={6} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F7F5FF" theme="light">
+  <Text id="motion-title-b" sharedId="motion-title" role="title" x={8} y={10} w={76} h={15} fontSize={56} fontWeight={800} color="#22113A">Shared Morph, complete</Text>
+  <Text id="motion-copy-b" sharedId="motion-copy" x={50} y={29} w={42} h={12} fontSize={28} fontWeight={600} color="#5B21B6">Different text crossfades.</Text>
+  <ImageBlock id="motion-image-b" sharedId="motion-image" x={8} y={54} w={32} h={32} src="packages/slidex-workbench/src/client/assets/slidex-x-mark.png" alt="OpenSlideX mark" fit="contain" radius={8} />
+  <Shape id="motion-shape-b" sharedId="motion-shape" x={58} y={51} w={34} h={30} rotation={18} opacity={0.86} shape="rectangle" fill="#EC4899" corner={32} />
+  <Shape id="motion-unmatched-b" x={46} y={48} w={8} h={34} shape="rectangle" fill="#DDD6FE" corner={18} />
+  <Table id="motion-table-b" x={45} y={86} w={47} h={8} cells='[["Static final state","Visible"]]' />
+</Slide>

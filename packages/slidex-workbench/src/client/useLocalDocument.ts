@@ -248,7 +248,7 @@ export function useLocalDocument() {
     };
   }, [setState]);
 
-  const commit = useCallback(async () => {
+  const commit = useCallback(async (): Promise<DocumentSnapshot | undefined> => {
     const currentSource = sourceRef.current;
     const currentValidation = validateSource(currentSource);
     setValidation(currentValidation);
@@ -259,11 +259,11 @@ export function useLocalDocument() {
       externalMutationInFlight.current
     ) {
       if (!currentValidation.isValid) setState("invalid");
-      return;
+      return undefined;
     }
     if (currentSource === savedSourceRef.current) {
       setState("saved");
-      return;
+      return snapshot ?? undefined;
     }
 
     saveInFlight.current = true;
@@ -287,6 +287,7 @@ export function useLocalDocument() {
         setState("dirty");
       }
       setMessage("");
+      return next;
     } catch (error) {
       const apiError = error as Error & { code?: string };
       if (apiError.code === "revision_conflict") {
@@ -296,10 +297,11 @@ export function useLocalDocument() {
         setState("error");
         setMessage(apiError.message);
       }
+      return undefined;
     } finally {
       saveInFlight.current = false;
     }
-  }, [draftKey, setState]);
+  }, [draftKey, setState, snapshot]);
 
   useEffect(() => {
     if (saveState !== "dirty") return;

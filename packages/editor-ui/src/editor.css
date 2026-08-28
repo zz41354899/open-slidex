@@ -54,3 +54,34 @@
 @source "../../../features/pitch/ui/**/*.{ts,tsx}";
 @source "../../../packages/editor-ui/src/**/*.{ts,tsx}";
 @source "../../../packages/slidex-workbench/src/client/**/*.{ts,tsx}";
+
+/* Keep dense editor sidebars readable without changing canvas or presentation typography. */
+.editor-readable-sidebar [class~="text-[8px]"] {
+  font-size: 12px;
+}
+
+.editor-readable-sidebar [class~="text-[9px]"] {
+  font-size: 12px;
+}
+
+.editor-readable-sidebar [class~="text-[10px]"] {
+  font-size: 13px;
+}
+
+.editor-readable-sidebar [class~="text-[11px]"] {
+  font-size: 14px;
+}
+
+.editor-readable-sidebar [class~="text-[12px]"],
+.editor-readable-sidebar .text-xs {
+  font-size: 14px;
+}
+
+.editor-readable-sidebar [class~="text-[13px]"] {
+  font-size: 15px;
+}
+
+.editor-readable-sidebar [class~="text-[14px]"],
+.editor-readable-sidebar .text-sm {
+  font-size: 15px;
+}

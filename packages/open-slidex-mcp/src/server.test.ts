@@ -160,6 +160,21 @@ test("Workspace MCP prints user-level configuration and selects a presentation",
     assert.equal((guidance.recommended as unknown[]).length, 1);
     assert.equal("references" in opened, false);
 
+    const brokenMorph = await client.callTool({
+      arguments: {
+        expectedRevision: opened.revision,
+        source: `# Broken Morph
+
+<Slide slideTransition="morph"><Text id="source" sharedId="planet" x={10} y={10} w={30} h={10}>Planet</Text></Slide>
+
+<Slide><Shape id="target" sharedId="planet" shape="circle" x={10} y={10} w={20} h={20} /></Slide>`,
+        target: "deck"
+      },
+      name: "open_slidex_edit"
+    });
+    assert.equal(brokenMorph.isError, true);
+    assert.match(String(structured(brokenMorph).message), /Each Morph edge must have at least one compatible/);
+
     const invalidSkillCursor = await client.callTool({
       arguments: {
         resourceCursor: 1,

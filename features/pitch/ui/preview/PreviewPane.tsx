@@ -160,6 +160,9 @@ export const PreviewPane = memo(function PreviewPane({
                 .map(({ block, blockKey }) => (
                   <div
                     data-motion-doc-node-id={blockKey}
+                    data-motion-sequence={typeof block.props.motion === "string" ? block.props.motion : undefined}
+                    data-shared-id={typeof block.props.sharedId === "string" ? block.props.sharedId : undefined}
+                    data-slidex-block-type={block.type}
                     key={blockKey}
                     style={{ width: "100%" }}
                   >

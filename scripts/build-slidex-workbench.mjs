@@ -68,6 +68,7 @@ async function copyWorkbenchSources(sourceRoot) {
     "packages/editor-ui/src",
     "packages/slidex-sdk/src",
     "packages/slidex-workbench/src/client",
+    "packages/slidex-workbench/src/server/official-template-assets",
     "packages/slidex-workbench/src/shared"
   ];
   for (const sourceDirectory of sourceDirectories) {

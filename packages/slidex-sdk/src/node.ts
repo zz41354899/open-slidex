@@ -281,7 +281,7 @@ export async function renderSlideXHtmlThumbnail(input: RenderSlideXHtmlThumbnail
       if (parsed.origin === localAssetOrigin && parsed.pathname.startsWith("/assets/")) {
         const asset = localAssets.get(decodeURIComponent(parsed.pathname.slice("/assets/".length)));
         if (asset) {
-          await route.fulfill({ body: asset.bytes, contentType: asset.mimeType });
+          await route.fulfill({ body: Buffer.from(asset.bytes), contentType: asset.mimeType });
           return;
         }
         await route.abort("blockedbyclient");

@@ -1,6 +1,7 @@
 import type { MotionDocProps } from "@/core/motion-doc/domain/motionDocTypes";
 
 export type BlockUpdateOptions = {
+  captureUndo?: boolean;
   transient?: boolean;
 };
 

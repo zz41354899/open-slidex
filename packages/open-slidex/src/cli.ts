@@ -120,6 +120,7 @@ async function applyOfficialTemplate(
   if (!template) {
     throw new Error(`Unknown official template: ${reference.id}`);
   }
+  await copyBundledTemplateAssets(root, template);
   await writeFile(
     path.join(root, "presentation.mdx"),
     template.sources[reference.locale],
@@ -136,6 +137,34 @@ async function applyOfficialTemplate(
     }, null, 2)}\n`,
     "utf8"
   );
+}
+
+async function copyBundledTemplateAssets(
+  root: string,
+  template: NonNullable<ReturnType<typeof getOfficialTemplatePackage>>
+) {
+  if (!template.assets.length) return;
+  const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
+  const assetRoots = [
+    path.resolve(moduleDirectory, "../runtime/workbench/source/packages/slidex-workbench/src/server/official-template-assets"),
+    path.resolve(moduleDirectory, "../../slidex-workbench/src/server/official-template-assets")
+  ];
+  const assetRoot = await firstExistingDirectory(assetRoots);
+  if (!assetRoot) throw new Error(`Bundled assets are unavailable for template: ${template.id}`);
+  await Promise.all(template.assets.map(async (asset) => {
+    const source = path.join(assetRoot, template.id, path.basename(asset.path));
+    const target = path.join(root, asset.path);
+    await mkdir(path.dirname(target), { recursive: true });
+    await cp(source, target, { errorOnExist: true, force: false });
+  }));
+}
+
+async function firstExistingDirectory(candidates: string[]) {
+  for (const candidate of candidates) {
+    const exists = await access(candidate).then(() => true, () => false);
+    if (exists) return candidate;
+  }
+  return undefined;
 }
 
 async function createInitialTemplateDeck(

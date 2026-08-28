@@ -119,6 +119,66 @@ export {
   type MotionDocEnterAnimation,
   type MotionDocSlideTransition
 } from "@/core/motion-doc/domain/motionVocabulary";
+export {
+  INTERACTION_PROP,
+  interactionFromProps,
+  isSafeInteractionUrl,
+  parseInteraction,
+  withInteraction,
+  type InteractionActionV1,
+  type InteractionV1
+} from "@/core/motion-doc/domain/interaction";
+export {
+  interpolateShapeMorphPath,
+  shapeMorphPoints,
+  type ShapeMorphDescriptor,
+  type ShapeMorphPoint
+} from "@/core/motion-doc/domain/shapeMorph";
+export {
+  autoLinkSharedMorphSequenceScenes,
+  autoLinkSharedMorphScenes,
+  defaultSharedMorphCurve,
+  hasSharedMorphReturnLink,
+  normalizeSharedMorphEasing,
+  sharedMorphCssEasing,
+  sharedMorphCurveFromProps,
+  sharedMorphEasings,
+  sharedMorphEffectProps,
+  sharedMorphPairCount,
+  unlinkSharedMorphGroupScenes,
+  setSharedMorphReturnLinkScenes,
+  type SharedMorphCurve,
+  type SharedMorphEasing
+} from "@/core/motion-doc/domain/sharedMorph";
+export {
+  MOTION_SEQUENCE_PROP,
+  applyTweenState,
+  createMotionActionId,
+  formatMotionNumber,
+  interpolateMotionNumber,
+  interpolateMotionState,
+  migrateLegacyEnterMotion,
+  motionActionStarts,
+  motionEasings,
+  motionSequenceFromProps,
+  motionTriggerCount,
+  parseMotionSequence,
+  scheduleMotionActions,
+  serializeMotionSequence,
+  tweenStateFromProps,
+  withMotionSequence,
+  type MotionAction,
+  type MotionActionStart,
+  type MotionEasing,
+  type MotionEnterAction,
+  type MotionNumberRange,
+  type MotionPath,
+  type MotionSequenceV1,
+  type MotionTweenAction,
+  type MotionTweenPreset,
+  type MotionTweenState,
+  type ScheduledMotionAction
+} from "@/core/motion-doc/domain/motionSequence";
 export type {
   MotionDocBlock,
   MotionDocProps,

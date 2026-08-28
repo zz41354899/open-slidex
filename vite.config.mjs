@@ -17,6 +17,7 @@ export const slideXWorkbenchSourceRoot = existsSync(
   : configRoot;
 
 const workbenchBrandAssets = new Set([
+  "/assets/morph-connector.webp",
   "/assets/slidex-wordmark.png",
   "/assets/slidex-x-mark.png"
 ]);

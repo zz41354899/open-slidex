@@ -127,6 +127,30 @@ test("Workbench project rejects invalid saves and preserves the last valid file"
   }
 });
 
+test("Workbench project canonicalizes relative and absolute Workspace image URLs before saving", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-local-asset-url-"));
+  try {
+    await writeFile(path.join(root, "presentation.mdx"), source, "utf8");
+    const project = new SlideXProject(root);
+    await project.prepare();
+    const opened = await project.open();
+    const saved = await project.save({
+      expectedRevision: opened.revision,
+      source: `# Shape image
+
+<Slide>
+  <Shape shape="circle" shapeImageSrc="/api/v1/workspace/presentations/galaxy/editor/assets/planet.webp" />
+  <Shape shape="circle" shapeImageSrc="http://127.0.0.1:4172/api/v1/workspace/presentations/galaxy/editor/assets/moon.webp" />
+</Slide>`,
+      title: "Shape image"
+    });
+    assert.match(saved.source, /shapeImageSrc="assets\/planet\.webp"/);
+    assert.match(saved.source, /shapeImageSrc="assets\/moon\.webp"/);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
 test("Workbench project saves HTTPS image and video links", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-local-media-"));
   try {

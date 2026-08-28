@@ -43,19 +43,20 @@ export async function readWorkspaceImport(
   file: File,
   referencedSources: (source: string) => string[],
   resolveWorkspaceAsset?: ResolveWorkspaceImportAsset,
-  options: { htmlSidecars?: WorkspaceHtmlSidecar[] } = {}
+  options: { htmlSidecars?: WorkspaceHtmlSidecar[]; mdxSidecars?: WorkspaceHtmlSidecar[] } = {}
 ): Promise<WorkspaceImportPayload> {
   const extension = path.extname(file.name).toLowerCase();
   if (extension === ".mdx") {
     const embedded = extractEmbeddedImageAssets(await readMdxFile(file));
     assertCanonicalMdxSize(embedded.source);
-    const embeddedSources = new Set(embedded.assets.map((asset) => asset.source));
-    const missingReferences = unique(referencedSources(embedded.source))
-      .filter((source) => !embeddedSources.has(source));
+    const references = unique(referencedSources(embedded.source));
+    const sidecarAssets = await packageMdxAssets(references, options.mdxSidecars ?? []);
+    const embeddedSources = new Set([...embedded.assets, ...sidecarAssets].map((asset) => asset.source));
+    const missingReferences = references.filter((source) => !embeddedSources.has(source));
     const recoveredAssets = await Promise.all(missingReferences.map((source) => resolveWorkspaceAsset?.(source)));
     const unresolvedReferences = missingReferences.filter((_, index) => !recoveredAssets[index]);
     return {
-      assets: [...embedded.assets, ...recoveredAssets.filter((asset): asset is WorkspaceImportAsset => Boolean(asset))],
+      assets: [...embedded.assets, ...sidecarAssets, ...recoveredAssets.filter((asset): asset is WorkspaceImportAsset => Boolean(asset))],
       kind: "mdx",
       source: stripUnavailableAssetReferences(embedded.source, unresolvedReferences)
     };
@@ -87,6 +88,55 @@ export async function readWorkspaceImport(
     kind: "html",
     source: createHtmlPresentationMdx(title, assetSource, hash, pages)
   };
+}
+
+async function packageMdxAssets(references: string[], sidecars: WorkspaceHtmlSidecar[]) {
+  if (!references.length || !sidecars.length) return [];
+  const sidecarsByReference = new Map<string, File>();
+  for (const sidecar of sidecars) {
+    const reference = normalizeSidecarReference(sidecar.path);
+    if (sidecarsByReference.has(reference)) throw badRequest(`The MDX import includes the sidecar more than once: ${reference}`);
+    sidecarsByReference.set(reference, sidecar.file);
+  }
+
+  const assets: WorkspaceImportAsset[] = [];
+  for (const source of references) {
+    const file = sidecarsByReference.get(normalizeSidecarReference(source));
+    if (!file) continue;
+    const extension = path.posix.extname(source).toLowerCase();
+    const maximumBytes = extension === ".mp4" ? 50 * 1024 * 1024 : 25 * 1024 * 1024;
+    if (!file.size || file.size > maximumBytes) {
+      throw badRequest(`MDX sidecar ${source} must be between 1 byte and ${Math.floor(maximumBytes / 1024 / 1024)} MB.`);
+    }
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (extension === ".svg") {
+      let svg: string;
+      try { svg = new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { throw badRequest(`MDX SVG sidecar must use UTF-8: ${source}`); }
+      try { assertSafeMotionDocSvg(svg); } catch (error) { throw badRequest(error instanceof Error ? error.message : `MDX SVG sidecar is unsafe: ${source}`); }
+      assets.push({ bytes, fileName: path.posix.basename(source), mediaType: "image/svg+xml", preserveOriginal: true, source });
+      continue;
+    }
+    if (extension === ".html" || extension === ".htm") {
+      let html: string;
+      try { html = new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { throw badRequest(`MDX HTML sidecar must use UTF-8: ${source}`); }
+      assertSandboxedHtml(html);
+      assets.push({ bytes, fileName: path.posix.basename(source), mediaType: "text/html", preserveOriginal: true, source });
+      continue;
+    }
+    if (extension === ".mp4") {
+      if (bytes.byteLength < 12 || String.fromCharCode(...bytes.slice(4, 8)) !== "ftyp") {
+        throw badRequest(`MDX video sidecar is not a valid MP4 file: ${source}`);
+      }
+      assets.push({ bytes, fileName: path.posix.basename(source), mediaType: "video/mp4", source });
+      continue;
+    }
+    const mediaType = htmlSidecarMimeType(extension);
+    if (!mediaType || mediaType === "image/svg+xml") {
+      throw badRequest(`MDX sidecars must be raster images, SVG, MP4, or HTML files: ${source}`);
+    }
+    assets.push({ bytes, fileName: path.posix.basename(source), mediaType, source });
+  }
+  return assets;
 }
 
 export async function packageHtmlAssets(source: string, options: PackageHtmlAssetsOptions = {}) {

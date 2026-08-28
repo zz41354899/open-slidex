@@ -69,6 +69,9 @@ export function makeMotionDocExportRuntime() {
         const viewport = document.querySelector(".viewport");
         let index = 0;
         let timer = null;
+        let interactionHintTimer = null;
+        let motionController = null;
+        let morphCleanup = null;
         const DESIGN_WIDTH = ${MOTION_DOC_CANVAS_WIDTH};
         const DESIGN_HEIGHT = ${MOTION_DOC_CANVAS_HEIGHT};
 
@@ -363,19 +366,489 @@ export function makeMotionDocExportRuntime() {
           viewport.style.setProperty("--export-viewport-height", Math.round(DESIGN_HEIGHT * scale * 100) / 100 + "px");
         }
 
+        const MOTION_EASING = { linear: "linear", easeIn: "ease-in", easeOut: "ease-out", easeInOut: "ease-in-out", smooth: "cubic-bezier(.45,0,.2,1)", emphasized: "cubic-bezier(.2,0,0,1)", spring: "cubic-bezier(.18,.9,.22,1.18)", backOut: "cubic-bezier(.34,1.56,.64,1)" };
+
+        function parseMotionSequence(element) {
+          try {
+            const value = JSON.parse(element.dataset.motionSequence || "");
+            if (!value || value.version !== 1 || !Array.isArray(value.actions)) return null;
+            return value.actions.slice().sort((a, b) => Number(a.order) - Number(b.order));
+          } catch { return null; }
+        }
+
+        function tweenMotionState(from, to, progress, path) {
+          const mix = (a, b) => Number(a) + (Number(b) - Number(a)) * progress;
+          let x = mix(from.x, to.x);
+          let y = mix(from.y, to.y);
+          const w = mix(from.w, to.w);
+          const h = mix(from.h, to.h);
+          if (path) {
+            const inverse = 1 - progress;
+            x = inverse * inverse * (Number(from.x) + Number(from.w) / 2) + 2 * inverse * progress * Number(path.controlX) + progress * progress * (Number(to.x) + Number(to.w) / 2) - w / 2;
+            y = inverse * inverse * (Number(from.y) + Number(from.h) / 2) + 2 * inverse * progress * Number(path.controlY) + progress * progress * (Number(to.y) + Number(to.h) / 2) - h / 2;
+          }
+          return { x, y, w, h, rotation: mix(from.rotation, to.rotation), opacity: mix(from.opacity, to.opacity) };
+        }
+
+        function motionStateFrame(state) {
+          return { left: state.x + "%", top: state.y + "%", width: state.w + "%", height: state.h + "%", rotate: state.rotation + "deg", opacity: state.opacity };
+        }
+
+        function easedMotionProgress(value, easing) {
+          const progress = Math.min(1, Math.max(0, value));
+          if (easing === "linear") return progress;
+          if (easing === "easeIn") return progress * progress * progress;
+          if (easing === "easeOut") return 1 - Math.pow(1 - progress, 3);
+          return progress < .5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        }
+
+        function motionNumberValue(range, progress, easing) {
+          if (progress <= 0) return Number(range.from);
+          if (progress >= 1) return Number(range.to);
+          const from = Number(range.from);
+          const to = Number(range.to);
+          const step = Number(range.step);
+          const raw = from + (to - from) * easedMotionProgress(progress, easing);
+          const direction = to >= from ? 1 : -1;
+          const snapped = from + direction * Math.floor(Math.abs(raw - from) / step) * step;
+          return Math.min(Math.max(snapped, Math.min(from, to)), Math.max(from, to));
+        }
+
+        function formatMotionNumber(value, range) {
+          const precision = Math.min(6, Math.max(...[range.from, range.to, range.step].map((entry) => {
+            const text = String(entry).toLowerCase();
+            if (text.includes("e-")) return Number(text.split("e-")[1]) || 0;
+            return text.includes(".") ? (text.split(".")[1] || "").length : 0;
+          })));
+          return new Intl.NumberFormat("en-US", { minimumFractionDigits: precision, maximumFractionDigits: precision }).format(Number(value.toFixed(precision)));
+        }
+
+        function enterFrames(preset) {
+          if (preset === "fadeUp" || preset === "rise") return [{ opacity: 0, transform: "translateY(28px)" }, { opacity: 1, transform: "translateY(0)" }];
+          if (preset === "slideLeft") return [{ opacity: 0, transform: "translateX(52px)" }, { opacity: 1, transform: "translateX(0)" }];
+          if (preset === "zoomIn") return [{ opacity: 0, transform: "scale(.86)" }, { opacity: 1, transform: "scale(1)" }];
+          if (preset === "pop") return [{ opacity: 0, transform: "scale(.72)" }, { opacity: 1, transform: "scale(1)" }];
+          if (preset === "blurIn") return [{ filter: "blur(16px)", opacity: 0 }, { filter: "blur(0)", opacity: 1 }];
+          if (preset === "reveal") return [{ clipPath: "inset(0 100% 0 0)", opacity: 0 }, { clipPath: "inset(0 0 0 0)", opacity: 1 }];
+          return [{ opacity: 0 }, { opacity: 1 }];
+        }
+
+        function exitFrames(preset) {
+          if (preset === "fadeDown") return [{ opacity: 1, transform: "translateY(0)" }, { opacity: 0, transform: "translateY(28px)" }];
+          if (preset === "slideRight") return [{ opacity: 1, transform: "translateX(0)" }, { opacity: 0, transform: "translateX(52px)" }];
+          if (preset === "zoomOut") return [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(1.16)" }];
+          if (preset === "shrink") return [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(.72)" }];
+          return [{ opacity: 1 }, { opacity: 0 }];
+        }
+
+        function makeMotionController(slide, autoStartDelay = 0, morphSource = null) {
+          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return { cancel() {}, consume() { return false; } };
+          let animations = [];
+          let animationFrames = [];
+          let timeouts = [];
+          const originalStyles = new Map();
+          const originalTextContents = new Map();
+          const initializedElements = new Set();
+          let batchIndex = 0;
+          const items = [];
+          slide.querySelectorAll("[data-motion-sequence]").forEach((element) => {
+            if (element.closest("[data-slidex-morph-overlay]")) return;
+            const actions = parseMotionSequence(element);
+            actions?.forEach((action) => items.push({ action, element }));
+          });
+          items.sort((a, b) => Number(a.action.order) - Number(b.action.order));
+          items.forEach((item) => {
+            if (!originalStyles.has(item.element)) originalStyles.set(item.element, item.element.getAttribute("style"));
+            const textTarget = item.element.querySelector("[data-motion-text-content]");
+            if (textTarget && !originalTextContents.has(textTarget)) originalTextContents.set(textTarget, textTarget.innerHTML);
+          });
+          const batches = [];
+          items.forEach((item, itemIndex) => {
+            if (itemIndex === 0 || item.action.start === "onClick") batches.push([]);
+            batches[batches.length - 1].push(item);
+          });
+          const firstByElement = new Map();
+          items.forEach((item) => { if (!firstByElement.has(item.element)) firstByElement.set(item.element, item); });
+          const deferredMotion = (element) => {
+            const sharedId = (element.dataset.sharedId || "").trim();
+            const sharedSource = sharedId ? morphSource?.get("shared:" + sharedId) : null;
+            return sharedSource?.type === (element.dataset.slidexBlockType || "");
+          };
+          const initializeElement = (element) => {
+            if (initializedElements.has(element)) return;
+            const item = firstByElement.get(element);
+            if (!item) return;
+            const { action } = item;
+            element.getAnimations().forEach((animation) => animation.cancel());
+            if (action.type === "tween" && action.from) Object.assign(element.style, motionStateFrame(action.from));
+            if (action.type === "tween" && action.preset === "numberRange" && action.numberRange) {
+              const textTarget = element.querySelector("[data-motion-text-content]");
+              if (textTarget) textTarget.textContent = formatMotionNumber(Number(action.numberRange.from), action.numberRange);
+            }
+            if (action.type === "enter") Object.assign(element.style, enterFrames(action.preset)[0]);
+            initializedElements.add(element);
+          };
+          firstByElement.forEach((item) => { if (!deferredMotion(item.element)) initializeElement(item.element); });
+          function cancel() {
+            animations.forEach((animation) => animation.cancel());
+            animationFrames.forEach((frame) => window.cancelAnimationFrame(frame));
+            timeouts.forEach((timeout) => window.clearTimeout(timeout));
+            animations = [];
+            animationFrames = [];
+            timeouts = [];
+            originalStyles.forEach((style, element) => { if (style === null) element.removeAttribute("style"); else element.setAttribute("style", style); });
+            originalStyles.clear();
+            originalTextContents.forEach((content, element) => { element.innerHTML = content; });
+            originalTextContents.clear();
+            initializedElements.clear();
+          }
+          function playNumberRange(element, action) {
+            const range = action.numberRange;
+            const target = element.querySelector("[data-motion-text-content]");
+            if (!range || !target) return;
+            const startedAt = performance.now();
+            const duration = Math.max(0, Number(action.duration) || 0) * 1000;
+            const tick = (now) => {
+              const progress = duration === 0 ? 1 : Math.min(1, (now - startedAt) / duration);
+              target.textContent = formatMotionNumber(motionNumberValue(range, progress, action.easing), range);
+              if (progress < 1) animationFrames.push(window.requestAnimationFrame(tick));
+              else if (originalTextContents.has(target)) target.innerHTML = originalTextContents.get(target);
+            };
+            animationFrames.push(window.requestAnimationFrame(tick));
+          }
+          function playItem(item, delay) {
+            const timeout = window.setTimeout(() => {
+              const { action, element } = item;
+              initializeElement(element);
+              if (action.type === "tween" && action.preset === "numberRange" && action.numberRange) {
+                playNumberRange(element, action);
+                return;
+              }
+              let frames = action.type === "exit" ? exitFrames(action.preset) : enterFrames(action.preset);
+              if (action.type === "tween" && action.from && action.to) {
+                const count = action.path ? 31 : 2;
+                frames = Array.from({ length: count }, (_, frameIndex) => motionStateFrame(tweenMotionState(action.from, action.to, frameIndex / (count - 1), action.path)));
+              }
+              const animation = element.animate(frames, {
+                duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : Math.max(0, Number(action.duration) || 0) * 1000,
+                easing: MOTION_EASING[action.easing] || "ease-in-out",
+                fill: "forwards"
+              });
+              animations.push(animation);
+            }, Math.max(0, delay));
+            timeouts.push(timeout);
+          }
+          function consume() {
+            const batch = batches[batchIndex];
+            if (!batch) return false;
+            batchIndex += 1;
+            let previousStart = 0;
+            let previousDuration = 0;
+            batch.forEach((item, itemIndex) => {
+              const start = itemIndex === 0 ? 0 : item.action.start === "withPrevious" ? previousStart : previousStart + previousDuration;
+              playItem(item, start * 1000);
+              previousStart = start;
+              previousDuration = Number(item.action.duration) || 0;
+            });
+            return true;
+          }
+          if (batches[0]?.[0]?.action.start === "afterPrevious") {
+            const batch = batches[batchIndex];
+            batchIndex += 1;
+            const timeout = window.setTimeout(() => {
+              let previousStart = 0;
+              let previousDuration = 0;
+              batch?.forEach((item, itemIndex) => {
+                const start = itemIndex === 0 ? 0 : item.action.start === "withPrevious" ? previousStart : previousStart + previousDuration;
+                playItem(item, start * 1000);
+                previousStart = start;
+                previousDuration = Number(item.action.duration) || 0;
+              });
+            }, Math.max(0, autoStartDelay));
+            timeouts.push(timeout);
+          }
+          return { cancel, consume };
+        }
+
+        function captureMorph(slide, options = {}) {
+          const includeUnmatched = options.includeUnmatched !== false;
+          const captured = new Map();
+          const slideRect = slide.getBoundingClientRect();
+          const slideScaleX = slideRect.width / Math.max(slide.offsetWidth, 1);
+          const slideScaleY = slideRect.height / Math.max(slide.offsetHeight, 1);
+          slide.querySelectorAll("[data-slidex-block-type]").forEach((element, index) => {
+            const type = element.dataset.slidexBlockType || "";
+            const candidateSharedId = (element.dataset.sharedId || "").trim();
+            const sharedId = candidateSharedId && ["Text", "ImageBlock", "Shape", "SvgBlock"].includes(type) ? candidateSharedId : null;
+            const nodeId = (element.dataset.motionDocNodeId || "").trim() || type + "-" + index;
+            if (!sharedId && !includeUnmatched) return;
+            const snapshotKey = sharedId ? "shared:" + sharedId : "unmatched:" + nodeId;
+            if (captured.has(snapshotKey)) return;
+            const rect = element.getBoundingClientRect();
+            const styleTarget = type === "Text" ? element.querySelector("[data-motion-text-content]") || element : element;
+            const style = getComputedStyle(styleTarget);
+            const textLayout = type === "Text" ? captureTextLayout(styleTarget, slideRect, slideScaleX, slideScaleY) : null;
+            captured.set(snapshotKey, {
+              element,
+              frame: { left: (rect.left - slideRect.left) / slideScaleX, top: (rect.top - slideRect.top) / slideScaleY, width: rect.width / slideScaleX, height: rect.height / slideScaleY },
+              opacity: Number.isFinite(Number(style.opacity)) ? Number(style.opacity) : 1,
+              rotation: style.rotate === "none" ? "0deg" : style.rotate,
+              sharedId,
+              style: { backgroundColor: style.backgroundColor, borderRadius: style.borderRadius, color: style.color, fontFamily: style.fontFamily, fontSize: style.fontSize, fontStyle: style.fontStyle, fontWeight: style.fontWeight, letterSpacing: style.letterSpacing, lineHeight: style.lineHeight, textAlign: style.textAlign },
+              textFrame: textLayout?.frame || null,
+              textLineCount: textLayout?.lineCount || 0,
+              shape: type === "Shape" ? { shape: element.dataset.shapeKind || "rectangle", sides: Number(element.dataset.shapeSides) || 3, points: Number(element.dataset.shapePoints) || 5 } : null,
+              type
+            });
+          });
+          return captured;
+        }
+
+        function captureTextLayout(element, slideRect, scaleX, scaleY) {
+          const rects = [];
+          const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+          let node = walker.nextNode();
+          while (node) {
+            if ((node.textContent || "").trim()) {
+              const range = document.createRange();
+              range.selectNodeContents(node);
+              rects.push(...Array.from(range.getClientRects()).filter((rect) => rect.width > 0 && rect.height > 0));
+            }
+            node = walker.nextNode();
+          }
+          if (!rects.length) return null;
+          const left = Math.min(...rects.map((rect) => rect.left));
+          const top = Math.min(...rects.map((rect) => rect.top));
+          const right = Math.max(...rects.map((rect) => rect.right));
+          const bottom = Math.max(...rects.map((rect) => rect.bottom));
+          return {
+            frame: { left: (left - slideRect.left) / scaleX, top: (top - slideRect.top) / scaleY, width: (right - left) / scaleX, height: (bottom - top) / scaleY },
+            lineCount: new Set(rects.map((rect) => Math.round(rect.top * 2) / 2)).size
+          };
+        }
+
+        function playMorph(slide, source, duration, easingName, fadeUnmatched, shapeSoftness, shapePrecision, curve) {
+          if (!source?.size || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+          const easing = easingName === "custom" ? "cubic-bezier(" + curve.x1 + "," + curve.y1 + "," + curve.x2 + "," + curve.y2 + ")" : MOTION_EASING[easingName] || "ease-in-out";
+          // Only shared layers can participate in a Morph. Avoid synchronously
+          // measuring every destination block immediately after navigation.
+          const destination = captureMorph(slide, { includeUnmatched: false });
+          const overlay = document.createElement("div");
+          overlay.dataset.slidexMorphOverlay = "true";
+          Object.assign(overlay.style, { position: "absolute", inset: "0", overflow: "hidden", pointerEvents: "none", zIndex: "9999" });
+          slide.appendChild(overlay);
+          const animations = [];
+          const shapeFrames = [];
+          const hidden = [];
+          const moved = [];
+          let restoreBackground = null;
+          const transform = (origin, item) => {
+            const sourceWidth = Math.max(origin.frame.width, .001);
+            const sourceHeight = Math.max(origin.frame.height, .001);
+            const translateX = item.frame.left - origin.frame.left + (item.frame.width - origin.frame.width) / 2;
+            const translateY = item.frame.top - origin.frame.top + (item.frame.height - origin.frame.height) / 2;
+            return "translate(" + translateX + "px, " + translateY + "px) rotate(" + item.rotation + ") scale(" + item.frame.width / sourceWidth + ", " + item.frame.height / sourceHeight + ")";
+          };
+          // Keep source dimensions fixed and animate transform instead of
+          // left/top/width/height, which forces a canvas layout on every frame.
+          const frame = (origin, item) => ({ left: origin.frame.left + "px", top: origin.frame.top + "px", width: origin.frame.width + "px", height: origin.frame.height + "px", opacity: item.opacity, rotate: "none", transform: transform(origin, item), transformOrigin: "center center", backgroundColor: item.style.backgroundColor, borderRadius: item.style.borderRadius, color: item.style.color, fontSize: item.style.fontSize, fontWeight: item.style.fontWeight });
+          const textFrame = (itemFrame, style, opacity) => ({ left: itemFrame.left + "px", top: itemFrame.top + "px", width: itemFrame.width + "px", height: itemFrame.height + "px", opacity, transform: "none", color: style.color, fontFamily: style.fontFamily, fontSize: style.fontSize, fontStyle: style.fontStyle, fontWeight: style.fontWeight, letterSpacing: style.letterSpacing, lineHeight: style.lineHeight, textAlign: style.textAlign });
+          const prepareTextClone = (element, itemFrame, singleLine) => {
+            Object.assign(element.style, { position: "absolute", left: itemFrame.left + "px", top: itemFrame.top + "px", width: itemFrame.width + "px", height: itemFrame.height + "px", margin: "0", maxWidth: "none", overflow: "visible", transform: "none", transformOrigin: "left top", textAlign: singleLine ? "left" : element.style.textAlign });
+            if (singleLine) element.querySelectorAll(".block-line").forEach((line) => { line.style.whiteSpace = "nowrap"; });
+          };
+          const animateTextLayer = (from, to) => {
+            const sourceText = from.element.querySelector("[data-motion-text-content]");
+            const targetText = to.element.querySelector("[data-motion-text-content]");
+            if (!sourceText || !targetText) return;
+            const sameSingleLine = sourceText.textContent === targetText.textContent && from.textLineCount === 1 && to.textLineCount === 1 && from.textFrame && to.textFrame;
+            if (sameSingleLine) {
+              const clone = sourceText.cloneNode(true);
+              prepareTextClone(clone, from.textFrame, true);
+              overlay.appendChild(clone);
+              animations.push(clone.animate([textFrame(from.textFrame, from.style, from.opacity), textFrame(to.textFrame, to.style, to.opacity)], { duration, easing, fill: "forwards" }));
+              return;
+            }
+            const sourceClone = sourceText.cloneNode(true);
+            prepareTextClone(sourceClone, from.frame, false);
+            overlay.appendChild(sourceClone);
+            animations.push(sourceClone.animate([{ ...textFrame(from.frame, from.style, from.opacity), offset: 0 }, { ...textFrame(from.frame, from.style, 0), offset: .46 }, { ...textFrame(from.frame, from.style, 0), offset: 1 }], { duration, easing: "linear", fill: "forwards" }));
+            const targetClone = targetText.cloneNode(true);
+            prepareTextClone(targetClone, to.frame, false);
+            overlay.appendChild(targetClone);
+            animations.push(targetClone.animate([{ ...textFrame(to.frame, to.style, 0), offset: 0 }, { ...textFrame(to.frame, to.style, 0), offset: .38 }, { ...textFrame(to.frame, to.style, to.opacity), offset: .82 }, { ...textFrame(to.frame, to.style, to.opacity), offset: 1 }], { duration, easing: "linear", fill: "forwards" }));
+          };
+          destination.forEach((to, snapshotKey) => {
+            const from = source.get(snapshotKey);
+            if (!from?.sharedId || !to.sharedId || from.type !== to.type) return;
+            const live = slide.querySelector('[data-shared-id="' + CSS.escape(to.sharedId) + '"]');
+            if (live) { live.style.visibility = "hidden"; hidden.push(live); }
+            if (from.type === "Text") {
+              from.element.style.visibility = "hidden";
+              hidden.push(from.element);
+              animateTextLayer(from, to);
+              return;
+            }
+            // Move the decoded source node into the overlay instead of cloning
+            // embedded image media at navigation time. It is restored on cleanup.
+            const clone = from.element;
+            const parent = clone.parentNode;
+            if (!parent) return;
+            moved.push({ element: clone, parent, nextSibling: clone.nextSibling, style: clone.getAttribute("style") });
+            // The moved source node is now inside the active destination slide.
+            // Disable the generic active-slide motion-block entrance so
+            // it cannot fade or scale on top of the Morph animation.
+            Object.assign(clone.style, frame(from, from), { animation: "none", position: "absolute", margin: "0" });
+            overlay.appendChild(clone);
+            if (from.type === "Shape" && from.shape && to.shape && from.shape.shape !== to.shape.shape) {
+              animateShapeMorph(clone, from.shape, to.shape, duration, easingName, shapeSoftness, shapePrecision, shapeFrames, curve);
+            }
+            animations.push(clone.animate([frame(from, from), frame(from, to)], { duration, easing, fill: "forwards" }));
+          });
+          if (fadeUnmatched) {
+            // Let the existing leaving-slide transition fade source-only layers
+            // behind the destination. This keeps decoded media in its original
+            // DOM instead of cloning or reparenting embedded images at click time.
+            const backgroundColor = slide.style.backgroundColor;
+            slide.style.backgroundColor = "transparent";
+            restoreBackground = () => {
+              if (backgroundColor) slide.style.backgroundColor = backgroundColor;
+              else slide.style.removeProperty("background-color");
+            };
+            const content = slide.querySelector(".slide-content");
+            if (content) animations.push(content.animate([
+              { offset: 0, opacity: 0 },
+              { offset: .28, opacity: 0 },
+              { offset: .78, opacity: 1 },
+              { offset: 1, opacity: 1 }
+            ], { duration, easing: "linear", fill: "both" }));
+          }
+          const cleanup = () => {
+            animations.forEach((animation) => animation.cancel());
+            shapeFrames.forEach((frame) => cancelAnimationFrame(frame));
+            hidden.forEach((element) => element.style.removeProperty("visibility"));
+            moved.slice().reverse().forEach(({ element, parent, nextSibling, style }) => {
+              if (style === null) element.removeAttribute("style"); else element.setAttribute("style", style);
+              if (nextSibling?.parentNode === parent) parent.insertBefore(element, nextSibling); else parent.appendChild(element);
+            });
+            restoreBackground?.();
+            overlay.remove();
+          };
+          window.setTimeout(cleanup, duration + 40);
+          return cleanup;
+        }
+
+        function animateShapeMorph(clone, from, to, duration, easing, softness, precision, frames, curve) {
+          const fromPoints = shapePoints(from, precision);
+          const toPoints = shapePoints(to, precision);
+          if (!fromPoints || !toPoints) return;
+          const geometry = Array.from(clone.querySelectorAll("svg path, svg circle, svg rect, svg polygon")).find((node) => !node.closest("defs, mask"));
+          if (!geometry) return;
+          const path = geometry.tagName.toLowerCase() === "path" ? geometry : document.createElementNS("http://www.w3.org/2000/svg", "path");
+          if (path !== geometry) {
+            ["fill", "stroke", "stroke-width", "stroke-linejoin", "vector-effect", "style"].forEach((name) => { const value = geometry.getAttribute(name); if (value !== null) path.setAttribute(name, value); });
+            geometry.replaceWith(path);
+          }
+          const startedAt = performance.now();
+          const tick = (now) => {
+            const raw = duration === 0 ? 1 : Math.min(1, (now - startedAt) / duration);
+            path.setAttribute("d", shapePath(fromPoints, toPoints, morphEase(raw, easing, curve), softness));
+            if (raw < 1) frames.push(requestAnimationFrame(tick));
+          };
+          frames.push(requestAnimationFrame(tick));
+        }
+
+        function shapePoints(descriptor, requestedCount) {
+          if (descriptor.shape === "line") return null;
+          const count = Math.max(12, Math.min(Math.round(Number(requestedCount) || 48), 96));
+          if (descriptor.shape === "circle") return Array.from({ length: count }, (_, index) => { const angle = -Math.PI / 2 + Math.PI * 2 * index / count; return { x: 50 + 48 * Math.cos(angle), y: 50 + 48 * Math.sin(angle) }; });
+          const custom = {
+            arrow: [[2,22],[58,22],[58,2],[98,50],[58,98],[58,78],[2,78]], chevron: [[1,1],[68,1],[99,50],[68,99],[1,99],[32,50]], corner: [[1,1],[72,1],[99,28],[99,99],[1,99]], diamond: [[50,1],[99,50],[50,99],[1,50]], hexagon: [[20,1],[80,1],[99,50],[80,99],[20,99],[1,50]], parallelogram: [[24,1],[99,1],[76,99],[1,99]], rectangle: [[1,1],[99,1],[99,99],[1,99]]
+          };
+          let vertices;
+          if (descriptor.shape === "star") vertices = radialShape(Math.max(3, Math.min(Math.round(descriptor.points || 5), 12)), true);
+          else if (descriptor.shape === "triangle") vertices = radialShape(3, false);
+          else if (descriptor.shape === "polygon") vertices = radialShape(Math.max(3, Math.min(Math.round(descriptor.sides || 3), 12)), false);
+          else vertices = (custom[descriptor.shape] || custom.rectangle).map((point) => ({ x: point[0], y: point[1] }));
+          return resampleShape(vertices, count);
+        }
+
+        function radialShape(count, star) {
+          const total = star ? count * 2 : count;
+          return Array.from({ length: total }, (_, index) => { const angle = -Math.PI / 2 + Math.PI * 2 * index / total; const radius = star && index % 2 ? 20.16 : 48; return { x: 50 + radius * Math.cos(angle), y: 50 + radius * Math.sin(angle) }; });
+        }
+
+        function resampleShape(vertices, count) {
+          const segments = vertices.map((point, index) => { const to = vertices[(index + 1) % vertices.length]; return { from: point, to, length: Math.hypot(to.x - point.x, to.y - point.y) }; });
+          const perimeter = segments.reduce((total, segment) => total + segment.length, 0);
+          return Array.from({ length: count }, (_, index) => { let distance = perimeter * index / count; const segment = segments.find((candidate) => { if (distance <= candidate.length) return true; distance -= candidate.length; return false; }) || segments[segments.length - 1]; const progress = segment.length ? distance / segment.length : 0; return { x: segment.from.x + (segment.to.x - segment.from.x) * progress, y: segment.from.y + (segment.to.y - segment.from.y) * progress }; });
+        }
+
+        function shapePath(from, to, progress, softness) {
+          const count = Math.min(from.length, to.length);
+          const weight = Math.max(0, Math.min(Number(softness) || 0, 1)) * Math.sin(Math.PI * progress) * .42;
+          const points = Array.from({ length: count }, (_, index) => ({ x: from[index].x + (to[index].x - from[index].x) * progress, y: from[index].y + (to[index].y - from[index].y) * progress }));
+          const resolved = weight ? points.map((point, index) => { const previous = points[(index - 1 + count) % count]; const next = points[(index + 1) % count]; return { x: point.x + ((previous.x + next.x) / 2 - point.x) * weight, y: point.y + ((previous.y + next.y) / 2 - point.y) * weight }; }) : points;
+          return "M" + resolved.map((point) => point.x.toFixed(2) + "," + point.y.toFixed(2)).join(" L") + " Z";
+        }
+
+        function morphEase(value, easing, curve) {
+          if (easing === "linear") return value;
+          if (easing === "easeIn") return value * value;
+          if (easing === "easeOut") return 1 - (1 - value) * (1 - value);
+          if (easing === "smooth") return value * value * value * (value * (value * 6 - 15) + 10);
+          if (easing === "emphasized") return cubicBezierProgress(value, { x1: .2, y1: 0, x2: 0, y2: 1 });
+          if (easing === "spring") return Math.min(1, Math.max(0, 1 - Math.cos(value * Math.PI * 2.5) * Math.exp(-5 * value)));
+          if (easing === "backOut") return cubicBezierProgress(value, { x1: .34, y1: 1.56, x2: .64, y2: 1 });
+          if (easing === "custom") return cubicBezierProgress(value, curve);
+          return value < .5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2;
+        }
+
+        function cubicBezierProgress(progress, curve) {
+          let lower = 0, upper = 1, t = progress;
+          for (let index = 0; index < 12; index += 1) {
+            const x = cubicCoordinate(t, curve.x1, curve.x2);
+            if (Math.abs(x - progress) < .0001) break;
+            if (x < progress) lower = t; else upper = t;
+            t = (lower + upper) / 2;
+          }
+          return cubicCoordinate(t, curve.y1, curve.y2);
+        }
+
+        function cubicCoordinate(t, first, second) {
+          const inverse = 1 - t;
+          return 3 * inverse * inverse * t * first + 3 * inverse * t * t * second + t * t * t;
+        }
+
+        function finiteDatasetNumber(value, fallback) {
+          const parsed = Number(value);
+          return Number.isFinite(parsed) ? parsed : fallback;
+        }
+
         function render(nextIndex, replay = false) {
           if (slides.length === 0) return;
           const previousIndex = index;
           const nextResolvedIndex = (nextIndex + slides.length) % slides.length;
           const previousSlide = slides[previousIndex];
           const forward = nextResolvedIndex >= previousIndex;
+          const morphSlide = forward ? previousSlide : slides[nextResolvedIndex];
+          // MotionDoc's native frame is the complete final state. Restore it
+          // before measuring a Morph so an early click cannot capture a
+          // half-finished entrance scale or opacity from Action Tween.
+          motionController?.cancel();
+          const morphSource = !replay && previousSlide && previousSlide !== slides[nextResolvedIndex] && morphSlide?.classList.contains("slide-transition-morph")
+            ? captureMorph(previousSlide, { includeUnmatched: false })
+            : null;
+          morphCleanup?.();
           index = nextResolvedIndex;
-          slides.forEach((slide) => slide.classList.remove("is-active", "is-leaving"));
+          slides.forEach((slide) => slide.classList.remove("is-active", "is-leaving", "is-morph-leaving"));
           const activeSlide = slides[index];
 
-          if (!replay && previousSlide && previousSlide !== activeSlide && !activeSlide.classList.contains("slide-transition-none")) {
+          if (!replay && previousSlide && previousSlide !== activeSlide && (morphSource || !activeSlide.classList.contains("slide-transition-none"))) {
             previousSlide.classList.add("is-leaving");
-            window.setTimeout(() => previousSlide.classList.remove("is-leaving"), Math.max(180, Number(activeSlide.style.getPropertyValue("--slide-transition-duration").replace("s", "")) * 1000 || 720));
+            if (morphSource) previousSlide.classList.add("is-morph-leaving");
+            const transitionOwner = morphSource ? morphSlide : activeSlide;
+            window.setTimeout(() => previousSlide.classList.remove("is-leaving", "is-morph-leaving"), Math.max(180, Number(transitionOwner.style.getPropertyValue("--slide-transition-duration").replace("s", "")) * 1000 || 720));
           }
           document.documentElement.dataset.slideDirection = forward ? "forward" : "backward";
 
@@ -384,6 +857,17 @@ export function makeMotionDocExportRuntime() {
           }
 
           activeSlide.classList.add("is-active");
+          let transitionDelay = 0;
+          if (morphSource) {
+            const duration = Math.max(0, Number(morphSlide.style.getPropertyValue("--slide-transition-duration").replace("s", "")) || .72) * 1000;
+            transitionDelay = duration;
+            const easing = morphSlide.dataset.morphEasing || "easeInOut";
+            const curve = { x1: finiteDatasetNumber(morphSlide.dataset.morphCurveX1, .4), y1: finiteDatasetNumber(morphSlide.dataset.morphCurveY1, 0), x2: finiteDatasetNumber(morphSlide.dataset.morphCurveX2, .2), y2: finiteDatasetNumber(morphSlide.dataset.morphCurveY2, 1) };
+            morphCleanup = playMorph(activeSlide, morphSource, duration, easing, morphSlide.dataset.morphFadeUnmatched !== "false", Number(morphSlide.dataset.morphShapeSoftness) || .32, Number(morphSlide.dataset.morphShapePrecision) || 48, curve);
+          } else if (!replay && previousSlide && previousSlide !== activeSlide && !activeSlide.classList.contains("slide-transition-none")) {
+            transitionDelay = Math.max(0, Number(activeSlide.style.getPropertyValue("--slide-transition-duration").replace("s", "")) || .72) * 1000;
+          }
+          motionController = makeMotionController(activeSlide, transitionDelay, morphSource);
           layoutCroppedImages(activeSlide);
           renderHtmlScenes(index, replay);
           renderSvgScenes(index, replay);
@@ -434,6 +918,22 @@ export function makeMotionDocExportRuntime() {
         }
 
         document.addEventListener("click", (event) => {
+          const interactive = event.target instanceof Element ? event.target.closest("[data-slidex-interaction]") : null;
+          if (interactive && interactive.closest(".slide") === slides[index]) {
+            try {
+              const interaction = JSON.parse(interactive.dataset.slidexInteraction || "null");
+              const action = interaction?.version === 1 && interaction.trigger === "click" ? interaction.action : null;
+              if (action?.type === "nextSlide") { stop(); render(index + 1); return; }
+              if (action?.type === "previousSlide") { stop(); render(index - 1); return; }
+              if (action?.type === "goToSlide" && Number.isInteger(action.slide) && action.slide > 0) { stop(); render(action.slide - 1); return; }
+              if (action?.type === "openUrl" && typeof action.url === "string") {
+                if (action.url.startsWith("#") && action.url.length > 1) { location.hash = action.url; return; }
+                const url = new URL(action.url);
+                if (["https:", "http:", "mailto:"].includes(url.protocol)) window.open(url.href, "_blank", "noopener,noreferrer");
+                return;
+              }
+            } catch {}
+          }
           const dot = event.target.closest("[data-slide-target]");
           if (dot) {
             stop();
@@ -441,7 +941,22 @@ export function makeMotionDocExportRuntime() {
             return;
           }
           const button = event.target.closest("[data-action]");
-          if (!button) return;
+          if (!button) {
+            if (event.target.closest(".viewport") && !event.target.closest("a,button,input,iframe,video")) {
+              const activeSlide = slides[index];
+              if (activeSlide?.querySelector("[data-slidex-interaction]")) {
+                window.clearTimeout(interactionHintTimer);
+                activeSlide.classList.remove("show-interaction-hints");
+                activeSlide.getBoundingClientRect();
+                activeSlide.classList.add("show-interaction-hints");
+                interactionHintTimer = window.setTimeout(() => activeSlide.classList.remove("show-interaction-hints"), 900);
+                return;
+              }
+              stop();
+              if (!motionController?.consume()) render(index + 1);
+            }
+            return;
+          }
           const action = button.dataset.action;
 
           if (action === "prev") {
@@ -450,7 +965,7 @@ export function makeMotionDocExportRuntime() {
           }
           if (action === "next") {
             stop();
-            render(index + 1);
+            if (!motionController?.consume()) render(index + 1);
           }
           if (action === "replay") {
             render(index, true);
@@ -475,7 +990,7 @@ export function makeMotionDocExportRuntime() {
           if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") {
             event.preventDefault();
             stop();
-            render(index + 1);
+            if (!motionController?.consume()) render(index + 1);
           }
           if (event.key === "ArrowLeft" || event.key === "PageUp") {
             event.preventDefault();
@@ -1480,6 +1995,7 @@ export function makeMotionDocExportRuntime() {
 
         async function prepareStaticExport(options = {}) {
           stop();
+          motionController?.cancel();
           const requestedRasterScale = Number(options.rasterScale);
           staticExportRasterScale = Number.isFinite(requestedRasterScale)
             ? Math.max(0.25, Math.min(requestedRasterScale, 2))

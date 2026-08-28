@@ -1,4 +1,4 @@
-import type { CSSProperties, DragEventHandler, MouseEventHandler, PointerEventHandler, ReactNode, RefObject } from "react";
+import { useLayoutEffect, type CSSProperties, type DragEventHandler, type MouseEventHandler, type PointerEventHandler, type ReactNode, type RefObject } from "react";
 import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
 import { sceneContainsHtmlRuntime } from "@/features/pitch/application/htmlRuntimePolicy";
 import {
@@ -16,6 +16,7 @@ import { CanvasSlideAddControls } from "@/features/pitch/ui/preview/CanvasChrome
 import { PreviewPane } from "@/features/pitch/ui/preview/PreviewPane";
 import { ViewportDeferredPreview } from "@/features/pitch/ui/preview/ViewportDeferredPreview";
 import { HtmlPageThumbnail } from "@/features/pitch/ui/preview/HtmlPageThumbnail";
+import { createMotionPlaybackController } from "@/features/pitch/application/motionPlayback";
 
 type CanvasSlideFrameProps = {
   actualScale: number;
@@ -83,6 +84,15 @@ export function CanvasSlideFrame({
     ? Math.max(1, Number(htmlBlock.props.page))
     : slide.index + 1;
 
+  useLayoutEffect(() => {
+    if (!isActive || replayNonce < 1) return;
+    const root = canvasRef.current;
+    if (!root) return;
+    const playback = createMotionPlaybackController(root);
+    playback.playAll();
+    return playback.cancel;
+  }, [canvasRef, isActive, replayNonce]);
+
   return (
     <div
       className={`relative flex shrink-0 flex-col gap-2 transition-opacity ${isActive ? "z-30" : "z-0 opacity-80 hover:opacity-100"}`}
@@ -122,6 +132,7 @@ export function CanvasSlideFrame({
         >
           <div
             className={`absolute left-0 top-0 ${isActive ? "overflow-visible" : "overflow-hidden"}`}
+            data-motion-canvas-content={isActive ? "active" : undefined}
             style={{
               height: CANVAS_HEIGHT,
               transform: `scale(${actualScale})`,

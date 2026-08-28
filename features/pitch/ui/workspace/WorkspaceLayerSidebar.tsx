@@ -143,6 +143,8 @@ function LayerSidebarContent({
       dragOverBlockIndex={selection.dragOverBlockIndex}
       moveBlock={commands.moveBlock}
       moveBlockToEdge={commands.moveBlockToEdge}
+      moveSlideIntoMorphGroup={commands.moveSlideIntoMorphGroup}
+      moveSlideOutOfMorphGroup={commands.moveSlideOutOfMorphGroup}
       onAddSlide={onAddSlide}
       onSelectBlock={selection.selectBlockFromLayer}
       onSelectSlide={onSelectSlide}
@@ -160,6 +162,7 @@ function LayerSidebarContent({
       source={document.canvasSource}
       templateLibraryEnabled={templateLibraryEnabled}
       toggleBlockPositionLock={commands.toggleBlockPositionLock}
+      unlinkSharedMorphGroup={commands.unlinkSharedMorphGroup}
     />
   );
 }

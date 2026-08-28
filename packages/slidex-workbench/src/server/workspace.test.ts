@@ -139,6 +139,29 @@ test("local workspace creates a new deck from the bundled public template", asyn
   assert.deepEqual(validateOpenSlideXLocalMedia(source).issues, []);
 });
 
+test("local workspace copies official template assets into each new deck", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const planetary = await workspace.create({
+    locale: "en",
+    templateId: "planetary-morph",
+    templateVersion: "1.0.0",
+    title: "Planetarium"
+  });
+  const church = await workspace.create({
+    locale: "en",
+    templateId: "church-presentation",
+    templateVersion: "1.0.0",
+    title: "Sunday welcome"
+  });
+
+  await access(path.join(workspaceRoot, planetary.id, "assets", "planetarium-space-background-bf33da3348efa85f.webp"));
+  await access(path.join(workspaceRoot, planetary.id, "assets", "Uranus_Voyager2_color_calibrated-ea1eab40a19cef79.webp"));
+  await access(path.join(workspaceRoot, church.id, "assets", "source-5ad7b364e098eba0.html"));
+  assert.equal(parseMotionDoc(await readFile(path.join(workspaceRoot, church.id, "presentation.mdx"), "utf8")).scenes.length, 13);
+});
+
 test("local workspace renders each official template slide for the preview gallery", async (context) => {
   const { root, workspace } = await fixture();
   context.after(async () => rm(root, { force: true, recursive: true }));
@@ -183,6 +206,29 @@ test("local workspace renders and caches the official template's real shader cov
   assert.ok(stats.channels.some((channel) => channel.stdev > 8));
   assert.equal(await workspace.templateCover({ id: "summer-time-report", locale: "en", slideIndex: 0, version: "1.0.0" }), cover);
   assert.ok((await readdir(path.join(workspace.stateRoot, "template-covers"))).some((name) => name.endsWith(".png")));
+});
+
+test("local workspace renders native and browser-native official template covers", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+  const { root, workspace } = await fixture();
+  context.after(async () => {
+    await closeSlideXChromiumPool();
+    await rm(root, { force: true, recursive: true });
+  });
+
+  const [planetary, churchFirst, churchLast] = await Promise.all([
+    workspace.templateCover({ id: "planetary-morph", locale: "en", slideIndex: 0, version: "1.0.0" }),
+    workspace.templateCover({ id: "church-presentation", locale: "en", slideIndex: 0, version: "1.0.0" }),
+    workspace.templateCover({ id: "church-presentation", locale: "en", slideIndex: 12, version: "1.0.0" })
+  ]);
+  const encodedPngs = [planetary, churchFirst, churchLast].map((cover) => cover.match(/href="data:image\/png;base64,([^"]+)"/)?.[1]);
+  assert.ok(encodedPngs.every(Boolean));
+  const metadata = await Promise.all(encodedPngs.map((encoded) => sharp(Buffer.from(encoded!, "base64")).metadata()));
+  assert.ok(metadata.every((image) => image.width === 1920 && image.height === 1080));
+  assert.notEqual(churchFirst, churchLast);
 });
 
 test("local workspace renders and caches the presentation's real shader cover", async (context) => {
@@ -367,7 +413,7 @@ test("portable MDX export carries project images through Workspace import", asyn
   const originalRoot = path.join(workspaceRoot, original.id);
   const originalAsset = path.join(originalRoot, "assets", "portable.webp");
   await writeFile(originalAsset, await tinyWebp());
-  const originalSource = `# Portable source\n\n<Slide><ImageBlock src="assets/portable.webp" alt="Portable" /></Slide>\n`;
+  const originalSource = `# Portable source\n\n<Slide><ImageBlock src="assets/portable.webp" alt="Portable" /><Shape shape="circle" shapeImageSrc="assets/portable.webp" /></Slide>\n`;
   await writeFile(path.join(originalRoot, "presentation.mdx"), originalSource, "utf8");
 
   const exportPath = path.join(root, "portable.mdx");
@@ -386,6 +432,32 @@ test("portable MDX export carries project images through Workspace import", asyn
   const storedAssets = (await readdir(path.join(importedRoot, "assets"))).filter((name) => name.endsWith(".webp"));
   assert.equal(storedAssets.length, 1);
   assert.match(storedSource, new RegExp(`src="assets/${storedAssets[0]}"`));
+  assert.match(storedSource, new RegExp(`shapeImageSrc="assets/${storedAssets[0]}"`));
+});
+
+test("MDX folder import carries referenced image sidecars into ImageBlock and Shape layers", async (context) => {
+  const { root, workspace, workspaceRoot } = await fixture();
+  context.after(async () => rm(root, { force: true, recursive: true }));
+
+  const source = `# Folder sidecars
+
+<Slide>
+  <ImageBlock src="assets/planet.png" alt="Planet" x={8} y={10} w={38} h={80} />
+  <Shape shape="circle" shapeImageSrc="assets/planet.png" x={54} y={10} w={38} h={80} />
+</Slide>
+`;
+  const imported = await workspace.importMdx(
+    new File([source], "presentation.mdx", { type: "text/mdx" }),
+    [{ file: new File([await tinyPng()], "planet.png", { type: "image/png" }), path: "assets/planet.png" }]
+  );
+  const importedRoot = path.join(workspaceRoot, imported.id);
+  const storedSource = await readFile(path.join(importedRoot, "presentation.mdx"), "utf8");
+  const storedAssets = (await readdir(path.join(importedRoot, "assets"))).filter((name) => name.endsWith(".webp"));
+
+  assert.equal(storedAssets.length, 1);
+  assert.doesNotMatch(storedSource, /assets\/planet\.png/);
+  assert.match(storedSource, new RegExp(`src="assets/${storedAssets[0]}"`));
+  assert.match(storedSource, new RegExp(`shapeImageSrc="assets/${storedAssets[0]}"`));
 });
 
 test("portable MDX export restores safe SvgBlock assets", async (context) => {
@@ -737,6 +809,24 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   const importedPayload = await imported.json();
   assert.equal(importedPayload.presentation.title, "Imported through API");
   assert.equal(await readFile(path.join(workspaceRoot, importedPayload.presentation.id, "presentation.mdx"), "utf8"), importedSource);
+
+  const mdxSidecarForm = new FormData();
+  mdxSidecarForm.set("file", new File([
+    `# MDX folder import\n\n<Slide><Shape shape="circle" shapeImageSrc="assets/api-planet.png" /></Slide>\n`
+  ], "presentation.mdx", { type: "text/mdx" }));
+  mdxSidecarForm.append("asset", new File([await tinyPng()], "api-planet.png", { type: "image/png" }));
+  mdxSidecarForm.append("assetPath", "assets/api-planet.png");
+  const mdxSidecarImport = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/presentations/import`, {
+    body: mdxSidecarForm,
+    headers: { origin: `http://127.0.0.1:${uiPort}` },
+    method: "POST"
+  });
+  assert.equal(mdxSidecarImport.status, 201);
+  const mdxSidecarPayload = await mdxSidecarImport.json();
+  const mdxSidecarRoot = path.join(workspaceRoot, mdxSidecarPayload.presentation.id);
+  const mdxSidecarSource = await readFile(path.join(mdxSidecarRoot, "presentation.mdx"), "utf8");
+  assert.match(mdxSidecarSource, /shapeImageSrc="assets\/[A-Za-z0-9._-]+\.webp"/);
+  assert.doesNotMatch(mdxSidecarSource, /api-planet\.png/);
 
   const htmlSidecarForm = new FormData();
   htmlSidecarForm.set("file", new File([

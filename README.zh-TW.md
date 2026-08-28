@@ -80,6 +80,8 @@ Starter 內含五項專案層級的 Agent Skills：PPTX 原始檔匯入、MDX �
 
 - 從空白簡報或官方範本開始。
 - 在本機 Workbench 編輯 native MotionDoc MDX 簡報。
+- 不使用影片式時間軸，也能組合精選的「開始、動作、結束」效果、文字數字區間，以及可柔化的形狀對形狀 Shared Morph。
+- 可將任何 native 圖層設為安全的點擊區域，用來切換投影片或開啟連結；MDX 與匯出 HTML 保留相同行為。
 - 透過 Vite HMR 預覽、驗證、render 與匯出本機檔案。
 - 為支援的 agent client 設定選用的 Workspace 範圍 MCP 存取。
 

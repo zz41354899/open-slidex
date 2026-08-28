@@ -48,6 +48,7 @@ export function Text({
   return (
     <MotionBlock
       className={`w-full text-lg leading-8 text-[var(--slide-muted)] md:text-2xl md:leading-9`}
+      motionTextContent
       style={{
         ...textStyle({ fontFamily, fontSize: fontSize ?? MOTION_DOC_FONT_SIZES.body, fontStyle, fontWeight, letterSpacing, lineHeight, lineHeightPt }, 1.45, textAlign),
         ...textBoxAlignment(textVerticalAlign),

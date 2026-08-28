@@ -28,6 +28,7 @@ export const elementAnimationPresets = [
 
 export const slideTransitionPresets = [
   { description: "No slide motion", label: "None", value: "none" },
+  { description: "Match layers across adjacent slides", label: "Morph", value: "morph" },
   { description: "Editorial fade", label: "Fade", value: "fade" },
   { description: "Stage lift", label: "Rise", value: "rise" },
   { description: "Cinematic push", label: "Push", value: "pushLeft" },

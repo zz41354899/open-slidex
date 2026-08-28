@@ -1,11 +1,6 @@
 
 import { Link2, Unlink2 } from "lucide-react";
-import {
-  elementAnimationPresets,
-  normalizeEnterAnimation,
-  type EnterAnimation
-} from "@/features/pitch/application/motionPresets";
-import type { MotionDocProps } from "@/core/motion-doc/domain/motionDocTypes";
+import type { MotionDocProps, MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
 import {
   blockAspectRatioLocked,
   blockRotation,
@@ -15,15 +10,17 @@ import { applyBlockTextStyle } from "@/core/motion-doc/domain/textStyleRanges";
 import { motionDocBlockFrame } from "@/core/motion-doc/domain/frame";
 import { relativeCornerFromRadius } from "@/core/motion-doc/application/continuousRoundedRect";
 import { MOTION_DOC_CANVAS_HEIGHT, MOTION_DOC_CANVAS_WIDTH } from "@/core/motion-doc/domain/viewport";
-import { applyElementAnimationProps } from "@/features/pitch/application/motionModel";
 import { autoSizeTextFrameProps } from "@/features/pitch/application/textFrameSizing";
 import { ColorControl, Field, NumberInput, type BlockFieldProps } from "@/features/pitch/ui/inspector/InspectorControls";
 import { AccordionSection } from "@/features/pitch/ui/inspector/controls/AccordionSection";
-import { MotionThumbnailGrid } from "@/features/pitch/ui/inspector/controls/MotionThumbnailGrid";
+import { MotionActionPanel } from "@/features/pitch/ui/inspector/MotionActionPanel";
+import { InteractionActionPanel } from "@/features/pitch/ui/inspector/InteractionActionPanel";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import { Toggle } from "@/common/ui/shadcnPrimitives";
 
 export function MotionFields({
+  activeSlide,
+  scenes,
   block,
   inheritedBackgroundColor,
   inheritedTextColor,
@@ -32,6 +29,8 @@ export function MotionFields({
   textValue,
   updateBlock
 }: BlockFieldProps & {
+  activeSlide: MotionDocScene;
+  scenes: MotionDocScene[];
   inheritedBackgroundColor: string;
   inheritedTextColor: string;
   isTextType: boolean;
@@ -64,7 +63,6 @@ export function MotionFields({
 
 
   const hasCustomBackground = Boolean(block.props.background ?? block.props.backgroundColor ?? block.props.bg);
-  const selectedAnimation = normalizeEnterAnimation(block.props.enter);
   const supportsAspectRatioLock = block.type === "Shape"
     ? block.props.shape !== "line"
     : block.type === "ImageBlock" || block.type === "VideoBlock" || block.type === "Chart";
@@ -102,10 +100,6 @@ export function MotionFields({
     updateProps(axis === "w"
       ? { ...block.props, h: Math.round(currentH * nextValue / currentW * 10) / 10, w: nextValue }
       : { ...block.props, h: nextValue, w: Math.round(currentW * nextValue / currentH * 10) / 10 });
-  }
-
-  function updateAnimation(value: EnterAnimation) {
-    updateProps(applyElementAnimationProps(block.props, value));
   }
 
   return (
@@ -233,24 +227,11 @@ export function MotionFields({
         </div>
       </AccordionSection>
 
-      <AccordionSection title="Motion & Transition" defaultOpen={false}>
-        <div className="flex flex-col gap-5">
-          {selectedAnimation !== "none" ? (
-            <div className="grid grid-cols-2 gap-1.5">
-              <NumberInput prefix={<span className="text-[10px] font-semibold text-neutral-500 w-9">{tx("Delay")}</span>} min="0" onChange={(value) => updateProps({ ...block.props, delay: value })} placeholder="0" step="0.1" suffix="s" value={block.props.delay ?? ""} />
-              <NumberInput prefix={<span className="text-[10px] font-semibold text-neutral-500 w-11">{tx("Duration")}</span>} min="0.1" onChange={(value) => updateProps({ ...block.props, duration: value === "" ? "" : value })} placeholder="0.6" step="0.1" suffix="s" value={block.props.duration ?? ""} />
-            </div>
-          ) : null}
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-medium text-neutral-500">{tx("Animation Style")}</span>
-            <MotionThumbnailGrid
-              label=""
-              onChange={updateAnimation}
-              options={elementAnimationPresets}
-              value={selectedAnimation}
-            />
-          </div>
-        </div>
+      <AccordionSection title="Actions" defaultOpen={false}>
+        <MotionActionPanel activeSlide={activeSlide} block={block} selectedBlockIndex={selectedBlockIndex} updateBlock={updateBlock} />
+      </AccordionSection>
+      <AccordionSection title="Click area" defaultOpen={true}>
+        <InteractionActionPanel block={block} scenes={scenes} selectedBlockIndex={selectedBlockIndex} updateBlock={updateBlock} />
       </AccordionSection>
     </div>
   );

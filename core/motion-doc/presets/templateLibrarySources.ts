@@ -136,7 +136,8 @@ export function getBundledTemplateLibraryBlankSource(templateId: string, locale:
   const source = getBundledTemplateLibrarySource(templateId, locale);
   const firstSlide = source ? motionDocSlideSourceRanges(source)[0] : undefined;
   const tagName = firstSlide?.source.match(/^<(Slide|Scene)\b/)?.[1];
-  return firstSlide && tagName ? `# Untitled\n\n${firstSlide.openingTag}\n</${tagName}>` : undefined;
+  const openingTag = firstSlide?.openingTag.replace(/\s+slideTransition="morph"/, ' slideTransition="none"');
+  return openingTag && tagName ? `# Untitled\n\n${openingTag}\n</${tagName}>` : undefined;
 }
 
 export function getBundledTemplateLibraryDeck(templateId: string, locale: "zh-TW" | "en"): BundledTemplateLibraryDeck | undefined {

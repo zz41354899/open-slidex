@@ -76,7 +76,7 @@ export function slideMotionProps({
   slideTransition = motion.slideTransition;
   duration = motion.duration ?? 0.72;
 
-  if (slideTransition === "none") {
+  if (slideTransition === "none" || slideTransition === "morph") {
     return { initial: false };
   }
 

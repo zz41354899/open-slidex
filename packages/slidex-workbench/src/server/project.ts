@@ -146,7 +146,7 @@ export class SlideXProject {
 
   async save(input: { expectedRevision: string; source: string; title: string }) {
     await this.assertRevision(input.expectedRevision);
-    const source = await this.importEmbeddedImageAssets(input.source);
+    const source = await this.importEmbeddedImageAssets(normalizeWorkspaceAssetUrls(input.source));
     assertOpenSlideXLocalMedia(source);
     return this.snapshot(await this.adapter.save({ ...input, source }));
   }
@@ -464,7 +464,7 @@ export class SlideXProject {
     // pasted just before the autosave normalizes it to an assets/*.webp path.
     // Keep export behavior aligned with save so this valid user flow cannot
     // fail with local_media_not_allowed during that short interval.
-    const source = await this.importEmbeddedImageAssets(input.source);
+    const source = await this.importEmbeddedImageAssets(normalizeWorkspaceAssetUrls(input.source));
     assertOpenSlideXLocalMedia(source);
     const fileName = safeExportName(input.fileName);
     const parsedDocument = parseMotionDoc(source);
@@ -585,6 +585,18 @@ export function safeExportName(value: unknown) {
           .replace(/^-+|-+$/g, "")
       : "";
   return (normalized || "presentation").slice(0, 80);
+}
+
+const workspaceAssetUrlAttributePattern = /\b(backgroundImage|poster|shapeImageSrc|src)\s*=\s*(?:(["'])([^"']*)\2|\{\s*(["'])([^"']*)\4\s*\})/g;
+const workspaceAssetUrlPattern = /^(?:(?:https?:)?\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\/|\/)(?:api\/v1\/workspace\/presentations\/[A-Za-z0-9._-]+\/editor\/)?assets\/([A-Za-z0-9._-]+\.(?:avif|gif|jpe?g|png|webp|mp4|svg|html?))$/i;
+
+/** Workspace previews use routed local URLs, but MotionDoc persists assets by their portable path. */
+function normalizeWorkspaceAssetUrls(source: string) {
+  return source.replace(workspaceAssetUrlAttributePattern, (attribute, _prop: string, _quote: string, staticValue: string | undefined, _expressionQuote: string, expressionValue: string | undefined) => {
+    const value = (staticValue ?? expressionValue ?? "").trim();
+    const match = value.match(workspaceAssetUrlPattern);
+    return match ? attribute.replace(value, `assets/${match[1]}`) : attribute;
+  });
 }
 
 function assetName(source: string) {

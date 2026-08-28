@@ -10,7 +10,9 @@ import {
 
 const expectedTemplateSlides = new Map([
   ["summer-time-report", 7],
-  ["moodboard", 14]
+  ["moodboard", 14],
+  ["planetary-morph", 4],
+  ["church-presentation", 13]
 ]);
 
 test("official local templates include the prior MDX catalog without Notion or Obsidian", () => {
@@ -26,6 +28,7 @@ test("every official local template is complete, valid, and filesystem-safe", ()
     const expectedSlides = expectedTemplateSlides.get(template.id);
     assert.ok(expectedSlides, `Unexpected template: ${template.id}`);
     assert.equal(template.catalog.slideCount, expectedSlides);
+    assert.ok(template.assets.every((asset) => asset.path.startsWith("assets/")));
 
     const packageValidation = validateTemplatePackageV1(template);
     assert.equal(packageValidation.valid, true, `${template.id}: ${JSON.stringify(packageValidation.issues)}`);

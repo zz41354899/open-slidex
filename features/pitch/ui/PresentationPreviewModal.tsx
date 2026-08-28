@@ -1,13 +1,31 @@
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Maximize2, Minimize2, RotateCcw, X } from "lucide-react";
 import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
+import { interactionFromProps, parseInteraction } from "@/core/motion-doc/domain/interaction";
+import { motionDocBlockFrame } from "@/core/motion-doc/domain/frame";
+import { blockRotation } from "@/core/motion-doc/domain/blockTransform";
+import {
+  normalizeSharedMorphEasing,
+  sharedMorphCurveFromProps,
+  sharedMorphEffectProps,
+  type SharedMorphCurve,
+  type SharedMorphEasing
+} from "@/core/motion-doc/domain/sharedMorph";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "@/features/pitch/application/previewCanvas";
 import { PresentationThumbnailRail } from "@/features/pitch/ui/PresentationThumbnailRail";
 import { PreviewPane } from "@/features/pitch/ui/preview/PreviewPane";
 import { SharedHtmlSceneLayer } from "@/features/pitch/ui/preview/SharedHtmlSceneLayer";
 import { SharedSvgSceneLayer } from "@/features/pitch/ui/preview/SharedSvgSceneLayer";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
+import {
+  captureSharedMorph,
+  createMotionPlaybackController,
+  playSharedMorph,
+  sharedMorphMotionIds,
+  type MotionPlaybackController,
+  type SharedMorphSnapshot
+} from "@/features/pitch/application/motionPlayback";
 
 type PresentationPreviewModalProps = {
   activeSlideIndex: number;
@@ -29,19 +47,95 @@ export function PresentationPreviewModal({
   const { tx } = usePitchI18n();
   const previewRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const contentRootRef = useRef<HTMLDivElement | null>(null);
+  const playbackRef = useRef<MotionPlaybackController | null>(null);
+  const morphCleanupRef = useRef<(() => void) | null>(null);
+  const transitionDelayRef = useRef(0);
+  const interactionHintTimerRef = useRef<number | null>(null);
+  const pendingMorphRef = useRef<{
+    options: { curve: SharedMorphCurve; duration: number; easing: SharedMorphEasing; fadeUnmatched: boolean; shapePrecision: number; shapeSoftness: number };
+    snapshot: SharedMorphSnapshot;
+  } | null>(null);
   const [slideIndex, setSlideIndex] = useState(0);
   const [replayNonce, setReplayNonce] = useState(0);
   const [frameSize, setFrameSize] = useState({ height: 0, width: 0 });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSlideNavigatorOpen, setIsSlideNavigatorOpen] = useState(true);
+  const [showInteractionHints, setShowInteractionHints] = useState(false);
   const slideCount = scenes.length;
 
   const goToSlide = useCallback((nextIndex: number) => {
-    setSlideIndex(Math.min(Math.max(nextIndex, 0), Math.max(slideCount - 1, 0)));
-  }, [slideCount]);
+    const resolvedIndex = Math.min(Math.max(nextIndex, 0), Math.max(slideCount - 1, 0));
+    if (resolvedIndex === slideIndex) return;
+    const root = contentRootRef.current;
+    const sourceScene = scenes[slideIndex];
+    const targetScene = scenes[resolvedIndex];
+    const morphSceneIndex = resolvedIndex > slideIndex ? slideIndex : resolvedIndex;
+    const morphScene = resolvedIndex > slideIndex ? sourceScene : targetScene;
+    const morphProps = sharedMorphEffectProps(scenes, morphSceneIndex);
+    // Interactive overview links may jump across a Morph group. Shared IDs, not
+    // adjacency, determine which objects participate in the transition.
+    if (root && morphScene?.props.slideTransition === "morph") {
+      pendingMorphRef.current = {
+        options: {
+          curve: sharedMorphCurveFromProps(morphProps),
+          duration: numericProp(morphProps.transitionDuration, 0.72),
+          easing: morphEasingProp(morphProps.morphEasing),
+          fadeUnmatched: morphProps.morphFadeUnmatched !== "false" && morphProps.morphFadeUnmatched !== 0,
+          shapePrecision: numericProp(morphProps.morphShapePrecision, 48),
+          shapeSoftness: numericProp(morphProps.morphShapeSoftness, 0.32)
+        },
+        snapshot: captureSharedMorph(root)
+      };
+      transitionDelayRef.current = numericProp(morphProps.transitionDuration, 0.72) * 1000;
+    } else {
+      pendingMorphRef.current = null;
+      const transitionScene = scenes[resolvedIndex];
+      transitionDelayRef.current = transitionScene?.props.slideTransition && transitionScene.props.slideTransition !== "none"
+        ? numericProp(transitionScene.props.transitionDuration, 0.72) * 1000
+        : 0;
+    }
+    playbackRef.current?.cancel();
+    // A target slide can contain images or complex vector layers. Let the
+    // pointer interaction finish before React mounts that non-urgent tree.
+    startTransition(() => setSlideIndex(resolvedIndex));
+  }, [scenes, slideCount, slideIndex]);
 
   const goToPreviousSlide = useCallback(() => goToSlide(slideIndex - 1), [goToSlide, slideIndex]);
-  const goToNextSlide = useCallback(() => goToSlide(slideIndex + 1), [goToSlide, slideIndex]);
+  const goToNextSlide = useCallback(() => {
+    if (playbackRef.current?.consume()) return;
+    goToSlide(slideIndex + 1);
+  }, [goToSlide, slideIndex]);
+
+  const handleViewportClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    const target = (event.target as Element).closest<HTMLElement>("[data-slidex-interaction]");
+    const interaction = parseInteraction(target?.dataset.slidexInteraction).interaction;
+    if (!interaction) {
+      if (scenes[slideIndex]?.blocks.some((block) => interactionFromProps(block.props))) {
+        if (interactionHintTimerRef.current !== null) window.clearTimeout(interactionHintTimerRef.current);
+        setShowInteractionHints(true);
+        interactionHintTimerRef.current = window.setTimeout(() => setShowInteractionHints(false), 900);
+        return;
+      }
+      playbackRef.current?.consume();
+      return;
+    }
+    event.stopPropagation();
+    if (interaction.action.type === "nextSlide") goToSlide(slideIndex + 1);
+    if (interaction.action.type === "previousSlide") goToSlide(slideIndex - 1);
+    if (interaction.action.type === "goToSlide") goToSlide(interaction.action.slide - 1);
+    if (interaction.action.type === "openUrl") {
+      if (interaction.action.url.startsWith("#")) window.location.hash = interaction.action.url;
+      else window.open(interaction.action.url, "_blank", "noopener,noreferrer");
+    }
+  }, [goToSlide, scenes, slideIndex]);
+
+  useEffect(() => {
+    setShowInteractionHints(false);
+    return () => {
+      if (interactionHintTimerRef.current !== null) window.clearTimeout(interactionHintTimerRef.current);
+    };
+  }, [slideIndex]);
 
   const exitFullscreen = useCallback(async () => {
     if (document.fullscreenElement === previewRef.current) {
@@ -73,6 +167,30 @@ export function PresentationPreviewModal({
     if (!isOpen) return;
     setSlideIndex(Math.min(Math.max(activeSlideIndex, 0), Math.max(slideCount - 1, 0)));
   }, [activeSlideIndex, isOpen, slideCount]);
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const root = contentRootRef.current;
+    if (!root) return;
+    playbackRef.current?.cancel();
+    morphCleanupRef.current?.();
+    const pendingMorph = pendingMorphRef.current;
+    pendingMorphRef.current = null;
+    playbackRef.current = createMotionPlaybackController(root, {
+      autoStartDelayMs: transitionDelayRef.current,
+      deferMotionIds: pendingMorph
+        ? sharedMorphMotionIds(root, pendingMorph.snapshot)
+        : undefined
+    });
+    transitionDelayRef.current = 0;
+    if (pendingMorph) {
+      morphCleanupRef.current = playSharedMorph(root, pendingMorph.snapshot, pendingMorph.options);
+    }
+    return () => {
+      playbackRef.current?.cancel();
+      morphCleanupRef.current?.();
+    };
+  }, [isOpen, replayNonce, slideIndex]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -219,6 +337,7 @@ export function PresentationPreviewModal({
             <div className={`flex min-h-0 min-w-0 flex-1 items-center justify-center ${isFullscreen ? "px-3 py-3 sm:px-6 sm:py-4" : "px-3 py-3 sm:px-6 sm:py-5 lg:px-8 lg:py-6"}`} ref={viewportRef}>
               <div
                 className={`relative shrink-0 overflow-hidden bg-black ${isFullscreen ? "rounded-[10px] shadow-[0_30px_90px_rgba(0,0,0,0.58)] ring-1 ring-white/[0.08]" : "rounded-sm shadow-[0_28px_100px_rgba(0,0,0,0.74)] ring-1 ring-white/[0.14]"}`}
+                onClick={handleViewportClick}
                 style={{
                   height: frameSize.height,
                   visibility: frameSize.width > 0 ? "visible" : "hidden",
@@ -227,6 +346,7 @@ export function PresentationPreviewModal({
               >
                 <div
                   className="absolute left-0 top-0"
+                  ref={contentRootRef}
                   style={{
                     height: CANVAS_HEIGHT,
                     transform: `scale(${scale})`,
@@ -237,6 +357,7 @@ export function PresentationPreviewModal({
                   <PreviewPane activeSlideIndex={slideIndex} hideHtmlSourceTextBlocks hideSharedHtmlBlocks hideSharedSvgBlocks replayNonce={replayNonce} scene={activeScene} />
                   <SharedHtmlSceneLayer activeSlideIndex={slideIndex} onRequestSlide={goToSlide} replayNonce={replayNonce} scenes={scenes} />
                   <SharedSvgSceneLayer activeSlideIndex={slideIndex} replayNonce={replayNonce} scenes={scenes} />
+                  {showInteractionHints && activeScene ? <InteractionAreaHints scene={activeScene} tx={tx} /> : null}
                 </div>
               </div>
             </div>
@@ -269,11 +390,11 @@ export function PresentationPreviewModal({
               </button>
             ) : null}
             <button
-              aria-label={tx("Restart current slide animation")}
+              aria-label={tx("Restart current slide actions")}
               className={`flex h-9 w-9 items-center justify-center text-neutral-400 transition hover:bg-white/[0.08] hover:text-white active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-35 ${isFullscreen ? "rounded-[14px] hover:bg-white/[0.12]" : "rounded-lg"}`}
               disabled={!activeScene}
               onClick={() => setReplayNonce((value) => value + 1)}
-              title={tx("Restart current slide animation")}
+              title={tx("Restart current slide actions")}
               type="button"
             >
               <RotateCcw size={15} />
@@ -308,6 +429,39 @@ export function PresentationPreviewModal({
   );
 }
 
+function InteractionAreaHints({ scene, tx }: { scene: MotionDocScene; tx: (key: string) => string }) {
+  return (
+    <div aria-label={tx("Available click areas")} className="pointer-events-none absolute inset-0 z-[90]">
+      {scene.blocks.map((block, index) => {
+        if (!interactionFromProps(block.props)) return null;
+        const frame = motionDocBlockFrame(block);
+        return (
+          <div
+            className="absolute rounded-[12px] border-[3px] border-violet-300 bg-violet-500/20 shadow-[0_0_0_7px_rgba(139,92,246,.13),0_0_36px_rgba(139,92,246,.5)] motion-safe:animate-pulse"
+            key={String(block.props.id ?? index)}
+            style={{
+              height: `${frame.h}%`,
+              left: `${frame.x}%`,
+              top: `${frame.y}%`,
+              transform: `rotate(${blockRotation(block.props)}deg)`,
+              width: `${frame.w}%`
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 function localePageStatus(tx: (key: string) => string, slideIndex: number, slideCount: number) {
   return `${tx("Slides")}: ${Math.min(slideIndex + 1, Math.max(slideCount, 1))} / ${Math.max(slideCount, 1)}`;
+}
+
+function numericProp(value: string | number | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function morphEasingProp(value: string | number | undefined) {
+  return normalizeSharedMorphEasing(value);
 }

@@ -97,6 +97,10 @@ export const motionDocExportStyles = `      :root {
         pointer-events: none;
         z-index: 1;
       }
+      .slide.is-leaving.is-morph-leaving {
+        animation-name: morph-exit-unmatched;
+        animation-timing-function: linear;
+      }
       .slide-content {
         position: relative;
         z-index: 10;
@@ -193,6 +197,11 @@ export const motionDocExportStyles = `      :root {
         width: var(--motion-w, 42%);
         height: var(--motion-h, auto);
       }
+      .slide.show-interaction-hints [data-slidex-interaction] {
+        border-radius: 12px;
+        box-shadow: 0 0 0 3px rgba(196, 181, 253, .95), 0 0 0 10px rgba(139, 92, 246, .18), 0 0 34px rgba(139, 92, 246, .55);
+        animation: interaction-area-hint .9s ease-out both !important;
+      }
       .motion-block > * {
         width: 100%;
         height: 100%;
@@ -250,6 +259,10 @@ export const motionDocExportStyles = `      :root {
           opacity: 1;
           transform: translate3d(0, 0, 0) scale(1) rotate(0);
         }
+      }
+      @keyframes interaction-area-hint {
+        0%, 100% { box-shadow: 0 0 0 3px rgba(196, 181, 253, .8), 0 0 0 7px rgba(139, 92, 246, .12), 0 0 20px rgba(139, 92, 246, .3); }
+        45% { box-shadow: 0 0 0 4px rgba(221, 214, 254, 1), 0 0 0 14px rgba(139, 92, 246, .23), 0 0 42px rgba(139, 92, 246, .65); }
       }
       @keyframes enter-reveal-motion {
         to {
@@ -744,6 +757,10 @@ export const motionDocExportStyles = `      :root {
       @keyframes slide-exit-soft {
         from { opacity: 1; transform: scale(1); filter: blur(0); }
         to { opacity: 0; transform: scale(.992); filter: blur(3px); }
+      }
+      @keyframes morph-exit-unmatched {
+        0% { opacity: 1; transform: scale(1); filter: blur(0); }
+        42%, 100% { opacity: 0; transform: scale(.996); filter: blur(2px); }
       }
       .block-chart {
         align-items: stretch;

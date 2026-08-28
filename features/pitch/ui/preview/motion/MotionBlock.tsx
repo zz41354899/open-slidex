@@ -31,6 +31,7 @@ export type ColorProps = {
 type MotionBlockProps = AnimationProps & {
   children: ReactNode;
   className?: string;
+  motionTextContent?: boolean;
   style?: CSSProperties;
 } & RadiusProps;
 
@@ -39,6 +40,7 @@ export function MotionBlock({
   children,
   className,
   fillFrame,
+  motionTextContent,
   radius,
   style,
   ...animation
@@ -51,7 +53,7 @@ export function MotionBlock({
 
   if (!hasElementMotion(animation)) {
     return (
-      <div className={className} style={blockStyle}>
+      <div className={className} data-motion-text-content={motionTextContent ? "true" : undefined} style={blockStyle}>
         {children}
       </div>
     );
@@ -60,6 +62,7 @@ export function MotionBlock({
   return (
     <motion.div
       className={className}
+      data-motion-text-content={motionTextContent ? "true" : undefined}
       style={blockStyle}
       {...elementMotionProps(animation)}
     >

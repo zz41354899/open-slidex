@@ -22,6 +22,7 @@ import { resolveSlideThemeColors } from "@/core/motion-doc/application/slideThem
 import { MOTION_DOC_CANVAS_HEIGHT, MOTION_DOC_CANVAS_WIDTH } from "@/core/motion-doc/domain/viewport";
 import { blockRotation } from "@/core/motion-doc/domain/blockTransform";
 import { motionDocBlockFrame, percentFrameValue } from "@/core/motion-doc/domain/frame";
+import { sharedMorphEffectProps } from "@/core/motion-doc/domain/sharedMorph";
 import {
   tableCellsFromProps,
   tableCellStyleOverride,
@@ -65,7 +66,10 @@ export function buildMotionDocHtml(source: string, customTitle?: string) {
   const document = parseMotionDoc(source);
   const displayTitle = customTitle || document.title;
   const slidesHtml = document.scenes
-    .map((scene, slideIndex) => renderSceneHtml(scene, { sharedHtmlOverlay: true, sharedSvgOverlay: true, slideIndex }))
+    .map((scene, slideIndex) => renderSceneHtml(
+      { ...scene, props: sharedMorphEffectProps(document.scenes, slideIndex) },
+      { sharedHtmlOverlay: true, sharedSvgOverlay: true, slideIndex }
+    ))
     .join("\n");
   const sharedHtml = renderSharedHtmlScenes(document.scenes);
   const sharedSvgHtml = renderSharedSvgScenes(document.scenes);
@@ -613,7 +617,7 @@ function renderSceneHtml(scene: MotionDocScene, options: RenderSceneHtmlOptions 
     shouldSplit ? "slide-content--split" : ""
   ].filter(Boolean).join(" ");
 
-  return `<section class="slide ${slideTransition}${options.active ? " is-active" : ""}" data-duration="${Math.max(duration, 1)}" data-has-shader="${shader ? "true" : "false"}" data-slidex-slide-index="${options.slideIndex ?? 0}" data-theme-tone="${themeColors.tone}" style="${escapeAttribute(inlineCss({
+  return `<section class="slide ${slideTransition}${options.active ? " is-active" : ""}" data-duration="${Math.max(duration, 1)}" data-has-shader="${shader ? "true" : "false"}" data-morph-easing="${escapeAttribute(stringProp(props.morphEasing) ?? "easeInOut")}" data-morph-curve-x1="${escapeAttribute(String(numberProp(props.morphCurveX1, 0.4)))}" data-morph-curve-y1="${escapeAttribute(String(numberProp(props.morphCurveY1, 0)))}" data-morph-curve-x2="${escapeAttribute(String(numberProp(props.morphCurveX2, 0.2)))}" data-morph-curve-y2="${escapeAttribute(String(numberProp(props.morphCurveY2, 1)))}" data-morph-fade-unmatched="${props.morphFadeUnmatched === "false" || props.morphFadeUnmatched === 0 ? "false" : "true"}" data-morph-shape-softness="${escapeAttribute(String(numberProp(props.morphShapeSoftness, 0.32)))}" data-morph-shape-precision="${escapeAttribute(String(numberProp(props.morphShapePrecision, 48)))}" data-slidex-slide-index="${options.slideIndex ?? 0}" data-theme-tone="${themeColors.tone}" style="${escapeAttribute(inlineCss({
     "--slide-align-x": alignXCss(props.alignX),
     "--slide-align-y": alignYCss(props.alignY),
     "--slide-accent": themeColors.accent,
@@ -727,16 +731,16 @@ function renderBlock(block: MotionDocBlock, blockIndex: number, options: RenderS
 
     if (markdownKind === "heading" || props.role === "title") {
       const depth = Math.min(Math.max(Math.round(numberProp(props.markdownDepth, props.role === "title" ? 1 : 2)), 1), 6);
-      return renderMotionBlock(block, `<h${depth} class="block-text block-markdown-heading">${contents}</h${depth}>`);
+      return renderMotionBlock(block, `<h${depth} class="block-text block-markdown-heading" data-motion-text-content="true">${contents}</h${depth}>`);
     }
     if (markdownKind === "blockquote") {
-      return renderMotionBlock(block, `<blockquote class="block-text block-text--blockquote">${contents}</blockquote>`);
+      return renderMotionBlock(block, `<blockquote class="block-text block-text--blockquote" data-motion-text-content="true">${contents}</blockquote>`);
     }
     if (markdownKind === "code") {
-      return renderMotionBlock(block, `<pre class="block-text block-text--code"><code>${contents}</code></pre>`);
+      return renderMotionBlock(block, `<pre class="block-text block-text--code" data-motion-text-content="true"><code>${contents}</code></pre>`);
     }
 
-    return renderMotionBlock(block, `<p class="block-text">${contents}</p>`);
+    return renderMotionBlock(block, `<p class="block-text" data-motion-text-content="true">${contents}</p>`);
   }
 
   if (block.type === "Chart") {
@@ -1040,7 +1044,13 @@ function renderMotionBlock(block: MotionDocBlock, content: string) {
   const props = "props" in block ? block.props : {};
   const nodeId = motionDocBlockId(block);
   const groupId = stringProp(props.groupId)?.trim() ?? "";
-  const enter = animationClass(props.enter);
+  const sharedId = stringProp(props.sharedId)?.trim() ?? "";
+  const motionSequence = stringProp(props.motion)?.trim() ?? "";
+  const interaction = stringProp(props.interaction)?.trim() ?? "";
+  const shapeAttributes = block.type === "Shape"
+    ? ` data-shape-kind="${escapeAttribute(stringProp(props.shape) ?? "rectangle")}" data-shape-points="${escapeAttribute(String(numberProp(props.points, 5)))}" data-shape-sides="${escapeAttribute(String(numberProp(props.sides, 3)))}"`
+    : "";
+  const enter = motionSequence ? "enter-none" : animationClass(props.enter);
   const delay = numberProp(props.delay, 0);
   const duration = numberProp(props.duration, 0.6);
   const fullClass = props.full === "true" || props.full === 1 ? " motion-block--full" : "";
@@ -1049,13 +1059,14 @@ function renderMotionBlock(block: MotionDocBlock, content: string) {
     ? ` data-slidex-x="${framePositionPercent(props.x, 8)}" data-slidex-y="${framePositionPercent(props.y, 12)}" data-slidex-w="${framePercent(props.w, 42)}" data-slidex-h="${framePercent(props.h, 18)}"`
     : "";
 
-  return `<div class="motion-block ${enter}${fullClass}${positionClass}"${nodeId ? ` data-slidex-node-id="${escapeAttribute(nodeId)}"` : ""}${groupId ? ` data-slidex-group-id="${escapeAttribute(groupId)}"` : ""}${frameAttributes} data-slidex-block-type="${escapeAttribute(block.type)}" style="${escapeAttribute(inlineCss({
+  return `<div class="motion-block ${enter}${fullClass}${positionClass}"${nodeId ? ` data-slidex-node-id="${escapeAttribute(nodeId)}"` : ""}${groupId ? ` data-slidex-group-id="${escapeAttribute(groupId)}"` : ""}${sharedId ? ` data-shared-id="${escapeAttribute(sharedId)}"` : ""}${motionSequence ? ` data-motion-sequence="${escapeAttribute(motionSequence)}"` : ""}${interaction ? ` data-slidex-interaction="${escapeAttribute(interaction)}"` : ""}${shapeAttributes}${frameAttributes} data-slidex-block-type="${escapeAttribute(block.type)}" style="${escapeAttribute(inlineCss({
     "--motion-delay": `${delay}s`,
     "--motion-duration": `${duration}s`,
     ...fontSizeVars(props),
     ...textStyleVars(props),
     ...positionVars(props),
     ...objectShadowCss(props),
+    ...(interaction ? { cursor: "pointer" } : {}),
     rotate: `${blockRotation(props)}deg`,
     ...radiusVars(props),
     ...colorVars(props),
@@ -1162,6 +1173,7 @@ function slideTransitionClass(value: string | number | undefined) {
   }
   if (value === "curtain") return "slide-transition-curtain";
   if (value === "fade") return "slide-transition-fade";
+  if (value === "morph") return "slide-transition-morph";
   if (value === "pushLeft") return "slide-transition-push-left";
   if (value === "rise") return "slide-transition-rise";
   if (value === "scale") return "slide-transition-scale";

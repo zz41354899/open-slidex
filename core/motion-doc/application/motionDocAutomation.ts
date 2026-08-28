@@ -28,6 +28,12 @@ import {
   motionDocSlideTransitions
 } from "@/core/motion-doc/domain/motionVocabulary";
 import {
+  motionEasings,
+  parseMotionSequence
+} from "@/core/motion-doc/domain/motionSequence";
+import { parseInteraction } from "@/core/motion-doc/domain/interaction";
+import { sharedMorphEasings, sharedMorphPairCount } from "@/core/motion-doc/domain/sharedMorph";
+import {
   legacyFontPixelsToPoints,
   MOTION_DOC_CANVAS_PROPS
 } from "@/core/motion-doc/domain/typography";
@@ -564,6 +570,7 @@ function validateMotionDocSource(
   document: ParsedMotionDoc
 ): MotionDocValidationIssue[] {
   const issues: MotionDocValidationIssue[] = [];
+  const actionIds = new Set<string>();
   const blockIds = new Set<string>();
   const sharedHtmlSources = new Map<string, string>();
   const sharedSvgSources = new Map<string, string>();
@@ -629,6 +636,9 @@ function validateMotionDocSource(
   }
 
   document.scenes.forEach((scene, sceneIndex) => {
+    const slideActionOrders = new Set<number>();
+    const slideActions: Array<{ blockIndex: number; order: number; start: string }> = [];
+    const sharedIds = new Set<string>();
     const slideTransition = scene.props.slideTransition;
     if (
       slideTransition !== undefined &&
@@ -639,6 +649,80 @@ function validateMotionDocSource(
         message: `slideTransition must be one of: ${motionDocSlideTransitions.join(", ")}.`,
         path: `scenes[${sceneIndex}].props.slideTransition`,
         severity: "error"
+      });
+    }
+
+    if (slideTransition === "morph") {
+      const targetScene = document.scenes[sceneIndex + 1];
+      if (!targetScene) {
+        issues.push({
+          code: "morph_missing_target",
+          message: "A Morph source slide must be followed by a target slide; remove the dangling final Morph transition.",
+          path: `scenes[${sceneIndex}].props.slideTransition`,
+          severity: "error"
+        });
+      } else if (sharedMorphPairCount(scene, targetScene) === 0) {
+        issues.push({
+          code: "morph_missing_shared_pair",
+          message: "Each Morph edge must have at least one compatible Text, ImageBlock, Shape, or SvgBlock pair with the same sharedId on both adjacent slides.",
+          path: `scenes[${sceneIndex}].props.slideTransition`,
+          severity: "error"
+        });
+      }
+      const easing = scene.props.morphEasing ?? "easeInOut";
+      if (typeof easing !== "string" || !sharedMorphEasings.includes(easing as (typeof sharedMorphEasings)[number])) {
+        issues.push({
+          message: `morphEasing must be one of: ${sharedMorphEasings.join(", ")}.`,
+          path: `scenes[${sceneIndex}].props.morphEasing`,
+          severity: "error"
+        });
+      }
+      const fadeUnmatched = scene.props.morphFadeUnmatched;
+      if (fadeUnmatched !== undefined && fadeUnmatched !== "true" && fadeUnmatched !== "false" && fadeUnmatched !== 1 && fadeUnmatched !== 0) {
+        issues.push({
+          message: "morphFadeUnmatched must be true or false.",
+          path: `scenes[${sceneIndex}].props.morphFadeUnmatched`,
+          severity: "error"
+        });
+      }
+      const effectMode = scene.props.morphEffectMode;
+      if (effectMode !== undefined && effectMode !== "custom" && effectMode !== "inherit") {
+        issues.push({
+          message: "morphEffectMode must be custom or inherit.",
+          path: `scenes[${sceneIndex}].props.morphEffectMode`,
+          severity: "error"
+        });
+      }
+      const shapeSoftness = scene.props.morphShapeSoftness ?? 0.32;
+      if (!Number.isFinite(Number(shapeSoftness)) || Number(shapeSoftness) < 0 || Number(shapeSoftness) > 1) {
+        issues.push({
+          message: "morphShapeSoftness must be between 0 and 1.",
+          path: `scenes[${sceneIndex}].props.morphShapeSoftness`,
+          severity: "error"
+        });
+      }
+      const shapePrecision = scene.props.morphShapePrecision ?? 48;
+      if (!Number.isInteger(Number(shapePrecision)) || Number(shapePrecision) < 12 || Number(shapePrecision) > 96) {
+        issues.push({
+          message: "morphShapePrecision must be an integer between 12 and 96.",
+          path: `scenes[${sceneIndex}].props.morphShapePrecision`,
+          severity: "error"
+        });
+      }
+      const curveProps = [
+        ["morphCurveX1", scene.props.morphCurveX1 ?? 0.4, 0, 1],
+        ["morphCurveY1", scene.props.morphCurveY1 ?? 0, -1.5, 2.5],
+        ["morphCurveX2", scene.props.morphCurveX2 ?? 0.2, 0, 1],
+        ["morphCurveY2", scene.props.morphCurveY2 ?? 1, -1.5, 2.5]
+      ] as const;
+      curveProps.forEach(([key, value, min, max]) => {
+        if (!Number.isFinite(Number(value)) || Number(value) < min || Number(value) > max) {
+          issues.push({
+            message: `${key} must be between ${min} and ${max}.`,
+            path: `scenes[${sceneIndex}].props.${key}`,
+            severity: "error"
+          });
+        }
       });
     }
 
@@ -663,6 +747,99 @@ function validateMotionDocSource(
           });
         }
         blockIds.add(blockId);
+      }
+
+      const sharedId = typeof block.props.sharedId === "string" ? block.props.sharedId.trim() : "";
+      if (sharedId) {
+        if (!/^[A-Za-z0-9._:-]+$/.test(sharedId)) {
+          issues.push({
+            message: "sharedId may contain only letters, numbers, dots, underscores, colons, and hyphens.",
+            path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.sharedId`,
+            severity: "error"
+          });
+        }
+        if (sharedIds.has(sharedId)) {
+          issues.push({
+            message: `sharedId must be unique within a slide: ${sharedId}.`,
+            path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.sharedId`,
+            severity: "error"
+          });
+        }
+        sharedIds.add(sharedId);
+      }
+
+      const motionResult = parseMotionSequence(block.props.motion);
+      motionResult.issues.forEach((message) => issues.push({
+        message,
+        path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.motion`,
+        severity: "error"
+      }));
+      motionResult.sequence?.actions.forEach((action) => {
+        if (actionIds.has(action.id)) {
+          issues.push({
+            message: `Motion action id must be unique across the deck: ${action.id}.`,
+            path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.motion`,
+            severity: "error"
+          });
+        }
+        actionIds.add(action.id);
+        if (slideActionOrders.has(action.order)) {
+          issues.push({
+            message: `Motion action order must be unique within a slide: ${action.order}.`,
+            path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.motion`,
+            severity: "error"
+          });
+        }
+        slideActionOrders.add(action.order);
+        slideActions.push({ blockIndex, order: action.order, start: action.start });
+        if (action.type === "tween" && action.preset === "numberRange") {
+          if (block.type !== "Text") {
+            issues.push({
+              message: "numberRange is only supported on Text blocks.",
+              path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.motion`,
+              severity: "error"
+            });
+          } else if (action.numberRange) {
+            const finalTextValue = Number(block.text.replaceAll(",", "").trim());
+            if (!Number.isFinite(finalTextValue) || Math.abs(finalTextValue - action.numberRange.to) > 0.000001) {
+              issues.push({
+                message: "The Text content must match the final numberRange value.",
+                path: `scenes[${sceneIndex}].blocks[${blockIndex}].text`,
+                severity: "error"
+              });
+            }
+          }
+        }
+      });
+      if (motionResult.sequence && (block.props.enter !== undefined || block.props.delay !== undefined || block.props.duration !== undefined)) {
+        issues.push({
+          message: "motion cannot be combined with legacy enter, delay, or duration props.",
+          path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.motion`,
+          severity: "error"
+        });
+      }
+      parseInteraction(block.props.interaction).issues.forEach((message) => issues.push({
+        message,
+        path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.interaction`,
+        severity: "error"
+      }));
+      const finalTween = motionResult.sequence?.actions.filter((action) => action.type === "tween").at(-1);
+      if (finalTween?.type === "tween") {
+        const nativeState = {
+          h: Number(block.props.h),
+          opacity: Number(block.props.opacity ?? 1),
+          rotation: Number(block.props.rotation ?? 0),
+          w: Number(block.props.w),
+          x: Number(block.props.x),
+          y: Number(block.props.y)
+        };
+        if (Object.values(nativeState).some((value) => !Number.isFinite(value)) || Object.entries(finalTween.to).some(([key, value]) => Math.abs(Number(nativeState[key as keyof typeof nativeState]) - value) > 0.001)) {
+          issues.push({
+            message: "The last tween destination must match the block's native x, y, w, h, rotation, and opacity props.",
+            path: `scenes[${sceneIndex}].blocks[${blockIndex}].props.motion`,
+            severity: "error"
+          });
+        }
       }
 
       for (const [alias, canonical] of Object.entries(nonCanonicalMotionDocPropAliases)) {
@@ -796,6 +973,14 @@ function validateMotionDocSource(
         }
       }
     });
+    const firstSlideAction = slideActions.sort((left, right) => left.order - right.order)[0];
+    if (firstSlideAction?.start === "withPrevious") {
+      issues.push({
+        message: "The first motion action on a slide cannot start withPrevious.",
+        path: `scenes[${sceneIndex}].blocks[${firstSlideAction.blockIndex}].props.motion`,
+        severity: "error"
+      });
+    }
   });
 
   return issues;

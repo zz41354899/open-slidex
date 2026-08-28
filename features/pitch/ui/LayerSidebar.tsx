@@ -1,10 +1,11 @@
 
-import { Bot, ChevronRight, Copy, Group, Layers, Plus, Trash2 } from "lucide-react";
-import type { KeyboardEvent, MouseEvent } from "react";
-import { useEffect, useState } from "react";
+import { Bot, ChevronDown, ChevronRight, Copy, Diamond, Group, Layers, Link2, MoreHorizontal, MousePointerClick, Plus, Trash2, Unlink2 } from "lucide-react";
+import type { DragEvent, KeyboardEvent, MouseEvent, ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LayerRow } from "@/features/pitch/ui/LayerRow";
 import { motionDocBlockKey } from "@/core/motion-doc/application/motionDocBlockIdentity";
 import type { MotionDocBlock, MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
+import { interactionFromProps } from "@/core/motion-doc/domain/interaction";
 import { SlideThumbnailPreview } from "@/features/pitch/ui/preview/SlideThumbnailPreview";
 import type { SlideRow } from "@/features/pitch/application/slideRows";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
@@ -26,6 +27,8 @@ export function LayerSidebar({
   dragOverBlockIndex,
   moveBlock,
   moveBlockToEdge,
+  moveSlideIntoMorphGroup,
+  moveSlideOutOfMorphGroup,
   onAddSlide,
   onSelectBlock,
   onSelectSlide,
@@ -42,7 +45,8 @@ export function LayerSidebar({
   slideRows,
   source,
   templateLibraryEnabled,
-  toggleBlockPositionLock
+  toggleBlockPositionLock,
+  unlinkSharedMorphGroup
 }: {
   activeSlideIndex: number;
   authoringDisabled?: boolean;
@@ -54,6 +58,8 @@ export function LayerSidebar({
   dragOverBlockIndex: number | null;
   moveBlock: (index: number, direction: -1 | 1) => void;
   moveBlockToEdge: (index: number, edge: "back" | "front") => void;
+  moveSlideIntoMorphGroup: (slideIndex: number, groupStartIndex: number) => void;
+  moveSlideOutOfMorphGroup: (slideIndex: number, targetSlideIndex: number) => void;
   onAddSlide: () => void;
   onSelectBlock: (index: number, event: MouseEvent<HTMLDivElement>, target?: "group" | "layer") => void;
   onSelectSlide: (index: number) => void;
@@ -71,11 +77,17 @@ export function LayerSidebar({
   source: string;
   templateLibraryEnabled: boolean;
   toggleBlockPositionLock: (index: number) => void;
+  unlinkSharedMorphGroup: (startIndex: number, endIndex: number) => void;
 }) {
   const { tx, locale } = usePitchI18n();
   const [activeTab, setActiveTab] = useState<"slides" | "layers">("slides");
   const [draggedSlideIndex, setDraggedSlideIndex] = useState<number | null>(null);
+  const draggedSlideIndexRef = useRef<number | null>(null);
   const [dragOverSlideIndex, setDragOverSlideIndex] = useState<number | null>(null);
+  const [dragOverMorphGroupStart, setDragOverMorphGroupStart] = useState<number | null>(null);
+  const [isMorphExitDropTarget, setIsMorphExitDropTarget] = useState(false);
+  const [expandedMorphGroups, setExpandedMorphGroups] = useState<Set<number>>(() => new Set());
+  const [openMorphMenu, setOpenMorphMenu] = useState<number | null>(null);
 
   useEffect(() => {
     if (authoringDisabled) setActiveTab("slides");
@@ -91,8 +103,33 @@ export function LayerSidebar({
     copySlide(slideIndex);
   }
 
+  function draggedSlideFrom(event: DragEvent<HTMLElement>) {
+    const transferValue = event.dataTransfer.getData("application/x-slidex-slide");
+    const transferIndex = transferValue ? Number(transferValue) : Number.NaN;
+    return draggedSlideIndex ?? draggedSlideIndexRef.current ?? (Number.isInteger(transferIndex) && transferIndex >= 0 ? transferIndex : null);
+  }
+
+  function beginSlideDrag(event: DragEvent<HTMLElement>, slideIndex: number) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("application/x-slidex-slide", String(slideIndex));
+    draggedSlideIndexRef.current = slideIndex;
+    setDraggedSlideIndex(slideIndex);
+  }
+
+  function finishSlideDrag() {
+    draggedSlideIndexRef.current = null;
+    setDraggedSlideIndex(null);
+    setDragOverSlideIndex(null);
+    setDragOverMorphGroupStart(null);
+    setIsMorphExitDropTarget(false);
+  }
+
+  function clearMorphDropTarget() {
+    setDragOverMorphGroupStart(null);
+  }
+
   return (
-    <div id="sidebar-v4" className="relative z-10 flex h-full w-full shrink-0 select-none flex-col overflow-hidden bg-[#171717] transition-all duration-300 md:w-[265px] md:border-r md:border-white/[0.08]">
+    <div id="sidebar-v4" className="editor-readable-sidebar relative z-10 flex h-full w-full shrink-0 select-none flex-col overflow-hidden bg-[#171717] transition-all duration-300 md:w-[265px] md:border-r md:border-white/[0.08]">
       {/* Sidebar Header / Tabs */}
       <EditorPanelTabs
         ariaLabel={tx("Slides & Layers")}
@@ -151,9 +188,65 @@ export function LayerSidebar({
             {slideRows.map((slide) => {
               const isActive = slide.index === activeSlideIndex;
               const currentSlide = scenes[slide.index];
+              const morphRole = slideMorphRole(scenes, slide.index);
+              const morphGroup = morphGroupStartingAt(scenes, slideRows, slide.index);
+              if (activeTab === "slides" && !morphGroup && slide.index > 0 && scenes[slide.index - 1]?.props.slideTransition === "morph") return null;
               const mcpActivity = remoteMcpOperations.find((activity) => (
                 remoteMcpOperationTargetsSlide(activity, slide.index, activeSlideIndex)
               ));
+              if (activeTab === "slides" && morphGroup) {
+                const isExpanded = expandedMorphGroups.has(morphGroup.startIndex);
+                return (
+                  <MorphSlideGroup
+                    activeSlideIndex={activeSlideIndex}
+                    authoringDisabled={authoringDisabled}
+                    expanded={isExpanded}
+                    group={morphGroup}
+                    key={`morph-${morphGroup.startIndex}`}
+                    locale={locale}
+                    menuOpen={openMorphMenu === morphGroup.startIndex}
+                    dragOver={dragOverMorphGroupStart === morphGroup.startIndex}
+                    onEdit={() => {
+                      onSelectSlide(morphGroup.startIndex);
+                      setOpenMorphMenu(null);
+                    }}
+                    onDragEnd={finishSlideDrag}
+                    onDragLeave={clearMorphDropTarget}
+                    onDragOver={(event) => {
+                      if (authoringDisabled) return;
+                      const draggedIndex = draggedSlideFrom(event);
+                      if (draggedIndex === null || draggedIndex >= morphGroup.startIndex && draggedIndex <= morphGroup.endIndex) return;
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = "move";
+                      setDragOverMorphGroupStart(morphGroup.startIndex);
+                    }}
+                    onDrop={(event) => {
+                      if (authoringDisabled) return;
+                      const draggedIndex = draggedSlideFrom(event);
+                      event.preventDefault();
+                      if (draggedIndex !== null && (draggedIndex < morphGroup.startIndex || draggedIndex > morphGroup.endIndex)) {
+                        moveSlideIntoMorphGroup(draggedIndex, morphGroup.startIndex);
+                      }
+                      finishSlideDrag();
+                    }}
+                    onSlideDragStart={beginSlideDrag}
+                    onSelectSlide={onSelectSlide}
+                    onToggleExpanded={() => setExpandedMorphGroups((current) => {
+                      const next = new Set(current);
+                      if (next.has(morphGroup.startIndex)) next.delete(morphGroup.startIndex);
+                      else next.add(morphGroup.startIndex);
+                      return next;
+                    })}
+                    onToggleMenu={() => setOpenMorphMenu((current) => current === morphGroup.startIndex ? null : morphGroup.startIndex)}
+                    onUnlink={() => {
+                      unlinkSharedMorphGroup(morphGroup.startIndex, morphGroup.endIndex);
+                      setOpenMorphMenu(null);
+                    }}
+                    replayNonce={replayNonce}
+                    tx={tx}
+                  />
+                );
+              }
               return (
                 <div className="flex flex-col" key={slide.index}>
 
@@ -168,7 +261,7 @@ export function LayerSidebar({
                       onClick={() => onSelectSlide(slide.index)}
                     >
                       <div className="flex items-center gap-2.5 overflow-hidden">
-                        <Layers size={13} className={isActive ? "text-[#8ea5ff]" : "text-neutral-500 group-hover:text-neutral-300 transition-colors"} />
+                        {morphRole ? <Diamond aria-label={locale === "zh-TW" ? "Morph 投影片" : "Morph slide"} className={morphRole === "root" ? "fill-violet-400/35 text-violet-300" : "text-violet-400/75"} size={11} /> : <Layers size={13} className={isActive ? "text-[#8ea5ff]" : "text-neutral-500 group-hover:text-neutral-300 transition-colors"} />}
                         <span className={`truncate text-sm font-medium ${isActive ? "text-white" : "text-neutral-400 group-hover:text-neutral-200"}`}>
                           {tx("Slide")} {slide.index + 1}
                         </span>
@@ -203,13 +296,13 @@ export function LayerSidebar({
                       draggable={!authoringDisabled}
                       onDragStart={(e) => {
                         if (authoringDisabled) return;
-                        e.dataTransfer.effectAllowed = "move";
-                        setDraggedSlideIndex(slide.index);
+                        beginSlideDrag(e, slide.index);
                       }}
                       onDragOver={(e) => {
                         if (authoringDisabled) return;
                         e.preventDefault();
-                        if (draggedSlideIndex !== null && draggedSlideIndex !== slide.index) {
+                        const draggedIndex = draggedSlideFrom(e);
+                        if (draggedIndex !== null && draggedIndex !== slide.index) {
                           setDragOverSlideIndex(slide.index);
                         }
                       }}
@@ -219,15 +312,16 @@ export function LayerSidebar({
                       onDrop={(e) => {
                         if (authoringDisabled) return;
                         e.preventDefault();
-                        if (draggedSlideIndex !== null && draggedSlideIndex !== slide.index) {
-                          reorderSlide(draggedSlideIndex, slide.index);
+                        const draggedIndex = draggedSlideFrom(e);
+                        const draggedGroupStart = draggedIndex === null ? null : morphGroupStartContaining(scenes, draggedIndex);
+                        if (draggedIndex !== null && draggedIndex !== slide.index) {
+                          if (draggedGroupStart !== null) moveSlideOutOfMorphGroup(draggedIndex, slide.index);
+                          else reorderSlide(draggedIndex, slide.index);
                         }
-                        setDraggedSlideIndex(null);
-                        setDragOverSlideIndex(null);
+                        finishSlideDrag();
                       }}
                       onDragEnd={() => {
-                        setDraggedSlideIndex(null);
-                        setDragOverSlideIndex(null);
+                        finishSlideDrag();
                       }}
                       className={`relative flex flex-col p-2 pb-6 mb-2 rounded-xl outline-none transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#8ea5ff]/70 ${
                         isActive ? "bg-white/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]" : "hover:bg-white/[0.04]"
@@ -240,6 +334,15 @@ export function LayerSidebar({
                         ? (locale === "zh-TW" ? "點選以預覽這一頁 HTML" : "Select to preview this HTML page")
                         : (locale === "zh-TW" ? "點選後可用 ⌘C／⌘V 複製貼上投影片" : "Select, then use Cmd/Ctrl+C and Cmd/Ctrl+V to copy and paste")}
                     >
+                      {morphRole ? (
+                        <div className="pointer-events-none absolute left-0 top-0 z-20 flex h-full w-5 flex-col items-center" title={locale === "zh-TW" ? "Morph 連續投影片" : "Morph continuation"}>
+                          {morphRole !== "root" ? <span className="h-2.5 w-px bg-violet-400/45" /> : <span className="h-2.5" />}
+                          <span className={`flex h-4 w-4 items-center justify-center rounded-md border bg-[#20172d] shadow-[0_0_12px_rgba(139,92,246,.24)] ${morphRole === "root" ? "border-violet-300/60" : "border-violet-500/35"}`}>
+                            <Diamond className={morphRole === "root" ? "fill-violet-400/45 text-violet-200" : "text-violet-300/80"} size={8} />
+                          </span>
+                          {morphRole !== "end" ? <span className="min-h-0 flex-1 w-px bg-violet-400/45" /> : null}
+                        </div>
+                      ) : null}
                       {isActive && <div className="absolute left-0 top-3 bottom-8 w-[3px] rounded-r bg-[#8ea5ff] z-10" />}
                       <div className={`relative aspect-video w-full overflow-hidden rounded-lg border shadow-sm transition-colors ${isActive ? "border-white/20 bg-black/60" : "border-white/5 bg-black/40 hover:border-white/10"}`}>
                         <SlideThumbnailPreview
@@ -373,11 +476,261 @@ export function LayerSidebar({
               );
             })}
           </div>
+          {activeTab === "slides" && !authoringDisabled ? (
+            <div
+              aria-label={locale === "zh-TW" ? "拖曳到此處轉為一般投影片" : "Drop here to make an ordinary slide"}
+              className={`relative mt-2 flex min-h-[72px] items-center justify-center overflow-hidden rounded-xl border border-dashed px-4 text-center transition-all duration-200 ${isMorphExitDropTarget ? "border-violet-200 bg-violet-500/20 shadow-[inset_0_0_24px_rgba(139,92,246,.2)]" : "border-white/[0.1] bg-white/[0.018] text-neutral-500"}`}
+              data-morph-exit-drop-zone
+              onDragLeave={(event) => {
+                if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+                setIsMorphExitDropTarget(false);
+              }}
+              onDragOver={(event) => {
+                const draggedIndex = draggedSlideFrom(event);
+                if (draggedIndex === null || morphGroupStartContaining(scenes, draggedIndex) === null) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+                setIsMorphExitDropTarget(true);
+              }}
+              onDrop={(event) => {
+                const draggedIndex = draggedSlideFrom(event);
+                event.preventDefault();
+                if (draggedIndex !== null && morphGroupStartContaining(scenes, draggedIndex) !== null) {
+                  moveSlideOutOfMorphGroup(draggedIndex, scenes.length);
+                }
+                finishSlideDrag();
+              }}
+              role="status"
+            >
+              <span className={`pointer-events-none absolute inset-1 rounded-[9px] border-2 border-dashed border-violet-200/70 transition-opacity ${isMorphExitDropTarget ? "opacity-100 motion-safe:animate-pulse" : "opacity-0"}`} />
+              <span className="relative flex items-center gap-2.5">
+                <span className={`flex size-8 shrink-0 items-center justify-center rounded-full border transition ${isMorphExitDropTarget ? "border-violet-200 bg-violet-400 text-violet-950 shadow-[0_0_0_5px_rgba(196,181,253,.15)] motion-safe:animate-bounce" : "border-white/[0.1] bg-black/20 text-neutral-500"}`}><Unlink2 size={14} /></span>
+                <span className="text-left"><span className={`block text-[11px] font-semibold ${isMorphExitDropTarget ? "text-white" : "text-neutral-400"}`}>{locale === "zh-TW" ? "拖到這裡，轉為一般 Slide" : "Drop here to make an ordinary slide"}</span><span className={`mt-0.5 block text-[9px] ${isMorphExitDropTarget ? "text-violet-200/85" : "text-neutral-600"}`}>{locale === "zh-TW" ? "放開後會移到最後一張" : "Release to move it to the end"}</span></span>
+              </span>
+            </div>
+          ) : null}
 
         </div>
       </div>
     </div>
   );
+}
+
+function slideMorphRole(scenes: MotionDocScene[], index: number): "root" | "child" | "end" | null {
+  const continuesFromPrevious = index > 0 && scenes[index - 1]?.props.slideTransition === "morph";
+  const continuesToNext = scenes[index]?.props.slideTransition === "morph";
+  if (!continuesFromPrevious && !continuesToNext) return null;
+  if (!continuesFromPrevious) return "root";
+  if (!continuesToNext) return "end";
+  return "child";
+}
+
+type MorphSlideGroupModel = {
+  endIndex: number;
+  rows: SlideRow[];
+  scenes: MotionDocScene[];
+  startIndex: number;
+};
+
+function morphGroupStartingAt(scenes: MotionDocScene[], slideRows: SlideRow[], index: number): MorphSlideGroupModel | null {
+  if (scenes[index]?.props.slideTransition !== "morph" || (index > 0 && scenes[index - 1]?.props.slideTransition === "morph")) return null;
+  let endIndex = index + 1;
+  while (endIndex < scenes.length - 1 && scenes[endIndex]?.props.slideTransition === "morph") endIndex += 1;
+  return {
+    endIndex,
+    rows: slideRows.slice(index, endIndex + 1),
+    scenes: scenes.slice(index, endIndex + 1),
+    startIndex: index
+  };
+}
+
+function morphGroupStartContaining(scenes: MotionDocScene[], index: number) {
+  if (!scenes[index]) return null;
+  let startIndex = index;
+  while (startIndex > 0 && scenes[startIndex - 1]?.props.slideTransition === "morph") startIndex -= 1;
+  return scenes[startIndex]?.props.slideTransition === "morph" ? startIndex : null;
+}
+
+function MorphSlideGroup({
+  activeSlideIndex,
+  authoringDisabled,
+  dragOver,
+  expanded,
+  group,
+  locale,
+  menuOpen,
+  onEdit,
+  onDragEnd,
+  onDragLeave,
+  onDragOver,
+  onDrop,
+  onSlideDragStart,
+  onSelectSlide,
+  onToggleExpanded,
+  onToggleMenu,
+  onUnlink,
+  replayNonce,
+  tx
+}: {
+  activeSlideIndex: number;
+  authoringDisabled: boolean;
+  dragOver: boolean;
+  expanded: boolean;
+  group: MorphSlideGroupModel;
+  locale: string;
+  menuOpen: boolean;
+  onEdit: () => void;
+  onDragEnd: () => void;
+  onDragLeave: () => void;
+  onDragOver: (event: DragEvent<HTMLElement>) => void;
+  onDrop: (event: DragEvent<HTMLElement>) => void;
+  onSlideDragStart: (event: DragEvent<HTMLElement>, slideIndex: number) => void;
+  onSelectSlide: (index: number) => void;
+  onToggleExpanded: () => void;
+  onToggleMenu: () => void;
+  onUnlink: () => void;
+  replayNonce: number;
+  tx: (value: string) => string;
+}) {
+  const active = activeSlideIndex >= group.startIndex && activeSlideIndex <= group.endIndex;
+  const interactions = group.scenes.flatMap((scene, offset) => scene.blocks.flatMap((block) => {
+    const value = interactionFromProps(block.props);
+    return value ? [{ interaction: value, slideIndex: group.startIndex + offset }] : [];
+  }));
+  const interaction = interactions[0];
+  const title = group.rows[0]?.title || tx("Morph sequence");
+  const interactionLabel = interactions.length > 1
+    ? `${interactions.length} ${tx("click actions")}`
+    : interaction ? interactionActionLabel(interaction.interaction.action, tx) : tx("No click action");
+
+  return (
+    <section
+      className={`relative mb-3 overflow-visible rounded-[16px] border transition-all duration-200 ${dragOver ? "border-violet-300 bg-violet-400/[0.12] ring-2 ring-violet-400/35" : active ? "border-violet-400/40 bg-violet-500/[0.07] shadow-[0_14px_32px_rgba(30,10,58,.25)]" : "border-white/[0.075] bg-white/[0.018] hover:border-white/[0.13]"}`}
+      data-morph-slide-group={group.startIndex}
+      onDragEnd={onDragEnd}
+      onDragLeave={(event) => {
+        if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+        onDragLeave();
+      }}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
+      <div className="flex items-center gap-2.5 px-3 pb-2 pt-3">
+        <span className="flex size-7 shrink-0 rotate-45 items-center justify-center rounded-[7px] border border-violet-300/35 bg-violet-500/25 shadow-[0_0_16px_rgba(139,92,246,.18)]">
+          <span className="size-2.5 rounded-[2px] bg-violet-200/90" />
+        </span>
+        <button className="min-w-0 flex-1 text-left" onClick={() => onSelectSlide(group.startIndex)} type="button">
+          <span className="block truncate text-[13px] font-semibold text-neutral-100">{title}</span>
+          <span className="mt-0.5 block text-[10px] font-medium text-violet-300/75">Morph · {group.rows.length} {tx("slides short")}</span>
+        </button>
+        <button aria-label={tx(expanded ? "Collapse slides" : "Expand slides")} className="flex size-7 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-white/[0.06] hover:text-white" onClick={onToggleExpanded} type="button"><ChevronDown className={`transition-transform ${expanded ? "rotate-180" : ""}`} size={13} /></button>
+        {!authoringDisabled ? <button aria-label={tx("Morph options")} className="flex size-7 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-white/[0.06] hover:text-white" onClick={onToggleMenu} type="button"><MoreHorizontal size={14} /></button> : null}
+      </div>
+
+      {menuOpen ? (
+        <div className="absolute right-2 top-11 z-50 w-[168px] overflow-hidden rounded-[13px] border border-white/[0.12] bg-[#242426] p-1.5 shadow-[0_20px_48px_rgba(0,0,0,.55)]">
+          <MorphMenuButton icon={<Layers size={13} />} label={tx(expanded ? "Collapse slides" : "Expand slides")} onClick={onToggleExpanded} />
+          <MorphMenuButton icon={<Link2 size={13} />} label={tx("Edit Morph")} onClick={onEdit} />
+          <div className="my-1 h-px bg-white/[0.07]" />
+          <MorphMenuButton danger icon={<Unlink2 size={13} />} label={tx("Unlink Morph")} onClick={onUnlink} />
+        </div>
+      ) : null}
+
+      {dragOver ? (
+        <div aria-live="polite" className="pointer-events-none absolute inset-1 z-40 flex items-center justify-center rounded-[13px] border-2 border-dashed border-violet-200/80 bg-[#32155d]/72 p-3 text-center shadow-[inset_0_0_36px_rgba(167,139,250,.28)] backdrop-blur-[2px] motion-safe:animate-pulse">
+          <span className="flex flex-col items-center gap-1.5 rounded-xl border border-violet-200/30 bg-[#1d1033]/90 px-4 py-3 shadow-[0_10px_28px_rgba(0,0,0,.38)]">
+            <span className="flex size-8 items-center justify-center rounded-full bg-violet-400 text-violet-950 shadow-[0_0_0_5px_rgba(196,181,253,.16)] motion-safe:animate-bounce">
+              <Plus size={17} strokeWidth={2.8} />
+            </span>
+            <span className="text-[11px] font-bold text-white">{locale === "zh-TW" ? "放開以加入 Morph" : "Release to add to Morph"}</span>
+            <span className="flex items-center gap-1 text-[9px] font-medium text-violet-200/80"><MousePointerClick size={10} />{locale === "zh-TW" ? "建立下一個動態步驟" : "Create the next motion step"}</span>
+          </span>
+        </div>
+      ) : null}
+
+      {expanded ? (
+        <div className="relative flex flex-col gap-2 border-t border-white/[0.055] px-3 py-3">
+          <span className="absolute bottom-6 left-[22px] top-6 w-px bg-violet-400/25" />
+          {group.rows.map((row, offset) => {
+            const scene = group.scenes[offset];
+            const isActive = row.index === activeSlideIndex;
+            const sceneInteractionLabel = scene
+              ? sceneInteractionActionLabel(scene, row.index, tx)
+              : null;
+            return (
+              <button
+                className={`relative z-10 grid grid-cols-[14px_72px_minmax(0,1fr)] items-center gap-2 rounded-xl p-1.5 text-left transition ${authoringDisabled ? "" : "cursor-grab active:cursor-grabbing"} ${isActive ? "bg-white/[0.075]" : "hover:bg-white/[0.04]"}`}
+                draggable={!authoringDisabled}
+                key={row.index}
+                onClick={() => onSelectSlide(row.index)}
+                onDragStart={(event) => {
+                  if (!authoringDisabled) onSlideDragStart(event, row.index);
+                }}
+                type="button"
+              >
+                <span className={`size-2.5 rotate-45 rounded-[2px] border ${offset === 0 ? "border-violet-200/70 bg-violet-400" : "border-violet-400/45 bg-[#21162e]"}`} />
+                <span className="relative block aspect-video overflow-hidden rounded-[6px] border border-white/[0.1] bg-black/50">
+                  <SlideThumbnailPreview activeSlideIndex={row.index} eager={isActive} replayNonce={replayNonce} scene={scene} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[11px] font-semibold text-neutral-300">{offset === 0 ? tx("Start slide") : offset === group.rows.length - 1 ? tx("End slide") : `${tx("Step")} ${offset + 1}`}</span>
+                  <span className={`mt-1 flex items-center gap-1 text-[9px] ${sceneInteractionLabel ? "text-violet-300/75" : "text-neutral-600"}`}>{sceneInteractionLabel ? <><MousePointerClick size={10} /><span className="truncate">{sceneInteractionLabel}</span></> : <span>{locale === "zh-TW" ? `投影片 ${row.index + 1}` : `Slide ${row.index + 1}`}</span>}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <button className="group/stack relative mx-3 mb-3 block aspect-video w-[calc(100%-1.5rem)]" onClick={() => onSelectSlide(group.startIndex)} type="button">
+          <span className="absolute inset-x-3 bottom-[-7px] top-3 rounded-[9px] border border-white/[0.06] bg-[#29262f]" />
+          <span className="absolute inset-x-1.5 bottom-[-3px] top-1.5 rounded-[9px] border border-white/[0.08] bg-[#302b38]" />
+          <span className={`absolute inset-0 overflow-hidden rounded-[9px] border bg-black shadow-sm transition ${active ? "border-violet-300/55" : "border-white/[0.11] group-hover/stack:border-white/[0.2]"}`}>
+            <SlideThumbnailPreview activeSlideIndex={group.startIndex} eager={active} replayNonce={replayNonce} scene={group.scenes[0]} />
+          </span>
+        </button>
+      )}
+
+      <div className="mx-3 mb-3 flex min-h-9 items-center gap-2 rounded-[11px] border border-white/[0.055] bg-black/20 px-2.5 text-[10px] text-neutral-400">
+        <MousePointerClick className={interaction ? "text-violet-300" : "text-neutral-600"} size={12} />
+        <span>{tx(interaction ? "Click" : "Interaction")}</span>
+        <ChevronRight className="text-neutral-700" size={11} />
+        <span className="min-w-0 flex-1 truncate text-neutral-300">{interactionLabel}</span>
+        {interaction ? <Link2 className="text-violet-300/75" size={12} /> : null}
+      </div>
+    </section>
+  );
+}
+
+function MorphMenuButton({ danger = false, icon, label, onClick }: { danger?: boolean; icon: ReactNode; label: string; onClick: () => void }) {
+  return <button className={`flex h-8 w-full items-center gap-2 rounded-lg px-2.5 text-left text-[11px] transition ${danger ? "text-red-300 hover:bg-red-500/10" : "text-neutral-300 hover:bg-white/[0.06]"}`} onClick={onClick} type="button">{icon}<span>{label}</span></button>;
+}
+
+function interactionActionLabel(action: NonNullable<ReturnType<typeof interactionFromProps>>["action"], tx: (value: string) => string) {
+  if (action.type === "nextSlide") return tx("Next slide");
+  if (action.type === "previousSlide") return tx("Previous slide");
+  if (action.type === "goToSlide") return `${tx("Go to slide")} ${action.slide}`;
+  return tx("Open link");
+}
+
+function sceneInteractionActionLabel(scene: MotionDocScene, slideIndex: number, tx: (value: string) => string) {
+  const actions = scene.blocks.flatMap((block) => {
+    const action = interactionFromProps(block.props)?.action;
+    return action ? [action] : [];
+  });
+  if (actions.length === 0) return null;
+  const targets = actions.flatMap((action) => {
+    if (action.type === "goToSlide") return [action.slide];
+    if (action.type === "nextSlide") return [slideIndex + 2];
+    if (action.type === "previousSlide") return [Math.max(1, slideIndex)];
+    return [];
+  });
+  const uniqueTargets = [...new Set(targets)].sort((left, right) => left - right);
+  if (uniqueTargets.length === actions.length && uniqueTargets.length > 0) {
+    return `${tx(uniqueTargets.length === 1 ? "Go to slide" : "Go to slides")} ${uniqueTargets.join(", ")}`;
+  }
+  return actions.length === 1
+    ? interactionActionLabel(actions[0]!, tx)
+    : `${actions.length} ${tx("click actions")}`;
 }
 
 type LayerTreeEntry =

@@ -101,6 +101,8 @@ function PitchInspectorContent({ commands, document, onOpenMdxEditor, selection,
   return (
     <PitchInspector
       activeSlide={document.activeSlide}
+      activeSlideIndex={document.activeSlideIndex}
+      scenes={document.scenes}
       activeSlideAccent={document.activeSlideAccent}
       activeSlideBackground={document.activeSlideBackground}
       activeSlideMutedColor={document.activeSlideMutedColor}
@@ -124,6 +126,7 @@ function PitchInspectorContent({ commands, document, onOpenMdxEditor, selection,
       addSlideWithLayout={commands.addSlideWithLayout}
       alignSelectedBlocks={commands.alignSelectedBlocks}
       distributeSelectedBlocks={commands.distributeSelectedBlocks}
+      extendSharedMorphGroup={commands.extendSharedMorphGroup}
       imageSourceRequiresAbsoluteUrl={commands.imageSourceRequiresAbsoluteUrl}
       inspectorExtension={view.inspectorExtension}
       localAssetsOnly={view.localAssetsOnly === true}
@@ -140,6 +143,9 @@ function PitchInspectorContent({ commands, document, onOpenMdxEditor, selection,
       requestImageUpload={commands.requestImageUpload}
       selectedBlockIndex={selection.selectedBlockIndex}
       selectedBlockIndices={selection.selectedBlockIndices}
+      selectSingleBlock={selection.selectSingleBlock}
+      selectSlide={commands.setActiveSlideIndex}
+      setSharedMorphReturnLink={commands.setSharedMorphReturnLink}
       setIsGridVisible={view.setIsCanvasGridVisible}
       setIsSafeAreaVisible={view.setIsCanvasSafeAreaVisible}
       setIsSnapEnabled={view.setIsCanvasSnapEnabled}
@@ -147,6 +153,7 @@ function PitchInspectorContent({ commands, document, onOpenMdxEditor, selection,
       updateActiveSlideStyle={commands.updateActiveSlideStyle}
       updateAllSlidesStyle={commands.updateAllSlidesStyle}
       updateBlock={commands.updateBlock}
+      updateSlideStyle={commands.updateSlideStyle}
       updateSelectedBlockColor={commands.updateSelectedBlockColor}
       uploadImageForBlock={commands.uploadImageForBlock}
       uploadVideoForBlock={commands.uploadVideoForBlock}

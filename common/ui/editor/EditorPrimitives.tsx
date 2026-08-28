@@ -1,5 +1,5 @@
 
-import { Check, ChevronDown, Download, Layers, PanelRight, Play, Redo2, Undo2 } from "lucide-react";
+import { Check, ChevronDown, Download, Layers, PanelRight, Play, Redo2, Sparkles, Undo2 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 
 import styles from "./EditorPrimitives.module.css";
@@ -255,7 +255,7 @@ export function EditorHeader({
         </button>
         {onReplay ? (
           <button aria-label={labels.replayAnimations} className={styles.actionButton} onClick={onReplay} title={labels.replayAnimations} type="button">
-            <Redo2 size={15} /><span>{labels.replayAnimations}</span>
+            <Sparkles size={16} /><span>{labels.replayAnimations}</span>
           </button>
         ) : null}
         <div className={styles.exportControl} ref={(node) => {

@@ -1,7 +1,6 @@
 import { createMotionDocBlock, type AddBlockType } from "@/core/motion-doc/application/motionDocBlockFactory";
 import { materializeFreeformSource } from "@/core/motion-doc/application/motionDocFreeform";
-import { withNewMotionDocBlockId } from "@/core/motion-doc/application/motionDocBlockIdentity";
-import { cloneBlock, generateBlockString, generateSlideString, replaceSlideOpeningTag } from "@/core/motion-doc/application/motionDocSerialize";
+import { generateBlockString, generateSlideString, replaceSlideOpeningTag } from "@/core/motion-doc/application/motionDocSerialize";
 import {
   appendMotionDocSlideSource,
   deleteMotionDocSlideSource,
@@ -14,6 +13,14 @@ import {
 import { clampFramePosition, defaultBlockHeight, defaultBlockWidth, defaultBlockX, defaultBlockY, framePositionValue, percentFrameValue } from "@/core/motion-doc/domain/frame";
 import { parseMotionDoc } from "@/core/motion-doc/domain/motionDocParser";
 import type { MotionDocBlock, MotionDocProps, MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
+import {
+  autoLinkSharedMorphSequenceScenes,
+  autoLinkSharedMorphScenes,
+  cloneBlockForPaste,
+  cloneSceneForSharedMorph,
+  ensureSceneSharedMorphIds,
+  unlinkSharedMorphGroupScenes
+} from "@/core/motion-doc/domain/sharedMorph";
 import {
   MOTION_DOC_CANVAS_PROPS,
   MOTION_DOC_FONT_SIZES
@@ -202,10 +209,188 @@ export function reorderSlideSource(source: string, fromIndex: number, toIndex: n
 export function duplicateSlideSource(source: string, slideIndex: number) {
   const ranges = motionDocSlideSourceRanges(source);
   const targetIndex = Math.max(0, Math.min(slideIndex, Math.max(ranges.length - 1, 0)));
-  const sourceSlide = ranges[targetIndex];
-  return sourceSlide
-    ? insertMotionDocSlideSource(source, targetIndex, sourceSlide.source, "after")
-    : source;
+  const scene = parseMotionDoc(source).scenes[targetIndex];
+  if (!scene || !ranges[targetIndex]) return source;
+  const pairedScene = ensureSceneSharedMorphIds(scene);
+  const withPairedSource = replaceMotionDocSlideSource(source, targetIndex, generateSlideString(pairedScene));
+  return insertMotionDocSlideSource(
+    withPairedSource,
+    targetIndex,
+    generateSlideString(cloneSceneForSharedMorph(pairedScene)),
+    "after"
+  );
+}
+
+/** Appends one editable continuation to an existing Morph group. */
+export function extendSharedMorphGroupSource(source: string, endIndex: number) {
+  const ranges = motionDocSlideSourceRanges(source);
+  const scene = parseMotionDoc(source).scenes[endIndex];
+  if (!scene || !ranges[endIndex]) return source;
+
+  const pairedScene = ensureSceneSharedMorphIds(scene);
+  const duration = Number(pairedScene.props.transitionDuration);
+  const morphSource: MotionDocScene = {
+    ...pairedScene,
+    props: {
+      ...pairedScene.props,
+      morphEasing: pairedScene.props.morphEasing || "easeInOut",
+      morphFadeUnmatched: pairedScene.props.morphFadeUnmatched ?? "true",
+      slideTransition: "morph",
+      transitionDuration: Number.isFinite(duration) && duration > 0 ? duration : 0.72
+    }
+  };
+  const continuationProps = { ...scene.props };
+  if (continuationProps.slideTransition === "morph") continuationProps.slideTransition = "none";
+  delete continuationProps.morphCurveX1;
+  delete continuationProps.morphCurveX2;
+  delete continuationProps.morphCurveY1;
+  delete continuationProps.morphCurveY2;
+  delete continuationProps.morphEasing;
+  delete continuationProps.morphFadeUnmatched;
+  delete continuationProps.morphShapePrecision;
+  delete continuationProps.morphShapeSoftness;
+  const continuation = cloneSceneForSharedMorph({ ...pairedScene, props: continuationProps });
+  const withMorphSource = replaceMotionDocSlideSource(source, endIndex, generateSlideString(morphSource));
+  const extended = insertMotionDocSlideSource(withMorphSource, endIndex, generateSlideString(continuation), "after");
+  const extendedScenes = parseMotionDoc(extended).scenes;
+  const groupStartIndex = sharedMorphGroupStartIndex(extendedScenes, endIndex) ?? endIndex;
+  return repairSharedMorphSequenceSource(extended, groupStartIndex, endIndex + 1);
+}
+
+/** Moves an ordinary slide to the end of a Morph sequence and links its editable layers. */
+export function moveSlideIntoSharedMorphGroupSource(source: string, slideIndex: number, groupStartIndex: number) {
+  const scenes = parseMotionDoc(source).scenes;
+  const groupEndIndex = sharedMorphGroupEndIndex(scenes, groupStartIndex);
+  if (groupEndIndex === null || slideIndex < 0 || slideIndex >= scenes.length || slideIndex >= groupStartIndex && slideIndex <= groupEndIndex) {
+    return source;
+  }
+
+  // `reorderMotionDocSlideSource` inserts at an index in the post-removal list.
+  // This keeps the dragged slide immediately after the current Morph end.
+  const destinationIndex = slideIndex < groupStartIndex ? groupEndIndex : groupEndIndex + 1;
+  const reordered = reorderSlideSource(source, slideIndex, destinationIndex);
+  const reorderedScenes = parseMotionDoc(reordered).scenes;
+  const nextGroupStartIndex = slideIndex < groupStartIndex ? groupStartIndex - 1 : groupStartIndex;
+  const nextGroupEndIndex = groupEndIndex + 1;
+  const morphSource = reorderedScenes[nextGroupEndIndex - 1];
+  const morphTarget = reorderedScenes[nextGroupEndIndex];
+  if (!morphSource || !morphTarget) return source;
+
+  const [linkedSource, linkedTarget] = autoLinkSharedMorphScenes(
+    sharedMorphSourceScene(ensureSceneSharedMorphIds(morphSource)),
+    sharedMorphTargetScene(morphTarget)
+  );
+  const linked = replaceSlideSource(
+    replaceSlideSource(reordered, nextGroupEndIndex - 1, linkedSource),
+    nextGroupEndIndex,
+    linkedTarget
+  );
+  return repairSharedMorphSequenceSource(linked, nextGroupStartIndex, nextGroupEndIndex);
+}
+
+/** Removes one slide from a Morph sequence and leaves both sides as valid independent sequences. */
+export function moveSlideOutOfSharedMorphGroupSource(source: string, slideIndex: number, targetSlideIndex: number) {
+  const scenes = parseMotionDoc(source).scenes;
+  const groupStartIndex = sharedMorphGroupStartIndex(scenes, slideIndex);
+  const appendToEnd = targetSlideIndex === scenes.length;
+  if (groupStartIndex === null || targetSlideIndex < 0 || targetSlideIndex > scenes.length || !appendToEnd && targetSlideIndex >= groupStartIndex && targetSlideIndex <= sharedMorphGroupEndIndex(scenes, groupStartIndex)!) {
+    return source;
+  }
+  const groupEndIndex = sharedMorphGroupEndIndex(scenes, groupStartIndex)!;
+  const remainingCount = groupEndIndex - groupStartIndex;
+  let prepared = replaceSlideSource(source, slideIndex, standaloneMorphScene(scenes[slideIndex]!));
+
+  if (remainingCount === 1) {
+    // A one-slide remainder is not a Morph sequence; remove the identity from both pages.
+    const unlinked = unlinkSharedMorphGroupScenes(parseMotionDoc(prepared).scenes, groupStartIndex, groupEndIndex);
+    prepared = replaceMorphRange(prepared, unlinked, groupStartIndex, groupEndIndex);
+  } else if (slideIndex === groupEndIndex) {
+    // The preceding slide used to transition into the removed end slide.
+    const previous = parseMotionDoc(prepared).scenes[slideIndex - 1];
+    if (previous) prepared = replaceSlideSource(prepared, slideIndex - 1, sharedMorphTargetScene(previous));
+  } else if (slideIndex > groupStartIndex) {
+    // The predecessor now transitions directly to the following slide. Pair what remains.
+    const parsed = parseMotionDoc(prepared);
+    const previous = parsed.scenes[slideIndex - 1];
+    const next = parsed.scenes[slideIndex + 1];
+    if (previous && next) {
+      const [linkedPrevious, linkedNext] = autoLinkSharedMorphScenes(
+        sharedMorphSourceScene(ensureSceneSharedMorphIds(previous)),
+        next
+      );
+      prepared = replaceSlideSource(replaceSlideSource(prepared, slideIndex - 1, linkedPrevious), slideIndex + 1, linkedNext);
+    }
+  }
+
+  return reorderSlideSource(prepared, slideIndex, appendToEnd ? scenes.length - 1 : targetSlideIndex);
+}
+
+function sharedMorphGroupStartIndex(scenes: MotionDocScene[], slideIndex: number) {
+  if (!scenes[slideIndex]) return null;
+  let startIndex = slideIndex;
+  while (startIndex > 0 && scenes[startIndex - 1]?.props.slideTransition === "morph") startIndex -= 1;
+  return scenes[startIndex]?.props.slideTransition === "morph" ? startIndex : null;
+}
+
+function sharedMorphGroupEndIndex(scenes: MotionDocScene[], startIndex: number) {
+  if (scenes[startIndex]?.props.slideTransition !== "morph") return null;
+  let endIndex = startIndex + 1;
+  while (endIndex < scenes.length - 1 && scenes[endIndex]?.props.slideTransition === "morph") endIndex += 1;
+  return endIndex;
+}
+
+function sharedMorphSourceScene(scene: MotionDocScene): MotionDocScene {
+  const duration = Number(scene.props.transitionDuration);
+  return {
+    ...scene,
+    props: {
+      ...scene.props,
+      morphEasing: scene.props.morphEasing || "easeInOut",
+      morphFadeUnmatched: scene.props.morphFadeUnmatched ?? "true",
+      slideTransition: "morph",
+      transitionDuration: Number.isFinite(duration) && duration > 0 ? duration : 0.72
+    }
+  };
+}
+
+function sharedMorphTargetScene(scene: MotionDocScene): MotionDocScene {
+  const props = { ...scene.props };
+  if (props.slideTransition === "morph") props.slideTransition = "none";
+  delete props.morphCurveX1;
+  delete props.morphCurveX2;
+  delete props.morphCurveY1;
+  delete props.morphCurveY2;
+  delete props.morphEasing;
+  delete props.morphFadeUnmatched;
+  delete props.morphShapePrecision;
+  delete props.morphShapeSoftness;
+  delete props.transitionDuration;
+  return { ...scene, props };
+}
+
+function standaloneMorphScene(scene: MotionDocScene): MotionDocScene {
+  const unlinked = unlinkSharedMorphGroupScenes([scene], 0, 0)[0];
+  return unlinked ?? scene;
+}
+
+function replaceMorphRange(source: string, scenes: MotionDocScene[], startIndex: number, endIndex: number) {
+  let nextSource = source;
+  for (let index = startIndex; index <= endIndex; index += 1) {
+    const scene = scenes[index];
+    if (scene) nextSource = replaceSlideSource(nextSource, index, scene);
+  }
+  return nextSource;
+}
+
+function repairSharedMorphSequenceSource(source: string, startIndex: number, endIndex: number) {
+  const scenes = parseMotionDoc(source).scenes;
+  const linked = autoLinkSharedMorphSequenceScenes(scenes, startIndex, endIndex);
+  return replaceMorphRange(source, linked, startIndex, endIndex);
+}
+
+export function preparePastedSlideSource(slideSource: string) {
+  const scene = parseMotionDoc(`# Pasted slide\n\n${slideSource}`).scenes[0];
+  return scene ? generateSlideString(cloneSceneForSharedMorph(scene)) : slideSource;
 }
 
 export function selectedLayerIndices(selectedBlockIndices: number[], selectedBlockIndex: number | null, sort: "asc" | "desc" = "asc") {
@@ -241,7 +426,7 @@ export function duplicateBlockAt(slide: MotionDocScene, blockIndex: number) {
   }
 
   const blocks = [...slide.blocks];
-  const duplicate = offsetDuplicatedBlock(withNewMotionDocBlockId(cloneBlock(block)));
+  const duplicate = offsetDuplicatedBlock(cloneBlockForPaste(block));
   const insertIndex = Math.min(blockIndex + 1, blocks.length);
 
   blocks.splice(insertIndex, 0, duplicate);
@@ -271,7 +456,7 @@ export function pasteBlockIntoSlide(slide: MotionDocScene, copiedBlock: MotionDo
   const blocks = [...slide.blocks];
   const insertIndex = selectedBlockIndex === null ? blocks.length : Math.min(selectedBlockIndex + 1, blocks.length);
 
-  blocks.splice(insertIndex, 0, withNewMotionDocBlockId(cloneBlock(copiedBlock)));
+  blocks.splice(insertIndex, 0, cloneBlockForPaste(copiedBlock));
 
   return {
     blockIndex: insertIndex,
@@ -284,7 +469,7 @@ export function pasteBlocksIntoSlide(slide: MotionDocScene, copiedBlocks: Motion
   const insertIndex = selectedBlockIndex === null ? blocks.length : Math.min(selectedBlockIndex + 1, blocks.length);
   const groupIds = new Map<string, string>();
   const pastedBlocks = copiedBlocks.map((block) => {
-    const identifiedClone = withNewMotionDocBlockId(cloneBlock(block));
+    const identifiedClone = cloneBlockForPaste(block);
     const clone = options.offset ? offsetDuplicatedBlock(identifiedClone) : identifiedClone;
     if (!("props" in clone) || typeof clone.props.groupId !== "string") return clone;
     const nextGroupId = groupIds.get(clone.props.groupId) ?? `group-${Date.now().toString(36)}-${groupIds.size}`;

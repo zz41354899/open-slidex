@@ -55,6 +55,8 @@ import {
 
 export function PitchInspector({
   activeSlide,
+  activeSlideIndex,
+  scenes,
   activeSlideAccent,
   activeSlideBackground,
   activeSlideMutedColor,
@@ -78,6 +80,7 @@ export function PitchInspector({
   addSlideWithLayout,
   alignSelectedBlocks,
   distributeSelectedBlocks,
+  extendSharedMorphGroup,
   imageSourceRequiresAbsoluteUrl,
   inspectorExtension,
   localAssetsOnly = false,
@@ -94,18 +97,24 @@ export function PitchInspector({
   requestImageUpload,
   selectedBlockIndex,
   selectedBlockIndices = [],
+  selectSingleBlock,
+  selectSlide,
+  setSharedMorphReturnLink,
   setIsGridVisible,
   setIsSafeAreaVisible,
   setIsSnapEnabled,
   snapSelectedBlocksToGrid,
   updateAllSlidesStyle,
   updateActiveSlideStyle,
+  updateSlideStyle,
   updateBlock,
   updateSelectedBlockColor,
   uploadImageForBlock,
   uploadVideoForBlock
 }: {
   activeSlide: MotionDocScene | undefined;
+  activeSlideIndex: number;
+  scenes: MotionDocScene[];
   activeSlideAccent: string;
   activeSlideBackground: string;
   activeSlideMutedColor: string;
@@ -129,6 +138,7 @@ export function PitchInspector({
   addSlideWithLayout: (layoutSource: string, layoutId: string) => void;
   alignSelectedBlocks: (alignment: SelectionAlignment) => void;
   distributeSelectedBlocks: (distribution: SelectionDistribution) => void;
+  extendSharedMorphGroup: (endIndex: number) => void;
   imageSourceRequiresAbsoluteUrl: boolean;
   inspectorExtension?: React.ReactNode;
   localAssetsOnly?: boolean;
@@ -145,12 +155,16 @@ export function PitchInspector({
   requestImageUpload: () => boolean;
   selectedBlockIndex: number | null;
   selectedBlockIndices?: number[];
+  selectSingleBlock: (index: number | null) => void;
+  selectSlide: (index: number) => void;
+  setSharedMorphReturnLink: (groupStartIndex: number, detailSlideIndex: number, enabled: boolean) => void;
   setIsGridVisible: (value: boolean) => void;
   setIsSafeAreaVisible: (value: boolean) => void;
   setIsSnapEnabled: (value: boolean) => void;
   snapSelectedBlocksToGrid: () => void;
   updateAllSlidesStyle: (updates: MotionDocProps) => void;
   updateActiveSlideStyle: (updates: MotionDocProps) => void;
+  updateSlideStyle: (slideIndex: number, updates: MotionDocProps) => void;
   updateBlock: BlockUpdater;
   updateSelectedBlockColor: (blockIndex: number, color: string) => void;
   uploadImageForBlock: (blockIndex: number, file: File | undefined) => void;
@@ -163,7 +177,7 @@ export function PitchInspector({
   const { tx } = usePitchI18n();
 
   return (
-    <div id="inspector-v4" className="flex w-full sm:w-[300px] md:w-[320px] shrink-0 flex-col overflow-hidden border-l border-white/[0.08] bg-[#171717] select-none h-full relative z-10 transition-all duration-300 font-sans antialiased">
+    <div id="inspector-v4" className="editor-readable-sidebar flex w-full sm:w-[340px] md:w-[390px] shrink-0 flex-col overflow-hidden border-l border-white/[0.08] bg-[#171717] select-none h-full relative z-10 transition-all duration-300 font-sans antialiased">
 
       <EditorInspectorHeader
         actions={(
@@ -209,6 +223,8 @@ export function PitchInspector({
                 onAddLayout={addSlideWithLayout}
               />
               <SlideSettings
+                activeSlide={activeSlide}
+                activeSlideIndex={activeSlideIndex}
                 accent={activeSlideAccent}
                 background={activeSlideBackground}
                 duration={activeSlide?.duration ?? 5}
@@ -216,6 +232,12 @@ export function PitchInspector({
                 isSafeAreaVisible={isSafeAreaVisible}
                 isSnapEnabled={isSnapEnabled}
                 mutedColor={activeSlideMutedColor}
+                nextSlide={scenes[activeSlideIndex + 1]}
+                scenes={scenes}
+                extendSharedMorphGroup={extendSharedMorphGroup}
+                selectSingleBlock={selectSingleBlock}
+                selectSlide={selectSlide}
+                setSharedMorphReturnLink={setSharedMorphReturnLink}
                 setIsGridVisible={setIsGridVisible}
                 setIsSafeAreaVisible={setIsSafeAreaVisible}
                 setIsSnapEnabled={setIsSnapEnabled}
@@ -240,12 +262,14 @@ export function PitchInspector({
                 transitionDuration={activeSlide?.props.transitionDuration}
                 updateAllSlidesStyle={updateAllSlidesStyle}
                 updateActiveSlideStyle={updateActiveSlideStyle}
+                updateSlideStyle={updateSlideStyle}
               />
             </div>
           ) : (
             <>
               <ElementSettings
                 activeSlide={activeSlide}
+                scenes={scenes}
                 imageSourceRequiresAbsoluteUrl={imageSourceRequiresAbsoluteUrl}
                 importImageUrlForBlock={importImageUrlForBlock}
                 pushUndoSnapshot={pushUndoSnapshot}
@@ -289,6 +313,7 @@ function InspectorActionButton({ icon, label, onClick }: { icon: React.ReactNode
 
 function ElementSettings({
   activeSlide,
+  scenes,
   imageSourceRequiresAbsoluteUrl,
   importImageUrlForBlock,
   pushUndoSnapshot,
@@ -301,6 +326,7 @@ function ElementSettings({
   uploadVideoForBlock
 }: {
   activeSlide: MotionDocScene | undefined;
+  scenes: MotionDocScene[];
   imageSourceRequiresAbsoluteUrl: boolean;
   importImageUrlForBlock: (blockIndex: number, source: string) => boolean;
   pushUndoSnapshot: () => void;
@@ -334,10 +360,12 @@ function ElementSettings({
       <div className="flex flex-col gap-0">
         {"props" in block && (
           <MotionFields
+            activeSlide={activeSlide}
             block={block}
             inheritedBackgroundColor={inheritedBackgroundColor}
             inheritedTextColor={inheritedTextColor}
             isTextType={isTextType}
+            scenes={scenes}
             selectedBlockIndex={selectedBlockIndex}
             textValue={textValue}
             updateBlock={updateBlock}

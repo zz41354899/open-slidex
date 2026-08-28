@@ -3,13 +3,20 @@ import { useRef, type Dispatch, type SetStateAction } from "react";
 import { insertMotionDocSlideSource } from "@/core/motion-doc/application/motionDocSourceEditor";
 import { normalizeShaderFrame } from "@/core/motion-doc/application/shaderFrame";
 import { numberValue } from "@/core/motion-doc/domain/frame";
+import { parseMotionDoc } from "@/core/motion-doc/domain/motionDocParser";
 import type { MotionDocProps, MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
+import { autoLinkSharedMorphScenes, setSharedMorphReturnLinkScenes, unlinkSharedMorphGroupScenes } from "@/core/motion-doc/domain/sharedMorph";
 import {
   appendBlankSlideSource,
   applyAllSlidesStyleSource,
   applySlideStyleSource,
   deleteSlideSource,
   duplicateSlideSource,
+  extendSharedMorphGroupSource,
+  moveSlideIntoSharedMorphGroupSource,
+  moveSlideOutOfSharedMorphGroupSource,
+  preparePastedSlideSource,
+  replaceSlideSource,
   insertBlankSlideSource,
   insertLayoutSlideSource,
   insertTemplateSlideSource,
@@ -132,6 +139,14 @@ export function usePitchSlideCommands({
     setNotice("Slide duplicated");
   }
 
+  function extendSharedMorphGroup(endIndex: number) {
+    if (!scenes[endIndex]) return;
+    commitSource((current) => extendSharedMorphGroupSource(current, endIndex));
+    setActiveSlideIndex(Math.min(endIndex + 1, scenes.length));
+    selectSingleBlock(null);
+    setNotice("Morph slide added");
+  }
+
   function copySlide(slideIndex: number) {
     const packet = createMotionDocSlideClipboardPacket(source, slideIndex);
     if (!packet) return;
@@ -146,7 +161,7 @@ export function usePitchSlideCommands({
     const slideSource = packet?.slideSource ?? copiedSlideSourceRef.current;
     if (!slideSource) return false;
 
-    commitSource((current) => insertMotionDocSlideSource(current, slideIndex, slideSource, "after"));
+    commitSource((current) => insertMotionDocSlideSource(current, slideIndex, preparePastedSlideSource(slideSource), "after"));
     setActiveSlideIndex(Math.min(slideIndex + 1, scenes.length));
     selectSingleBlock(null);
     setNotice("Slide pasted");
@@ -164,10 +179,71 @@ export function usePitchSlideCommands({
     });
   }
 
+  function moveSlideIntoMorphGroup(slideIndex: number, groupStartIndex: number) {
+    const nextSource = moveSlideIntoSharedMorphGroupSource(source, slideIndex, groupStartIndex);
+    if (nextSource === source) return;
+    const groupEndIndex = morphGroupEndIndex(scenes, groupStartIndex);
+    const nextActiveSlideIndex = slideIndex < groupStartIndex
+      ? groupEndIndex
+      : groupEndIndex + 1;
+    commitSource(nextSource);
+    setActiveSlideIndex(nextActiveSlideIndex);
+    selectSingleBlock(null);
+    setNotice("Slide added to Morph");
+  }
+
+  function moveSlideOutOfMorphGroup(slideIndex: number, targetSlideIndex: number) {
+    const nextSource = moveSlideOutOfSharedMorphGroupSource(source, slideIndex, targetSlideIndex);
+    if (nextSource === source) return;
+    commitSource(nextSource);
+    setActiveSlideIndex((current) => current === slideIndex ? Math.min(targetSlideIndex, scenes.length - 1) : current);
+    selectSingleBlock(null);
+    setNotice("Slide removed from Morph");
+  }
+
   function updateActiveSlideStyle(updates: MotionDocProps) {
-    if (!activeSlide) return;
-    commitSource((current) => applySlideStyleSource(current, activeSlide, activeSlideIndex, updates));
+    updateSlideStyle(activeSlideIndex, updates);
+  }
+
+  function updateSlideStyle(slideIndex: number, updates: MotionDocProps) {
+    const slide = scenes[slideIndex];
+    if (!slide) return;
+    commitSource((current) => {
+      const styledSource = applySlideStyleSource(current, slide, slideIndex, updates);
+      if (updates.slideTransition !== "morph") return styledSource;
+      const parsed = parseMotionDoc(styledSource);
+      const sourceSlide = parsed.scenes[slideIndex];
+      const targetSlide = parsed.scenes[slideIndex + 1];
+      if (!sourceSlide || !targetSlide) return styledSource;
+      const [linkedSource, linkedTarget] = autoLinkSharedMorphScenes(sourceSlide, targetSlide);
+      return replaceSlideSource(replaceSlideSource(styledSource, slideIndex, linkedSource), slideIndex + 1, linkedTarget);
+    });
     setNotice("Slide style updated");
+  }
+
+  function unlinkSharedMorphGroup(startIndex: number, endIndex: number) {
+    commitSource((current) => {
+      const parsed = parseMotionDoc(current);
+      const unlinked = unlinkSharedMorphGroupScenes(parsed.scenes, startIndex, endIndex);
+      return unlinked.reduce((next, scene, sceneIndex) => (
+        sceneIndex >= startIndex && sceneIndex <= endIndex
+          ? replaceSlideSource(next, sceneIndex, scene)
+          : next
+      ), current);
+    });
+    setNotice("Morph group unlinked");
+  }
+
+  function setSharedMorphReturnLink(groupStartIndex: number, detailSlideIndex: number, enabled: boolean) {
+    commitSource((current) => {
+      const parsed = parseMotionDoc(current);
+      const linked = setSharedMorphReturnLinkScenes(parsed.scenes, groupStartIndex, detailSlideIndex, enabled);
+      return [groupStartIndex, detailSlideIndex].reduce((next, sceneIndex) => {
+        const scene = linked[sceneIndex];
+        return scene ? replaceSlideSource(next, sceneIndex, scene) : next;
+      }, current);
+    });
+    setNotice(enabled ? "Return Morph enabled" : "Return Morph disabled");
   }
 
   function persistActiveSlideShaderFrame(frame: number) {
@@ -200,13 +276,25 @@ export function usePitchSlideCommands({
     copySlide,
     deleteSlide,
     duplicateSlide,
+    extendSharedMorphGroup,
     goToNextSlide,
     goToPreviousSlide,
     insertSlideNearActive,
+    moveSlideIntoMorphGroup,
+    moveSlideOutOfMorphGroup,
     pasteSlide,
     persistActiveSlideShaderFrame,
     reorderSlide,
+    setSharedMorphReturnLink,
+    unlinkSharedMorphGroup,
     updateActiveSlideStyle,
+    updateSlideStyle,
     updateAllSlidesStyle
   };
+}
+
+function morphGroupEndIndex(scenes: MotionDocScene[], startIndex: number) {
+  let endIndex = startIndex + 1;
+  while (endIndex < scenes.length - 1 && scenes[endIndex]?.props.slideTransition === "morph") endIndex += 1;
+  return endIndex;
 }

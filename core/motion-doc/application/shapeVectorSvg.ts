@@ -111,7 +111,7 @@ export function renderShapeVectorSvg(props: ShapeProps, id = "shape") {
   const transformedGeometry = shape === "line" ? geometry : `<g${geometryTransform}>${geometry}${booleanLayer}</g>`;
   const resolvedBooleanLayer = shape === "line" ? booleanLayer : "";
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" overflow="visible" preserveAspectRatio="none" shape-rendering="geometricPrecision" viewBox="${viewBox}" opacity="${opacity}"><defs>${defs}${imageMask}</defs><g${maskAttr}>${imageLayer}${transformedGeometry}${resolvedBooleanLayer}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="${viewportWidth}" height="${viewportHeight}" overflow="visible" preserveAspectRatio="none" shape-rendering="geometricPrecision" viewBox="${viewBox}" opacity="${opacity}"><defs>${defs}${imageMask}</defs><g${maskAttr}>${imageLayer}${transformedGeometry}${resolvedBooleanLayer}</g></svg>`;
 }
 
 function renderMaskDefs(mask: string, id: string, width: number, height: number) {

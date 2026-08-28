@@ -27,12 +27,14 @@ import {
 } from "@open-slidex/sdk";
 import {
   importOpenSlideXImageAsset,
+  importOpenSlideXVideoAsset,
   renderSlideXDocument
 } from "@open-slidex/sdk/node";
 
 import { SlideXProject } from "./project";
 import { assertSandboxedHtml } from "./htmlImportPolicy";
 import { renderOfficialTemplateCover } from "./templateCover";
+import { copyBundledOfficialTemplateAssets } from "./officialTemplateAssets";
 import { readWorkspaceImport, type WorkspaceHtmlSidecar } from "./workspaceImport";
 
 export type LocalWorkspacePresentation = {
@@ -148,6 +150,7 @@ export class OpenSlideXWorkspace {
     try {
       await resetGeneratedProjectState(target);
       await replaceProjectName(target, id);
+      if (template) await copyBundledOfficialTemplateAssets(template, target);
       const source = withDocumentTitle(
         template ? template.sources[locale] : blankPresentationMdx,
         title
@@ -175,7 +178,7 @@ export class OpenSlideXWorkspace {
       file,
       (source) => listSlideXAssetReferences(source).map((reference) => reference.source),
       (source) => this.recoverWorkspaceAsset(source),
-      { htmlSidecars }
+      { htmlSidecars, mdxSidecars: htmlSidecars }
     );
     const source = imported.source;
 
@@ -208,6 +211,18 @@ export class OpenSlideXWorkspace {
           await writeFile(path.join(target, asset.source), asset.bytes, { flag: "wx" }).catch(async (error: NodeJS.ErrnoException) => {
             if (error.code !== "EEXIST") throw error;
           });
+          continue;
+        }
+        if (asset.mediaType === "video/mp4") {
+          const stored = await importOpenSlideXVideoAsset({
+            bytes: asset.bytes,
+            fileName: asset.fileName,
+            mediaType: asset.mediaType,
+            projectRoot: target
+          });
+          if (stored.source !== asset.source) {
+            commands.push({ from: asset.source, to: stored.source, type: "asset.repath" } as const);
+          }
           continue;
         }
         const stored = await importOpenSlideXImageAsset({

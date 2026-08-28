@@ -165,10 +165,7 @@ async function routeWorkspaceRequest(
     const sidecarFiles = form.getAll("asset");
     const sidecarPaths = form.getAll("assetPath");
     if (sidecarFiles.length !== sidecarPaths.length || !sidecarFiles.every(isWorkspaceImportFile) || !sidecarPaths.every((value) => typeof value === "string")) {
-      throw Object.assign(new Error("Each HTML sidecar must include a file and its path inside the selected folder."), { status: 400 });
-    }
-    if (sidecarFiles.length && !/\.html$/i.test(file.name)) {
-      throw Object.assign(new Error("HTML sidecars can be imported only with an .html presentation."), { status: 400 });
+      throw Object.assign(new Error("Each import sidecar must include a file and its path inside the selected folder."), { status: 400 });
     }
     const presentation = await input.workspace.importMdx(file, sidecarFiles.map((sidecar, index) => ({
       file: sidecar,

@@ -80,7 +80,98 @@ const zhTw = {
   "Search fonts...": "搜尋字型…",
   "Default Font": "預設字型",
   "No fonts found.": "找不到字型。",
-  "Animation": "動畫",
+  "Animation": "動作",
+  "Actions": "動作",
+  "Preview": "預覽",
+  "Preview on canvas": "在畫布預覽",
+  "Live preview": "即時預覽",
+  "Replay preview": "重新預覽",
+  "Playing": "播放中",
+  "Choose an effect to preview": "選擇效果即可預覽",
+  "Canvas": "畫布",
+  "Timing & order": "時間與順序",
+  "Entrance": "進場",
+  "Action": "動作",
+  "Start effect": "開始效果",
+  "Action effect": "動作效果",
+  "End effect": "結束效果",
+  "Number range": "數字區間",
+  "Drift": "漂移",
+  "Glide": "滑行",
+  "Arc": "弧線",
+  "Focus": "聚焦",
+  "Count": "數字",
+  "Spin": "旋轉",
+  "Templates": "範本",
+  "Advanced": "進階",
+  "Advanced timing": "進階時序",
+  "Seconds short": "秒",
+  "Animate a count between two values. Static exports keep the final number.": "在兩個數值之間遞增或倒數；靜態輸出會保留最後數字。",
+  "Countdown": "倒數",
+  "Count up": "遞增",
+  "Count from": "起始數字",
+  "Count to": "結束數字",
+  "Step interval": "跳動間隔",
+  "Effect": "效果",
+  "Start mode": "開始方式",
+  "Add action": "新增動作",
+  "Add an action, then drag its start ghost on the canvas.": "新增動作後，可在畫布拖曳紫色起始虛構物件。",
+  "Add an action, then set its start point, end point, and path.": "新增動作後，可分別設定起點、終點與路徑。",
+  "Choose how this layer first appears. Static remains the default.": "選擇圖層如何出現；預設維持靜態。",
+  "Choose how this layer leaves during playback. Static exports keep it visible.": "選擇圖層播放時如何離開；靜態輸出仍會完整顯示。",
+  "Start point": "起點",
+  "End point": "終點",
+  "Path": "路徑",
+  "Straight": "直線",
+  "Straight path uses the shortest route between both points.": "直線會沿起點與終點之間的最短路徑移動。",
+  "Arc up": "向上弧線",
+  "Arc down": "向下弧線",
+  "Slide out": "滑出",
+  "Fade out": "淡出",
+  "Fade down": "向下淡出",
+  "Shrink": "縮小消失",
+  "Easing": "緩動",
+  "On click": "點按時",
+  "After previous": "上一個之後",
+  "With previous": "與上一個一起",
+  "Ease in": "緩入",
+  "Ease out": "緩出",
+  "Ease in & out": "緩入緩出",
+  "Ease in and out": "緩入緩出",
+  "Start ghost": "起始虛構物件",
+  "Animation start ghost": "動作起始虛構物件",
+  "Resize animation start ghost": "調整動作起始虛構物件大小",
+  "Rotate animation start ghost": "旋轉動作起始虛構物件",
+  "Animation curve control": "動作曲線控制點",
+  "Curved path": "曲線路徑",
+  "Preview action": "預覽動作",
+  "Move action earlier": "提前動作順序",
+  "Move action later": "延後動作順序",
+  "Delete action": "刪除動作",
+  "Animation order": "動作順序",
+  "Action order": "動作順序",
+  "Preview actions": "預覽所有動作",
+  "Collapse action order": "收合動作順序",
+  "Expand action order": "展開動作順序",
+  "Alt + arrow keys to reorder": "Alt＋方向鍵重新排序",
+  "items": "個項目",
+  "Click": "點按",
+  "With": "一起",
+  "After": "之後",
+  "Morph": "Morph 變形",
+  "Match layers across adjacent slides": "配對相鄰投影片的圖層",
+  "Morph easing": "Morph 緩動",
+  "Fade unmatched layers": "淡化未配對圖層",
+  "Fade unmatched content": "淡化未配對內容",
+  "Layer pairing": "圖層配對",
+  "Paired": "已配對",
+  "Unpaired": "未配對",
+  "paired": "已配對",
+  "unpaired": "未配對",
+  "unsupported": "不支援",
+  "Unsupported": "不支援",
+  "Not linked": "未連結",
+  "Add a next slide to create Morph pairs.": "新增下一張投影片後即可建立 Morph 配對。",
   "Arrow": "箭頭",
   "Bar": "長條",
   "Background": "背景",
@@ -140,7 +231,6 @@ const zhTw = {
   "All": "全部",
   "No labels": "不顯示",
   "Color treatment": "色彩處理",
-  "Focus": "焦點",
   "Gradient": "漸層",
   "Key data point": "重點資料點",
   "Quiet background guides": "低干擾背景引導線",
@@ -160,12 +250,12 @@ const zhTw = {
   "Donut hole": "圓環內徑",
   "Accessible description": "無障礙說明",
   "Remove row": "刪除列",
-  "Build animation": "建立動畫",
+  "Build animation": "建立動作",
   "Automatic": "自動",
   "Grow": "向上生長",
   "Draw": "繪製",
   "Sweep": "掃入",
-  "Animated": "已啟用動畫",
+  "Animated": "已啟用動作",
   "Best motion for this chart": "自動選擇最適合此圖表的動畫",
   "Build from the baseline": "由基準線建立動畫",
   "Trace the data path": "沿資料路徑繪製",
@@ -177,7 +267,7 @@ const zhTw = {
   "Values and names": "顯示數值與名稱",
   "Applies to every data mark": "套用至每個資料標記",
   "Plays when the slide becomes active": "投影片啟用時播放",
-  "Animation is disabled automatically when the viewer requests reduced motion. PPTX exports the matching editable final state.": "檢視者要求減少動態時，動畫會自動關閉。PPTX 會匯出對應的可編輯最終狀態。",
+  "Animation is disabled automatically when the viewer requests reduced motion. PPTX exports the matching editable final state.": "檢視者要求減少動態時，動作會自動關閉。PPTX 會匯出對應的可編輯最終狀態。",
   "Paste CSV or spreadsheet cells into any label field. Up to 24 rows.": "可將 CSV 或試算表儲存格貼到任一標籤欄位，最多 24 列。",
   "Quarterly revenue by region": "各地區季度營收",
   "Choose only what you need.": "選擇需要加入的內容。",
@@ -527,7 +617,8 @@ const zhTw = {
   "Hide slide navigator": "收合投影片導覽列",
   "Show slide navigator": "展開投影片導覽列",
   "Close presentation preview": "關閉簡報預覽",
-  "Restart current slide animation": "重新播放目前投影片動畫",
+  "Restart current slide animation": "重新播放目前投影片動作",
+  "Restart current slide actions": "重新播放目前投影片動作",
   "Untitled presentation": "未命名簡報",
   "← → to navigate · Esc exits full screen or closes": "← → 切換投影片 · Esc 離開全螢幕或關閉",
   "Properties": "屬性",
@@ -638,7 +729,10 @@ const zhTw = {
   "Transition": "轉場",
   "Transition duration": "轉場時間",
   "Transition style": "轉場樣式",
-  "Slide Animation & Timing": "投影片動畫與時間",
+  "Slide Animation & Timing": "投影片動作與時間",
+  "Slide Actions & Timing": "投影片動作與時間",
+  "Slide Interaction & Timing": "投影片互動與時間",
+  "Transition Effects": "轉場效果",
   "Slide Duration": "投影片時間",
   "No slide motion": "無投影片動態",
   "Editorial fade": "柔和淡入淡出",
@@ -839,7 +933,8 @@ const zhTw = {
   "Radius": "圓角半徑",
   "Delay": "延遲",
   "Duration": "持續時間",
-  "Animation Style": "動畫樣式",
+  "Animation Style": "動作樣式",
+  "Action Style": "動作樣式",
   "Import an image": "匯入圖片",
   "Choose a file from the right panel": "請從右側面板選擇檔案",
   "ImageBlock": "圖片",
@@ -940,7 +1035,75 @@ const zhTw = {
   ,"Try again": "再試一次"
   ,"Interactive presentation": "互動式簡報"
   ,"Canonical source": "標準原始碼"
-  ,"Replay animations": "重播動畫"
+  ,"Replay animations": "重播動作"
+  ,"Replay actions": "重播動作"
+  ,"Action start ghost": "動作起始虛構物件"
+  ,"Resize action start ghost": "調整動作起始虛構物件大小"
+  ,"Rotate action start ghost": "旋轉動作起始虛構物件"
+  ,"Action curve control": "動作曲線控制點"
+  ,"Click action": "點擊動作"
+  ,"click actions": "個點擊動作"
+  ,"The selected layer becomes the interactive area.": "選取的圖層就是互動區域。"
+  ,"No click action": "無點擊動作"
+  ,"Go to slide": "跳到投影片"
+  ,"Go to slides": "跳到投影片"
+  ,"Open link": "開啟連結"
+  ,"Link URL": "連結網址"
+  ,"Works in presentation preview and exported HTML. MDX keeps the same declarative action.": "可在簡報預覽與匯出 HTML 中使用；MDX 會保留相同的宣告式動作。"
+  ,"Shape softness": "形狀柔化"
+  ,"Shape precision": "形狀精度"
+  ,"Smooth": "柔順"
+  ,"Spring": "彈性"
+  ,"Element Actions": "元件動作"
+  ,"Slide Morph": "投影片 Morph"
+  ,"Morph sequence": "Morph 序列"
+  ,"Motion feel": "動態手感"
+  ,"Slide sequence": "投影片序列"
+  ,"Add slide to Morph": "新增 Morph 投影片"
+  ,"Compatible content is matched automatically between every slide.": "每張投影片之間會自動配對相容內容。"
+  ,"Return Morph": "返回 Morph"
+  ,"Same effect": "相同效果"
+  ,"Overview": "總覽"
+  ,"slides short": "張"
+  ,"Expand slides": "展開投影片"
+  ,"Collapse slides": "收合投影片"
+  ,"Morph options": "Morph 選項"
+  ,"Edit Morph": "編輯 Morph"
+  ,"Unlink Morph": "解除 Morph"
+  ,"Same content": "同一組內容"
+  ,"Start slide": "起始"
+  ,"End slide": "完成"
+  ,"Step": "步驟"
+  ,"Interaction": "互動"
+  ,"Easing curve": "緩動曲線"
+  ,"Editing previous transition": "正在編輯上一頁轉換"
+  ,"Preview Effect": "預覽效果"
+  ,"Effect preview": "效果預覽"
+  ,"Click Areas": "點擊區域"
+  ,"Click area": "點擊區域"
+  ,"Choose a layer to define what happens when it is clicked.": "選擇圖層，設定點擊後要執行的動作。"
+  ,"Add click action": "新增點擊動作"
+  ,"Add a layer before creating a click area.": "請先新增圖層，再建立點擊區域。"
+  ,"Available click areas": "可點擊區域"
+  ,"Canvas preview": "畫布預覽"
+  ,"Morph preview": "Morph 預覽"
+  ,"Morph canvas preview": "Morph 畫布預覽"
+  ,"Morph easing curve": "Morph 緩動曲線"
+  ,"First curve control": "第一個曲線控制點"
+  ,"Second curve control": "第二個曲線控制點"
+  ,"Preview Morph": "預覽 Morph"
+  ,"Advanced settings": "進階設定"
+  ,"Emphasized": "強調"
+  ,"Back out": "回彈"
+  ,"Constant speed": "等速移動"
+  ,"Accelerates at the start": "由慢到快"
+  ,"Settles gently at the end": "由快到慢"
+  ,"Balanced acceleration and deceleration": "平衡加速與減速"
+  ,"Soft presentation motion": "柔順的簡報動態"
+  ,"Fast focus with a calm finish": "快速聚焦並平穩收尾"
+  ,"Subtle elastic response": "輕微彈性回應"
+  ,"Overshoots before settling": "超出後回到終點"
+  ,"Drag both curve handles": "拖曳兩個曲線控制點"
   ,"Choose export format": "選擇匯出格式"
   ,"Exporting HTML…": "正在匯出 HTML…"
   ,"Exporting MDX…": "正在匯出 MDX…"

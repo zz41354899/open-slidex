@@ -12,6 +12,7 @@ import type { PitchWorkspaceProps } from "@/features/pitch/ui/workspace/PitchWor
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import { useVisibleRemoteMcpOperations } from "@/features/pitch/ui/hooks/useVisibleRemoteMcpOperations";
 import { PreviewMediaPolicyProvider } from "@/features/pitch/ui/preview/PreviewMediaPolicy";
+import { MotionSequenceStrip } from "@/features/pitch/ui/MotionSequenceStrip";
 
 export function PitchWorkspace({ assistant, commands, document, remoteMcp, selection, toolRail, view }: PitchWorkspaceProps) {
   const { tx } = usePitchI18n();
@@ -165,6 +166,12 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
             singleSlidePreview={view.singleSlideCanvas === true}
             slideRows={document.slideRows}
             zoomLevel={zoomLevel}
+          />
+          <MotionSequenceStrip
+            onPreview={view.onReplayAnimations}
+            onReorder={commands.reorderMotionActions}
+            onSelectBlock={(index) => selection.selectSingleBlock(index)}
+            scene={document.activeSlide}
           />
           {view.commentsEnabled ? <DesktopSlideNoteFab
             comments={document.activeSlideComments}

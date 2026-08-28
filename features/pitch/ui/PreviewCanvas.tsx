@@ -1,5 +1,5 @@
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent } from "react";
 import { InteractiveDotField } from "@/common/ui/InteractiveDotField";
 import { applyImageCropRect, fullImageCropRect, type ImageCropRect } from "@/core/motion-doc/application/imageCrop";
 import { autoSizeTextFrameProps } from "@/core/motion-doc/application/textFrameSizing";
@@ -73,6 +73,12 @@ import type { AddBlockType } from "@/features/pitch/ui/pitchOptions";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import { sharedHtmlDeckRuntime } from "@/features/pitch/application/htmlRuntimePolicy";
 import { SharedHtmlCanvasOverlay } from "@/features/pitch/ui/preview/SharedHtmlCanvasOverlay";
+import { CanvasMorphPreviewOverlay } from "@/features/pitch/ui/preview/CanvasMorphPreviewOverlay";
+import {
+  MORPH_CANVAS_PREVIEW_EVENT,
+  normalizeMorphCanvasPreviewRange,
+  type MorphCanvasPreviewRequest
+} from "@/features/pitch/application/morphCanvasPreview";
 
 type PreviewCanvasProps = {
   assistantActivities: readonly AssistantCanvasActivity[];
@@ -217,6 +223,7 @@ export function PreviewCanvas({
   const [canvasViewportOffset, setCanvasViewportOffset] = useState({ x: 0, y: 0 });
   const [isMouseOverCanvas, setIsMouseOverCanvas] = useState(false);
   const [isTemporaryHandActive, setIsTemporaryHandActive] = useState(false);
+  const [morphPreview, setMorphPreview] = useState<{ endSlideIndex: number; nonce: number; startSlideIndex: number } | null>(null);
   const [imageCropTarget, setImageCropTarget] = useState<{ blockIndex: number; cropRect: ImageCropRect; slideIndex: number } | null>(null);
   const { closeContextMenu, contextMenu, openContextMenu } = useCanvasContextMenu();
   const { actualScale, canvasFrameStyle, canvasStripSidePadding } = useCanvasViewportMetrics({
@@ -249,6 +256,23 @@ export function PreviewCanvas({
     ? imageCropTarget.blockIndex
     : null;
   const imageCropRect = imageCropBlockIndex === null ? null : imageCropTarget?.cropRect ?? null;
+  const finishMorphPreview = useCallback(() => setMorphPreview(null), []);
+
+  useEffect(() => {
+    function requestMorphPreview(event: Event) {
+      const range = normalizeMorphCanvasPreviewRange(scenes, (event as CustomEvent<MorphCanvasPreviewRequest>).detail);
+      if (!range) return;
+      const start = () => setMorphPreview({ ...range, nonce: Date.now() });
+      if (range.startSlideIndex !== activeSlideIndex) {
+        onSelectSlide(range.startSlideIndex);
+        window.requestAnimationFrame(() => window.requestAnimationFrame(start));
+      } else {
+        start();
+      }
+    }
+    window.addEventListener(MORPH_CANVAS_PREVIEW_EVENT, requestMorphPreview);
+    return () => window.removeEventListener(MORPH_CANVAS_PREVIEW_EVENT, requestMorphPreview);
+  }, [activeSlideIndex, onSelectSlide, scenes]);
   const canvasInputTool: CanvasTool = isTemporaryHandActive ? "hand" : activeCanvasTool;
   const canvasPanZoom = useCanvasPanZoom({
     activeCanvasTool: canvasInputTool,
@@ -1037,6 +1061,17 @@ export function PreviewCanvas({
                           backgroundImage: `linear-gradient(to right, ${gridColor} 1px, transparent 1px), linear-gradient(to bottom, ${gridColor} 1px, transparent 1px)`,
                           backgroundSize: `${40 * actualScale}px ${40 * actualScale}px`
                         }}
+                      />
+                    ) : null}
+                    {isActiveSlideFrame && morphPreview?.startSlideIndex === slide.index && slideScene && scenes[morphPreview.endSlideIndex] && canvasRef.current?.querySelector<HTMLElement>("[data-motion-canvas-content=active]") ? (
+                      <CanvasMorphPreviewOverlay
+                        actualScale={actualScale}
+                        endSlideIndex={morphPreview.endSlideIndex}
+                        key={morphPreview.nonce}
+                        onFinish={finishMorphPreview}
+                        scenes={scenes}
+                        sourceRoot={canvasRef.current.querySelector<HTMLElement>("[data-motion-canvas-content=active]")!}
+                        startSlideIndex={morphPreview.startSlideIndex}
                       />
                     ) : null}
                     {isActiveSlideFrame ? <CanvasSafeAreaOverlay visible={isSafeAreaVisible} /> : null}

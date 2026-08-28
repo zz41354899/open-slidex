@@ -1,4 +1,8 @@
 import type { AssetItem, DocumentSnapshot, Selection } from "./domain";
+import {
+  localExportMediaSourcesToMaterialize,
+  replaceLocalExportMediaSources
+} from "./localExport";
 export type OfficialTemplateSummary = {
   blueprintSummary: string;
   cover: string;
@@ -184,6 +188,23 @@ export function selectOfficialTemplate(template: { id: string; locale: "en" | "z
 }
 
 export async function uploadAsset(file: File, expectedRevision: string) {
+  try {
+    return await uploadAssetAtRevision(file, expectedRevision);
+  } catch (error) {
+    const conflict = error as Error & { code?: string; currentRevision?: string };
+    // Asset imports create a content-addressed file but do not alter
+    // presentation.mdx. A save can finish between the last React render and
+    // the file-picker change event, leaving that event with the previous
+    // revision. Retrying once with the server-provided revision preserves the
+    // user's upload without weakening conflicts for document writes.
+    if (conflict.code === "revision_conflict" && conflict.currentRevision) {
+      return uploadAssetAtRevision(file, conflict.currentRevision);
+    }
+    throw error;
+  }
+}
+
+async function uploadAssetAtRevision(file: File, expectedRevision: string) {
   const form = new FormData();
   form.set("file", file);
   form.set("expectedRevision", expectedRevision);
@@ -236,14 +257,29 @@ export type PreparedExportDestination = {
   output: string;
 };
 
+const exportFileTypes: Record<ExportFormat, {
+  description: string;
+  mimeType: string;
+}> = {
+  html: { description: "HTML presentation", mimeType: "text/html" },
+  mdx: { description: "OpenSlideX MDX source", mimeType: "text/mdx" },
+  pptx: {
+    description: "PowerPoint presentation",
+    mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+  }
+};
+
+/**
+ * Ask for the final file location while the export-menu click still has a
+ * browser user gesture. This avoids Chromium silently blocking the synthetic
+ * download after a slower asynchronous export has finished.
+ */
 export async function prepareExportDestination(
   fileName: string,
   format: ExportFormat
 ): Promise<PreparedExportDestination | null> {
   const output = `${fileName}.${format}`;
-  if (format !== "pptx" || typeof window === "undefined" || !window.isSecureContext) {
-    return { output };
-  }
+  if (typeof window === "undefined" || !window.isSecureContext) return { output };
 
   const picker = (window as Window & {
     showSaveFilePicker?: (options: {
@@ -254,15 +290,14 @@ export async function prepareExportDestination(
   }).showSaveFilePicker;
   if (!picker) return { output };
 
+  const fileType = exportFileTypes[format];
   try {
     const handle = await picker.call(window, {
       excludeAcceptAllOption: true,
       suggestedName: output,
       types: [{
-        accept: {
-          "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"]
-        },
-        description: "PowerPoint presentation"
+        accept: { [fileType.mimeType]: [`.${format}`] },
+        description: fileType.description
       }]
     });
     return { handle, output: handle.name || output };
@@ -281,36 +316,118 @@ export async function exportDocument(input: {
   target: "download" | "dist";
 }, destination?: PreparedExportDestination) {
   const response = await fetch(localWorkbenchApiPath("/api/v1/export"), {
-    body: JSON.stringify(input),
+    body: JSON.stringify(input.target === "download" ? { ...input, delivery: "browser" } : input),
     headers: { "content-type": "application/json" },
     method: "POST"
   });
   if (!response.ok) throw await apiError(response);
   if (input.target === "dist") return requestResponseJson<{ output: string }>(response);
 
+  if ((response.headers.get("content-type") ?? "").includes("application/json")) {
+    const prepared = await requestResponseJson<{ downloadUrl?: string; output?: string }>(response);
+    if (!prepared.downloadUrl || !prepared.output) {
+      throw new Error("The export server did not provide a browser download.");
+    }
+    if (destination?.handle) {
+      const downloadResponse = await fetch(localWorkbenchApiPath(prepared.downloadUrl));
+      if (!downloadResponse.ok) throw await apiError(downloadResponse);
+      const blob = await downloadResponse.blob();
+      assertExportBlob(blob);
+      await writeExportDestination(destination.handle, blob);
+      return { output: destination.output };
+    }
+    const anchor = document.createElement("a");
+    anchor.href = localWorkbenchApiPath(prepared.downloadUrl);
+    anchor.download = prepared.output;
+    anchor.style.display = "none";
+    document.body.append(anchor);
+    anchor.click();
+    // Keep the real download link attached until Chromium has started the GET.
+    // Removing it in the click task can cancel every format before the one-time
+    // server URL is consumed.
+    window.setTimeout(() => anchor.remove(), 1_000);
+    return { output: prepared.output };
+  }
+
   const blob = await response.blob();
+  assertExportBlob(blob);
   const disposition = response.headers.get("content-disposition") ?? "";
   const downloadName =
     disposition.match(/filename="([^"]+)"/)?.[1] ??
     `${input.fileName}.${input.format}`;
   if (destination?.handle) {
-    const writable = await destination.handle.createWritable();
-    try {
-      await writable.write(blob);
-      await writable.close();
-    } catch (error) {
-      await writable.abort?.().catch(() => undefined);
-      throw error;
-    }
+    await writeExportDestination(destination.handle, blob);
     return { output: destination.output };
   }
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = downloadName;
+  anchor.style.display = "none";
+  document.body.append(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  // Revoking in the same task can cancel the navigation before Chromium has
+  // handed the Blob to its download manager. Keep the URL alive briefly for
+  // browsers that do not expose showSaveFilePicker.
+  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
   return { output: downloadName };
+}
+
+function assertExportBlob(blob: Blob) {
+  if (blob.size === 0) throw new Error("The export server returned an empty file.");
+}
+
+async function writeExportDestination(handle: LocalSaveFileHandle, blob: Blob) {
+  const writable = await handle.createWritable();
+  try {
+    await writable.write(blob);
+    await writable.close();
+  } catch (error) {
+    await writable.abort?.().catch(() => undefined);
+    throw error;
+  }
+}
+
+/**
+ * Makes browser-local shape/image sources portable without ever persisting a
+ * Base64 URL in MotionDoc. The imported Workspace asset is then used both for
+ * this export and for the Canvas source that follows it.
+ */
+export async function materializeLocalExportMedia(input: {
+  expectedRevision: string;
+  source: string;
+}) {
+  const candidates = localExportMediaSourcesToMaterialize(input.source);
+  if (candidates.length === 0) return { imported: 0, source: input.source };
+
+  const replacements = new Map<string, string>();
+  for (const candidate of candidates) {
+    const resource = candidate.source.startsWith("assets/")
+      ? localWorkbenchAssetUrl(candidate.source)
+      : candidate.source.startsWith("/assets/")
+        ? localWorkbenchAssetUrl(candidate.source.slice(1))
+      : candidate.source;
+    const response = await fetch(resource);
+    if (!response.ok) {
+      throw new Error(`Could not prepare the shape image for export (${response.status}). Replace the image and try again.`);
+    }
+    const blob = await response.blob();
+    if (!blob.type.startsWith("image/") && candidate.prop !== "src") {
+      throw new Error("Shape images must be raster images before export.");
+    }
+    const file = new File(
+      [blob],
+      exportMediaFileName(candidate.source, blob.type),
+      { type: blob.type || "image/png" }
+    );
+    const { asset } = await uploadAsset(file, input.expectedRevision);
+    replacements.set(`${candidate.prop}:${candidate.source}`, asset.source);
+  }
+  return {
+    imported: replacements.size,
+    source: replaceLocalExportMediaSources(input.source, replacements)
+  };
 }
 
 export function renderMontage(overwrite = false) {
@@ -333,9 +450,11 @@ async function requestResponseJson<T>(response: Response) {
 
 async function apiError(response: Response) {
   const payload = (await response.json().catch(() => null)) as
-    | { code?: string; currentRevision?: string; message?: string }
+    | { code?: string; currentRevision?: string; issues?: Array<{ message?: string; path?: string; severity?: string }>; message?: string }
     | null;
-  const error = new Error(payload?.message ?? `Request failed (${response.status}).`) as Error & {
+  const firstIssue = payload?.issues?.find((issue) => issue.severity === "error") ?? payload?.issues?.[0];
+  const issueDetail = firstIssue?.message ? `${firstIssue.path ? `${firstIssue.path}: ` : ""}${firstIssue.message}` : "";
+  const error = new Error(issueDetail ? `${payload?.message ?? `Request failed (${response.status}).`} ${issueDetail}` : payload?.message ?? `Request failed (${response.status}).`) as Error & {
     code?: string;
     currentRevision?: string;
     status?: number;
@@ -344,4 +463,14 @@ async function apiError(response: Response) {
   error.currentRevision = payload?.currentRevision;
   error.status = response.status;
   return error;
+}
+
+function exportMediaFileName(source: string, mimeType: string) {
+  const extension = mimeType === "image/jpeg" ? "jpg" : mimeType.split("/")[1] || "png";
+  const base = source
+    .replace(/^blob:[^/]*\/\//, "")
+    .replace(/[^A-Za-z0-9._-]+/g, "-")
+    .replace(/\.[A-Za-z0-9]+$/, "")
+    .slice(-56) || "shape-image";
+  return `${base}.${extension}`;
 }

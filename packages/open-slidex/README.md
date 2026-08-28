@@ -100,6 +100,11 @@ opens the Workbench. The Workbench includes slide and layer navigation, a left-s
 canvas selection, Inspector editing, local asset management,
 and animated bar, line, area, pie, donut, and scatter charts. HTML and the
 Workbench animate charts; PPTX exports their editable static final state.
+The Actions inspector composes curated Start, Action, and End effects,
+Text number ranges, softened shape-to-shape Shared Morph, and safe click areas
+for slide navigation or links in MDX and exported HTML.
+All remain declarative MotionDoc data; reduced motion,
+thumbnails, PNG, and PowerPoint always render the complete native final frame.
 The installed CLI keeps its generated HMR source and Vite dependency cache in
 the ignored `.open-slidex/` directory. Production build and preview commands
 continue to use the optimized client bundle.

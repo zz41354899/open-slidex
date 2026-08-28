@@ -5,10 +5,14 @@ import path from "node:path";
 import {
   buildMotionDocPngSvg,
   getOfficialTemplatePackage,
+  parseMotionDoc,
   stripNonLocalMotionDocMedia,
-  type TemplatePackageLocale
+  type TemplatePackageLocale,
+  type TemplatePackageV1
 } from "@open-slidex/sdk";
-import { renderSlideXDocument } from "@open-slidex/sdk/node";
+import { renderSlideXDocument, renderSlideXHtmlThumbnail } from "@open-slidex/sdk/node";
+
+import { materializeBundledOfficialTemplateAssets } from "./officialTemplateAssets";
 
 const templateCoverRenders = new Map<string, Promise<string>>();
 
@@ -31,7 +35,10 @@ export async function renderOfficialTemplateCover(input: {
 
   const title = template.locales[input.locale].name;
   const source = stripNonLocalMotionDocMedia(template.sources[input.locale]);
-  const sourceHash = createHash("sha256").update(`real-cover-v1\0${source}`).digest("hex").slice(0, 16);
+  const sourceHash = createHash("sha256")
+    .update(`real-cover-v2\0${source}\0${template.assets.map((asset) => asset.sha256).join("\0")}`)
+    .digest("hex")
+    .slice(0, 16);
   const fileName = [input.id, input.version, input.locale, slideIndex, sourceHash]
     .join("-")
     .replace(/[^A-Za-z0-9._-]/g, "-");
@@ -45,6 +52,7 @@ export async function renderOfficialTemplateCover(input: {
     projectRoot: input.projectRoot,
     slideIndex,
     source,
+    template,
     title
   }).finally(() => {
     templateCoverRenders.delete(coverPath);
@@ -59,6 +67,7 @@ async function renderTemplateCover(input: {
   projectRoot: string;
   slideIndex: number;
   source: string;
+  template: TemplatePackageV1;
   title: string;
 }) {
   await mkdir(input.cacheRoot, { recursive: true });
@@ -67,20 +76,51 @@ async function renderTemplateCover(input: {
 
   const temporaryPath = `${input.coverPath}.${process.pid}.${Date.now()}.tmp.png`;
   try {
-    await renderSlideXDocument({
-      mode: "slide",
-      outputPath: temporaryPath,
-      projectRoot: input.projectRoot,
-      slideIndex: input.slideIndex,
-      source: input.source,
-      title: input.title
-    });
+    const template = input.template;
+    if (!template) throw new Error("Official template package is unavailable.");
+    const renderRoot = path.join(input.cacheRoot, "render-assets", template.id);
+    const assets = await materializeBundledOfficialTemplateAssets(template, renderRoot);
+    const html = templateHtmlScene(input.source, input.slideIndex);
+    if (html) {
+      const htmlSource = assets.find((asset) => asset.path === html.source);
+      if (!htmlSource || htmlSource.mediaType !== "text/html") {
+        throw new Error(`HTML template source is missing: ${html.source}`);
+      }
+      await renderSlideXHtmlThumbnail({
+        html: htmlSource.bytesData.toString("utf8"),
+        localAssets: assets
+          .filter((asset) => asset.path !== html.source && /^assets\/html-asset-[a-f0-9]{16}\./i.test(asset.path))
+          .map((asset) => ({ bytes: asset.bytesData, mimeType: asset.mediaType, name: path.basename(asset.path) })),
+        outputPath: temporaryPath,
+        page: html.page
+      });
+    } else {
+      await renderSlideXDocument({
+        mode: "slide",
+        outputPath: temporaryPath,
+        projectRoot: assets.length ? renderRoot : input.projectRoot,
+        slideIndex: input.slideIndex,
+        source: input.source,
+        title: input.title
+      });
+    }
     await rename(temporaryPath, input.coverPath);
     return embeddedPngSvg(await readFile(input.coverPath), input.title);
   } catch {
     await rm(temporaryPath, { force: true });
     return buildMotionDocPngSvg(input.source, input.slideIndex, input.title);
   }
+}
+
+function templateHtmlScene(source: string, slideIndex: number) {
+  const scene = parseMotionDoc(source).scenes[slideIndex];
+  const block = scene?.blocks.find((candidate) => candidate.type === "HtmlEmbedBlock");
+  if (!block || block.type !== "HtmlEmbedBlock") return undefined;
+  const props = block.props as Record<string, unknown>;
+  const assetSource = typeof props.src === "string" ? props.src : "";
+  const page = Number(props.page ?? 1);
+  if (!/^assets\/[A-Za-z0-9._-]+\.html?$/i.test(assetSource) || !Number.isInteger(page) || page < 1) return undefined;
+  return { page, source: assetSource };
 }
 
 function embeddedPngSvg(png: Buffer, title: string) {

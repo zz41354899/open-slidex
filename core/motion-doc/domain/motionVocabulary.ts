@@ -15,6 +15,7 @@ export type MotionDocEnterAnimation = (typeof motionDocEnterAnimations)[number];
 export const motionDocSlideTransitions = [
   "curtain",
   "fade",
+  "morph",
   "none",
   "pushLeft",
   "rise",

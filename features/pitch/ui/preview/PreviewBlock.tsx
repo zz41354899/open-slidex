@@ -52,7 +52,18 @@ export function PreviewBlockList({
   return (
     <>
       {flowBlocks.map(({ block, blockKey }) => (
-        <div data-motion-doc-node-id={blockKey} key={blockKey} style={objectShadowCss(block.props) as CSSProperties}>
+        <div
+          data-motion-doc-node-id={blockKey}
+          data-motion-sequence={typeof block.props.motion === "string" ? block.props.motion : undefined}
+          data-slidex-interaction={typeof block.props.interaction === "string" ? block.props.interaction : undefined}
+          data-shared-id={typeof block.props.sharedId === "string" ? block.props.sharedId : undefined}
+          data-shape-kind={block.type === "Shape" ? String(block.props.shape ?? "rectangle") : undefined}
+          data-shape-points={block.type === "Shape" ? String(block.props.points ?? 5) : undefined}
+          data-shape-sides={block.type === "Shape" ? String(block.props.sides ?? 3) : undefined}
+          data-slidex-block-type={block.type}
+          key={blockKey}
+          style={objectShadowCss(block.props) as CSSProperties}
+        >
           <PreviewBlock block={block} imageFetchPriority={imageFetchPriority} imageLoading={imageLoading} />
         </div>
       ))}
@@ -89,6 +100,13 @@ const PositionedPreviewBlock = memo(function PositionedPreviewBlock({
     <div
       className="motion-positioned-block"
       data-motion-doc-node-id={blockKey}
+      data-motion-sequence={typeof block.props.motion === "string" ? block.props.motion : undefined}
+      data-slidex-interaction={typeof block.props.interaction === "string" ? block.props.interaction : undefined}
+      data-shared-id={typeof block.props.sharedId === "string" ? block.props.sharedId : undefined}
+      data-shape-kind={block.type === "Shape" ? String(block.props.shape ?? "rectangle") : undefined}
+      data-shape-points={block.type === "Shape" ? String(block.props.points ?? 5) : undefined}
+      data-shape-sides={block.type === "Shape" ? String(block.props.sides ?? 3) : undefined}
+      data-slidex-block-type={block.type}
       style={positionedBlockStyle(block, originalIndex, frame)}
     >
       <PreviewBlock
@@ -140,7 +158,7 @@ export const PreviewBlock = memo(function PreviewBlock({
         background={stringProp(block.props.background ?? block.props.backgroundColor ?? block.props.bg)}
         delay={numberProp(block.props.delay)}
         duration={numberProp(block.props.duration)}
-        enter={enterProp(block.props.enter)}
+        enter={block.props.motion ? "none" : enterProp(block.props.enter)}
         fillFrame={fillFrame}
         fontFamily={stringProp(block.props.fontFamily)}
         fontSize={sizeNumberProp(block.props.fontSize, undefined)}
@@ -165,7 +183,7 @@ export const PreviewBlock = memo(function PreviewBlock({
         background={stringProp(block.props.background ?? block.props.backgroundColor ?? block.props.bg)}
         delay={numberProp(block.props.delay)}
         duration={numberProp(block.props.duration)}
-        enter={enterProp(block.props.enter)}
+        enter={block.props.motion ? "none" : enterProp(block.props.enter)}
         fillFrame={fillFrame}
         fontFamily={stringProp(block.props.fontFamily)}
         fontSize={sizeNumberProp(block.props.fontSize, undefined)}
@@ -193,7 +211,7 @@ export const PreviewBlock = memo(function PreviewBlock({
         background={stringProp(block.props.background ?? block.props.backgroundColor ?? block.props.bg)}
         delay={numberProp(block.props.delay)}
         duration={numberProp(block.props.duration)}
-        enter={enterProp(block.props.enter)}
+        enter={block.props.motion ? "none" : enterProp(block.props.enter)}
         fillFrame={fillFrame}
         filter={stringProp(block.props.filter)}
         filterAngle={numberProp(block.props.filterAngle)}
@@ -225,7 +243,7 @@ export const PreviewBlock = memo(function PreviewBlock({
         controls={booleanProp(block.props.controls ?? "true")}
         delay={numberProp(block.props.delay)}
         duration={numberProp(block.props.duration)}
-        enter={enterProp(block.props.enter)}
+        enter={block.props.motion ? "none" : enterProp(block.props.enter)}
         fillFrame={fillFrame}
         fit={fitProp(block.props.fit)}
         full={booleanProp(block.props.full)}
@@ -261,7 +279,7 @@ export const PreviewBlock = memo(function PreviewBlock({
         corner={spacingProp(block.props.corner)}
         delay={numberProp(block.props.delay)}
         duration={numberProp(block.props.duration)}
-        enter={enterProp(block.props.enter)}
+        enter={block.props.motion ? "none" : enterProp(block.props.enter)}
         fill={stringProp(block.props.fill)}
         fillFrame={fillFrame}
         frameHeight={frame.h / 100 * MOTION_DOC_CANVAS_HEIGHT}

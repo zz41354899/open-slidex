@@ -22,6 +22,7 @@ import {
   deleteAsset,
   exportDocument,
   localWorkbenchAssetUrl,
+  materializeLocalExportMedia,
   prepareExportDestination,
   renderMontage,
   updateContext,
@@ -33,7 +34,7 @@ import { ChartInspector } from "./ChartInspector";
 import { HtmlCanvasToolbar } from "./HtmlCanvasToolbar";
 import { HtmlWorkspaceEditor, type HtmlWorkspaceSaveReason } from "./HtmlWorkspaceEditor";
 import { LocalWorkbenchToolbar, type LocalToolMenuId } from "./LocalWorkbenchToolbar";
-import { localExportFileName, localExportOptionsForMode } from "./localExport";
+import { localExportFileName, localExportOptionsForMode, localExportPreflightError } from "./localExport";
 import { normalizePresentationTitle, renamePresentationSource } from "./presentationTitle";
 import type { Selection } from "./domain";
 import { useLocalWorkbenchShortcuts } from "./useLocalWorkbenchShortcuts";
@@ -217,19 +218,43 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     const label = format === "pptx" ? "PowerPoint" : format.toUpperCase();
     setNotice(tx(`Exporting ${label}…`));
     try {
+      const preflightError = localExportPreflightError(source, documentState.saveState);
+      if (preflightError) throw new Error(preflightError);
       const fileName = localExportFileName(projectName);
+      // Ask where to save while this call still belongs to the user's menu
+      // click. Chromium may otherwise block the eventual synthetic download
+      // after an asynchronous HTML/PPTX render has completed.
       const destination = await prepareExportDestination(fileName, format);
       if (!destination) {
         setNotice(tx("Export cancelled"));
         return;
       }
+      // The Canvas is optimistically editable while its MDX autosave is in
+      // flight. Do not send that transient draft straight to /export: an
+      // asset or MotionDoc validation failure there would otherwise surface
+      // only as a browser-console 422 and leave the user without a usable
+      // export. Commit first and export the canonical server source.
+      const savedDocument = documentState.saveState === "saved" && documentState.source === source
+        ? documentState.snapshot
+        : await documentState.commit();
+      if (!savedDocument) {
+        throw new Error(tx("The Canvas could not be saved. Fix the Canvas error or restore the saved version before exporting."));
+      }
       setNotice(tx(`Exporting ${label}…`));
+      const preparedMedia = await materializeLocalExportMedia({
+        expectedRevision: savedDocument.revision,
+        source: savedDocument.source
+      });
+      if (preparedMedia.source !== savedDocument.source) {
+        setSource(preparedMedia.source);
+        setNotice(tx("Prepared shape image for export"));
+      }
       const result = await exportDocument({
         fileName,
         format,
         htmlMode,
         overwrite: false,
-        source,
+        source: preparedMedia.source,
         target: "download"
       }, destination);
       setNotice(`${label} ${tx("downloaded")} · ${result.output}`);
@@ -238,7 +263,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     } finally {
       exportInFlightRef.current = false;
     }
-  }, [projectName, setNotice, source, tx]);
+  }, [documentState, projectName, setNotice, source, tx]);
 
   const runExport = useCallback(async (format: "html" | "mdx" | "pptx") => {
     if (hasOriginalHtml && format === "pptx") {
@@ -451,6 +476,8 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           insertSlideNearActive: pitchCommandActions.insertSlideNearActive,
           moveBlock: pitchCommandActions.moveBlock,
           moveBlockToEdge: pitchCommandActions.moveBlockToEdge,
+          moveSlideIntoMorphGroup: pitchCommandActions.moveSlideIntoMorphGroup,
+          moveSlideOutOfMorphGroup: pitchCommandActions.moveSlideOutOfMorphGroup,
           moveSelectedBlocksToEdge: pitchCommandActions.moveSelectedBlocksToEdge,
           snapSelectedBlocksToGrid: pitchCommandActions.snapSelectedBlocksToGrid,
           newProject,
@@ -469,14 +496,20 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           requestImageUpload: pitchCommandActions.requestImageUpload,
           renameBlock: pitchCommandActions.renameBlock,
           reorderBlock: pitchCommandActions.reorderBlock,
+          reorderMotionActions: pitchCommandActions.reorderMotionActions,
+          setSharedMorphLink: pitchCommandActions.setSharedMorphLink,
+          setSharedMorphReturnLink: pitchCommandActions.setSharedMorphReturnLink,
           reorderSlide: pitchCommandActions.reorderSlide,
           setActiveSlideIndex: setWorkspaceActiveSlideIndex,
           toggleBlockPositionLock: pitchCommandActions.toggleBlockPositionLock,
           toggleSelectedBlocksPositionLock: pitchCommandActions.toggleSelectedBlocksPositionLock,
           undoLastChange,
           ungroupSelectedBlocks: pitchCommandActions.ungroupSelectedBlocks,
+          unlinkSharedMorphGroup: pitchCommandActions.unlinkSharedMorphGroup,
+          extendSharedMorphGroup: pitchCommandActions.extendSharedMorphGroup,
           updateActiveSlideStyle: pitchCommandActions.updateActiveSlideStyle,
           updateAllSlidesStyle: pitchCommandActions.updateAllSlidesStyle,
+          updateSlideStyle: pitchCommandActions.updateSlideStyle,
           updateSelectedBlockColor: pitchCommandActions.updateSelectedBlockColor,
           updateBlock: pitchCommandActions.updateBlock,
           updatePositionedBlockFrames: pitchCommandActions.updatePositionedBlockFrames,
@@ -591,6 +624,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           isMobileSidebarOpen,
           notice: `${tx(saveLabel(documentState.saveState))} · ${notice}`,
           onProjectNameChange: renamePresentation,
+          onReplayAnimations: triggerChartReplay,
           replayNonce,
           setActiveCanvasTool,
           setCanvasViewMode,

@@ -446,7 +446,7 @@ export function TextFrameEditor({
       ) : null}
       <div
         className={`absolute z-10 overflow-hidden border-0 bg-transparent p-0 text-current outline-none ${
-          isEditingEnabled || onRequestEdit ? "cursor-text" : "pointer-events-none cursor-move"
+          isEditingEnabled ? "cursor-text" : "pointer-events-none cursor-move"
         }`}
         onClick={(event) => {
           event.stopPropagation();
@@ -507,7 +507,7 @@ export function TextFrameEditor({
           onPointerUp={updateTextSelection}
           onSelect={updateTextSelection}
           ref={editorRef}
-          role="textbox"
+          role={isEditingEnabled ? "textbox" : undefined}
           spellCheck={false}
           style={editableTextStyle(block, canvasScale)}
           suppressContentEditableWarning

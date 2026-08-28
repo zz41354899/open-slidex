@@ -1,4 +1,3 @@
-
 import type { SVGProps } from "react";
 import type { MotionPreset } from "@/features/pitch/application/motionPresets";
 import { Field } from "@/features/pitch/ui/inspector/InspectorControls";
@@ -24,7 +23,7 @@ export function MotionThumbnailGrid<TValue extends string>({
   return (
     <Field label={label}>
       <ToggleGroup
-        aria-label={tx(label || "Animation Style")}
+        aria-label={tx(label || "Action Style")}
         className="grid w-full grid-cols-2 gap-2"
         onValueChange={(nextValue) => {
           if (nextValue) onChange(nextValue as TValue);
@@ -40,22 +39,22 @@ export function MotionThumbnailGrid<TValue extends string>({
 
           return (
             <ToggleGroupItem
-              className={`group relative min-h-[126px] overflow-hidden rounded-xl border p-2 text-left transition-all duration-200 active:scale-[0.98] ${
+              className={`group relative overflow-hidden rounded-[14px] border p-2 text-left transition-all duration-200 active:scale-[0.98] ${variant === "slide" ? "min-h-[108px]" : "min-h-[126px]"} ${
                 isSelected
-                  ? "border-white/[0.24] bg-white/[0.07] text-white shadow-[0_6px_18px_rgba(0,0,0,0.22)] ring-1 ring-white/[0.16]"
-                  : "border-white/[0.07] bg-white/[0.018] text-neutral-400 hover:border-white/[0.15] hover:bg-white/[0.045] hover:text-neutral-200"
+                  ? "border-violet-300/65 bg-violet-500/[0.09] text-white shadow-[0_8px_22px_rgba(76,29,149,.2),inset_0_0_0_1px_rgba(196,181,253,.1)]"
+                  : "border-white/[0.085] bg-[linear-gradient(150deg,rgba(255,255,255,.025),rgba(0,0,0,.14))] text-neutral-400 hover:border-white/[0.17] hover:bg-white/[0.045] hover:text-neutral-200"
               }`}
               key={option.value}
               title={`${optionLabel}: ${optionDescription}`}
               value={option.value}
             >
-              <span className="relative z-10 flex h-full flex-col justify-between gap-2.5">
+              <span className={`relative z-10 flex h-full flex-col justify-between ${variant === "slide" ? "gap-2" : "gap-2.5"}`}>
                 <MotionPreview active={isSelected} value={option.value} variant={variant} />
-                <span className="flex min-w-0 flex-col gap-1 px-1 pb-0.5">
-                  <span className="truncate text-[13px] font-semibold leading-none">{optionLabel}</span>
-                  <span className="truncate text-[11px] font-medium leading-none text-neutral-500 group-hover:text-neutral-400">
+                <span className={`flex min-w-0 flex-col px-1 pb-0.5 ${variant === "slide" ? "items-center" : "gap-1"}`}>
+                  <span className={`truncate font-semibold leading-none ${variant === "slide" ? "text-[11px]" : "text-[13px]"}`}>{optionLabel}</span>
+                  {variant === "slide" ? null : <span className="truncate text-[11px] font-medium leading-none text-neutral-500 group-hover:text-neutral-400">
                     {optionDescription}
-                  </span>
+                  </span>}
                 </span>
               </span>
             </ToggleGroupItem>
@@ -77,7 +76,7 @@ function MotionPreview({
 }) {
   return (
     <span
-      className="relative flex min-h-[62px] w-full items-center justify-center overflow-hidden rounded-lg border border-white/[0.07] bg-[#202020] shadow-inner"
+      className={`relative flex w-full items-center justify-center overflow-hidden rounded-[10px] border border-white/[0.07] bg-[#202020] shadow-inner ${variant === "slide" ? "min-h-[58px]" : "min-h-[62px]"}`}
       style={{ aspectRatio: "16 / 9" }}
     >
       <span className="absolute inset-0 bg-white/[0.015]" />
@@ -153,6 +152,9 @@ function SlideMotionSvg({ active, type }: { active: boolean; type: string }) {
       @keyframes svg-wipe-mask { 0%, 20% { width: 0; } 40%, 80% { width: 38px; } 100% { width: 0; } }
       @keyframes svg-curtain-l { 0%, 20% { transform: translateX(0); } 40%, 80% { transform: translateX(-20px); opacity: 0; } 100% { transform: translateX(0); opacity: 1;} }
       @keyframes svg-curtain-r { 0%, 20% { transform: translateX(0); } 40%, 80% { transform: translateX(20px); opacity: 0; } 100% { transform: translateX(0); opacity: 1;} }
+      @keyframes svg-morph-a { 0%, 20% { opacity: 1; } 40%, 80% { opacity: .28; } 100% { opacity: 1; } }
+      @keyframes svg-morph-b { 0%, 20% { opacity: .2; } 40%, 80% { opacity: 1; } 100% { opacity: .2; } }
+      @keyframes svg-morph-object { 0%, 20% { rx: 50%; transform: translate(0, 0) rotate(0deg) scale(1); } 40%, 80% { rx: 8%; transform: translate(18px, -5px) rotate(45deg) scale(1.35); } 100% { rx: 50%; transform: translate(0, 0) rotate(0deg) scale(1); } }
     `}</style>
   );
 
@@ -170,6 +172,15 @@ function SlideMotionSvg({ active, type }: { active: boolean; type: string }) {
           {defs}{styles}
           <SlideA style={{ animation: getAnim("svg-fade-out") }} />
           <SlideB style={{ animation: getAnim("svg-fade-in") }} />
+        </svg>
+      );
+    case "morph":
+      return (
+        <svg className="size-full overflow-hidden rounded-[6px]" viewBox="0 0 60 30">
+          {defs}{styles}
+          <SlideA style={{ animation: getAnim("svg-morph-a") }} />
+          <SlideB style={{ animation: getAnim("svg-morph-b") }} />
+          <rect fill="rgba(167,139,250,.92)" height="6" rx="2" style={{ animation: getAnim("svg-morph-object"), transformOrigin: "23px 17px" }} width="10" x="18" y="14" />
         </svg>
       );
     case "pushLeft":

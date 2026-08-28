@@ -175,7 +175,8 @@
 .header[data-editor-header-variant="local"] .projectNameButton:hover { background: #2f2f2f; color: #f5f5f5; }
 .header[data-editor-header-variant="local"] .notice { display: none; }
 .header[data-editor-header-variant="local"] .actionGroup { gap: 2px; padding-right: 8px; border-right: 1px solid rgb(255 255 255 / 7%); }
-.header[data-editor-header-variant="local"] .actionButton { width: 32px; min-height: 32px; padding: 0; border-radius: 8px; color: #8b919d; }
+.header[data-editor-header-variant="local"] .actionButton { width: 34px; min-height: 34px; padding: 0; border-radius: 8px; color: #a3a8b2; }
+.header[data-editor-header-variant="local"] .actionGroup .actionButton svg { width: 17px; height: 17px; }
 .header[data-editor-header-variant="local"] .actionButton span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .header[data-editor-header-variant="local"] .playButton { width: auto; min-height: 40px; gap: 7px; border: 1px solid rgb(255 255 255 / 8%); border-radius: 10px; padding: 0 14px; background: #2f2f2f; color: #dedede; }
 .header[data-editor-header-variant="local"] .playButton span { position: static; width: auto; height: auto; overflow: visible; clip: auto; }

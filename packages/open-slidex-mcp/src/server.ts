@@ -111,11 +111,12 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     {
       instructions: [
         "Select a deck with open_slidex_workspace.",
-        "Use open_slidex_read for source, revision, and skill routes.",
-        "For HTML, read its authoring, design, motion, and QA skill chain; use sourceFormat html, target html, and htmlAssetRoot for local images.",
+        "Use open_slidex_read for source, revision, and skills.",
+        "For HTML use sourceFormat html and open_slidex_edit target html; playback is opaque-origin.",
         "Re-read before mutation and pass expectedRevision to open_slidex_edit.",
+        "Every Morph edge needs slideTransition morph and a same-type sharedId pair.",
         "Native layers are Text, ImageBlock, VideoBlock, SvgBlock, Chart, Table, and Shape.",
-        "HTML runs opaque-origin; native edits include rendered QA; open_slidex_review is review-only."
+        "Native edits include rendered QA."
       ].join(" ")
     }
   );
@@ -307,6 +308,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         "For creation or redesign, use template recommendations and read exactly one thirty-page core MDX reference before composing slides.",
         "Plan claim-specific hierarchy and geometry from the source; include a real cover image, vary image and card rhythm, and do not clone the specimen page-for-page.",
         "Submit one complete deck or slide source to open_slidex_edit with this revision.",
+        "When changing a Morph sequence, re-read and submit the complete affected sequence so every adjacent edge keeps a compatible sharedId pair.",
         "If rejected, patch the same candidate from the reported node-specific findings."
       ]
     };

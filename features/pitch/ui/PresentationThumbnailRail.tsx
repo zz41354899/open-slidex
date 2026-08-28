@@ -1,5 +1,6 @@
 
 import { useEffect, useRef } from "react";
+import { Diamond } from "lucide-react";
 import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
 import { SlideThumbnailPreview } from "@/features/pitch/ui/preview/SlideThumbnailPreview";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
@@ -39,6 +40,7 @@ export function PresentationThumbnailRail({
           <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-color:rgba(255,255,255,0.18)_transparent] [scrollbar-width:thin]" ref={railRef}>
             {scenes.map((scene, sceneIndex) => {
               const isActive = sceneIndex === activeSlideIndex;
+              const morphRole = slideMorphRole(scenes, sceneIndex);
 
               return (
                 <button
@@ -53,6 +55,7 @@ export function PresentationThumbnailRail({
                   <span className={`absolute left-1.5 top-1.5 z-10 rounded-md border border-white/[0.08] bg-black/55 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums shadow-sm backdrop-blur-md transition-colors ${isActive ? "text-white" : "text-neutral-300 group-hover:text-white"}`}>
                     {String(sceneIndex + 1).padStart(2, "0")}
                   </span>
+                  {morphRole ? <span className="absolute right-1.5 top-1.5 z-10 flex h-4 w-4 items-center justify-center rounded-md border border-violet-300/35 bg-violet-950/80 text-violet-200"><Diamond className={morphRole === "root" ? "fill-violet-400/45" : ""} size={8} /></span> : null}
                   <span className={`relative block aspect-video overflow-hidden rounded-[7px] bg-black transition-all duration-200 ${
                     isActive
                       ? "scale-[1.02] ring-2 ring-white shadow-[0_0_0_3px_rgba(255,255,255,0.12),0_8px_18px_rgba(0,0,0,0.42)]"
@@ -83,6 +86,7 @@ export function PresentationThumbnailRail({
       <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-2.5 py-3 [scrollbar-color:rgba(255,255,255,0.18)_transparent] [scrollbar-width:thin] lg:px-3" ref={railRef}>
         {scenes.map((scene, sceneIndex) => {
           const isActive = sceneIndex === activeSlideIndex;
+          const morphRole = slideMorphRole(scenes, sceneIndex);
 
           return (
             <button
@@ -95,7 +99,7 @@ export function PresentationThumbnailRail({
               type="button"
             >
               <span className={`mb-1.5 block pl-0.5 font-mono text-[10px] font-semibold transition-colors ${isActive ? "text-white" : "text-neutral-600 group-hover:text-neutral-400"}`}>
-                {String(sceneIndex + 1).padStart(2, "0")}
+                <span className="flex items-center gap-1.5">{morphRole ? <Diamond className={morphRole === "root" ? "fill-violet-400/40 text-violet-300" : "text-violet-400/70"} size={8} /> : null}{String(sceneIndex + 1).padStart(2, "0")}</span>
               </span>
               <span className={`relative block aspect-video overflow-hidden rounded-[3px] bg-black transition-all ${
                 isActive
@@ -115,4 +119,13 @@ export function PresentationThumbnailRail({
       </div>
     </aside>
   );
+}
+
+function slideMorphRole(scenes: MotionDocScene[], index: number): "root" | "child" | "end" | null {
+  const fromPrevious = index > 0 && scenes[index - 1]?.props.slideTransition === "morph";
+  const toNext = scenes[index]?.props.slideTransition === "morph";
+  if (!fromPrevious && !toNext) return null;
+  if (!fromPrevious) return "root";
+  if (!toNext) return "end";
+  return "child";
 }

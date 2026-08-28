@@ -7,6 +7,8 @@ import {
 } from "@/core/motion-doc/application/motionDocClipboard";
 import type { MotionDocBlock, MotionDocProps, MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
 import { textStyleRangesFromProps } from "@/core/motion-doc/domain/textStyleRanges";
+import { motionSequenceFromProps, withMotionSequence } from "@/core/motion-doc/domain/motionSequence";
+import { createSharedMorphId, isMorphSupportedBlock } from "@/core/motion-doc/domain/sharedMorph";
 import {
   deleteTableColumn,
   deleteTableRow,
@@ -543,8 +545,78 @@ export function usePitchCommands({
       return;
     }
 
-    commitSource((current) => replaceSlideSource(current, activeSlideIndex, nextSlide));
+    commitSource((current) => replaceSlideSource(current, activeSlideIndex, nextSlide), { captureUndo: options?.captureUndo });
     setNotice("Block updated");
+  }
+
+  function reorderMotionActions(sourceActionId: string, targetActionId: string) {
+    if (!activeSlide || sourceActionId === targetActionId) return;
+    const entries = activeSlide.blocks.flatMap((block, blockIndex) =>
+      (motionSequenceFromProps(block.props)?.actions ?? []).map((action) => ({ action, blockIndex }))
+    );
+    const sourceEntry = entries.find((entry) => entry.action.id === sourceActionId);
+    const targetEntry = entries.find((entry) => entry.action.id === targetActionId);
+    if (!sourceEntry || !targetEntry) return;
+    const blocks = activeSlide.blocks.map((block, blockIndex) => {
+      const sequence = motionSequenceFromProps(block.props);
+      if (!sequence || (blockIndex !== sourceEntry.blockIndex && blockIndex !== targetEntry.blockIndex)) return block;
+      const actions = sequence.actions.map((action) => {
+        if (action.id === sourceActionId) return { ...action, order: targetEntry.action.order };
+        if (action.id === targetActionId) return { ...action, order: sourceEntry.action.order };
+        return action;
+      });
+      return { ...block, props: withMotionSequence(block.props, { actions, version: 1 }) } as MotionDocBlock;
+    });
+    const ordered = blocks.flatMap((block, blockIndex) =>
+      (motionSequenceFromProps(block.props)?.actions ?? []).map((action) => ({ action, blockIndex }))
+    ).sort((left, right) => left.action.order - right.action.order);
+    const first = ordered[0];
+    if (first?.action.start === "withPrevious") {
+      const firstBlock = blocks[first.blockIndex];
+      const sequence = firstBlock ? motionSequenceFromProps(firstBlock.props) : null;
+      if (firstBlock && sequence) {
+        blocks[first.blockIndex] = {
+          ...firstBlock,
+          props: withMotionSequence(firstBlock.props, {
+            actions: sequence.actions.map((action) => action.id === first.action.id ? { ...action, start: "onClick" as const } : action),
+            version: 1
+          })
+        } as MotionDocBlock;
+      }
+    }
+    commitSource((current) => replaceSlideSource(current, activeSlideIndex, { ...activeSlide, blocks }));
+    setNotice("Action order updated");
+  }
+
+  function setSharedMorphLink(sourceBlockIndex: number, targetBlockIndex: number | null, sourceSlideIndex = activeSlideIndex) {
+    const sourceSlide = scenes[sourceSlideIndex];
+    if (!sourceSlide) return;
+    const targetSlide = scenes[sourceSlideIndex + 1];
+    const sourceBlock = sourceSlide.blocks[sourceBlockIndex];
+    const targetBlock = targetBlockIndex === null ? undefined : targetSlide?.blocks[targetBlockIndex];
+    if (!sourceBlock || !isMorphSupportedBlock(sourceBlock)) return;
+    if (targetBlockIndex !== null && (!targetSlide || !targetBlock || !isMorphSupportedBlock(targetBlock) || targetBlock.type !== sourceBlock.type)) return;
+    const existingSharedId = typeof sourceBlock.props.sharedId === "string" ? sourceBlock.props.sharedId.trim() : "";
+    const sharedId = targetBlock
+      ? existingSharedId || (typeof targetBlock.props.sharedId === "string" ? targetBlock.props.sharedId.trim() : "") || createSharedMorphId()
+      : "";
+    const sourceBlocks = sourceSlide.blocks.map((block, blockIndex) => {
+      if (blockIndex !== sourceBlockIndex && sharedId && block.props.sharedId === sharedId) return withoutSharedId(block);
+      if (blockIndex !== sourceBlockIndex) return block;
+      return sharedId ? { ...block, props: { ...block.props, sharedId } } : withoutSharedId(block);
+    });
+    let nextSource = replaceSlideSource(source, sourceSlideIndex, { ...sourceSlide, blocks: sourceBlocks });
+    if (targetSlide) {
+      const targetBlocks = targetSlide.blocks.map((block, blockIndex) => {
+        if (blockIndex === targetBlockIndex) return { ...block, props: { ...block.props, sharedId } } as MotionDocBlock;
+        if (sharedId && block.props.sharedId === sharedId) return withoutSharedId(block);
+        if (!sharedId && existingSharedId && block.props.sharedId === existingSharedId) return withoutSharedId(block);
+        return block;
+      });
+      nextSource = replaceSlideSource(nextSource, sourceSlideIndex + 1, { ...targetSlide, blocks: targetBlocks });
+    }
+    commitSource(nextSource);
+    setNotice(targetBlock ? "Morph layers linked" : "Morph link removed");
   }
 
   function textCreationFontFamily() {
@@ -599,6 +671,8 @@ export function usePitchCommands({
     snapSelectedBlocksToGrid,
     pasteCopiedBlock,
     reorderBlock,
+    reorderMotionActions,
+    setSharedMorphLink,
     renameBlock,
     selectBlockFromLayer,
     toggleSelectedBlocksPositionLock,
@@ -625,6 +699,12 @@ export function usePitchCommands({
     imageSourceRequiresAbsoluteUrl,
     selectedBlocksLocked
   };
+}
+
+function withoutSharedId(block: MotionDocBlock): MotionDocBlock {
+  const props = { ...block.props };
+  delete props.sharedId;
+  return { ...block, props } as MotionDocBlock;
 }
 
 type StableActions<T extends object> = {
