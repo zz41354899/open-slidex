@@ -107,6 +107,16 @@ test("HTML export preserves declarative Action Tween and Shared Morph data", () 
   assert.match(html, /playMorph/);
 });
 
+test("HTML export exposes a parent-controlled MotionDoc player bridge", () => {
+  const runtime = makeMotionDocExportRuntime();
+
+  assert.match(runtime, /open-slidex:player-command/);
+  assert.match(runtime, /open-slidex:player-state/);
+  assert.match(runtime, /action === "goToSlide"/);
+  assert.match(runtime, /action === "togglePlay"/);
+  assert.match(runtime, /event\.source !== window\.parent/);
+});
+
 test("HTML export preserves number range playback and its safe text target", () => {
   const motion = JSON.stringify({ actions: [{ duration: 1, easing: "easeInOut", from: { h: 20, opacity: 1, rotation: 0, w: 20, x: 10, y: 10 }, id: "count", numberRange: { from: 100, step: 1, to: 0 }, order: 0, preset: "numberRange", start: "onClick", to: { h: 20, opacity: 1, rotation: 0, w: 20, x: 10, y: 10 }, type: "tween" }], version: 1 });
   const html = buildMotionDocHtml(`# Count export\n\n<Slide><Text id="count" x={10} y={10} w={20} h={20} rotation={0} opacity={1} motion='${motion}'>0</Text></Slide>`);

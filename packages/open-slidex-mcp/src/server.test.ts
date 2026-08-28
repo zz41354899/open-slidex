@@ -4,8 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { blankPresentationMdx } from "@open-slidex/sdk";
 import { closeSlideXChromiumPool, getSlideXQualityCacheStats } from "@open-slidex/sdk/node";
 import JSZip from "jszip";

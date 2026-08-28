@@ -53,6 +53,27 @@ test("every published, workspace, starter, lockfile, and built runtime version s
   }
 });
 
+test("the 0.4 runtime uses the stable MCP v2 package architecture", async () => {
+  const rootManifest = await readJson("package.json");
+  const publishedManifest = await readJson("packages/open-slidex/package.json");
+  const mcpManifest = await readJson("packages/open-slidex-mcp/package.json");
+  const serverSource = await readFile(
+    path.join(repositoryRoot, "packages/open-slidex-mcp/src/server.ts"),
+    "utf8"
+  );
+
+  assert.equal(rootManifest.devDependencies?.["@modelcontextprotocol/client"], "2.0.0");
+  assert.equal(publishedManifest.dependencies?.["@modelcontextprotocol/server"], "2.0.0");
+  assert.equal(mcpManifest.dependencies?.["@modelcontextprotocol/server"], "2.0.0");
+  assert.equal(publishedManifest.dependencies?.["@modelcontextprotocol/sdk"], undefined);
+  assert.equal(mcpManifest.dependencies?.["@modelcontextprotocol/sdk"], undefined);
+  assert.match(serverSource, /from "@modelcontextprotocol\/server"/);
+  assert.match(serverSource, /from "@modelcontextprotocol\/server\/stdio"/);
+  assert.equal(serverSource.match(/inputSchema: z\.object\(\{/g)?.length, 6);
+  assert.match(serverSource, /await serveStdio\(\(\) =>/);
+  assert.doesNotMatch(serverSource, /@modelcontextprotocol\/sdk/);
+});
+
 function assertInternalDependencies(manifest, version, source) {
   for (const field of ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"]) {
     for (const [name, range] of Object.entries(manifest[field] ?? {})) {

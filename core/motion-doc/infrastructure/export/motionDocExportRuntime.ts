@@ -75,6 +75,16 @@ export function makeMotionDocExportRuntime() {
         const DESIGN_WIDTH = ${MOTION_DOC_CANVAS_WIDTH};
         const DESIGN_HEIGHT = ${MOTION_DOC_CANVAS_HEIGHT};
 
+        function notifyPlayerHost() {
+          if (window.parent === window) return;
+          window.parent.postMessage({
+            type: "open-slidex:player-state",
+            slideIndex: index,
+            slideCount: slides.length,
+            playing: Boolean(timer)
+          }, "*");
+        }
+
         function hydrateYouTubeEmbeds() {
           const canEmbed = window.location.protocol === "http:" || window.location.protocol === "https:";
 
@@ -874,12 +884,14 @@ export function makeMotionDocExportRuntime() {
           dotButtons.forEach((button, buttonIndex) => button.setAttribute("aria-current", String(buttonIndex === index)));
           if (current) current.textContent = String(index + 1);
           if (progress) progress.style.setProperty("--progress", slides.length <= 1 ? "100%" : ((index + 1) / slides.length * 100).toFixed(2) + "%");
+          notifyPlayerHost();
         }
 
         function stop() {
           window.clearTimeout(timer);
           timer = null;
           if (playButton) playButton.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>';
+          notifyPlayerHost();
         }
 
         function play() {
@@ -893,6 +905,7 @@ export function makeMotionDocExportRuntime() {
             }, Math.max(duration, 1) * 1000);
           };
           tick();
+          notifyPlayerHost();
         }
 
         async function toggleFullscreen() {
@@ -985,6 +998,28 @@ export function makeMotionDocExportRuntime() {
 
         document.addEventListener("fullscreenchange", updateFullscreenButton);
         window.addEventListener("resize", updateFrameScale);
+
+        window.addEventListener("message", (event) => {
+          if (event.source !== window.parent || !event.data || event.data.type !== "open-slidex:player-command") return;
+          const action = event.data.action;
+          if (action === "status") notifyPlayerHost();
+          if (action === "goToSlide") {
+            stop();
+            render(Number(event.data.slideIndex) || 0);
+          }
+          if (action === "previous") {
+            stop();
+            render(index - 1);
+          }
+          if (action === "next") {
+            stop();
+            if (!motionController?.consume()) render(index + 1);
+          }
+          if (action === "replay") render(index, true);
+          if (action === "play") play();
+          if (action === "pause") stop();
+          if (action === "togglePlay") timer ? stop() : play();
+        });
 
         document.addEventListener("keydown", (event) => {
           if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") {

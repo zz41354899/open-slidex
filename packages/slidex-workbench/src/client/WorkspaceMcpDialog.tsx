@@ -25,6 +25,11 @@ export function WorkspaceMcpDialog({ locale, onClose, onNotice }: Props) {
   const zh = locale === "zh-TW";
   const [client, setClient] = useState<WorkspaceMcpClient>("codex");
   const [platform, setPlatform] = useState<WorkspaceMcpPlatform>("macos");
+  const [hostPlatform, setHostPlatform] = useState<WorkspaceMcpPlatform>(() =>
+    typeof navigator !== "undefined" && /Windows/i.test(navigator.userAgent) ? "windows" : "macos"
+  );
+  const [scopeRootDraft, setScopeRootDraft] = useState("");
+  const [scopeRoot, setScopeRoot] = useState<string>();
   const [setup, setSetup] = useState<WorkspaceMcpSetup>();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
@@ -34,11 +39,23 @@ export function WorkspaceMcpDialog({ locale, onClose, onNotice }: Props) {
     let active = true;
     setError("");
     setSetup(undefined);
-    void readWorkspaceMcpSetup(client, { platform })
-      .then((value) => { if (active) setSetup(value); })
+    if (platform !== hostPlatform && !scopeRoot) return () => { active = false; };
+    void readWorkspaceMcpSetup(client, { platform, scopeRoot: platform === hostPlatform ? undefined : scopeRoot })
+      .then((value) => {
+        if (!active) return;
+        setHostPlatform(value.hostPlatform);
+        setSetup(value);
+      })
       .catch((reason) => { if (active) setError(messageOf(reason, zh ? "無法準備 MCP 設定。" : "Could not prepare the MCP setup.")); });
     return () => { active = false; };
-  }, [client, platform, zh]);
+  }, [client, hostPlatform, platform, scopeRoot, zh]);
+
+  function selectPlatform(value: WorkspaceMcpPlatform) {
+    setPlatform(value);
+    setCopied(undefined);
+    setScopeRoot(undefined);
+    setScopeRootDraft("");
+  }
 
   async function copy(value: string, notice: string, kind: "configuration" | "prompt" = "configuration") {
     try {
@@ -109,18 +126,24 @@ export function WorkspaceMcpDialog({ locale, onClose, onNotice }: Props) {
         <span className="osx-mcp-dialog-icon"><Cable size={20} /></span>
         <small>{zh ? "MCP 快速設定" : "MCP quick setup"}</small>
         <h2 id="osx-mcp-title">{zh ? "連接你的 AI 工作區" : "Connect your AI workspace"}</h2>
-        <p>{zh ? "選擇 Agent 與平台分頁。切換 macOS 或 Windows，設定與可複製的安裝提示詞會立即切換。" : "Choose an agent and platform tab. Switching macOS or Windows immediately updates the configuration and copyable setup prompt."}</p>
+        <p>{zh ? "選擇 Agent 與平台分頁。若設定另一台裝置，請輸入該裝置的 Workspace 絕對路徑。" : "Choose an agent and platform. For another device, enter that device's absolute Workspace path."}</p>
 
         <div aria-label={zh ? "MCP 用戶端" : "MCP client"} className="osx-mcp-client-picker" role="group">
           {clients.map((value) => <button className={client === value ? "is-active" : ""} key={value} onClick={() => { setClient(value); setCopied(undefined); }} type="button">{clientLabel(value)}</button>)}
         </div>
         <div className="osx-mcp-platform-section">
           <span>{zh ? "設定平台" : "Setup platform"}</span>
-          <div aria-label={zh ? "設定平台" : "Setup platform"} className="osx-mcp-platform-picker" role="group"><button className={platform === "macos" ? "is-active" : ""} onClick={() => { setPlatform("macos"); setCopied(undefined); }} type="button">macOS</button><button className={platform === "windows" ? "is-active" : ""} onClick={() => { setPlatform("windows"); setCopied(undefined); }} type="button">Windows</button></div>
+          <div aria-label={zh ? "設定平台" : "Setup platform"} className="osx-mcp-platform-picker" role="group"><button className={platform === "macos" ? "is-active" : ""} onClick={() => selectPlatform("macos")} type="button">macOS</button><button className={platform === "windows" ? "is-active" : ""} onClick={() => selectPlatform("windows")} type="button">Windows</button></div>
         </div>
 
+        {platform !== hostPlatform ? <form className="osx-mcp-scope-root" onSubmit={(event) => { event.preventDefault(); setScopeRoot(scopeRootDraft.trim() || undefined); }}>
+          <label htmlFor="osx-mcp-scope-root">{zh ? `${platformName(platform)} 裝置上的 Workspace 絕對路徑` : `Absolute Workspace path on the ${platformName(platform)} device`}</label>
+          <div><input autoComplete="off" id="osx-mcp-scope-root" onChange={(event) => setScopeRootDraft(event.target.value)} placeholder={platform === "windows" ? "C:\\Users\\you\\OpenSlideX Workspace" : "/Users/you/Documents/OpenSlideX Workspace"} spellCheck={false} value={scopeRootDraft} /><button disabled={!scopeRootDraft.trim()} type="submit">{scopeRoot ? (zh ? "更新設定" : "Update configuration") : (zh ? "產生設定" : "Generate configuration")}</button></div>
+          <small>{zh ? "OpenSlideX 不會猜測或轉換另一個作業系統的本機路徑。" : "OpenSlideX never guesses or converts another operating system's local path."}</small>
+        </form> : null}
+
         {error ? <div className="osx-workspace-error">{error}</div> : null}
-        {!error && !setup ? <div className="osx-mcp-loading"><LoaderCircle className="spin" size={15} />{zh ? "正在準備安全設定…" : "Preparing a safe setup…"}</div> : null}
+        {!error && !setup && (platform === hostPlatform || scopeRoot) ? <div className="osx-mcp-loading"><LoaderCircle className="spin" size={15} />{zh ? "正在準備安全設定…" : "Preparing a safe setup…"}</div> : null}
         {setup ? <>
           <div className="osx-mcp-summary">
             <MonitorCog size={18} /><span><small>{zh ? "設定平台" : "Setup platform"}</small><strong>{platformName(setup.platform)}</strong></span><span><small>{scopeLabel}</small><strong>{setup.scopeRoot}</strong></span><span><small>{zh ? "設定位置" : "Configuration location"}</small><strong>{setup.configPath}</strong></span>

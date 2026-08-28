@@ -3,9 +3,9 @@ import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { access, mkdir, readFile, readdir, realpath, stat, unlink, writeFile } from "node:fs/promises";
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import type { CallToolResult } from "@modelcontextprotocol/server";
+import { McpServer } from "@modelcontextprotocol/server";
+import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { z } from "zod/v4";
 
 import {
@@ -131,14 +131,14 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     server.registerTool("open_slidex_workspace", {
       title: "Choose an OpenSlideX workspace presentation",
       description: "List Workspace decks or select exactly one deck for all later deck-specific calls.",
-      inputSchema: {
+      inputSchema: z.object({
         action: z.enum(["list", "select"]).default("list").describe(
           "Use list to discover presentations. Use select before any deck-specific tool call."
         ),
         presentationId: z.string().regex(/^[A-Za-z0-9._-]+$/).optional().describe(
           "Required for select. Use one exact presentation id returned by list."
         )
-      }
+      })
     }, ({ action, presentationId }) => runTool(() => {
       if (action === "select") {
         if (!presentationId) throw new Error("presentationId is required when action is select.");
@@ -151,7 +151,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   server.registerTool("open_slidex_read", {
     title: "Read OpenSlideX source or one project resource",
     description: "Read current MotionDoc MDX, canonical browser-native HTML, or one project resource. HTML reads preserve source bytes, page mapping, and online dependency boundaries; native reads include a compact skill manifest.",
-    inputSchema: {
+    inputSchema: z.object({
       intent: z.enum(openSlideXGuidanceIntents).default("authoring").describe(
         "Task route for the manifest: import, create, redesign, design, authoring, html, motion, or qa."
       ),
@@ -182,7 +182,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       slideIndex: z.number().int().min(0).optional().describe(
         "Zero-based slide index for a focused source read; omit for the complete deck."
       )
-    }
+    })
   }, ({ htmlCursor, htmlMaxChars, htmlSource, intent, knowledgeQuery, resourceCursor, resourcePath, slideIndex, sourceFormat, templateQuery }) => runTool(async () => {
     const { documentAdapter, root } = await projectContext();
     const guidanceRoot = await resolveAuthoringGuidanceRoot(root, configuredWorkspaceRoot);
@@ -317,7 +317,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   server.registerTool("open_slidex_source_import", {
     title: "Read a PPTX source for high-fidelity OpenSlideX conversion",
     description: "Inspect a root-confined .pptx as ordered semantic evidence. It recovers text geometry and typography hints as native Text blocks; import-media converts supported embedded images to portable assets/*.webp with original geometry and z-order.",
-    inputSchema: {
+    inputSchema: z.object({
       action: z.enum(["inspect", "import-media"]).default("inspect").describe(
         "inspect is read-only. import-media writes supported embedded PPTX images as content-addressed WebP assets."
       ),
@@ -327,7 +327,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       filePath: z.string().trim().min(1).max(500).describe(
         "Local path relative to the selected OpenSlideX deck. Supports .pptx only."
       )
-    }
+    })
   }, ({ action, expectedRevision, filePath }) => runTool(async () => {
     const { documentAdapter, root } = await projectContext();
     if (action === "inspect") return readOpenSlideXSourceImport(root, filePath);
@@ -340,7 +340,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   server.registerTool("open_slidex_media", {
     title: "Search or import OpenSlideX media",
     description: "One media workflow: search trusted Unsplash candidates, import one user-confirmed candidate, or import a root-confined local image as content-addressed WebP.",
-    inputSchema: {
+    inputSchema: z.object({
       action: z.enum(["search-trusted", "import-trusted", "import-local"]).describe(
         "Search first, then import either one explicitly confirmed trusted result or one root-confined local image."
       ),
@@ -359,7 +359,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       query: z.string().trim().min(2).max(200).optional().describe(
         "Required for search-trusted. Describe the subject and useful visual context."
       )
-    }
+    })
   }, (input) => runTool(async () => {
     if (input.action === "search-trusted") {
       if (!input.query) throw new Error("query is required when action is search-trusted.");
@@ -404,15 +404,15 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   server.registerTool("open_slidex_review", {
       title: "Review OpenSlideX presentation",
       description: "Run structural validation and rendered visual QA together, returning one immutable slide or montage preview. Use for review-only work; edits already include this gate.",
-      inputSchema: {
+      inputSchema: z.object({
       scope: z.enum(["deck", "slide"]).default("deck").describe(
         "Review the complete deck montage or one zero-based slide."
       ),
       slideIndex: z.number().int().min(0).optional().describe(
         "Required when scope is slide; omit when scope is deck."
       )
-    }
-  }, ({ scope, slideIndex }, extra) => runTool(async () => {
+    })
+  }, ({ scope, slideIndex }, ctx) => runTool(async () => {
     if (scope === "slide" && slideIndex === undefined) {
       throw new Error("slideIndex is required when scope is slide.");
     }
@@ -430,7 +430,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       slideIndex: mode === "slide" ? slideIndex ?? 0 : undefined,
       source: document.source,
       title: document.title,
-      signal: extra.signal
+      signal: ctx.mcpReq.signal
     });
     return {
       preview: report.preview,
@@ -443,7 +443,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   server.registerTool("open_slidex_edit", {
       title: "Edit OpenSlideX presentation",
       description: "Revision-safely replace one complete native deck, one native slide, or canonical browser-native HTML. Native edits receive structural and rendered QA; HTML bytes are preserved in an opaque-origin playback asset.",
-      inputSchema: {
+      inputSchema: z.object({
       expectedRevision: z.string().startsWith("sha256:").describe(
         "Latest revision returned by open_slidex_read. Never reuse a stale revision."
       ),
@@ -468,10 +468,10 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       title: z.string().trim().min(1).max(200).optional().describe(
         "Optional presentation title when target is html and htmlSource is omitted."
       )
-    }
-  }, ({ expectedRevision, htmlAssetRoot, htmlSource, rejectedCandidateId, slideIndex, source, target, title }, extra) => runTool(async () => {
+    })
+  }, ({ expectedRevision, htmlAssetRoot, htmlSource, rejectedCandidateId, slideIndex, source, target, title }, ctx) => runTool(async () => {
     const { documentAdapter, root } = await projectContext();
-    extra.signal.throwIfAborted();
+    ctx.mcpReq.signal.throwIfAborted();
     const current = await documentAdapter.open();
     if (current.revision !== expectedRevision) throw new SlideXRevisionConflictError(current.revision);
     if (target === "html") {
@@ -525,7 +525,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         }
 
         const candidateDocument = parseMotionDoc(candidateSource);
-        extra.signal.throwIfAborted();
+        ctx.mcpReq.signal.throwIfAborted();
         const saved = candidateSource === current.source
           ? current
           : await documentAdapter.save({
@@ -595,7 +595,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       projectRoot: root,
       source: candidateSource,
       title: candidateDocument.title,
-      signal: extra.signal
+      signal: ctx.mcpReq.signal
     });
     if (!quality.passed) {
       const candidateId = rejectedCandidateId ?? randomUUID();
@@ -607,7 +607,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       });
       throw new SlideXVisualQualityGateError(current.revision, quality, candidateId);
     }
-    extra.signal.throwIfAborted();
+    ctx.mcpReq.signal.throwIfAborted();
     const document = await documentAdapter.save({
       expectedRevision,
       source: candidateSource,
@@ -829,11 +829,10 @@ async function main() {
     return;
   }
   if (!workspaceRoot) await adapter.open();
-  const server = workspaceRoot
+  process.stderr.write(`OpenSlideX MCP ready for ${workspaceRoot ? `workspace ${workspaceRoot}` : projectRoot}\n`);
+  await serveStdio(() => workspaceRoot
     ? createOpenSlideXMcpServer({ workspaceRoot })
-    : createOpenSlideXMcpServer();
-  await server.connect(new StdioServerTransport());
-  process.stderr.write(`OpenSlideX MCP connected to ${workspaceRoot ? `workspace ${workspaceRoot}` : projectRoot}\n`);
+    : createOpenSlideXMcpServer());
 }
 
 export type OpenSlideXMcpClient = OpenSlideXMcpConfigClient;

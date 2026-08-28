@@ -6,8 +6,8 @@ import path from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { Client } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
 const execFileAsync = promisify(execFile);
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -157,8 +157,12 @@ try {
     cwd: starterRoot,
     stderr: "pipe"
   });
-  client = new Client({ name: "open-slidex-release-smoke", version: "1.0.0" });
+  client = new Client(
+    { name: "open-slidex-release-smoke", version: "1.0.0" },
+    { versionNegotiation: { mode: "auto" } }
+  );
   await client.connect(transport);
+  assert.ok(client.getDiscoverResult(), "the packed MCP must negotiate the current 2026 protocol over stdio");
   assert.equal(client.getServerVersion()?.version, packageManifest.version);
   const instructions = client.getInstructions() ?? "";
   assert.ok(instructions.length > 0 && instructions.length <= 512);

@@ -3,4 +3,9 @@ declare module "*.png" {
   export default source;
 }
 
+declare module "*.webp" {
+  const source: string;
+  export default source;
+}
+
 declare const __OPEN_SLIDEX_WORKSPACE_URL__: string;

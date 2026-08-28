@@ -1,6 +1,6 @@
 {
   "name": "open-slidex",
-  "version": "0.3.9",
+  "version": "0.4.0",
   "description": "Create a local-first MDX presentation workspace.",
   "type": "module",
   "bin": {
@@ -35,7 +35,7 @@
     "@codemirror/lang-javascript": "^6.2.5",
     "@codemirror/lang-markdown": "^6.5.0",
     "@fontsource/roboto": "^5.2.8",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/server": "2.0.0",
     "@paper-design/shaders": "^0.0.77",
     "@paper-design/shaders-react": "^0.0.77",
     "@radix-ui/react-popover": "^1.1.17",

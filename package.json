@@ -1,7 +1,7 @@
 {
   "name": "open-slidex",
   "private": true,
-  "version": "0.3.9",
+  "version": "0.4.0",
   "workspaces": [
     "packages/editor-ui",
     "packages/open-slidex",
@@ -28,6 +28,7 @@
     "open-slidex": "node packages/open-slidex/dist/cli.mjs"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "2.0.0",
     "@codemirror/autocomplete": "^6.20.3",
     "@codemirror/commands": "^6.10.3",
     "@codemirror/language": "^6.12.3",
