@@ -11,3 +11,4 @@ output/
 *.tgz
 .open-slidex/
 .codex
+exports/
