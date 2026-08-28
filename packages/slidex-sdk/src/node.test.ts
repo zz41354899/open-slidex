@@ -17,6 +17,7 @@ import { promisify } from "node:util";
 import sharp from "sharp";
 
 import { blankPresentationMdx, buildMotionDocHtml } from "./index";
+import { withSlideXChromiumPage } from "./nodeBrowser";
 import {
   analyzeSlideXDocumentQuality,
   closeSlideXChromiumPool,
@@ -143,6 +144,52 @@ test("HTML thumbnails select the requested MDX-exported page in a full 16:9 proj
   } finally {
     await rm(root, { force: true, recursive: true });
   }
+});
+
+test("HTML export vertically aligns positioned text while preserving the full text surface", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+
+  const html = buildMotionDocHtml(`# Positioned text alignment
+
+<Slide>
+  <Text id="top" x={5} y={5} w={25} h={40} background="#336699" textVerticalAlign="top">Top</Text>
+  <Text id="middle" x={35} y={5} w={25} h={40} background="#336699" textVerticalAlign="middle">Middle</Text>
+  <Text id="bottom" x={65} y={5} w={25} h={40} background="#336699" textVerticalAlign="bottom">Bottom</Text>
+</Slide>`);
+
+  await withSlideXChromiumPage({ viewport: { height: 1080, width: 1920 } }, async (page) => {
+    await page.setContent(html, { waitUntil: "load" });
+    const measurements = await page.evaluate(() => ["top", "middle", "bottom"].map((id) => {
+      const frame = document.querySelector(`[data-slidex-node-id="${id}"]`);
+      const text = frame?.querySelector(".block-text");
+      const line = frame?.querySelector(".block-line");
+      if (!(frame instanceof HTMLElement) || !(text instanceof HTMLElement) || !(line instanceof HTMLElement)) {
+        throw new Error(`Missing rendered positioned text ${id}.`);
+      }
+      const frameRect = frame.getBoundingClientRect();
+      const textRect = text.getBoundingClientRect();
+      const lineRect = line.getBoundingClientRect();
+      return {
+        frameHeight: frameRect.height,
+        lineHeight: lineRect.height,
+        lineOffset: lineRect.top - frameRect.top,
+        textHeight: textRect.height
+      };
+    }));
+    const [top, middle, bottom] = measurements;
+
+    assert.ok(top && middle && bottom);
+    for (const measurement of measurements) {
+      assert.ok(measurement.frameHeight > 0);
+      assert.ok(Math.abs(measurement.textHeight - measurement.frameHeight) < 0.5, "expected the text background surface to fill its frame");
+    }
+    assert.ok(top.lineOffset < 10, "expected top-aligned text near the top of its frame");
+    assert.ok(Math.abs(middle.lineOffset - (middle.frameHeight - middle.lineHeight) / 2) < 1, "expected middle-aligned text in the vertical center");
+    assert.ok(bottom.lineOffset > bottom.frameHeight - bottom.lineHeight - 10, "expected bottom-aligned text near the bottom of its frame");
+  });
 });
 
 test("HTML thumbnails select Gamma-style data-page slides without resetting to the cover", async (context) => {

@@ -214,6 +214,11 @@ export const motionDocExportStyles = `      :root {
         width: 100%;
         max-width: none;
       }
+      .motion-block--positioned > .block-text {
+        display: flex;
+        flex-direction: column;
+        justify-content: inherit;
+      }
       .slide.is-active .motion-block {
         animation: enter-motion var(--motion-duration, 0.6s) cubic-bezier(0.22, 1, 0.36, 1) var(--motion-delay, 0s) both;
       }
