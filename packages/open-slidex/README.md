@@ -130,10 +130,13 @@ MotionDoc references and returns three exact MDX resource paths. The agent
 loads exactly one reference and submits the complete result through the normal
 revision and rendered-quality gate.
 
-Place source notes or research in the selected deck's `knowledge/` directory.
-Markdown, text, CSV, and PDF files are indexed locally. Search returns compact
-cited matches; a second read loads one exact source resource with pagination for
-long reports.
+Stage supplied Markdown, text, CSV, PDF, or image attachments under the
+configured root's `.open-slidex-inbox/`, then use `open_slidex_media` with
+`action: "ingest-source"`. Documents move into the selected deck's
+`knowledge/`; local, data-URI, public HTTPS, Notion/CDN, AI-generated, and PDF
+images become content-addressed `assets/*.webp`. Search returns compact cited
+matches, and a second read loads one exact source resource. Failed or expired
+remote images return warnings without discarding readable document text.
 
 Optional trusted image search uses the server-side `UNSPLASH_ACCESS_KEY`.
 Search returns attribution and candidate IDs without downloading. Import
@@ -184,7 +187,7 @@ a presentation. Workspace scope loads six tools total:
 | `open_slidex_workspace` | List local decks and select the target deck. |
 | `open_slidex_read` | Read current MotionDoc, canonical browser-native HTML, guided skill resources or local knowledge, and rank six core native references from `templateQuery`. |
 | `open_slidex_source_import` | Inspect local PPTX text and image evidence, preserve geometry and type hints, and import embedded images as WebP. |
-| `open_slidex_media` | Search trusted images or import approved local media as WebP. |
+| `open_slidex_media` | Ingest inbox documents and their WebP assets, or search/import trusted media. |
 | `open_slidex_review` | Run read-only structural and rendered visual QA. |
 | `open_slidex_edit` | Apply a revision-safe complete native deck or slide edit with rendered QA, or create/replace canonical browser-native HTML. |
 

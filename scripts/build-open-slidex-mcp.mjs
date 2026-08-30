@@ -14,7 +14,7 @@ await build({
   banner: { js: "#!/usr/bin/env node" },
   bundle: true,
   entryPoints: [path.join(packageDir, "src/server.ts")],
-  external: ["pdf-parse", "playwright-core", "sharp"],
+  external: ["@napi-rs/canvas", "pdf-to-img", "pdfjs-dist", "playwright-core", "sharp"],
   format: "esm",
   logLevel: "info",
   minify: true,

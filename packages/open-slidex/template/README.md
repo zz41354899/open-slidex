@@ -36,9 +36,11 @@ or redesign, MCP can rank those styles from a report or summary and return one
 exact MDX resource to load. Load only the resource routed by the active skill;
 illustrative content is never factual evidence for a real deck.
 
-Put source notes, Markdown, text, CSV, or PDF research in an inner deck's
-`knowledge/` directory. MCP searches locally, returns cited matches, and reads
-only the selected source resource.
+Stage supplied Markdown, text, CSV, PDF, or image attachments in
+`.open-slidex-inbox/`. The source-intake skill routes them through the existing
+media tool: documents move into the selected deck's `knowledge/`, while local,
+public Notion/CDN, AI-generated, and PDF images become portable WebP files in
+`assets/`. MCP then reads only the returned knowledge resource.
 
 Configure the user-level Workspace MCP once from OpenSlideX Workspace Settings.
 It is restricted to `open-slidex-workspace/`; the desktop agent lists and

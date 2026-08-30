@@ -41,6 +41,11 @@ Never create or use an outer `presentation.mdx`.
 
 - Skill loading is progressive. Read the recommended `SKILL.md`, then only the
   direct `references/` files it routes to. Do not load every example.
+- For supplied Markdown, text, CSV, PDF, or image input, load
+  `slidex-source-import`. Stage local attachments under the configured root's
+  `.open-slidex-inbox/`, call `open_slidex_media` with `action:
+  "ingest-source"`, then read its returned `knowledge/...` resources. Use only
+  returned `assets/...` paths in `ImageBlock`; never persist source URLs.
 - For a supplied `.pptx`, first load `slidex-source-import`
   and use `open_slidex_source_import`; rebuild its semantic evidence with
   native MotionDoc layers rather than copying foreign markup.

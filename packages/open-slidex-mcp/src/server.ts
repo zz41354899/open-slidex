@@ -45,6 +45,7 @@ import {
 } from "./trustedImages";
 import { openSlideXMcpVersion } from "./version";
 import { readOpenSlideXSourceImport } from "./sourceImport";
+import { ingestOpenSlideXSource } from "./sourceIntake";
 import {
   analyzeHtmlPresentation,
   assertSandboxedHtml,
@@ -99,6 +100,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   const configuredWorkspaceRoot = typeof root === "string" ? undefined : resolve(root.workspaceRoot);
   const workspace = typeof root === "string" ? undefined : new OpenSlideXWorkspaceMcpScope(configuredWorkspaceRoot!);
   const fixedRoot = typeof root === "string" ? root : undefined;
+  const inboxRoot = join(configuredWorkspaceRoot ?? fixedRoot ?? projectRoot, ".open-slidex-inbox");
   const projectContext = async () => {
     const resolvedRoot = fixedRoot ?? await workspace!.selectedRoot();
     return {
@@ -338,20 +340,20 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   }));
 
   server.registerTool("open_slidex_media", {
-    title: "Search or import OpenSlideX media",
-    description: "One media workflow: search trusted Unsplash candidates, import one user-confirmed candidate, or import a root-confined local image as content-addressed WebP.",
+    title: "Import OpenSlideX sources or media",
+    description: "One intake workflow: move an inbox document into knowledge with extracted WebP assets, search or import trusted Unsplash media, or import a deck-local image as WebP.",
     inputSchema: z.object({
-      action: z.enum(["search-trusted", "import-trusted", "import-local"]).describe(
-        "Search first, then import either one explicitly confirmed trusted result or one root-confined local image."
+      action: z.enum(["ingest-source", "search-trusted", "import-trusted", "import-local"]).describe(
+        "Use ingest-source for a file staged under .open-slidex-inbox; use the other actions for trusted search or image-only import."
       ),
       confirmedByUser: z.boolean().optional().describe(
         "Must be true for import-trusted after the user selected a returned candidate."
       ),
       expectedRevision: z.string().startsWith("sha256:").optional().describe(
-        "Required for both import actions and must match the selected deck's latest revision."
+        "Required for every write action and must match the selected deck's latest revision."
       ),
       filePath: z.string().trim().min(1).max(500).optional().describe(
-        "Required for import-local. Use a path inside the selected deck, never a URL or Base64 value."
+        "Required for ingest-source or import-local. For ingest-source use a path relative to .open-slidex-inbox or one public HTTPS image URL; for import-local use a path inside the selected deck."
       ),
       providerAssetId: z.string().regex(/^[A-Za-z0-9_-]{1,80}$/).optional().describe(
         "Required for import-trusted. Use an exact providerAssetId returned by search-trusted."
@@ -369,6 +371,15 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     const { documentAdapter, root } = await projectContext();
     const current = await documentAdapter.open();
     if (current.revision !== input.expectedRevision) throw new SlideXRevisionConflictError(current.revision);
+    if (input.action === "ingest-source") {
+      if (!input.filePath) throw new Error("filePath is required when action is ingest-source.");
+      return ingestOpenSlideXSource({
+        expectedRevision: current.revision,
+        filePath: input.filePath,
+        inboxRoot,
+        projectRoot: root
+      });
+    }
     if (input.action === "import-trusted") {
       if (input.confirmedByUser !== true) throw new Error("confirmedByUser must be true when action is import-trusted.");
       if (!input.providerAssetId) throw new Error("providerAssetId is required when action is import-trusted.");

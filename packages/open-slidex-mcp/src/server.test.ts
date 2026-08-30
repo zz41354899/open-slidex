@@ -390,6 +390,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
 
   try {
     await mkdir(path.join(root, "knowledge"));
+    await mkdir(path.join(root, ".open-slidex-inbox"));
     await Promise.all(openSlideXProjectSkillNames.map(async (skill) => {
       const skillRoot = path.join(root, ".agents", "skills", skill);
       await mkdir(path.join(skillRoot, "references"), { recursive: true });
@@ -406,6 +407,11 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     await writeFile(
       path.join(root, "import.png"),
       await sharp({ create: { background: "#3457d5", channels: 4, height: 64, width: 64 } }).png().toBuffer()
+    );
+    await writeFile(path.join(root, ".open-slidex-inbox", "attachment.md"), "# Attached brief\n\nThe retained metric is weekly activation.\n\n![Evidence](attachment.png)\n", "utf8");
+    await writeFile(
+      path.join(root, ".open-slidex-inbox", "attachment.png"),
+      await sharp({ create: { background: "#228866", channels: 4, height: 40, width: 80 } }).png().toBuffer()
     );
     const pptx = new JSZip();
     pptx.file("ppt/presentation.xml", `<p:presentation xmlns:p="x" xmlns:r="y"><p:sldSz cx="13333333" cy="7500000"/><p:sldIdLst><p:sldId id="256" r:id="rId1"/></p:sldIdLst></p:presentation>`);
@@ -513,6 +519,21 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     }));
     assert.match(String(imported.source), /^assets\/.+\.webp$/);
     assert.ok(Number(imported.bytes) <= Number(imported.targetOutputBytes));
+
+    const ingested = structured(await client.callTool({
+      arguments: { action: "ingest-source", expectedRevision: edited.revision, filePath: "attachment.md" },
+      name: "open_slidex_media"
+    }));
+    assert.match(String(ingested.knowledgePath), /^knowledge\/attachment-[a-f0-9]{16}\.md$/);
+    const ingestedAsset = (ingested.assets as Array<Record<string, unknown>>)[0];
+    assert.equal((ingestedAsset?.origin as Record<string, unknown>)?.kind, "markdown-local");
+    assert.match(String(ingestedAsset?.source), /^assets\/.+\.webp$/);
+
+    const ingestedResource = structured(await client.callTool({
+      arguments: { resourcePath: ingested.knowledgePath },
+      name: "open_slidex_read"
+    }));
+    assert.match(String((((ingestedResource.knowledge as Record<string, unknown>).chunks as Array<Record<string, unknown>>)[0]?.content)), /weekly activation/);
 
     const escaped = await client.callTool({
       arguments: { action: "import-local", expectedRevision: edited.revision, filePath: "../outside.png" },

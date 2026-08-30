@@ -15,6 +15,12 @@ export type TrustedImageCandidate = {
   width: number;
 };
 
+export type SlideXAssetProvenance = {
+  importedAt: string;
+  source: string;
+  [key: string]: unknown;
+};
+
 type UnsplashPhoto = TrustedImageCandidate & {
   downloadLocation: string;
   regularUrl: string;
@@ -76,7 +82,7 @@ export async function downloadTrustedImage(
 
 export async function appendImageProvenance(
   root: string,
-  provenance: TrustedImageCandidate & { importedAt: string; source: string }
+  provenance: SlideXAssetProvenance
 ) {
   const stateRoot = path.join(root, ".open-slidex");
   const target = path.join(stateRoot, "asset-provenance.json");

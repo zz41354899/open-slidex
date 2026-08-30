@@ -179,6 +179,10 @@ try {
   assert.deepEqual(tools.tools.map((tool) => tool.name).sort(), expectedTools);
   const media = tools.tools.find((tool) => tool.name === "open_slidex_media");
   const mediaProperties = media?.inputSchema?.properties ?? {};
+  assert.ok(
+    mediaProperties.action?.enum?.includes("ingest-source"),
+    "the six-tool MCP must expose document intake through open_slidex_media"
+  );
   assert.deepEqual(Object.keys(mediaProperties).sort(), [
     "action",
     "confirmedByUser",

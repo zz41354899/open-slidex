@@ -53,7 +53,7 @@ test("every published, workspace, starter, lockfile, and built runtime version s
   }
 });
 
-test("the 0.4 runtime uses the stable MCP v2 package architecture", async () => {
+test("the published runtime uses the stable MCP v2 package architecture", async () => {
   const rootManifest = await readJson("package.json");
   const publishedManifest = await readJson("packages/open-slidex/package.json");
   const mcpManifest = await readJson("packages/open-slidex-mcp/package.json");

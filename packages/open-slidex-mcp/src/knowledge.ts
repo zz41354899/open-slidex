@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { lstat, mkdir, readFile, readdir, realpath, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { extractPdfTextPages } from "./pdfContent";
+
 type KnowledgeChunk = {
   content: string;
   end: number;
@@ -136,7 +138,7 @@ async function fileChunks(root: string, filePath: string) {
   if (fileStats.size > 20 * 1024 * 1024) return [];
   const extension = path.extname(filePath).toLowerCase();
   if (extension === ".pdf") {
-    const pages = await extractPdfPages(filePath);
+    const pages = await extractPdfTextPages(new Uint8Array(await readFile(filePath)));
     return pages.flatMap((contents, pageIndex) => chunksFromText(relativePath, contents, pageIndex + 1));
   }
   return chunksFromText(relativePath, await readFile(filePath, "utf8"));
@@ -164,36 +166,6 @@ function chunksFromText(relativePath: string, contents: string, page?: number) {
   }
   return chunks;
 }
-
-async function extractPdfPages(filePath: string) {
-  const packageName = "pdf-parse";
-  const pdfModule = await import(packageName) as unknown as {
-    default?: (input: Buffer, options?: { pagerender?: (pageData: PdfPageData) => Promise<string> }) => Promise<{ text?: string }>;
-  };
-  if (typeof pdfModule.default !== "function") {
-    throw new Error("PDF knowledge extraction is unavailable in this installation.");
-  }
-  let page = 0;
-  const marker = "OPENSLIDEX_PAGE_BOUNDARY_";
-  const result = await pdfModule.default(await readFile(filePath), {
-    pagerender: async (pageData) => {
-      const currentPage = ++page;
-      const text = await pageData.getTextContent({ disableCombineTextItems: false, normalizeWhitespace: true });
-      return `${marker}${currentPage}\n${text.items.map((item) => item.str).join(" ")}`;
-    }
-  });
-  const pages = (result.text ?? "")
-    .split(new RegExp(`${marker}\\d+\\n`))
-    .map((value) => value.trim())
-    .filter(Boolean);
-  return pages.length > 0 ? pages : [result.text ?? ""];
-}
-
-type PdfPageData = {
-  getTextContent(options: { disableCombineTextItems: boolean; normalizeWhitespace: boolean }): Promise<{
-    items: Array<{ str: string }>;
-  }>;
-};
 
 function tokenize(value: string) {
   return [...new Set(value.toLowerCase().match(/[\p{L}\p{N}_-]{2,}/gu) ?? [])];

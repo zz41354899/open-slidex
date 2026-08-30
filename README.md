@@ -95,8 +95,8 @@ Generated Workbench source and dependency cache stay in the ignored
 `.open-slidex/` directory. Each Workspace deck owns its own source, assets,
 and exports.
 
-The starter includes six project-local Agent Skills: PPTX source import,
-MDX authoring, browser-native HTML authoring, narrative design, motion
+The starter includes six project-local Agent Skills: source intake and PPTX
+conversion, MDX authoring, browser-native HTML authoring, narrative design, motion
 direction, and visual QA. Detailed
 guidance and verified native-layer examples live inside each skill's
 `references/` directory. Narrative design includes exactly six core
@@ -127,14 +127,19 @@ read (including browser-native HTML), PPTX source import, media, review, and
 edit. `open_slidex_read` preserves canonical HTML bytes and reports online
 dependencies; `open_slidex_edit` creates or replaces that HTML with revision
 protection. HTTP(S) libraries, styles, fonts, images, media, frames, workers,
-and connections run in an opaque-origin sandbox. Source import inspects PPTX
-text geometry, typography hints, reading order, and embedded images safely;
+and connections run in an opaque-origin sandbox. Source intake moves staged
+Markdown, text, CSV, and PDF attachments into the selected deck's `knowledge/`
+and converts local, public Notion/CDN, AI-generated, and PDF visual evidence to
+content-addressed WebP assets. PPTX import separately inspects text geometry,
+typography hints, reading order, and embedded images safely;
 `import-media` converts supported images to portable WebP and returns the
 original frame geometry for native `ImageBlock` layers. Narrative and visual
 direction stay in the project skills; MCP remains
 the revision-safe file and validation boundary. User notes and research stay
 local under each deck's `knowledge/`; Markdown, text, CSV, and PDF sources are
-searched first and read one resource at a time.
+searched first and read one resource at a time. Agents stage local attachments
+under `.open-slidex-inbox/` and call `open_slidex_media` with
+`action: "ingest-source"`; source URLs never enter MotionDoc.
 
 For creation or redesign, `open_slidex_read` accepts a `templateQuery`
 containing the source brief, audience, outcome, and evidence type. It ranks the
