@@ -1,0 +1,12 @@
+node_modules
+.git
+.github
+*.log
+open-slidex-workspace
+.open-slidex
+dist
+packages/*/dist
+packages/*/runtime
+coverage
+.DS_Store
+Thumbs.db

@@ -1,0 +1,23 @@
+services:
+  open-slidex:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: open-slidex:latest
+    container_name: open-slidex-workspace
+    restart: unless-stopped
+    ports:
+      - "4172:4172"
+    environment:
+      - OPEN_SLIDEX_HOST=0.0.0.0
+      - NODE_ENV=production
+    volumes:
+      # Mount your local presentations folder into the container.
+      # Override with WORKSPACE_PATH=/path/to/decks docker compose up -d
+      - ${WORKSPACE_PATH:-./open-slidex-workspace}:/app/open-slidex-workspace
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4172/workspace').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3

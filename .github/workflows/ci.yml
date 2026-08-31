@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-check:
+    name: Lint, Types & Boundary Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Check Open-Source Boundaries
+        run: npm run check:open-source-boundary
+      - name: Check Agent Skills Discoverability
+        run: npm run check:skills
+      - name: TypeCheck TypeScript
+        run: npx tsc --noEmit
+
+  test-matrix:
+    name: Test on ${{ matrix.os }} (Node ${{ matrix.node }})
+    needs: lint-and-check
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [22, 24]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build Runtime
+        run: npm run build:runtime
+      - name: Run Source Tests
+        run: npm run test:source
