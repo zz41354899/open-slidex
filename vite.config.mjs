@@ -159,8 +159,13 @@ export function createSlideXWorkbenchViteConfig(options = {}) {
     ...(apiTarget
       ? {
           server: {
+            // Non-loopback hosts (e.g. 0.0.0.0 for container port publishing) are an
+            // explicit opt-in, so Vite's DNS-rebinding host check is disabled to match.
+            ...(options.host && options.host !== "127.0.0.1" && options.host !== "localhost"
+              ? { allowedHosts: true }
+              : {}),
             fs: { allow: [sourceRoot, robotoPackageRoot] },
-            host: "127.0.0.1",
+            host: options.host ?? "127.0.0.1",
             port: options.port ?? 4173,
             proxy: {
               "/api/v1": localWorkbenchProxy(apiTarget),
