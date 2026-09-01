@@ -57,6 +57,7 @@ async function main() {
       createSlideXWorkbenchViteConfig(options: {
         apiPort: number;
         cacheDir: string;
+        host?: string;
         port: number;
         sourceRoot: string;
         workspaceUrl?: string;
@@ -65,6 +66,7 @@ async function main() {
     const vite = await createViteServer(createSlideXWorkbenchViteConfig({
       apiPort: running.port,
       cacheDir: path.join(workspace.stateRoot, "vite-cache"),
+      host: process.env.OPEN_SLIDEX_HOST,
       port,
       sourceRoot,
       workspaceUrl
