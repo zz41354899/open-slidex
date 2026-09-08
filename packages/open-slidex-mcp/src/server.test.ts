@@ -425,7 +425,7 @@ test("MCP reads, replaces, and creates browser-native HTML presentations with re
     const packagedHtml = await readFile(path.join(root, String(packaged.source)), "utf8");
     const packagedWebp = packagedHtml.match(/html-asset-[a-f0-9]{16}\.webp/)?.[0];
     assert.ok(packagedWebp);
-    assert.equal((await sharp(path.join(root, "assets", packagedWebp)).metadata()).format, "webp");
+    assert.equal((await sharp(await readFile(path.join(root, "assets", packagedWebp))).metadata()).format, "webp");
     assert.equal((await readFile(path.join(root, "presentation.mdx"), "utf8").then((value) => value.match(/<Slide\b/g) ?? [])).length, 52);
     const packagedRead = structured(await client.callTool({
       arguments: { sourceFormat: "html" },
