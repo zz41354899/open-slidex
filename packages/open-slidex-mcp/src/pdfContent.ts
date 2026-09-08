@@ -89,7 +89,7 @@ export async function extractPdfTextPages(
     }
     return pages;
   } finally {
-    await document.destroy();
+    await document.destroy().catch(() => undefined);
   }
 }
 
@@ -213,7 +213,7 @@ export async function extractPdfMedia(
     }
     return { candidates, warnings };
   } finally {
-    await document.destroy();
+    await document.destroy().catch(() => undefined);
   }
 }
 
@@ -235,6 +235,7 @@ async function openPdf(bytes: Uint8Array, deadline?: PdfDeadline) {
     maxImageSize: Math.min(deadline?.maximumDecodedPixels ?? 40_000_000, 40_000_000),
     useSystemFonts: true
   });
+  void loading.promise.catch(() => undefined);
   let document: Awaited<typeof loading.promise>;
   try {
     document = deadline
