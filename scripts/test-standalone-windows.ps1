@@ -33,6 +33,7 @@ try {
   function New-TestArchive {
     param([string]$SourceRoot, [string]$Destination)
 
+    Add-Type -AssemblyName System.IO.Compression
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     Remove-Item -LiteralPath $Destination -Force -ErrorAction SilentlyContinue
     $Zip = [IO.Compression.ZipFile]::Open($Destination, [IO.Compression.ZipArchiveMode]::Create)
