@@ -29,7 +29,32 @@ try {
 
   $Asset = "open-slidex-windows-x64.zip"
   $ArchivePath = Join-Path $ReleaseRoot $Asset
-  Compress-Archive -Path $PayloadRoot -DestinationPath $ArchivePath -Force
+
+  function New-TestArchive {
+    param([string]$SourceRoot, [string]$Destination)
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    Remove-Item -LiteralPath $Destination -Force -ErrorAction SilentlyContinue
+    $Zip = [IO.Compression.ZipFile]::Open($Destination, [IO.Compression.ZipArchiveMode]::Create)
+    try {
+      $Zip.CreateEntry("open-slidex/") | Out-Null
+      Get-ChildItem -LiteralPath $SourceRoot -Recurse -File | ForEach-Object {
+        $RelativePath = [IO.Path]::GetRelativePath($SourceRoot, $_.FullName).Replace("\", "/")
+        $Entry = $Zip.CreateEntry("open-slidex/$RelativePath", [IO.Compression.CompressionLevel]::Optimal)
+        $Input = [IO.File]::OpenRead($_.FullName)
+        $Output = $Entry.Open()
+        try { $Input.CopyTo($Output) }
+        finally {
+          $Output.Dispose()
+          $Input.Dispose()
+        }
+      }
+    } finally {
+      $Zip.Dispose()
+    }
+  }
+
+  New-TestArchive $PayloadRoot $ArchivePath
   $Digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $ArchivePath).Hash.ToLowerInvariant()
   Set-Content -LiteralPath (Join-Path $ReleaseRoot "SHA256SUMS.txt") -Value "$Digest  $Asset" -Encoding ASCII
 
@@ -46,7 +71,7 @@ try {
 
   Set-Content -LiteralPath (Join-Path $PayloadRoot "VERSION") -Value "9.9.10" -Encoding ASCII
   Set-ReleaseManifest "9.9.10" "darwin-x64"
-  Compress-Archive -Path $PayloadRoot -DestinationPath $ArchivePath -Force
+  New-TestArchive $PayloadRoot $ArchivePath
   $Digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $ArchivePath).Hash.ToLowerInvariant()
   Set-Content -LiteralPath (Join-Path $ReleaseRoot "SHA256SUMS.txt") -Value "$Digest  $Asset" -Encoding ASCII
   $BadUpdateOutput = & $Launcher update 2>&1
@@ -55,7 +80,7 @@ try {
   if ((Get-Content -Raw -LiteralPath (Join-Path $env:OPEN_SLIDEX_INSTALL_ROOT "current")).Trim() -ne "9.9.9") { throw "Failed update changed the current version." }
 
   Set-ReleaseManifest "9.9.10"
-  Compress-Archive -Path $PayloadRoot -DestinationPath $ArchivePath -Force
+  New-TestArchive $PayloadRoot $ArchivePath
   $Digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $ArchivePath).Hash.ToLowerInvariant()
   Set-Content -LiteralPath (Join-Path $ReleaseRoot "SHA256SUMS.txt") -Value "$Digest  $Asset" -Encoding ASCII
   $UpdateOutput = & $Launcher update
