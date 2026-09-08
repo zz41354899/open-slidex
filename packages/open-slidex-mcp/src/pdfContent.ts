@@ -63,9 +63,19 @@ export async function extractPdfTextPages(
       const strings: string[] = [];
       const reader = page.streamTextContent({ disableNormalization: false }).getReader();
       let completed = false;
+      let readPending = false;
       try {
         while (true) {
-          const chunk = await withPdfDeadline(trackPdfOperation(reader.read(), pendingOperations), deadline);
+          const read = reader.read();
+          readPending = true;
+          // Keep the state tied to this ReadableStream operation, rather than
+          // the generic cleanup set. The latter is deliberately asynchronous
+          // and can briefly retain an already-completed read.
+          void read.then(
+            () => { readPending = false; },
+            () => { readPending = false; }
+          );
+          const chunk = await withPdfDeadline(trackPdfOperation(read, pendingOperations), deadline);
           if (chunk.done) {
             completed = true;
             break;
@@ -90,7 +100,7 @@ export async function extractPdfTextPages(
         // still necessary. Observe that promise so a worker-side failure never
         // becomes an unhandled rejection.
         if (!completed) {
-          if (pendingOperations.size === 0) {
+          if (!readPending) {
             reader.releaseLock();
           } else {
             void reader
