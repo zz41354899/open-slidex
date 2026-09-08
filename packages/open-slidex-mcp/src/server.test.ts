@@ -71,12 +71,12 @@ test("MCP prints copyable Codex and Claude Code configuration", () => {
   assert.match(openSlideXMcpConfig("codex", root), /\[mcp_servers\.open_slidex\]/);
   assert.match(openSlideXMcpConfig("codex", root), /OpenSlideX demo/);
   assert.equal(
-    openSlideXMcpConfig("claude", root),
-    "claude mcp add --scope user open-slidex -- npx -y open-slidex@latest mcp --project '/tmp/OpenSlideX demo'"
+    openSlideXMcpConfig("claude", root, "macos"),
+    "claude mcp add --scope user open-slidex -- npx -y open-slidex@latest mcp --project '" + path.resolve(root) + "'"
   );
-  const desktop = JSON.parse(openSlideXMcpConfig("claude-desktop", root));
+  const desktop = JSON.parse(openSlideXMcpConfig("claude-desktop", root, "macos"));
   assert.equal(desktop.mcpServers.open_slidex.command, "npx");
-  assert.equal(desktop.mcpServers.open_slidex.args.at(-1), root);
+  assert.equal(desktop.mcpServers.open_slidex.args.at(-1), path.resolve(root));
   const windows = JSON.parse(openSlideXMcpConfig("claude-desktop", "C:\\Decks\\Demo", "windows"));
   assert.equal(windows.mcpServers.open_slidex.command, "powershell.exe");
   assert.deepEqual(windows.mcpServers.open_slidex.args.slice(0, 4), [
@@ -85,12 +85,13 @@ test("MCP prints copyable Codex and Claude Code configuration", () => {
     "-NonInteractive",
     "-Command"
   ]);
-  assert.match(windows.mcpServers.open_slidex.args[4], /param\(\[string\]\$root\)/);
-  assert.equal(windows.mcpServers.open_slidex.args.at(-1), "C:\\Decks\\Demo");
+  assert.equal(windows.mcpServers.open_slidex.args.length, 5);
+  assert.match(windows.mcpServers.open_slidex.args.at(-1), /npx\.cmd -y open-slidex@latest mcp --project 'C:\\Decks\\Demo'/);
   const metacharRoot = "C:\\Decks\\Research & Planning (100%)!";
   const metacharConfig = JSON.parse(openSlideXMcpConfig("claude-desktop", metacharRoot, "windows"));
   assert.equal(metacharConfig.mcpServers.open_slidex.command, "powershell.exe");
-  assert.equal(metacharConfig.mcpServers.open_slidex.args.at(-1), metacharRoot);
+  assert.equal(metacharConfig.mcpServers.open_slidex.args.length, 5);
+  assert.match(metacharConfig.mcpServers.open_slidex.args.at(-1), /--project 'C:\\Decks\\Research & Planning \(100%\)!'/);
   assert.doesNotMatch(JSON.stringify(metacharConfig), /cmd\s+\/c/i);
   const setupPrompt = openSlideXMcpSetupPrompt("codex", root);
   assert.match(setupPrompt, /Show me the exact proposed change/);
@@ -139,7 +140,7 @@ test("Windows MCP configuration launches npx with a metacharacter path as one ar
       root
     ]);
   } finally {
-    await rm(root, { force: true, recursive: true });
+    await rm(root, { force: true, maxRetries: 5, recursive: true, retryDelay: 200 });
     await rm(mockBin, { force: true, recursive: true });
   }
 });
@@ -424,7 +425,7 @@ test("MCP reads, replaces, and creates browser-native HTML presentations with re
     const packagedHtml = await readFile(path.join(root, String(packaged.source)), "utf8");
     const packagedWebp = packagedHtml.match(/html-asset-[a-f0-9]{16}\.webp/)?.[0];
     assert.ok(packagedWebp);
-    assert.equal((await sharp(path.join(root, "assets", packagedWebp)).metadata()).format, "webp");
+    assert.equal((await sharp(await readFile(path.join(root, "assets", packagedWebp))).metadata()).format, "webp");
     assert.equal((await readFile(path.join(root, "presentation.mdx"), "utf8").then((value) => value.match(/<Slide\b/g) ?? [])).length, 52);
     const packagedRead = structured(await client.callTool({
       arguments: { sourceFormat: "html" },
@@ -487,7 +488,7 @@ test("MCP reads, replaces, and creates browser-native HTML presentations with re
   } finally {
     await client.close().catch(() => undefined);
     await server.close().catch(() => undefined);
-    await rm(root, { force: true, recursive: true });
+    await rm(root, { force: true, maxRetries: 5, recursive: true, retryDelay: 200 });
   }
 });
 
@@ -750,7 +751,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     }));
     assert.notEqual(recovered.revision, edited.revision);
     assert.equal((recovered.candidateQuality as Record<string, unknown>).passed, true);
-    assert.match(String((recovered.preview as Record<string, unknown>).outputPath), /dist\/renders\/.+\/slide-0\.png$/);
+    assert.match(String((recovered.preview as Record<string, unknown>).outputPath).replaceAll("\\", "/"), /dist\/renders\/.+\/slide-0\.png$/);
 
     const crossRevisionCacheBefore = getSlideXQualityCacheStats();
     await client.callTool({ arguments: { scope: "deck" }, name: "open_slidex_review" });
@@ -769,7 +770,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     await client.close().catch(() => undefined);
     await server.close().catch(() => undefined);
     await closeSlideXChromiumPool();
-    await rm(root, { force: true, recursive: true });
+    await rm(root, { force: true, maxRetries: 5, recursive: true, retryDelay: 200 });
   }
 });
 
