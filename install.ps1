@@ -32,7 +32,10 @@ function Set-AtomicText([string]$Path, [string]$Value) {
   $Temporary = "$Path.tmp.$PID"
   [IO.File]::WriteAllText($Temporary, "$Value`n", [Text.UTF8Encoding]::new($false))
   if (Test-Path -LiteralPath $Path) {
-    [IO.File]::Replace($Temporary, $Path, $null)
+    $Backup = "$Temporary.backup"
+    Remove-Item -LiteralPath $Backup -Force -ErrorAction SilentlyContinue
+    try { [IO.File]::Replace($Temporary, $Path, $Backup) }
+    finally { Remove-Item -LiteralPath $Backup -Force -ErrorAction SilentlyContinue }
   } else {
     [IO.File]::Move($Temporary, $Path)
   }
@@ -200,7 +203,12 @@ function Test-SafeVersion([string]$Version) {
 function Set-AtomicText([string]$Path, [string]$Value) {
   $Temporary = "$Path.tmp.$PID"
   [IO.File]::WriteAllText($Temporary, "$Value`n", [Text.UTF8Encoding]::new($false))
-  if (Test-Path -LiteralPath $Path) { [IO.File]::Replace($Temporary, $Path, $null) }
+  if (Test-Path -LiteralPath $Path) {
+    $Backup = "$Temporary.backup"
+    Remove-Item -LiteralPath $Backup -Force -ErrorAction SilentlyContinue
+    try { [IO.File]::Replace($Temporary, $Path, $Backup) }
+    finally { Remove-Item -LiteralPath $Backup -Force -ErrorAction SilentlyContinue }
+  }
   else { [IO.File]::Move($Temporary, $Path) }
 }
 

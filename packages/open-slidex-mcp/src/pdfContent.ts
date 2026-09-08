@@ -235,6 +235,7 @@ async function openPdf(bytes: Uint8Array, deadline?: PdfDeadline) {
     maxImageSize: Math.min(deadline?.maximumDecodedPixels ?? 40_000_000, 40_000_000),
     useSystemFonts: true
   });
+  void loading.promise.catch(() => undefined);
   let document: Awaited<typeof loading.promise>;
   try {
     document = deadline
