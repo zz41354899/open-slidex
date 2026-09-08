@@ -89,7 +89,7 @@ export async function extractPdfTextPages(
     }
     return pages;
   } finally {
-    await document.destroy();
+    await document.destroy().catch(() => undefined);
   }
 }
 
@@ -213,7 +213,7 @@ export async function extractPdfMedia(
     }
     return { candidates, warnings };
   } finally {
-    await document.destroy();
+    await document.destroy().catch(() => undefined);
   }
 }
 

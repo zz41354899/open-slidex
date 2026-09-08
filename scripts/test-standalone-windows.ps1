@@ -75,7 +75,13 @@ try {
   New-TestArchive $PayloadRoot $ArchivePath
   $Digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $ArchivePath).Hash.ToLowerInvariant()
   Set-Content -LiteralPath (Join-Path $ReleaseRoot "SHA256SUMS.txt") -Value "$Digest  $Asset" -Encoding ASCII
-  $BadUpdateOutput = & $Launcher update 2>&1
+  $PreviousErrorActionPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = "Continue"
+    $BadUpdateOutput = & $Launcher update 2>&1
+  } finally {
+    $ErrorActionPreference = $PreviousErrorActionPreference
+  }
   if ($LASTEXITCODE -eq 0) { throw "Wrong-target update unexpectedly succeeded." }
   if (($BadUpdateOutput -join "`n") -notmatch "release identity does not match") { throw "Wrong-target update failed for the wrong reason: $BadUpdateOutput" }
   if ((Get-Content -Raw -LiteralPath (Join-Path $env:OPEN_SLIDEX_INSTALL_ROOT "current")).Trim() -ne "9.9.9") { throw "Failed update changed the current version." }
