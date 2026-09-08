@@ -73,21 +73,26 @@ export function createWorkbenchRouter(project: SlideXProject): WorkbenchRouter {
       for (const client of eventClients) if (!client.destroyed) client.write(`event: ${event}\ndata: {}\n\n`);
     }, 50));
   };
-  // Do not watch the project directory and its assets child concurrently:
-  // libuv's Windows watcher rejects overlapping directory handles. The source
-  // file is the only document change this router needs to publish.
+  // Windows libuv cannot safely combine parent, child, or file watches when
+  // temporary paths are reported through their short-name form. A single
+  // recursive root watcher covers both the source and assets there; other
+  // platforms keep their native focused watches.
+  const windowsWatcher = process.platform === "win32";
   const documentWatcher = watch(
-    path.isAbsolute(project.adapter.documentPath)
-      ? project.adapter.documentPath
-      : path.join(project.root, project.adapter.documentPath),
-    { persistent: false },
-    () => notify("document.changed")
+    project.root,
+    { persistent: false, recursive: windowsWatcher },
+    (_event, fileName) => {
+      const relative = fileName?.toString().replace(/\\/g, "/");
+      if (relative === "presentation.tsx" || relative === "presentation.mdx") {
+        notify("document.changed");
+      } else if (windowsWatcher && relative?.startsWith("assets/")) {
+        notify("assets.changed");
+      }
+    }
   );
-  const assetWatcher = watch(
-    project.assetsRoot,
-    { persistent: false },
-    () => notify("assets.changed")
-  );
+  const assetWatcher = windowsWatcher
+    ? undefined
+    : watch(project.assetsRoot, { persistent: false }, () => notify("assets.changed"));
   let closing: Promise<void> | undefined;
 
   return {
@@ -96,9 +101,9 @@ export function createWorkbenchRouter(project: SlideXProject): WorkbenchRouter {
       closing ??= (async () => {
         for (const timer of notifications.values()) clearTimeout(timer);
         notifications.clear();
-        const watcherClosed = [once(documentWatcher, "close"), once(assetWatcher, "close")];
-        documentWatcher.close();
-        assetWatcher.close();
+        const watchers = assetWatcher ? [documentWatcher, assetWatcher] : [documentWatcher];
+        const watcherClosed = watchers.map((watcher) => once(watcher, "close"));
+        for (const watcher of watchers) watcher.close();
         await Promise.all(watcherClosed);
         for (const client of eventClients) client.end();
         eventClients.clear();

@@ -62,10 +62,12 @@ export async function extractPdfTextPages(
       const page = await withPdfDeadline(document.getPage(pageNumber), deadline);
       const strings: string[] = [];
       const reader = page.streamTextContent({ disableNormalization: false }).getReader();
+      let completed = false;
       try {
         while (true) {
           const chunk = await withPdfDeadline(trackPdfOperation(reader.read(), pendingOperations), deadline);
           if (chunk.done) {
+            completed = true;
             break;
           }
           for (const item of chunk.value.items as unknown[]) {
@@ -79,12 +81,17 @@ export async function extractPdfTextPages(
           }
         }
       } finally {
-        // A deadline can reject while the underlying read is still pending.
-        // Let it settle before detaching it; direct cancellation races pdf.js's
-        // Node stream controller, while releaseLock during a read is rejected
-        // by Node 24.
+        // pdf.js requires an Error reason for stream cancellation. It may wait
+        // for document destruction before acknowledging, so retain its promise
+        // and observe it after teardown rather than stalling the budgeted call.
+        if (!completed) {
+          void reader
+            .cancel(new Error(`${deadline.label} stopped before completion.`))
+            .catch(() => undefined);
+        } else {
+          reader.releaseLock();
+        }
         await settlePdfOperations(pendingOperations);
-        reader.releaseLock();
       }
       pages.push(strings
         .join(" ")
