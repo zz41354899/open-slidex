@@ -56,7 +56,7 @@ export async function startWorkspaceServer(input: StartWorkspaceServerInput) {
     close: async () => {
       clearInterval(sweep);
       await Promise.allSettled(editorRouterLoads.values());
-      for (const router of editorRouters.values()) router.close();
+      await Promise.all([...editorRouters.values()].map((router) => router.close()));
       editorRouters.clear();
       editorRouterLoads.clear();
       await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
@@ -67,7 +67,7 @@ export async function startWorkspaceServer(input: StartWorkspaceServerInput) {
 
 export function evictIdleEditorRouters(routers: Map<string, WorkbenchRouter>, now = Date.now(), idleMs = 5 * 60_000) {
   for (const [id, router] of routers) {
-    if (router.isIdle(now, idleMs)) { router.close(); routers.delete(id); }
+    if (router.isIdle(now, idleMs)) { void router.close(); routers.delete(id); }
   }
 }
 
@@ -203,12 +203,12 @@ async function routeWorkspaceRequest(
     return;
   }
   if (presentationMatch?.[1] && request.method === "DELETE") {
+    await editorRouters.get(presentationMatch[1])?.close();
+    editorRouters.delete(presentationMatch[1]);
     const result = await input.workspace.deletePresentation(
       presentationMatch[1],
       await jsonBody<DeleteWorkspacePresentationInput>(request)
     );
-    editorRouters.get(presentationMatch[1])?.close();
-    editorRouters.delete(presentationMatch[1]);
     sendJson(outgoing, result);
     return;
   }

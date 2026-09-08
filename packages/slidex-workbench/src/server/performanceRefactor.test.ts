@@ -105,7 +105,7 @@ test("idle router eviction closes watchers and retains recently used routers", a
     assert.equal(routers.size, 1);
     evictIdleEditorRouters(routers, Date.now() + 60_001, 60_000);
     assert.equal(routers.size, 0);
-  } finally { if (routers.size) router.close(); await dispose(); }
+  } finally { await router.close(); await dispose(); }
 });
 
 test("HTML thumbnail batches render distinct pages and invalidate when a sidecar changes", async () => {

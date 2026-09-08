@@ -39,7 +39,7 @@ test("starter ships the six focused OpenSlideX skills", async () => {
     const bundledSkillUrl = new URL(`${skillName}/`, bundledSkillsUrl);
     const runtimeSkillUrl = new URL(`${skillName}/`, runtimeSkillsUrl);
     const repositorySkillUrl = new URL(`../../../.agents/skills/${skillName}/`, import.meta.url);
-    const source = await readFile(new URL("SKILL.md", sourceSkillUrl), "utf8");
+    const source = normalizeLineEndings(await readFile(new URL("SKILL.md", sourceSkillUrl), "utf8"));
     assert.match(source, new RegExp(`^---\\nname: ${skillName}\\n`, "m"));
     assert.doesNotMatch(source, /TODO|slidex_local_/);
     const sourceFiles = await relativeFiles(sourceSkillUrl);
@@ -113,7 +113,7 @@ test("skill entrypoints are discoverable and every bundled reference is reachabl
 
   for (const skillName of openSlideXProjectSkillNames) {
     const skillUrl = new URL(`${skillName}/`, skillsUrl);
-    const skillSource = await readFile(new URL("SKILL.md", skillUrl), "utf8");
+    const skillSource = normalizeLineEndings(await readFile(new URL("SKILL.md", skillUrl), "utf8"));
     const frontmatter = skillSource.match(/^---\n([\s\S]*?)\n---\n/);
     assert.ok(frontmatter, `${skillName}: SKILL.md needs YAML frontmatter`);
     const name = frontmatter[1].match(/^name:\s*(.+)$/m)?.[1]?.trim();
@@ -254,6 +254,10 @@ test("the template catalog contains exactly the six MCP-consumed core references
     await access(new URL(`references/${fileName}`, designSkillUrl));
   }
 });
+
+function normalizeLineEndings(value: string) {
+  return value.replace(/\r\n/g, "\n");
+}
 
 function assertGroupedShapeContainment(parsed: ReturnType<typeof parseMotionDoc>, file: string) {
   for (const [sceneIndex, scene] of parsed.scenes.entries()) {
@@ -416,13 +420,13 @@ test("init with an official template creates the complete localized deck", async
     const packageManifest = JSON.parse(
       await readFile(new URL("../package.json", import.meta.url), "utf8")
     ) as { version: string };
-    const tsxLoaderPath = fileURLToPath(import.meta.resolve("tsx"));
+    const tsxLoaderUrl = import.meta.resolve("tsx");
     const projectRoot = path.join(tempRoot, "project");
     await execFileAsync(
       process.execPath,
       [
         "--import",
-        tsxLoaderPath,
+        tsxLoaderUrl,
         fileURLToPath(new URL("./cli.ts", import.meta.url)),
         projectRoot,
         "--template",

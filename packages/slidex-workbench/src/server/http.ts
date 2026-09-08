@@ -1,5 +1,6 @@
 import { createReadStream, watch } from "node:fs";
 import { stat } from "node:fs/promises";
+import { once } from "node:events";
 import { createServer, type ServerResponse } from "node:http";
 import path from "node:path";
 import { Readable } from "node:stream";
@@ -24,7 +25,7 @@ type StartServerInput = {
 };
 
 export type WorkbenchRouter = {
-  close(): void;
+  close(): Promise<void>;
   isIdle(now: number, idleMs: number): boolean;
   route(input: {
     incoming: import("node:http").IncomingMessage;
@@ -50,7 +51,7 @@ export async function startWorkbenchServer(input: StartServerInput) {
 
   return {
     close: async () => {
-      router.close();
+      await router.close();
       await new Promise<void>((resolve, reject) =>
         server.close((error) => error ? reject(error) : resolve())
       );
@@ -80,16 +81,22 @@ export function createWorkbenchRouter(project: SlideXProject): WorkbenchRouter {
     { persistent: false },
     () => notify("assets.changed")
   );
+  let closing: Promise<void> | undefined;
 
   return {
     isIdle(now, idleMs) { return activeRequests === 0 && eventClients.size === 0 && now - lastActivity >= idleMs; },
     close() {
-      for (const timer of notifications.values()) clearTimeout(timer);
-      notifications.clear();
-      documentWatcher.close();
-      assetWatcher.close();
-      for (const client of eventClients) client.end();
-      eventClients.clear();
+      closing ??= (async () => {
+        for (const timer of notifications.values()) clearTimeout(timer);
+        notifications.clear();
+        const watcherClosed = [once(documentWatcher, "close"), once(assetWatcher, "close")];
+        documentWatcher.close();
+        assetWatcher.close();
+        await Promise.all(watcherClosed);
+        for (const client of eventClients) client.end();
+        eventClients.clear();
+      })();
+      return closing;
     },
     async route({ incoming, outgoing, request, url }) {
       activeRequests++;
