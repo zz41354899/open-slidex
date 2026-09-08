@@ -40,7 +40,7 @@ try {
     try {
       $Zip.CreateEntry("open-slidex/") | Out-Null
       Get-ChildItem -LiteralPath $SourceRoot -Recurse -File | ForEach-Object {
-        $RelativePath = [IO.Path]::GetRelativePath($SourceRoot, $_.FullName).Replace("\", "/")
+        $RelativePath = $_.FullName.Substring($SourceRoot.Length).TrimStart('\').Replace('\', '/')
         $Entry = $Zip.CreateEntry("open-slidex/$RelativePath", [IO.Compression.CompressionLevel]::Optimal)
         $Input = [IO.File]::OpenRead($_.FullName)
         $Output = $Entry.Open()
