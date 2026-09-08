@@ -61,12 +61,10 @@ export async function extractPdfTextPages(
       const page = await withPdfDeadline(document.getPage(pageNumber), deadline);
       const strings: string[] = [];
       const reader = page.streamTextContent({ disableNormalization: false }).getReader();
-      let completed = false;
       try {
         while (true) {
           const chunk = await withPdfDeadline(reader.read(), deadline);
           if (chunk.done) {
-            completed = true;
             break;
           }
           for (const item of chunk.value.items as unknown[]) {
@@ -80,7 +78,10 @@ export async function extractPdfTextPages(
           }
         }
       } finally {
-        if (completed) reader.releaseLock();
+        // Keep the stream detachable before document destruction. pdf.js owns
+        // worker cancellation; cancelling this Node ReadableStream directly
+        // races its controller while it is closing.
+        reader.releaseLock();
       }
       pages.push(strings
         .join(" ")
