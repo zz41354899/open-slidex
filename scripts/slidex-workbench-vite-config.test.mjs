@@ -53,7 +53,7 @@ test("Workbench production and HMR builds share the same Vite client configurati
 
   assert.equal(production.root, development.root);
   assert.ok(production.plugins.some((plugin) => plugin.name === "vite:react-refresh"));
-  assert.equal(production.root, `${slideXWorkbenchSourceRoot}/packages/slidex-workbench/src/client`);
+  assert.equal(production.root, path.join(slideXWorkbenchSourceRoot, "packages", "slidex-workbench", "src", "client"));
   assert.deepEqual(
     production.resolve.alias.map(({ find, replacement }) => [String(find), replacement]),
     development.resolve.alias.map(({ find, replacement }) => [String(find), replacement])
