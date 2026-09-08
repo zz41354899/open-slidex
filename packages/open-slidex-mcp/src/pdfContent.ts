@@ -81,13 +81,22 @@ export async function extractPdfTextPages(
           }
         }
       } finally {
-        // pdf.js requires an Error reason for stream cancellation. It may wait
-        // for document destruction before acknowledging, so retain its promise
-        // and observe it after teardown rather than stalling the budgeted call.
+        // A budget can be exceeded after a complete chunk has arrived. In that
+        // common case there is no outstanding read, and releasing the lock is
+        // both sufficient and safer than cancelling: pdf.js can otherwise
+        // report its delayed cancellation error after the caller has returned.
+        //
+        // When the deadline interrupts an in-flight read, cancellation is
+        // still necessary. Observe that promise so a worker-side failure never
+        // becomes an unhandled rejection.
         if (!completed) {
-          void reader
-            .cancel(new Error(`${deadline.label} stopped before completion.`))
-            .catch(() => undefined);
+          if (pendingOperations.size === 0) {
+            reader.releaseLock();
+          } else {
+            void reader
+              .cancel(new Error(`${deadline.label} stopped before completion.`))
+              .catch(() => undefined);
+          }
         } else {
           reader.releaseLock();
         }
