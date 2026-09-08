@@ -13,6 +13,10 @@ import {
   workbenchVendorChunk
 } from "../vite.config.mjs";
 
+function portablePath(value) {
+  return String(value).split(path.sep).join("/");
+}
+
 test("Workbench Tailwind scans only explicit editor source paths", async () => {
   const css = await readFile(new URL("../packages/editor-ui/src/editor.css", import.meta.url), "utf8");
 
@@ -64,15 +68,15 @@ test("Workbench production and HMR builds share the same Vite client configurati
   assert.equal(development.server.port, 4317);
   assert.equal(development.server.strictPort, true);
   assert.equal(development.server.fs.allow[0], slideXWorkbenchSourceRoot);
-  assert.match(development.server.fs.allow[1], /node_modules\/@fontsource\/roboto$/);
+  assert.match(portablePath(development.server.fs.allow[1]), /node_modules\/@fontsource\/roboto$/);
   assert.equal(development.cacheDir, "/tmp/open-slidex-vite-cache");
   assert.equal(development.optimizeDeps.noDiscovery, true);
   assert.ok(development.optimizeDeps.include.includes("react-dom"));
   assert.ok(development.optimizeDeps.include.includes("react-dom/client"));
   const reactAlias = development.resolve.alias.find(({ find }) => String(find) === "/^react$/");
-  assert.match(reactAlias?.replacement ?? "", /node_modules\/react$/);
+  assert.match(portablePath(reactAlias?.replacement), /node_modules\/react$/);
   const robotoAlias = development.resolve.alias.find(({ find }) => String(find) === "@fontsource/roboto/latin-400.css");
-  assert.match(robotoAlias?.replacement ?? "", /node_modules\/@fontsource\/roboto\/latin-400\.css$/);
+  assert.match(portablePath(robotoAlias?.replacement), /node_modules\/@fontsource\/roboto\/latin-400\.css$/);
 });
 
 test("Workbench defers editor routes and leaves cyclic dependency graphs to Rolldown", async () => {
