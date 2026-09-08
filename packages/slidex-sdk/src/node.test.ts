@@ -199,6 +199,14 @@ test("validated file handles stay pinned when an ancestor path is replaced", asy
     await writeFile(path.join(outside, "value.txt"), "outside", "utf8");
     const handle = await openExistingFileInsideRoot(root, "assets/value.txt");
     try {
+      if (process.platform === "win32") {
+        await assert.rejects(
+          rename(assets, movedAssets),
+          (error: NodeJS.ErrnoException) => error.code === "EPERM"
+        );
+        assert.equal(await handle.readFile("utf8"), "inside");
+        return;
+      }
       await rename(assets, movedAssets);
       await symlink(outside, assets);
       assert.equal(await handle.readFile("utf8"), "inside");

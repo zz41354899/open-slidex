@@ -1086,7 +1086,13 @@ test("starter Workspace MCP setup uses the exact installed presentation path", a
   assert.equal(setup.workspaceRoot, workspaceRoot);
   assert.match(setup.config, /\[mcp_servers\.open_slidex\]/);
   assert.match(setup.config, /--project/);
-  assert.match(setup.config, new RegExp(projectRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  const argsLine = setup.config.split("\n").find((line: string) => line.startsWith("args = "));
+  assert.ok(argsLine, "Codex configuration must include its JSON argument list.");
+  assert.equal(
+    (JSON.parse(argsLine.slice("args = ".length)) as string[]).at(-1),
+    projectRoot,
+    "The serialized TOML configuration must preserve the exact presentation root."
+  );
   assert.doesNotMatch(setup.config, /open_slidex_workspace/);
   assert.match(setup.prompt, /Replace an older open_slidex entry/);
   assert.doesNotMatch(setup.prompt, /older open_slidex_workspace entry/);

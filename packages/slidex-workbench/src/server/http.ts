@@ -1,5 +1,6 @@
 import { createReadStream, watch } from "node:fs";
 import { stat } from "node:fs/promises";
+import { once } from "node:events";
 import { createServer, type ServerResponse } from "node:http";
 import path from "node:path";
 import { Readable } from "node:stream";
@@ -24,7 +25,7 @@ type StartServerInput = {
 };
 
 export type WorkbenchRouter = {
-  close(): void;
+  close(): Promise<void>;
   isIdle(now: number, idleMs: number): boolean;
   route(input: {
     incoming: import("node:http").IncomingMessage;
@@ -50,7 +51,7 @@ export async function startWorkbenchServer(input: StartServerInput) {
 
   return {
     close: async () => {
-      router.close();
+      await router.close();
       await new Promise<void>((resolve, reject) =>
         server.close((error) => error ? reject(error) : resolve())
       );
@@ -64,7 +65,7 @@ export function createWorkbenchRouter(project: SlideXProject): WorkbenchRouter {
   let lastActivity = Date.now();
   let activeRequests = 0;
   const notifications = new Map<string, ReturnType<typeof setTimeout>>();
-  const notify = (event: "assets.changed" | "document.changed") => {
+  const notify = (event: "document.changed") => {
     const previous = notifications.get(event);
     if (previous) clearTimeout(previous);
     notifications.set(event, setTimeout(() => {
@@ -72,24 +73,28 @@ export function createWorkbenchRouter(project: SlideXProject): WorkbenchRouter {
       for (const client of eventClients) if (!client.destroyed) client.write(`event: ${event}\ndata: {}\n\n`);
     }, 50));
   };
-  const documentWatcher = watch(project.root, { persistent: false }, (_event, fileName) => {
-    if (fileName === "presentation.tsx" || fileName === "presentation.mdx") notify("document.changed");
-  });
-  const assetWatcher = watch(
-    project.assetsRoot,
-    { persistent: false },
-    () => notify("assets.changed")
-  );
+  // Directory watches do not provide an event the browser consumes, and on
+  // Windows overlapping directory watches can trip a libuv assertion. Track
+  // the one source file clients subscribe to instead.
+  const documentPath = path.isAbsolute(project.adapter.documentPath)
+    ? project.adapter.documentPath
+    : path.join(project.root, project.adapter.documentPath);
+  const documentWatcher = watch(documentPath, { persistent: false }, () => notify("document.changed"));
+  let closing: Promise<void> | undefined;
 
   return {
     isIdle(now, idleMs) { return activeRequests === 0 && eventClients.size === 0 && now - lastActivity >= idleMs; },
     close() {
-      for (const timer of notifications.values()) clearTimeout(timer);
-      notifications.clear();
-      documentWatcher.close();
-      assetWatcher.close();
-      for (const client of eventClients) client.end();
-      eventClients.clear();
+      closing ??= (async () => {
+        for (const timer of notifications.values()) clearTimeout(timer);
+        notifications.clear();
+        const watcherClosed = once(documentWatcher, "close");
+        documentWatcher.close();
+        await watcherClosed;
+        for (const client of eventClients) client.end();
+        eventClients.clear();
+      })();
+      return closing;
     },
     async route({ incoming, outgoing, request, url }) {
       activeRequests++;
