@@ -344,7 +344,7 @@ test("Workbench project downloads an offline-hardened static HTML copy", async (
       source: htmlSource,
       target: "download"
     });
-    assert.ok("bytes" in result);
+    assert.ok(result.bytes);
     assert.match(result.bytes.toString("utf8"), /data-open-slidex-offline-export/);
     assert.match(result.bytes.toString("utf8"), /<p>Static source<\/p>/);
     await assert.rejects(
@@ -373,7 +373,7 @@ test("Workbench project downloads offline HTML for mapped shared pages", async (
     await writeFile(path.join(project.assetsRoot, "original.html"), html);
 
     const result = await project.export({ fileName: "mapped", format: "html", overwrite: false, source, target: "download" });
-    assert.ok("bytes" in result);
+    assert.ok(result.bytes);
     assert.match(result.bytes.toString("utf8"), /data-open-slidex-offline-export/);
     assert.match(result.bytes.toString("utf8"), />Mapped</);
   } finally {
@@ -398,7 +398,7 @@ test("untouched native HTML Text layers keep canonical source content in the sec
     await writeFile(path.join(project.assetsRoot, "original.html"), html);
 
     const result = await project.export({ fileName: "untouched", format: "html", overwrite: false, source, target: "download" });
-    assert.ok("bytes" in result);
+    assert.ok(result.bytes);
     assert.match(result.bytes.toString("utf8"), /data-open-slidex-offline-export/);
     assert.match(result.bytes.toString("utf8"), /<h1>Original &amp;   copy<\/h1>/);
   } finally {
@@ -479,7 +479,7 @@ test("Workbench project edits HTML through content-addressed revision-safe repla
       source: result.document.source,
       target: "download"
     });
-    assert.ok("bytes" in exported);
+    assert.ok(exported.bytes);
     assert.match(exported.bytes.toString("utf8"), /data-open-slidex-offline-export/);
     assert.match(exported.bytes.toString("utf8"), /id="g1">Edited/);
   } finally {

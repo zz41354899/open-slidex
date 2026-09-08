@@ -31,8 +31,7 @@ export function createOpenSlideXMcpConfig(input: {
         "-NoProfile",
         "-NonInteractive",
         "-Command",
-        `& { param([string]$root) & npx.cmd -y ${openSlideXMcpNpxPackage} mcp ${option} $root }`,
-        absoluteRoot
+        `& npx.cmd -y ${openSlideXMcpNpxPackage} mcp ${option} ${powershellQuote(absoluteRoot)}`
       ]
     : ["-y", openSlideXMcpNpxPackage, "mcp", option, absoluteRoot];
 
