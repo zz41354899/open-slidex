@@ -5,7 +5,7 @@ import type { MotionDocBlock } from "@/core/motion-doc/domain/motionDocTypes";
 import { blockRotation } from "@/core/motion-doc/domain/blockTransform";
 import { objectShadowCss } from "@/core/motion-doc/application/objectShadow";
 import { MOTION_DOC_CANVAS_HEIGHT, MOTION_DOC_CANVAS_WIDTH } from "@/core/motion-doc/domain/viewport";
-import type { BlockFrameOverrides } from "@/features/pitch/application/pitchGeometry";
+import type { BlockFrameOverride, BlockFrameOverrides } from "@/features/pitch/application/pitchGeometry";
 import {
   booleanProp,
   enterProp,
@@ -90,7 +90,7 @@ const PositionedPreviewBlock = memo(function PositionedPreviewBlock({
   imageLoading,
   originalIndex
 }: PreviewBlockItem & {
-  frameOverride?: MotionDocFrame;
+  frameOverride?: BlockFrameOverride;
   imageFetchPriority?: "auto" | "high" | "low";
   imageLoading?: "eager" | "lazy";
 }) {
@@ -107,7 +107,7 @@ const PositionedPreviewBlock = memo(function PositionedPreviewBlock({
       data-shape-points={block.type === "Shape" ? String(block.props.points ?? 5) : undefined}
       data-shape-sides={block.type === "Shape" ? String(block.props.sides ?? 3) : undefined}
       data-slidex-block-type={block.type}
-      style={positionedBlockStyle(block, originalIndex, frame)}
+      style={positionedBlockStyle(block, originalIndex, frameOverride)}
     >
       <PreviewBlock
         block={block}
@@ -122,8 +122,8 @@ const PositionedPreviewBlock = memo(function PositionedPreviewBlock({
 }, positionedPreviewBlockPropsEqual);
 
 function positionedPreviewBlockPropsEqual(
-  previous: PreviewBlockItem & { frameOverride?: MotionDocFrame; imageFetchPriority?: "auto" | "high" | "low"; imageLoading?: "eager" | "lazy" },
-  next: PreviewBlockItem & { frameOverride?: MotionDocFrame; imageFetchPriority?: "auto" | "high" | "low"; imageLoading?: "eager" | "lazy" }
+  previous: PreviewBlockItem & { frameOverride?: BlockFrameOverride; imageFetchPriority?: "auto" | "high" | "low"; imageLoading?: "eager" | "lazy" },
+  next: PreviewBlockItem & { frameOverride?: BlockFrameOverride; imageFetchPriority?: "auto" | "high" | "low"; imageLoading?: "eager" | "lazy" }
 ) {
   return (
     previous.blockKey === next.blockKey
@@ -331,10 +331,13 @@ function previewBlockPropsEqual(previous: PreviewBlockProps, next: PreviewBlockP
   );
 }
 
-function framesEqual(previous: MotionDocFrame | undefined, next: MotionDocFrame | undefined) {
+function framesEqual(
+  previous: (MotionDocFrame & { rotation?: number }) | undefined,
+  next: (MotionDocFrame & { rotation?: number }) | undefined
+) {
   if (previous === next) return true;
   if (!previous || !next) return false;
-  return previous.x === next.x && previous.y === next.y && previous.w === next.w && previous.h === next.h;
+  return previous.x === next.x && previous.y === next.y && previous.w === next.w && previous.h === next.h && previous.rotation === next.rotation;
 }
 
 function motionDocBlocksEqual(previous: MotionDocBlock, next: MotionDocBlock) {
@@ -351,14 +354,14 @@ function motionDocBlocksEqual(previous: MotionDocBlock, next: MotionDocBlock) {
   );
 }
 
-function positionedBlockStyle(block: MotionDocBlock, index: number, frameOverride?: MotionDocFrame): CSSProperties {
+function positionedBlockStyle(block: MotionDocBlock, index: number, frameOverride?: BlockFrameOverride): CSSProperties {
   const frame = frameOverride ?? blockFrame(block);
   const h = "props" in block ? block.props.h : undefined;
 
   return {
     left: `${frame.x}%`,
     position: "absolute",
-    rotate: `${blockRotation(block.props)}deg`,
+    rotate: `${frameOverride?.rotation ?? blockRotation(block.props)}deg`,
     top: `${frame.y}%`,
     transformOrigin: "center",
     width: `${frame.w}%`,

@@ -217,6 +217,16 @@ const zhTw = {
   "Chart design": "圖表設計",
   "Chart type": "圖表類型",
   "Chart settings": "圖表設定",
+  "Visual theme": "視覺主題",
+  "Segment": "區塊",
+  "Amount": "數量",
+  "Paste CSV or spreadsheet cells into any label field. Up to {count} rows.": "可將 CSV 或試算表儲存格貼到任一標籤欄位，最多 {count} 列。",
+  "Choose a light or dark foreground treatment for the slide": "依投影片底色選擇淺色或深色的前景樣式",
+  "Light": "淺色",
+  "Dark": "深色",
+  "Clear everyday reporting": "適合淺色投影片",
+  "High contrast for dark slides": "適合深色投影片的高對比",
+  "Gilded": "金色",
   "Design preset": "設計預設",
   "A polished starting point you can customize": "先選一套精緻風格，再依需要調整",
   "Executive": "商務",
@@ -443,7 +453,9 @@ const zhTw = {
   "Toggle layers": "切換圖層面板",
   "Toggle properties": "切換屬性面板",
   "SlideX workspace home": "SlideX 工作區首頁",
-  "MDX Editor": "MDX 編輯器",
+  "Code Editor": "Code 編輯器",
+  "Close code editor": "關閉 Code 編輯器",
+  "Could not open code editor.": "無法開啟 Code 編輯器。",
   "Text style": "文字樣式",
   "Typography": "排版",
   "Toggle bulleted list": "切換項目符號",
@@ -838,8 +850,8 @@ const zhTw = {
   "Guests can replace images only with a complete HTTPS URL.": "訪客只能使用完整的 HTTPS 網址更換圖片。",
   "URLs and existing paths are used directly on Enter or blur.": "按 Enter 或移開焦點後，會直接使用網址或現有路徑。",
   "Presentation file action": "簡報檔案操作",
-  "Close MDX editor": "關閉 MDX 編輯器",
-  "Opening MDX editor…": "正在開啟 MDX 編輯器…",
+  "Opening code editor…": "正在開啟 Code 編輯器…",
+  "Reading presentation.tsx…": "正在讀取 presentation.tsx…",
   "Search icons": "搜尋圖示",
   "Search by name or idea…": "依名稱或概念搜尋…",
   "Clear search": "清除搜尋",
@@ -957,8 +969,11 @@ const zhTw = {
   "Short context": "簡短說明",
   "Corner label": "角標",
   "Copy MDX": "複製 MDX",
+  "Copy TSX": "複製 TSX",
   "Full Deck": "完整簡報",
   "Selection MDX": "選取範圍 MDX",
+  "Selection TSX": "選取範圍 TSX",
+  "Full TSX": "完整 TSX",
   "Full MDX": "完整 MDX",
   "Drag image · Adjust crop handles": "拖曳圖片 · 調整裁切控制點",
   "Cover": "裁切填滿",
@@ -1032,6 +1047,10 @@ const zhTw = {
   "Presentation updated in Realtime": "簡報已即時更新"
   ,"Opening presentation.mdx…": "正在開啟 presentation.mdx…"
   ,"Could not open presentation.mdx.": "無法開啟 presentation.mdx。"
+  ,"Opening presentation.tsx…": "正在開啟 presentation.tsx…"
+  ,"Could not open presentation.tsx.": "無法開啟 presentation.tsx。"
+  ,"Upgrade to React": "升級為 React"
+  ,"This deck will become presentation.tsx. The original presentation.mdx is kept as a read-only backup in .open-slidex/legacy/.": "這份簡報會轉成 presentation.tsx，原始 presentation.mdx 將以唯讀備份保存在 .open-slidex/legacy/。"
   ,"Try again": "再試一次"
   ,"Interactive presentation": "互動式簡報"
   ,"Canonical source": "標準原始碼"
@@ -1111,9 +1130,12 @@ const zhTw = {
   ,"downloaded": "已下載"
   ,"Export failed": "匯出失敗"
   ,"Reloaded presentation.mdx": "已重新讀取 presentation.mdx"
+  ,"Reloaded presentation.tsx": "已重新讀取 presentation.tsx"
+  ,"Wait for presentation.tsx to finish saving before editing HTML": "請等待 presentation.tsx 儲存完成，再編輯 HTML"
   ,"selected": "已選取"
   ,"New local presentation": "新的本機簡報"
   ,"MDX copied": "已複製 MDX"
+  ,"TSX copied": "已複製 TSX"
   ,"Back to OpenSlideX Workspace": "返回 OpenSlideX 工作區"
   ,"Back to workspace": "返回工作區"
   ,"AI model profile": "AI 模型設定檔"

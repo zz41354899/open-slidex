@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import {
   AlignCenter,
   AlignLeft,
@@ -53,7 +54,7 @@ import {
   TooltipTrigger
 } from "@/common/ui/shadcnPrimitives";
 
-export function PitchInspector({
+export const PitchInspector = memo(function PitchInspector({
   activeSlide,
   activeSlideIndex,
   scenes,
@@ -184,7 +185,7 @@ export function PitchInspector({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                aria-label={tx("MDX Editor")}
+                aria-label={tx("Code Editor")}
                 className="h-7 px-2 text-neutral-500 hover:bg-white/[0.05] hover:text-white"
                 onClick={onOpenMdxEditor}
                 onFocus={onPreloadMdxEditor}
@@ -196,7 +197,7 @@ export function PitchInspector({
                 <Code2 size={14} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="left">{tx("MDX Editor")}</TooltipContent>
+            <TooltipContent side="left">{tx("Code Editor")}</TooltipContent>
           </Tooltip>
         )}
         title={tx(isMultiSelection
@@ -295,7 +296,7 @@ export function PitchInspector({
       </div>
     </div>
   );
-}
+});
 
 function InspectorActionButton({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (

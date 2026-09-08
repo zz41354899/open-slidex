@@ -34,30 +34,33 @@ function escapeRuntimeTemplateLiteral(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
 }
 
-const runtimeVertexShader = escapeRuntimeTemplateLiteral(PAPER_SHADER_VERTEX);
-const escapedSwirl = escapeRuntimeTemplateLiteral(swirlFragmentShader);
-const escapedMeshGradient = escapeRuntimeTemplateLiteral(meshGradientFragmentShader);
-const escapedStaticMeshGradient = escapeRuntimeTemplateLiteral(staticMeshGradientFragmentShader);
-const escapedGemSmoke = escapeRuntimeTemplateLiteral(gemSmokeFragmentShader);
-const escapedDithering = escapeRuntimeTemplateLiteral(ditheringFragmentShader);
-const escapedImageDithering = escapeRuntimeTemplateLiteral(imageDitheringFragmentShader);
-const escapedDotOrbit = escapeRuntimeTemplateLiteral(dotOrbitFragmentShader);
-const escapedGodRays = escapeRuntimeTemplateLiteral(godRaysFragmentShader);
-const escapedNeuroNoise = escapeRuntimeTemplateLiteral(neuroNoiseFragmentShader);
-const escapedLiquidMetal = escapeRuntimeTemplateLiteral(liquidMetalFragmentShader);
-const escapedGrainGradient = escapeRuntimeTemplateLiteral(grainGradientFragmentShader);
-const escapedMetaballs = escapeRuntimeTemplateLiteral(metaballsFragmentShader);
-const escapedPaperTexture = escapeRuntimeTemplateLiteral(paperTextureFragmentShader);
-const escapedFlutedGlass = escapeRuntimeTemplateLiteral(flutedGlassFragmentShader);
-const escapedWater = escapeRuntimeTemplateLiteral(waterFragmentShader);
-const escapedHeatmap = escapeRuntimeTemplateLiteral(heatmapFragmentShader);
-const escapedHalftoneDots = escapeRuntimeTemplateLiteral(halftoneDotsFragmentShader);
-const escapedHalftoneCmyk = escapeRuntimeTemplateLiteral(halftoneCmykFragmentShader);
-const escapedPaperShaderRuntimePresets = escapeRuntimeTemplateLiteral(JSON.stringify(paperShaderRuntimePresetTable()));
-const escapedPaperImageFilterRuntimePresets = escapeRuntimeTemplateLiteral(JSON.stringify(paperImageFilterRuntimePresetTable()));
+let cachedRuntime: string | undefined;
 
 export function makeMotionDocExportRuntime() {
-  return `      (() => {
+  if (cachedRuntime !== undefined) return cachedRuntime;
+  const runtimeVertexShader = escapeRuntimeTemplateLiteral(PAPER_SHADER_VERTEX);
+  const escapedSwirl = escapeRuntimeTemplateLiteral(swirlFragmentShader);
+  const escapedMeshGradient = escapeRuntimeTemplateLiteral(meshGradientFragmentShader);
+  const escapedStaticMeshGradient = escapeRuntimeTemplateLiteral(staticMeshGradientFragmentShader);
+  const escapedGemSmoke = escapeRuntimeTemplateLiteral(gemSmokeFragmentShader);
+  const escapedDithering = escapeRuntimeTemplateLiteral(ditheringFragmentShader);
+  const escapedImageDithering = escapeRuntimeTemplateLiteral(imageDitheringFragmentShader);
+  const escapedDotOrbit = escapeRuntimeTemplateLiteral(dotOrbitFragmentShader);
+  const escapedGodRays = escapeRuntimeTemplateLiteral(godRaysFragmentShader);
+  const escapedNeuroNoise = escapeRuntimeTemplateLiteral(neuroNoiseFragmentShader);
+  const escapedLiquidMetal = escapeRuntimeTemplateLiteral(liquidMetalFragmentShader);
+  const escapedGrainGradient = escapeRuntimeTemplateLiteral(grainGradientFragmentShader);
+  const escapedMetaballs = escapeRuntimeTemplateLiteral(metaballsFragmentShader);
+  const escapedPaperTexture = escapeRuntimeTemplateLiteral(paperTextureFragmentShader);
+  const escapedFlutedGlass = escapeRuntimeTemplateLiteral(flutedGlassFragmentShader);
+  const escapedWater = escapeRuntimeTemplateLiteral(waterFragmentShader);
+  const escapedHeatmap = escapeRuntimeTemplateLiteral(heatmapFragmentShader);
+  const escapedHalftoneDots = escapeRuntimeTemplateLiteral(halftoneDotsFragmentShader);
+  const escapedHalftoneCmyk = escapeRuntimeTemplateLiteral(halftoneCmykFragmentShader);
+  const escapedPaperShaderRuntimePresets = escapeRuntimeTemplateLiteral(JSON.stringify(paperShaderRuntimePresetTable()));
+  const escapedPaperImageFilterRuntimePresets = escapeRuntimeTemplateLiteral(JSON.stringify(paperImageFilterRuntimePresetTable()));
+
+  return cachedRuntime = `      (() => {
         const slides = Array.from(document.querySelectorAll(".slide"));
         const progress = document.querySelector(".progress span");
         const current = document.querySelector("[data-current]");

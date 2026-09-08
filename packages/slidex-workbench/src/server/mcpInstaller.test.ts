@@ -50,5 +50,5 @@ test("Claude Desktop installation preserves unrelated servers", async (context) 
   assert.equal(result.action, "added");
   assert.equal(written.theme, "dark");
   assert.equal(written.mcpServers.other.command, "keep");
-  assert.equal(written.mcpServers.open_slidex_workspace.command, hostPlatform === "windows" ? "cmd" : "npx");
+  assert.equal(written.mcpServers.open_slidex_workspace.command, hostPlatform === "windows" ? "powershell.exe" : "npx");
 });

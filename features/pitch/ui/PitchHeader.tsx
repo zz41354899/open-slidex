@@ -1,10 +1,10 @@
 
-import type { ReactNode, RefObject } from "react";
+import { memo, type ReactNode, type RefObject } from "react";
 
 import { EditorHeader, type EditorHeaderBadge, type EditorZoomLevel } from "@/common/ui/editor/EditorPrimitives";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 
-export function PitchHeader({
+export const PitchHeader = memo(function PitchHeader({
   accessMode,
   actualScale,
   badge,
@@ -111,4 +111,4 @@ export function PitchHeader({
       zoomLevel={zoomLevel}
     />
   );
-}
+});

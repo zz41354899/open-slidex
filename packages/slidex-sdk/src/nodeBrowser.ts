@@ -1,4 +1,10 @@
-import { chromium, type Browser, type BrowserContextOptions, type Page } from "playwright-core";
+import {
+  chromium,
+  type Browser,
+  type BrowserContext,
+  type BrowserContextOptions,
+  type Page
+} from "playwright-core";
 
 const idleTimeoutMilliseconds = 30_000;
 let pooledBrowser: Browser | undefined;
@@ -25,15 +31,28 @@ export async function withSlideXChromiumPage<T>(
   signal?: AbortSignal
 ) {
   signal?.throwIfAborted();
-  const browser = await acquireBrowser();
-  signal?.throwIfAborted();
   activePages += 1;
+  let context: BrowserContext | undefined;
   let page: Page | undefined;
   const abort = () => {
-    void page?.close().catch(() => undefined);
+    void context?.close({ reason: "OpenSlideX rendering was cancelled." }).catch(() => undefined);
   };
   try {
-    page = await browser.newPage(options);
+    const browser = await abortable(
+      acquireBrowser(),
+      signal,
+      () => scheduleIdleClose()
+    );
+    context = await abortable(
+      browser.newContext(options),
+      signal,
+      (lateContext) => void lateContext.close({ reason: "OpenSlideX rendering was cancelled." }).catch(() => undefined)
+    );
+    page = await abortable(
+      context.newPage(),
+      signal,
+      (latePage) => void latePage.context().close({ reason: "OpenSlideX rendering was cancelled." }).catch(() => undefined)
+    );
     signal?.addEventListener("abort", abort, { once: true });
     signal?.throwIfAborted();
     return await action(page);
@@ -42,7 +61,7 @@ export async function withSlideXChromiumPage<T>(
     throw error;
   } finally {
     signal?.removeEventListener("abort", abort);
-    await page?.close().catch(() => undefined);
+    await context?.close().catch(() => undefined);
     activePages -= 1;
     scheduleIdleClose();
   }
@@ -97,4 +116,41 @@ function scheduleIdleClose() {
     void closeSlideXChromiumPool();
   }, idleTimeoutMilliseconds);
   idleTimer.unref?.();
+}
+
+function abortable<T>(
+  operation: Promise<T>,
+  signal?: AbortSignal,
+  disposeLateValue?: (value: T) => void
+) {
+  if (!signal) return operation;
+  signal.throwIfAborted();
+  return new Promise<T>((resolve, reject) => {
+    let settled = false;
+    const abort = () => {
+      if (settled) return;
+      settled = true;
+      signal.removeEventListener("abort", abort);
+      reject(signal.reason ?? new Error("OpenSlideX rendering was cancelled."));
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) abort();
+    operation.then(
+      (value) => {
+        if (settled) {
+          disposeLateValue?.(value);
+          return;
+        }
+        settled = true;
+        signal.removeEventListener("abort", abort);
+        resolve(value);
+      },
+      (error) => {
+        if (settled) return;
+        settled = true;
+        signal.removeEventListener("abort", abort);
+        reject(error);
+      }
+    );
+  });
 }

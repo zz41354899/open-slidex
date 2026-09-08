@@ -1,5 +1,5 @@
 
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, memo, Suspense, useEffect, useState } from "react";
 import { Code2, LoaderCircle, RefreshCw, X } from "lucide-react";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import type { PitchWorkspaceProps } from "@/features/pitch/ui/workspace/PitchWorkspaceTypes";
@@ -9,7 +9,7 @@ const MDX_EDITOR_LOADING_MINIMUM_MS = 180;
 
 export function preloadMdxEditorPane() {
   mdxEditorPanePromise ??= import("@/features/pitch/ui/MdxEditorPane").catch((error: unknown) => {
-    // A transient chunk/network failure must not poison every future MDX open.
+    // A transient chunk/network failure must not poison every future TSX open.
     mdxEditorPanePromise = undefined;
     throw error;
   });
@@ -22,10 +22,10 @@ type WorkspaceCodeEditorOverlayProps = Pick<PitchWorkspaceProps, "commands" | "d
   sceneCount: number;
 };
 
-export function WorkspaceCodeEditorOverlay({ commands, document, sceneCount, selection, view }: WorkspaceCodeEditorOverlayProps) {
+export const WorkspaceCodeEditorOverlay = memo(function WorkspaceCodeEditorOverlay({ commands, document, sceneCount, selection, view }: WorkspaceCodeEditorOverlayProps) {
   if (!view.isCodeEditorOpen) return null;
   return <MdxEditorSession commands={commands} document={document} sceneCount={sceneCount} selection={selection} view={view} />;
-}
+});
 
 function MdxEditorSession({ commands, document, sceneCount, selection, view }: WorkspaceCodeEditorOverlayProps) {
   const { tx } = usePitchI18n();
@@ -45,7 +45,7 @@ function MdxEditorSession({ commands, document, sceneCount, selection, view }: W
         if (!cancelled) setIsMdxEditorReady(true);
       }, remainingDelay);
     }).catch(() => {
-      if (!cancelled) setLoadError(tx("Could not open MDX editor."));
+      if (!cancelled) setLoadError(tx("Could not open code editor."));
     });
 
     return () => {
@@ -63,10 +63,10 @@ function MdxEditorSession({ commands, document, sceneCount, selection, view }: W
         <div className="flex items-center justify-between border-b border-white/[0.08] bg-white/[0.02] px-5 py-4">
           <div className="flex items-center gap-2.5">
             <Code2 className="text-[#a78bfa]" size={16} />
-            <span className="text-sm font-semibold tracking-wide text-white">{tx("MDX Editor")}</span>
+            <span className="text-sm font-semibold tracking-wide text-white">{tx("Code Editor")}</span>
           </div>
           <button
-            aria-label={tx("Close MDX editor")}
+            aria-label={tx("Close code editor")}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 transition-all hover:bg-white/10 hover:text-white"
             onClick={() => view.setIsCodeEditorOpen(false)}
             type="button"
@@ -75,7 +75,7 @@ function MdxEditorSession({ commands, document, sceneCount, selection, view }: W
           </button>
         </div>
         {loadError ? <MdxEditorLoadError label={loadError} onRetry={() => setLoadAttempt((attempt) => attempt + 1)} retryLabel={tx("Try again")} /> : isMdxEditorReady ? (
-          <Suspense fallback={<MdxEditorLoading label={tx("Opening MDX editor…")} />}>
+          <Suspense fallback={<MdxEditorLoading label={tx("Opening code editor…")} />}>
             <MdxEditorPane
               copySource={commands.copySource}
               onSelectionSourceChange={commands.updateSelectionMdx}
@@ -89,7 +89,7 @@ function MdxEditorSession({ commands, document, sceneCount, selection, view }: W
               source={document.source}
             />
           </Suspense>
-        ) : <MdxEditorLoading label={tx("Reading presentation.mdx…")} />}
+        ) : <MdxEditorLoading label={tx("Reading presentation.tsx…")} />}
       </div>
     </div>
   );

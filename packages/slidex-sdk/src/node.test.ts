@@ -4,7 +4,9 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  rename,
   rm,
+  symlink,
   writeFile
 } from "node:fs/promises";
 import { execFile } from "node:child_process";
@@ -24,6 +26,7 @@ import {
   exportSlideXDocument,
   importSlideXImageAsset,
   importSlideXVideoAsset,
+  openExistingFileInsideRoot,
   renderSlideXDocument,
   renderSlideXHtmlThumbnail,
   SlideXFileDocumentAdapter,
@@ -47,13 +50,14 @@ test.after(async () => {
   await packagedRuntime.closeSlideXChromiumPool();
 });
 
-test("HTML thumbnails load external scripts, images, and video URLs", async (context) => {
+test("HTML thumbnails block external and private-network resources", async (context) => {
   if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
     context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
     return;
   }
 
   const hits = new Set<string>();
+  let websocketUpgrades = 0;
   const server = createServer((request, response) => {
     const pathname = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
     hits.add(pathname);
@@ -80,6 +84,10 @@ test("HTML thumbnails load external scripts, images, and video URLs", async (con
     response.statusCode = 404;
     response.end("Not found");
   });
+  server.on("upgrade", (_request, socket) => {
+    websocketUpgrades += 1;
+    socket.destroy();
+  });
   const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-network-html-"));
   const outputPath = path.join(root, "external-resources.png");
 
@@ -100,21 +108,105 @@ test("HTML thumbnails load external scripts, images, and video URLs", async (con
             <img src="${origin}/image.svg" alt="External image">
             <video src="${origin}/clip.mp4" poster="${origin}/image.svg" muted playsinline preload="auto"></video>
             <script src="${origin}/runtime.js"></script>
+            <script>new WebSocket("ws://127.0.0.1:${address.port}/socket")</script>
           </body>
         </html>`,
       outputPath,
       page: 1
     });
 
-    assert.ok(hits.has("/runtime.js"), "expected the external script request");
-    assert.ok(hits.has("/image.svg"), "expected the external image request");
-    assert.ok(hits.has("/clip.mp4"), "expected the external video request");
+    assert.deepEqual([...hits], []);
+    assert.equal(websocketUpgrades, 0);
     const stats = await sharp(outputPath).stats();
-    assert.ok(stats.channels[1].mean > 245, "expected the external script to update the rendered page");
-    assert.ok(stats.channels[0].mean < 20, "expected the original red fallback to be replaced");
+    assert.ok(stats.channels[0].mean > 245, "expected the original red fallback to remain");
+    assert.ok(stats.channels[1].mean < 20, "expected the external script to stay blocked");
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));
     await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("HTML thumbnails terminate attacker scripts at the hard rendering deadline", async (context) => {
+  if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
+    context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
+    return;
+  }
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-html-deadline-"));
+  try {
+    await closeSlideXChromiumPool();
+    const acquisitionStartedAt = Date.now();
+    await assert.rejects(
+      () => renderSlideXHtmlThumbnail({
+        html: "<!doctype html><html><body>launch deadline</body></html>",
+        maximumDurationMs: 1,
+        outputPath: path.join(root, "launch-blocked.png"),
+        page: 1
+      }),
+      /HTML thumbnail rendering exceeded the 1 ms time budget/
+    );
+    assert.ok(Date.now() - acquisitionStartedAt < 5_000, "expected browser acquisition to obey the total deadline");
+
+    const startedAt = Date.now();
+    await assert.rejects(
+      () => renderSlideXHtmlThumbnail({
+        html: "<!doctype html><html><body><script>while (true) {}</script></body></html>",
+        maximumDurationMs: 250,
+        outputPath: path.join(root, "blocked.png"),
+        page: 1
+      }),
+      /HTML thumbnail rendering exceeded the 250 ms time budget/
+    );
+    assert.ok(Date.now() - startedAt < 5_000, "expected the stalled renderer to be terminated promptly");
+
+    const outputPath = path.join(root, "control.png");
+    await renderSlideXHtmlThumbnail({
+      html: "<!doctype html><html><body style='margin:0;background:#2563eb'></body></html>",
+      maximumDurationMs: 5_000,
+      outputPath,
+      page: 1
+    });
+    assert.equal((await sharp(outputPath).metadata()).width, 1920);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("file document adapter rejects a presentation symlink outside its project root", async () => {
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-symlink-document-"));
+  const root = path.join(workspace, "deck");
+  const outside = path.join(workspace, "outside.tsx");
+  try {
+    await mkdir(root);
+    await writeFile(outside, "export default 'secret'", "utf8");
+    await symlink(outside, path.join(root, "presentation.tsx"));
+    const adapter = new SlideXFileDocumentAdapter({ projectRoot: root });
+    await assert.rejects(() => adapter.open(), /Symbolic links are not allowed/);
+    await assert.rejects(() => adapter.exists(), /Symbolic links are not allowed/);
+  } finally {
+    await rm(workspace, { force: true, recursive: true });
+  }
+});
+
+test("validated file handles stay pinned when an ancestor path is replaced", async () => {
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-pinned-handle-"));
+  const root = path.join(workspace, "deck");
+  const assets = path.join(root, "assets");
+  const movedAssets = path.join(root, "assets-original");
+  const outside = path.join(workspace, "outside");
+  try {
+    await Promise.all([mkdir(assets, { recursive: true }), mkdir(outside)]);
+    await writeFile(path.join(assets, "value.txt"), "inside", "utf8");
+    await writeFile(path.join(outside, "value.txt"), "outside", "utf8");
+    const handle = await openExistingFileInsideRoot(root, "assets/value.txt");
+    try {
+      await rename(assets, movedAssets);
+      await symlink(outside, assets);
+      assert.equal(await handle.readFile("utf8"), "inside");
+    } finally {
+      await handle.close();
+    }
+  } finally {
+    await rm(workspace, { force: true, recursive: true });
   }
 });
 
@@ -285,6 +377,29 @@ test("PowerPoint shader backgrounds are stored as real PNG media", async (contex
   }
 });
 
+test("PowerPoint export rejects private HTTPS media in every renderable property before Chromium work", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-sdk-pptx-ssrf-"));
+  try {
+    const cases = [
+      '<Slide><ImageBlock id="private-image" x={10} y={10} w={80} h={80} src="https://127.0.0.1/internal.png" /></Slide>',
+      '<Slide backgroundImage="https://[::1]/background.png"><Text id="title">Blocked</Text></Slide>',
+      '<Slide><Shape id="private-shape" shape="rectangle" shapeImageSrc="https://127.1/shape.png" /></Slide>'
+    ];
+    for (const [index, source] of cases.entries()) {
+      await assert.rejects(
+        () => exportSlideXDocument({
+          format: "pptx",
+          outputPath: path.join(root, `blocked-${index}.pptx`),
+          source: `# Private image\n\n${source}`
+        }),
+        /public addresses/
+      );
+    }
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
 test("PowerPoint paper-texture backgrounds do not freeze an opaque black placeholder", async (context) => {
   if (!process.env.OPEN_SLIDEX_CHROMIUM_EXECUTABLE) {
     context.skip("OPEN_SLIDEX_CHROMIUM_EXECUTABLE is not configured");
@@ -388,7 +503,7 @@ test("file adapter uses revision CAS and does not persist a stale save", async (
       SlideXRevisionConflictError
     );
     assert.equal((await adapter.open()).revision, saved.revision);
-    assert.match(await readFile(path.join(root, "presentation.mdx"), "utf8"), /^# Saved/);
+    assert.match(await readFile(path.join(root, "presentation.tsx"), "utf8"), /title:\s*"Saved"/);
   } finally {
     await rm(root, { force: true, recursive: true });
   }
@@ -409,7 +524,7 @@ A **bold** sentence and a [link](https://example.com).
 
 </Slide>`;
   try {
-    const adapter = new SlideXFileDocumentAdapter({ projectRoot: root });
+    const adapter = new SlideXFileDocumentAdapter({ documentPath: "presentation.mdx", projectRoot: root });
     const created = await adapter.create(source);
     assert.match(created.source, /## Keep this Markdown <!-- slidex-block-id:block-/);
     assert.match(created.source, /A \*\*bold\*\* sentence/);
@@ -587,7 +702,7 @@ test("two concurrent writers cannot both commit the same revision", async () => 
     );
     const rejected = results.find((result) => result.status === "rejected");
     assert.ok(rejected && rejected.status === "rejected");
-    assert.match(String(rejected.reason), /presentation\.mdx changed/);
+    assert.match(String(rejected.reason), /presentation\.tsx changed/);
   } finally {
     await rm(root, { force: true, recursive: true });
   }

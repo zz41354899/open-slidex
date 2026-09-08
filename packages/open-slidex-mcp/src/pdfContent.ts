@@ -9,6 +9,26 @@ import { pdf as rasterizePdf } from "pdf-to-img";
 const maximumPdfPages = 200;
 const maximumEmbeddedImages = 100;
 const maximumFallbackPages = 50;
+const defaultMaximumDecodedPixels = 100_000_000;
+const defaultMaximumOutputBytes = 64 * 1024 * 1024;
+const defaultMaximumDurationMs = 30_000;
+const defaultMaximumTextDurationMs = 15_000;
+const defaultMaximumTextItems = 500_000;
+const defaultMaximumTextOutputBytes = 8 * 1024 * 1024;
+
+export type PdfMediaExtractionLimits = {
+  maximumDecodedPixels?: number;
+  maximumDurationMs?: number;
+  maximumOutputBytes?: number;
+  signal?: AbortSignal;
+};
+
+export type PdfTextExtractionLimits = {
+  maximumDurationMs?: number;
+  maximumItems?: number;
+  maximumOutputBytes?: number;
+  signal?: AbortSignal;
+};
 
 export type PdfMediaCandidate = {
   bytes: Uint8Array;
@@ -17,15 +37,52 @@ export type PdfMediaCandidate = {
   page: number;
 };
 
-export async function extractPdfTextPages(bytes: Uint8Array) {
-  const { document } = await openPdf(bytes);
+export async function extractPdfTextPages(
+  bytes: Uint8Array,
+  limits: PdfTextExtractionLimits = {}
+) {
+  limits.signal?.throwIfAborted();
+  const maximumDurationMs = positiveLimit(limits.maximumDurationMs, defaultMaximumTextDurationMs);
+  const maximumItems = positiveLimit(limits.maximumItems, defaultMaximumTextItems);
+  const maximumOutputBytes = positiveLimit(limits.maximumOutputBytes, defaultMaximumTextOutputBytes);
+  const deadline: PdfDeadline = {
+    label: "PDF text extraction",
+    maximumDurationMs,
+    signal: limits.signal,
+    startedAt: Date.now()
+  };
+  const { document } = await openPdf(bytes, deadline);
   try {
     const pages: string[] = [];
+    let extractedItems = 0;
+    let outputBytes = 0;
     for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
-      const page = await document.getPage(pageNumber);
-      const text = await page.getTextContent({ disableNormalization: false });
-      pages.push(text.items
-        .flatMap((item: unknown) => isTextItem(item) ? [item.str] : [])
+      assertWithinDuration(deadline);
+      const page = await withPdfDeadline(document.getPage(pageNumber), deadline);
+      const strings: string[] = [];
+      const reader = page.streamTextContent({ disableNormalization: false }).getReader();
+      let completed = false;
+      try {
+        while (true) {
+          const chunk = await withPdfDeadline(reader.read(), deadline);
+          if (chunk.done) {
+            completed = true;
+            break;
+          }
+          for (const item of chunk.value.items as unknown[]) {
+            if (!isTextItem(item)) continue;
+            assertWithinBudget(extractedItems, 1, maximumItems, "text item", deadline.label);
+            const addition = Buffer.byteLength(item.str) + (strings.length ? 1 : 0);
+            assertWithinBudget(outputBytes, addition, maximumOutputBytes, "output byte", deadline.label);
+            extractedItems += 1;
+            outputBytes += addition;
+            strings.push(item.str);
+          }
+        }
+      } finally {
+        if (completed) reader.releaseLock();
+      }
+      pages.push(strings
         .join(" ")
         .replace(/\s+/g, " ")
         .trim());
@@ -36,17 +93,36 @@ export async function extractPdfTextPages(bytes: Uint8Array) {
   }
 }
 
-export async function extractPdfMedia(bytes: Uint8Array, stem = "pdf") {
-  const { document, pdfjs } = await openPdf(bytes);
+export async function extractPdfMedia(
+  bytes: Uint8Array,
+  stem = "pdf",
+  limits: PdfMediaExtractionLimits = {}
+) {
+  limits.signal?.throwIfAborted();
+  const maximumDecodedPixels = positiveLimit(limits.maximumDecodedPixels, defaultMaximumDecodedPixels);
+  const maximumOutputBytes = positiveLimit(limits.maximumOutputBytes, defaultMaximumOutputBytes);
+  const maximumDurationMs = positiveLimit(limits.maximumDurationMs, defaultMaximumDurationMs);
+  const startedAt = Date.now();
+  const deadline: PdfDeadline = {
+    label: "PDF visual extraction",
+    maximumDecodedPixels,
+    maximumDurationMs,
+    signal: limits.signal,
+    startedAt
+  };
+  const { document, pdfjs } = await openPdf(bytes, deadline);
   const candidates: PdfMediaCandidate[] = [];
   const warnings: string[] = [];
+  let decodedPixels = 0;
+  let outputBytes = 0;
   let embeddedCount = 0;
   let fallbackCount = 0;
   let fallbackDocument: Awaited<ReturnType<typeof rasterizePdf>> | undefined;
   try {
     for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
-      const page = await document.getPage(pageNumber);
-      const operatorList = await page.getOperatorList();
+      assertWithinDuration(deadline);
+      const page = await withPdfDeadline(document.getPage(pageNumber), deadline);
+      const operatorList = await withPdfDeadline(page.getOperatorList(), deadline);
       const imageObjects = new Map<string, unknown>();
       let needsFallback = hasNonImageVisualPainting(operatorList.fnArray, pdfjs.OPS);
 
@@ -68,7 +144,7 @@ export async function extractPdfMedia(bytes: Uint8Array, stem = "pdf") {
           }
           identity = objectId;
           if (imageObjects.has(objectId)) continue;
-          image = await pageObject(page.objs, objectId).catch(() => undefined);
+          image = await withPdfDeadline(pageObject(page.objs, objectId), deadline).catch(() => undefined);
           imageObjects.set(objectId, image);
         } else if (
           operation === pdfjs.OPS.paintImageMaskXObject
@@ -83,11 +159,20 @@ export async function extractPdfMedia(bytes: Uint8Array, stem = "pdf") {
           needsFallback = true;
           continue;
         }
+        const pixels = pdfImagePixels(image);
+        if (pixels) assertWithinBudget(decodedPixels, pixels, maximumDecodedPixels, "decoded pixel", deadline.label);
+        if (pixels && isPdfImage(image)) {
+          assertWithinBudget(outputBytes, maximumPngAllocation(pixels, image.height), maximumOutputBytes, "output byte", deadline.label);
+        }
         const png = imageToPng(image);
+        assertWithinDuration(deadline);
         if (!png) {
           needsFallback = true;
           continue;
         }
+        assertWithinBudget(outputBytes, png.byteLength, maximumOutputBytes, "output byte", deadline.label);
+        decodedPixels += pixels;
+        outputBytes += png.byteLength;
         embeddedCount += 1;
         candidates.push({
           bytes: png,
@@ -98,13 +183,23 @@ export async function extractPdfMedia(bytes: Uint8Array, stem = "pdf") {
       }
 
       if (needsFallback && fallbackCount < maximumFallbackPages) {
+        assertWithinDuration(deadline);
+        const viewport = page.getViewport({ scale: 2 });
+        const fallbackPixels = Math.ceil(viewport.width) * Math.ceil(viewport.height);
+        assertWithinBudget(decodedPixels, fallbackPixels, maximumDecodedPixels, "decoded pixel", deadline.label);
+        assertWithinBudget(outputBytes, maximumPngAllocation(fallbackPixels, Math.ceil(viewport.height)), maximumOutputBytes, "output byte", deadline.label);
         fallbackCount += 1;
-        fallbackDocument ??= await rasterizePdf(new Uint8Array(bytes), { scale: 2 });
+        fallbackDocument ??= await withPdfDeadline(rasterizePdf(new Uint8Array(bytes), { scale: 2 }), deadline);
         if (fallbackDocument.length < pageNumber) {
           throw new Error(`PDF page ${pageNumber} is unavailable for fallback rendering.`);
         }
+        const fallbackBytes = new Uint8Array(await withPdfDeadline(fallbackDocument.getPage(pageNumber), deadline));
+        assertWithinDuration(deadline);
+        assertWithinBudget(outputBytes, fallbackBytes.byteLength, maximumOutputBytes, "output byte", deadline.label);
+        decodedPixels += fallbackPixels;
+        outputBytes += fallbackBytes.byteLength;
         candidates.push({
-          bytes: new Uint8Array(await fallbackDocument.getPage(pageNumber)),
+          bytes: fallbackBytes,
           fileName: `${safeStem(stem)}-page-${pageNumber}.png`,
           kind: "page-fallback",
           page: pageNumber
@@ -122,15 +217,33 @@ export async function extractPdfMedia(bytes: Uint8Array, stem = "pdf") {
   }
 }
 
-async function openPdf(bytes: Uint8Array) {
+type PdfDeadline = {
+  label: "PDF text extraction" | "PDF visual extraction";
+  maximumDecodedPixels?: number;
+  maximumDurationMs: number;
+  signal?: AbortSignal;
+  startedAt: number;
+};
+
+async function openPdf(bytes: Uint8Array, deadline?: PdfDeadline) {
   installCanvasGlobals();
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const loading = pdfjs.getDocument({
+    canvasMaxAreaInBytes: Math.min(deadline?.maximumDecodedPixels ?? 40_000_000, 40_000_000) * 4,
     data: new Uint8Array(bytes),
     isEvalSupported: false,
+    maxImageSize: Math.min(deadline?.maximumDecodedPixels ?? 40_000_000, 40_000_000),
     useSystemFonts: true
   });
-  const document = await loading.promise;
+  let document: Awaited<typeof loading.promise>;
+  try {
+    document = deadline
+      ? await withPdfDeadline(loading.promise, deadline)
+      : await loading.promise;
+  } catch (error) {
+    await loading.destroy().catch(() => undefined);
+    throw error;
+  }
   if (document.numPages < 1 || document.numPages > maximumPdfPages) {
     await document.destroy();
     throw new Error(`PDF sources must contain between 1 and ${maximumPdfPages} pages.`);
@@ -174,6 +287,79 @@ function imageToPng(value: unknown) {
   const context = canvas.getContext("2d");
   context.putImageData(new ImageData(pixels, value.width, value.height), 0, 0);
   return new Uint8Array(canvas.toBuffer("image/png"));
+}
+
+function pdfImagePixels(value: unknown) {
+  if (!isPdfImage(value)) return 0;
+  const pixels = value.width * value.height;
+  if (!Number.isSafeInteger(pixels) || pixels < 1 || pixels > 40_000_000) {
+    throw new Error("PDF visual extraction exceeded the per-image decoded pixel budget (40000000).");
+  }
+  return pixels;
+}
+
+function maximumPngAllocation(pixels: number, height: number) {
+  const maximum = pixels * 4 + height + 65_536;
+  return Number.isSafeInteger(maximum) ? maximum : Number.POSITIVE_INFINITY;
+}
+
+function positiveLimit(value: number | undefined, fallback: number) {
+  return Number.isSafeInteger(value) && value! > 0 ? value! : fallback;
+}
+
+function assertWithinBudget(
+  current: number,
+  addition: number,
+  maximum: number,
+  label: string,
+  operation = "PDF visual extraction"
+) {
+  if (!Number.isSafeInteger(addition) || addition < 0 || current + addition > maximum) {
+    throw new Error(`${operation} exceeded the cumulative ${label} budget (${maximum}).`);
+  }
+}
+
+function assertWithinDuration(deadline: PdfDeadline) {
+  deadline.signal?.throwIfAborted();
+  if (Date.now() - deadline.startedAt > deadline.maximumDurationMs) {
+    throw new Error(`${deadline.label} exceeded the ${deadline.maximumDurationMs} ms time budget.`);
+  }
+}
+
+async function withPdfDeadline<T>(operation: Promise<T>, deadline: PdfDeadline): Promise<T> {
+  assertWithinDuration(deadline);
+  const remaining = Math.max(1, deadline.maximumDurationMs - (Date.now() - deadline.startedAt));
+  return new Promise<T>((resolve, reject) => {
+    let settled = false;
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      deadline.signal?.removeEventListener("abort", abort);
+      callback();
+    };
+    const abort = () => finish(() => reject(deadline.signal?.reason ?? new Error("PDF visual extraction was cancelled.")));
+    const timer = setTimeout(
+      () => finish(() => reject(new Error(`${deadline.label} exceeded the ${deadline.maximumDurationMs} ms time budget.`))),
+      remaining
+    );
+    deadline.signal?.addEventListener("abort", abort, { once: true });
+    if (deadline.signal?.aborted) abort();
+    operation.then(
+      (value) => finish(() => resolve(value)),
+      (error) => finish(() => {
+        if (deadline.signal?.aborted) {
+          reject(deadline.signal.reason ?? new Error("PDF visual extraction was cancelled."));
+          return;
+        }
+        if (Date.now() - deadline.startedAt >= deadline.maximumDurationMs) {
+          reject(new Error(`${deadline.label} exceeded the ${deadline.maximumDurationMs} ms time budget.`));
+          return;
+        }
+        reject(error);
+      })
+    );
+  });
 }
 
 function rgbaPixels(image: PdfImage) {

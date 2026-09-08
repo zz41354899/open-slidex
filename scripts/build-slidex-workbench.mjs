@@ -40,6 +40,9 @@ await esbuild({
   bundle: true,
   entryPoints: [path.join(packageDir, "src/cli.ts")],
   external: [
+    // TSX compilation is a Node-side runtime dependency. Keep esbuild's
+    // CommonJS worker loader out of the generated ESM CLI bundle.
+    "esbuild",
     // `sharp` is provided by the published open-slidex package. Bundling its
     // CommonJS dependency chain into this ESM entrypoint breaks Node's dynamic
     // require shim before the Workbench can start.

@@ -1,21 +1,29 @@
 import { useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
-import { parseMotionDoc, summarizeMotionDoc } from "@open-slidex/sdk";
+import { summarizeMotionDoc } from "@open-slidex/sdk";
 
-import { localWorkbenchApiPath, readDocument, saveDocument } from "./api";
+import { localWorkbenchApiPath, migrateDocument, readDocument, saveDocument } from "./api";
+import { persistLocalDraft, readLocalDraft, removeLocalDraft } from "./draftStorage";
+import { latestRequest } from "./latestRequest";
+import { createSourceValidator } from "./sourceValidation";
 import type {
   DocumentSnapshot,
   SaveState,
-  StoredDraft,
   ValidationResult
 } from "./domain";
 
 export const LOCAL_DRAFT_DELAY_MS = 250;
+export const SOURCE_VALIDATION_DELAY_MS = 120;
 // The Workspace API and its per-deck router can be launched independently of
 // the Vite client. Keep the opening state while that local process finishes
 // booting instead of briefly presenting a fatal error that a retry resolves.
 export const INITIAL_DOCUMENT_READ_RETRY_DELAYS_MS = [250, 750, 1_500, 2_500] as const;
 
 export function scheduleLocalDraftPersist(callback: () => void, delay = LOCAL_DRAFT_DELAY_MS) {
+  const timeout = window.setTimeout(callback, delay);
+  return () => window.clearTimeout(timeout);
+}
+
+export function scheduleSourceValidation(callback: () => void, delay = SOURCE_VALIDATION_DELAY_MS) {
   const timeout = window.setTimeout(callback, delay);
   return () => window.clearTimeout(timeout);
 }
@@ -71,24 +79,23 @@ export function useLocalDocument() {
   const sourceRef = useRef("");
   const savedSourceRef = useRef("");
   const projectIdRef = useRef("");
+  const sourceFormatRef = useRef<"mdx" | "tsx">("tsx");
   const saveInFlight = useRef(false);
   const externalMutationInFlight = useRef(false);
   const [externalMutationVersion, setExternalMutationVersion] = useState(0);
   const saveStateRef = useRef<SaveState>("loading");
+  const validatorRef = useRef<ReturnType<typeof createSourceValidator> | null>(null);
+  const validatedRef = useRef<{ source: string; validation: ValidationResult; title: string } | null>(null);
+  useEffect(() => {
+    const validator = createSourceValidator();
+    validatorRef.current = validator;
+    return () => { validator.dispose(); validatorRef.current = null; };
+  }, []);
 
   const setState = useCallback((state: SaveState) => {
     saveStateRef.current = state;
     setSaveState(state);
   }, []);
-
-  const draftKey = useCallback(
-    () => `slidex-workbench:draft:${projectIdRef.current || "opening"}`,
-    []
-  );
-
-  const storeDraft = useCallback((draft: StoredDraft) => {
-    localStorage.setItem(draftKey(), JSON.stringify(draft));
-  }, [draftKey]);
 
   const applySource = useCallback((nextSource: string) => {
     sourceRef.current = nextSource;
@@ -101,38 +108,50 @@ export function useLocalDocument() {
 
   useEffect(() => {
     if (!shouldValidateDeferredSource(projectIdRef.current, deferredSource, sourceRef.current)) return;
-    const nextValidation = validateSource(deferredSource);
-    setValidation(nextValidation);
-    const dirty = deferredSource !== savedSourceRef.current;
-    setState(nextValidation.isValid ? (dirty ? "dirty" : "saved") : "invalid");
+    if (validatedRef.current?.source === deferredSource) return;
+    let cancelled = false;
+    const cancel = scheduleSourceValidation(async () => {
+      if (!shouldValidateDeferredSource(projectIdRef.current, deferredSource, sourceRef.current)) return;
+      const result = await validatorRef.current?.validate(deferredSource);
+      if (cancelled || !result || deferredSource !== sourceRef.current) return;
+      validatedRef.current = { source: deferredSource, ...result };
+      const nextValidation = result.validation;
+      setValidation(nextValidation);
+      const dirty = deferredSource !== savedSourceRef.current;
+      if (!saveInFlight.current && saveStateRef.current !== "conflict") setState(nextValidation.isValid ? (dirty ? "dirty" : "saved") : "invalid");
+    });
+    return () => { cancelled = true; cancel(); };
   }, [deferredSource, setState]);
 
   useEffect(() => {
     if (!projectIdRef.current || source === savedSourceRef.current) {
-      localStorage.removeItem(draftKey());
+      if (projectIdRef.current) void removeLocalDraft(projectIdRef.current);
       return;
     }
 
     return scheduleLocalDraftPersist(() => {
-      storeDraft({
+      void persistLocalDraft(projectIdRef.current, {
         baseRevision: revisionRef.current,
         source,
+        sourceFormat: sourceFormatRef.current,
         updatedAt: new Date().toISOString()
       });
     });
-  }, [draftKey, source, storeDraft]);
+  }, [source]);
 
   const acceptSnapshot = useCallback((next: DocumentSnapshot, note = "") => {
+    validatedRef.current = { source: next.source, validation: next.validation, title: next.title };
     revisionRef.current = next.revision;
     savedSourceRef.current = next.source;
     sourceRef.current = next.source;
     projectIdRef.current = next.projectId;
+    sourceFormatRef.current = sourceFormatOf(next);
     setSnapshot(next);
     setSource(next.source);
     setValidation(next.validation);
     setState("saved");
     setMessage(note);
-    localStorage.removeItem(`slidex-workbench:draft:${next.projectId}`);
+    void removeLocalDraft(next.projectId);
   }, [setState]);
 
   const beginExternalMutation = useCallback(() => {
@@ -183,6 +202,7 @@ export function useLocalDocument() {
     savedSourceRef.current = next.source;
     sourceRef.current = nextSource;
     projectIdRef.current = next.projectId;
+    sourceFormatRef.current = sourceFormatOf(next);
     setSnapshot(next);
     setSource(nextSource);
     const nextValidation = nextSource === next.source ? next.validation : validateSource(nextSource);
@@ -195,7 +215,7 @@ export function useLocalDocument() {
       setMessage("");
     }
     if (nextSource === next.source) {
-      localStorage.removeItem(`slidex-workbench:draft:${next.projectId}`);
+      void removeLocalDraft(next.projectId);
     }
     setExternalMutationVersion((version) => version + 1);
 
@@ -206,13 +226,15 @@ export function useLocalDocument() {
   useEffect(() => {
     let cancelled = false;
     void readInitialDocument(readDocument)
-      .then((next) => {
+      .then(async (next) => {
+        const draft = await readLocalDraft(next.projectId, sourceFormatOf(next));
         if (cancelled) return;
         projectIdRef.current = next.projectId;
         revisionRef.current = next.revision;
         savedSourceRef.current = next.source;
+        sourceFormatRef.current = sourceFormatOf(next);
         setSnapshot(next);
-        const draft = readDraft(`slidex-workbench:draft:${next.projectId}`);
+        validatedRef.current = { source: next.source, validation: next.validation, title: next.title };
         if (draft && draft.source !== next.source) {
           sourceRef.current = draft.source;
           setSource(draft.source);
@@ -241,7 +263,7 @@ export function useLocalDocument() {
       .catch((error: unknown) => {
         if (cancelled) return;
         setState("error");
-        setMessage(error instanceof Error ? error.message : "Could not open presentation.mdx.");
+        setMessage(error instanceof Error ? error.message : "Could not open presentation.tsx.");
       });
     return () => {
       cancelled = true;
@@ -250,11 +272,17 @@ export function useLocalDocument() {
 
   const commit = useCallback(async (): Promise<DocumentSnapshot | undefined> => {
     const currentSource = sourceRef.current;
-    const currentValidation = validateSource(currentSource);
+    if (saveInFlight.current || externalMutationInFlight.current || saveStateRef.current === "conflict") return undefined;
+    if (currentSource === savedSourceRef.current) return snapshot ?? undefined;
+    const result = validatedRef.current?.source === currentSource
+      ? validatedRef.current
+      : await validatorRef.current?.validate(currentSource);
+    if (!result || currentSource !== sourceRef.current) return undefined;
+    const currentValidation = result.validation;
     setValidation(currentValidation);
     if (
       !currentValidation.isValid ||
-      saveStateRef.current === "conflict" ||
+      (saveStateRef.current as SaveState) === "conflict" ||
       saveInFlight.current ||
       externalMutationInFlight.current
     ) {
@@ -272,12 +300,13 @@ export function useLocalDocument() {
       const next = await saveDocument({
         expectedRevision: revisionRef.current,
         source: currentSource,
-        title: parseMotionDoc(currentSource).title
+        title: result.title
       });
       revisionRef.current = next.revision;
       savedSourceRef.current = next.source;
       setSnapshot(next);
-      localStorage.removeItem(draftKey());
+      validatedRef.current = { source: next.source, validation: next.validation, title: next.title };
+      void removeLocalDraft(projectIdRef.current);
       if (sourceRef.current === currentSource) {
         sourceRef.current = next.source;
         setSource(next.source);
@@ -292,7 +321,7 @@ export function useLocalDocument() {
       const apiError = error as Error & { code?: string };
       if (apiError.code === "revision_conflict") {
         setState("conflict");
-        setMessage("presentation.mdx changed outside the workbench. Your draft is still local.");
+        setMessage("presentation.tsx changed outside the workbench. Your draft is still local.");
       } else {
         setState("error");
         setMessage(apiError.message);
@@ -301,7 +330,7 @@ export function useLocalDocument() {
     } finally {
       saveInFlight.current = false;
     }
-  }, [draftKey, setState, snapshot]);
+  }, [setState, snapshot]);
 
   useEffect(() => {
     if (saveState !== "dirty") return;
@@ -322,28 +351,36 @@ export function useLocalDocument() {
 
   useEffect(() => {
     const events = new EventSource(localWorkbenchApiPath("/api/v1/events"));
-    const onChange = () => {
-      if (saveInFlight.current || externalMutationInFlight.current || !revisionRef.current) return;
-      void readDocument().then((remote) => {
+    let disposed = false;
+    const reads = latestRequest(async () => {
+      if (!revisionRef.current) return;
+      if (saveInFlight.current || externalMutationInFlight.current) { reads.schedule(undefined); return; }
+      const requestedRevision = revisionRef.current;
+      await readDocument().then((remote) => {
+        if (disposed) return;
+        if (saveInFlight.current || externalMutationInFlight.current) { reads.schedule(undefined); return; }
+        if (requestedRevision !== revisionRef.current) { reads.schedule(undefined); return; }
         if (remote.revision === revisionRef.current) return;
         if (sourceRef.current === savedSourceRef.current) {
           acceptSnapshot(remote, "Reloaded an external file change.");
           return;
         }
-        storeDraft({
+        void persistLocalDraft(projectIdRef.current, {
           baseRevision: revisionRef.current,
           source: sourceRef.current,
+          sourceFormat: sourceFormatRef.current,
           updatedAt: new Date().toISOString()
         });
         setState("conflict");
         setMessage("External change detected. Reload the file or keep a copy of this draft.");
       }).catch(() => undefined);
-    };
+    });
+    const onChange = () => reads.schedule(undefined);
     events.addEventListener("document.changed", onChange);
-    return () => events.close();
-  }, [acceptSnapshot, setState, storeDraft]);
+    return () => { disposed = true; reads.dispose(); events.close(); };
+  }, [acceptSnapshot, setState]);
 
-  const reload = useCallback(async (note = "Reloaded presentation.mdx.") => {
+  const reload = useCallback(async (note = "Reloaded presentation.tsx.") => {
     if (!snapshot) setState("loading");
     try {
       const next = await (snapshot ? readDocument() : readInitialDocument(readDocument));
@@ -351,21 +388,35 @@ export function useLocalDocument() {
       return next;
     } catch (error) {
       setState("error");
-      setMessage(error instanceof Error ? error.message : "Could not open presentation.mdx.");
+      setMessage(error instanceof Error ? error.message : "Could not open presentation.tsx.");
       throw error;
     }
   }, [acceptSnapshot, setState, snapshot]);
 
   const downloadDraft = useCallback(() => {
     const url = URL.createObjectURL(
-      new Blob([sourceRef.current], { type: "text/mdx;charset=utf-8" })
+      new Blob([sourceRef.current], { type: "text/typescript;charset=utf-8" })
     );
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "presentation.local-draft.mdx";
+    anchor.download = "presentation.local-draft.tsx";
     anchor.click();
     URL.revokeObjectURL(url);
   }, []);
+
+  const migrateLegacy = useCallback(async () => {
+    if (!snapshot?.requiresMigration) return snapshot ?? undefined;
+    setState("saving");
+    try {
+      const next = await migrateDocument(snapshot.revision);
+      acceptSnapshot(next, "Upgraded to presentation.tsx. The original MDX is preserved in .open-slidex/legacy/.");
+      return next;
+    } catch (error) {
+      setState("error");
+      setMessage(error instanceof Error ? error.message : "Could not upgrade the legacy MDX deck.");
+      return undefined;
+    }
+  }, [acceptSnapshot, setState, snapshot]);
 
   return {
     acceptExternalMutation,
@@ -376,6 +427,7 @@ export function useLocalDocument() {
     commit,
     downloadDraft,
     message,
+    migrateLegacy,
     reload,
     saveState,
     snapshot,
@@ -390,20 +442,10 @@ function validateSource(source: string): ValidationResult {
   ).validation;
 }
 
-function readDraft(key: string): StoredDraft | null {
-  try {
-    const value = JSON.parse(localStorage.getItem(key) ?? "null") as StoredDraft | null;
-    return value &&
-      typeof value.baseRevision === "string" &&
-      typeof value.source === "string" &&
-      typeof value.updatedAt === "string"
-      ? value
-      : null;
-  } catch {
-    return null;
-  }
-}
-
 function waitForDocumentRetry(delay: number) {
   return new Promise<void>((resolve) => window.setTimeout(resolve, delay));
+}
+
+function sourceFormatOf(snapshot: DocumentSnapshot): "mdx" | "tsx" {
+  return snapshot.sourceFormat ?? (snapshot.requiresMigration ? "mdx" : "tsx");
 }

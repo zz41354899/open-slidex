@@ -1,0 +1,288 @@
+import {
+  Chart,
+  Deck,
+  HtmlEmbed as HtmlEmbedBlock,
+  Image as ImageBlock,
+  Shape,
+  Slide,
+  Svg as SvgBlock,
+  Table,
+  Text,
+  Video as VideoBlock,
+  definePresentation,
+} from "@open-slidex/sdk/react";
+
+export default definePresentation({
+  title: "Product Launch Thirty-Page Reference",
+  component: function Presentation() {
+    return (
+      <Deck title="Product Launch Thirty-Page Reference">
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <ImageBlock id="product-launch-01-image" src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash cover photograph for Product Launch" fit="cover" x={55} y={0} w={45} h={100} radius={0} enter="fadeIn" />
+          <Text id="product-launch-01-label" x={7} y={13} w={39} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>PRODUCT RELEASE · EDITABLE REFERENCE</Text>
+          <Text id="product-launch-01-title" role="title" x={7} y={29} w={39} h={35} color="#17152A" fontFamily="Inter" fontSize={34} fontWeight={790} lineHeight={1.0} enter="rise">Show the transformation before the feature list.</Text>
+          <Text id="product-launch-01-thesis" x={7} y={69} w={37} h={12} color="#625E78" fontFamily="Inter" fontSize={12} lineHeight={1.4} enter="fadeUp">Show the transformation before listing the features.</Text>
+          <Text id="product-launch-01-meta" x={7} y={89} w={39} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>OPENSLIDEX · 30 NATIVE EDITABLE SLIDES · 01 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-02-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>02 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-02-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Orient the launch around one customer promise.</Text>
+          <Text id="product-launch-02-statement" x={7} y={47} w={54} h={20} color="#6C5CE7" fontFamily="Inter" fontSize={22} fontWeight={730} lineHeight={1.18} enter="rise">One claim, one proof, one implication.</Text>
+          <Text id="product-launch-02-body" x={68} y={46} w={25} h={24} color="#625E78" fontFamily="Inter" fontSize={11} lineHeight={1.45} enter="fadeUp">Replace this teaching copy with sourced evidence. Keep observation, interpretation, and action visually distinct.</Text>
+          <Text id="product-launch-02-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 02 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-03-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>03 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-03-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Introduce the promise before the product anatomy.</Text>
+          <Text id="product-launch-03-statement" x={7} y={47} w={54} h={20} color="#6C5CE7" fontFamily="Inter" fontSize={22} fontWeight={730} lineHeight={1.18} enter="rise">One claim, one proof, one implication.</Text>
+          <Text id="product-launch-03-body" x={68} y={46} w={25} h={24} color="#625E78" fontFamily="Inter" fontSize={11} lineHeight={1.45} enter="fadeUp">Replace this teaching copy with sourced evidence. Keep observation, interpretation, and action visually distinct.</Text>
+          <Text id="product-launch-03-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 03 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <ImageBlock id="product-launch-04-image" src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 4" fit="cover" x={55} y={0} w={45} h={100} radius={0} enter="fadeIn" />
+          <Text id="product-launch-04-label" x={7} y={13} w={41} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>04 · CONTEXT</Text>
+          <Text id="product-launch-04-title" role="title" x={7} y={34} w={41} h={33} color="#17152A" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">Name the user, moment, and old constraint.</Text>
+          <Text id="product-launch-04-body" x={7} y={69} w={38} h={14} color="#625E78" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="product-launch-04-page" x={7} y={90} w={6} h={4} color="#625E78" fontFamily="Inter" fontSize={8.5}>04 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-05-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>05 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-05-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Make the old friction unmistakable.</Text>
+          <Table id="product-launch-05-table" x={7} y={42} w={86} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#17152A" background="#FBFAFF" cellBackground="#EEEAFE" stripeBackground="#FBFAFF" borderColor="#6C5CE7" borderWidth={1} enter="fadeUp" />
+          <Text id="product-launch-05-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 05 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-06-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>06 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-06-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Reveal the first useful product moment.</Text>
+          <Chart id="product-launch-06-chart" type="line" x={7} y={42} w={50} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="draw" enter="fadeUp" />
+          <Text id="product-launch-06-insight" x={70} y={45} w={18} h={22} color="#17152A" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="product-launch-06-source" x={70} y={72} w={18} h={9} color="#625E78" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-07-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>07 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-07-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Compare the old and new experience.</Text>
+          <Shape id="product-launch-07-left-card" groupId="product-launch-07-left-card-group" groupName="CURRENT card" shape="rectangle" x={7} y={43} w={41} h={35} fill="#EEEAFE" stroke="#6C5CE7" strokeWidth={1} radius={10} enter="fadeUp" />
+          <Text id="product-launch-07-left-label" groupId="product-launch-07-left-card-group" groupName="CURRENT card" x={10} y={47} w={35} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1}>CURRENT</Text>
+          <Text id="product-launch-07-left-body" groupId="product-launch-07-left-card-group" groupName="CURRENT card" x={10} y={57} w={35} h={16} color="#17152A" fontFamily="Inter" fontSize={14} fontWeight={680} lineHeight={1.3}>State the observed condition and its evidence boundary.</Text>
+          <Shape id="product-launch-07-right-card" groupId="product-launch-07-right-card-group" groupName="TARGET card" shape="rectangle" x={52} y={43} w={41} h={35} fill="#EEEAFE" stroke="#6C5CE7" strokeWidth={1} radius={10} enter="fadeUp" />
+          <Text id="product-launch-07-right-label" groupId="product-launch-07-right-card-group" groupName="TARGET card" x={55} y={47} w={35} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1}>TARGET</Text>
+          <Text id="product-launch-07-right-body" groupId="product-launch-07-right-card-group" groupName="TARGET card" x={55} y={57} w={35} h={16} color="#17152A" fontFamily="Inter" fontSize={14} fontWeight={680} lineHeight={1.3}>State the changed condition and proof required.</Text>
+          <Text id="product-launch-07-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 07 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-08-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>08 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-08-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Connect capabilities to one transformed workflow.</Text>
+          <Shape id="product-launch-08-1-card" groupId="product-launch-08-1-card-group" groupName="Frame card" shape="rectangle" x={7} y={44} w={19} h={33} fill="#EEEAFE" stroke="#6C5CE7" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="product-launch-08-1-index" groupId="product-launch-08-1-card-group" groupName="Frame card" x={9} y={48} w={15} h={7} color="#6C5CE7" fontFamily="Inter" fontSize={13} fontWeight={780}>01</Text>
+          <Text id="product-launch-08-1-title" groupId="product-launch-08-1-card-group" groupName="Frame card" x={9} y={60} w={15} h={8} color="#17152A" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Frame</Text>
+          <Text id="product-launch-08-1-body" groupId="product-launch-08-1-card-group" groupName="Frame card" x={9} y={69} w={15} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="product-launch-08-2-card" groupId="product-launch-08-2-card-group" groupName="Evidence card" shape="rectangle" x={29} y={44} w={19} h={33} fill="#EEEAFE" stroke="#6C5CE7" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="product-launch-08-2-index" groupId="product-launch-08-2-card-group" groupName="Evidence card" x={31} y={48} w={15} h={7} color="#6C5CE7" fontFamily="Inter" fontSize={13} fontWeight={780}>02</Text>
+          <Text id="product-launch-08-2-title" groupId="product-launch-08-2-card-group" groupName="Evidence card" x={31} y={60} w={15} h={8} color="#17152A" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Evidence</Text>
+          <Text id="product-launch-08-2-body" groupId="product-launch-08-2-card-group" groupName="Evidence card" x={31} y={69} w={15} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="product-launch-08-3-card" groupId="product-launch-08-3-card-group" groupName="Choice card" shape="rectangle" x={51} y={44} w={19} h={33} fill="#EEEAFE" stroke="#6C5CE7" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="product-launch-08-3-index" groupId="product-launch-08-3-card-group" groupName="Choice card" x={53} y={48} w={15} h={7} color="#6C5CE7" fontFamily="Inter" fontSize={13} fontWeight={780}>03</Text>
+          <Text id="product-launch-08-3-title" groupId="product-launch-08-3-card-group" groupName="Choice card" x={53} y={60} w={15} h={8} color="#17152A" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Choice</Text>
+          <Text id="product-launch-08-3-body" groupId="product-launch-08-3-card-group" groupName="Choice card" x={53} y={69} w={15} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="product-launch-08-4-card" groupId="product-launch-08-4-card-group" groupName="Commit card" shape="rectangle" x={73} y={44} w={19} h={33} fill="#EEEAFE" stroke="#6C5CE7" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="product-launch-08-4-index" groupId="product-launch-08-4-card-group" groupName="Commit card" x={75} y={48} w={15} h={7} color="#6C5CE7" fontFamily="Inter" fontSize={13} fontWeight={780}>04</Text>
+          <Text id="product-launch-08-4-title" groupId="product-launch-08-4-card-group" groupName="Commit card" x={75} y={60} w={15} h={8} color="#17152A" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Commit</Text>
+          <Text id="product-launch-08-4-body" groupId="product-launch-08-4-card-group" groupName="Commit card" x={75} y={69} w={15} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Text id="product-launch-08-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 08 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-09-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>09 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-09-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Use proof, not feature count.</Text>
+          <Chart id="product-launch-09-chart" type="donut" x={17} y={42} w={50} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="sweep" enter="fadeUp" />
+          <Text id="product-launch-09-insight" x={70} y={45} w={18} h={22} color="#17152A" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="product-launch-09-source" x={70} y={72} w={18} h={9} color="#625E78" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <ImageBlock id="product-launch-10-image" src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 10" fit="cover" x={65} y={0} w={35} h={100} radius={0} enter="fadeIn" />
+          <Text id="product-launch-10-label" x={7} y={13} w={51} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>10 · CONTEXT</Text>
+          <Text id="product-launch-10-title" role="title" x={7} y={30} w={51} h={33} color="#17152A" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">Put the product inside the work it changes.</Text>
+          <Text id="product-launch-10-body" x={7} y={69} w={48} h={14} color="#625E78" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="product-launch-10-page" x={7} y={90} w={6} h={4} color="#625E78" fontFamily="Inter" fontSize={8.5}>10 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-11-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>11 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-11-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Align the launch team around customer evidence.</Text>
+          <Table id="product-launch-11-table" x={7} y={42} w={76} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#17152A" background="#FBFAFF" cellBackground="#EEEAFE" stripeBackground="#FBFAFF" borderColor="#6C5CE7" borderWidth={1} enter="fadeUp" />
+          <Text id="product-launch-11-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 11 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#15132D" theme="dark" slideTransition="wipe">
+          <Text id="product-launch-12-label" x={7} y={16} w={40} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={10} fontWeight={760} letterSpacing={1.6}>SECTION · 12</Text>
+          <Text id="product-launch-12-title" role="title" x={7} y={36} w={77} h={27} color="#F7FBFC" fontFamily="Inter" fontSize={35} fontWeight={780} lineHeight={1.04} enter="rise">Move from promise to the first useful proof.</Text>
+          <Text id="product-launch-12-body" x={7} y={72} w={50} h={10} color="#BECACD" fontFamily="Inter" fontSize={11.5} lineHeight={1.4}>A quiet chapter reset creates rhythm across a long presentation.</Text>
+          <Text id="product-launch-12-page" x={87} y={90} w={6} h={4} color="#6C5CE7" fontFamily="Inter" fontSize={8.5} textAlign="right">12 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-13-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>13 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-13-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Time to first value is the launch metric that matters.</Text>
+          <Text id="product-launch-13-value" x={7} y={44} w={36} h={23} color="#6C5CE7" fontFamily="Inter" fontSize={52} fontWeight={800} letterSpacing={-1.4} enter="rise">72</Text>
+          <Text id="product-launch-13-value-label" x={7} y={69} w={35} h={6} color="#625E78" fontFamily="Inter" fontSize={9} fontWeight={700} letterSpacing={1}>ILLUSTRATIVE SIGNAL INDEX</Text>
+          <Chart id="product-launch-13-chart" type="bar" x={51} y={42} w={42} h={39} data='[{"label":"Base","value":44},{"label":"Now","value":72},{"label":"Gate","value":61}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative hero metric comparison" chartMotion="grow" enter="fadeUp" />
+          <Text id="product-launch-13-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 13 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-14-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>14 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-14-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Show adoption as a sequence, not a vanity total.</Text>
+          <Chart id="product-launch-14-chart" type="line" x={27} y={42} w={50} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="draw" enter="fadeUp" />
+          <Text id="product-launch-14-insight" x={7} y={45} w={18} h={22} color="#17152A" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="product-launch-14-source" x={7} y={72} w={18} h={9} color="#625E78" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-15-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>15 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-15-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Tie every capability to a user moment and proof.</Text>
+          <Table id="product-launch-15-table" x={7} y={42} w={66} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#17152A" background="#FBFAFF" cellBackground="#EEEAFE" stripeBackground="#FBFAFF" borderColor="#6C5CE7" borderWidth={1} enter="fadeUp" />
+          <Text id="product-launch-15-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 15 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <ImageBlock id="product-launch-16-image" src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 16" fit="cover" x={50} y={0} w={50} h={100} radius={0} enter="fadeIn" />
+          <Text id="product-launch-16-label" x={7} y={13} w={36} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>16 · CONTEXT</Text>
+          <Text id="product-launch-16-title" role="title" x={7} y={31} w={36} h={33} color="#17152A" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">A credible use context makes the promise tangible.</Text>
+          <Text id="product-launch-16-body" x={7} y={69} w={33} h={14} color="#625E78" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="product-launch-16-page" x={7} y={90} w={6} h={4} color="#625E78" fontFamily="Inter" fontSize={8.5}>16 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-17-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>17 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-17-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Make before and after impossible to confuse.</Text>
+          <Shape id="product-launch-17-left-card" groupId="product-launch-17-left-card-group" groupName="CURRENT card" shape="rectangle" x={7} y={43} w={41} h={35} fill="#EEEAFE" stroke="#6C5CE7" strokeWidth={1} radius={10} enter="fadeUp" />
+          <Text id="product-launch-17-left-label" groupId="product-launch-17-left-card-group" groupName="CURRENT card" x={10} y={47} w={35} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1}>CURRENT</Text>
+          <Text id="product-launch-17-left-body" groupId="product-launch-17-left-card-group" groupName="CURRENT card" x={10} y={57} w={35} h={16} color="#17152A" fontFamily="Inter" fontSize={14} fontWeight={680} lineHeight={1.3}>State the observed condition and its evidence boundary.</Text>
+          <Shape id="product-launch-17-right-card" groupId="product-launch-17-right-card-group" groupName="TARGET card" shape="rectangle" x={52} y={43} w={41} h={35} fill="#EEEAFE" stroke="#6C5CE7" strokeWidth={1} radius={10} enter="fadeUp" />
+          <Text id="product-launch-17-right-label" groupId="product-launch-17-right-card-group" groupName="TARGET card" x={55} y={47} w={35} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1}>TARGET</Text>
+          <Text id="product-launch-17-right-body" groupId="product-launch-17-right-card-group" groupName="TARGET card" x={55} y={57} w={35} h={16} color="#17152A" fontFamily="Inter" fontSize={14} fontWeight={680} lineHeight={1.3}>State the changed condition and proof required.</Text>
+          <Text id="product-launch-17-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 17 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-18-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>18 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-18-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Separate reach, activation, and retained use.</Text>
+          <Chart id="product-launch-18-chart" type="bar" x={37} y={42} w={50} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="grow" enter="fadeUp" />
+          <Text id="product-launch-18-insight" x={7} y={45} w={18} h={22} color="#17152A" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="product-launch-18-source" x={7} y={72} w={18} h={9} color="#625E78" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <ImageBlock id="product-launch-19-image" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 19" fit="cover" x={0} y={0} w={40} h={100} radius={0} enter="fadeIn" />
+          <Text id="product-launch-19-label" x={47} y={13} w={46} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>19 · CONTEXT</Text>
+          <Text id="product-launch-19-title" role="title" x={47} y={34} w={46} h={33} color="#17152A" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">One first-use moment can make the promise believable.</Text>
+          <Text id="product-launch-19-body" x={47} y={69} w={43} h={14} color="#625E78" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="product-launch-19-page" x={87} y={90} w={6} h={4} color="#625E78" fontFamily="Inter" fontSize={8.5}>19 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#15132D" theme="dark" slideTransition="wipe">
+          <Text id="product-launch-20-label" x={7} y={16} w={40} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={10} fontWeight={760} letterSpacing={1.6}>SECTION · 20</Text>
+          <Text id="product-launch-20-title" role="title" x={7} y={36} w={77} h={27} color="#F7FBFC" fontFamily="Inter" fontSize={35} fontWeight={780} lineHeight={1.04} enter="rise">Turn launch attention into repeated customer value.</Text>
+          <Text id="product-launch-20-body" x={7} y={72} w={50} h={10} color="#BECACD" fontFamily="Inter" fontSize={11.5} lineHeight={1.4}>A quiet chapter reset creates rhythm across a long presentation.</Text>
+          <Text id="product-launch-20-page" x={87} y={90} w={6} h={4} color="#6C5CE7" fontFamily="Inter" fontSize={8.5} textAlign="right">20 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-21-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>21 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-21-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Connect promise, proof, habit, and expansion.</Text>
+          <Shape id="product-launch-21-1-card" groupId="product-launch-21-1-card-group" groupName="Frame card" shape="rectangle" x={7} y={44} w={19} h={33} fill="#EEEAFE" stroke="#6C5CE7" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="product-launch-21-1-index" groupId="product-launch-21-1-card-group" groupName="Frame card" x={9} y={48} w={15} h={7} color="#6C5CE7" fontFamily="Inter" fontSize={13} fontWeight={780}>01</Text>
+          <Text id="product-launch-21-1-title" groupId="product-launch-21-1-card-group" groupName="Frame card" x={9} y={60} w={15} h={8} color="#17152A" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Frame</Text>
+          <Text id="product-launch-21-1-body" groupId="product-launch-21-1-card-group" groupName="Frame card" x={9} y={69} w={15} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="product-launch-21-2-card" groupId="product-launch-21-2-card-group" groupName="Evidence card" shape="rectangle" x={29} y={44} w={19} h={33} fill="#EEEAFE" stroke="#6C5CE7" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="product-launch-21-2-index" groupId="product-launch-21-2-card-group" groupName="Evidence card" x={31} y={48} w={15} h={7} color="#6C5CE7" fontFamily="Inter" fontSize={13} fontWeight={780}>02</Text>
+          <Text id="product-launch-21-2-title" groupId="product-launch-21-2-card-group" groupName="Evidence card" x={31} y={60} w={15} h={8} color="#17152A" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Evidence</Text>
+          <Text id="product-launch-21-2-body" groupId="product-launch-21-2-card-group" groupName="Evidence card" x={31} y={69} w={15} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="product-launch-21-3-card" groupId="product-launch-21-3-card-group" groupName="Choice card" shape="rectangle" x={51} y={44} w={19} h={33} fill="#EEEAFE" stroke="#6C5CE7" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="product-launch-21-3-index" groupId="product-launch-21-3-card-group" groupName="Choice card" x={53} y={48} w={15} h={7} color="#6C5CE7" fontFamily="Inter" fontSize={13} fontWeight={780}>03</Text>
+          <Text id="product-launch-21-3-title" groupId="product-launch-21-3-card-group" groupName="Choice card" x={53} y={60} w={15} h={8} color="#17152A" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Choice</Text>
+          <Text id="product-launch-21-3-body" groupId="product-launch-21-3-card-group" groupName="Choice card" x={53} y={69} w={15} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="product-launch-21-4-card" groupId="product-launch-21-4-card-group" groupName="Commit card" shape="rectangle" x={73} y={44} w={19} h={33} fill="#EEEAFE" stroke="#6C5CE7" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="product-launch-21-4-index" groupId="product-launch-21-4-card-group" groupName="Commit card" x={75} y={48} w={15} h={7} color="#6C5CE7" fontFamily="Inter" fontSize={13} fontWeight={780}>04</Text>
+          <Text id="product-launch-21-4-title" groupId="product-launch-21-4-card-group" groupName="Commit card" x={75} y={60} w={15} h={8} color="#17152A" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Commit</Text>
+          <Text id="product-launch-21-4-body" groupId="product-launch-21-4-card-group" groupName="Commit card" x={75} y={69} w={15} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Text id="product-launch-21-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 21 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-22-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>22 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-22-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Align product, sales, success, and support.</Text>
+          <Table id="product-launch-22-table" x={17} y={42} w={76} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#17152A" background="#FBFAFF" cellBackground="#EEEAFE" stripeBackground="#FBFAFF" borderColor="#6C5CE7" borderWidth={1} enter="fadeUp" />
+          <Text id="product-launch-22-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 22 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#15132D" theme="dark" slideTransition="fade">
+          <Text id="product-launch-23-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>23 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-23-title" role="title" x={7} y={20} w={72} h={15} color="#F7FBFC" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Treat weak activation as a product risk.</Text>
+          <Table id="product-launch-23-table" x={17} y={42} w={66} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#F7FBFC" background="#15132D" cellBackground="#17313A" stripeBackground="#102731" borderColor="#6C5CE7" borderWidth={1} enter="fadeUp" />
+          <Text id="product-launch-23-footer" x={7} y={88} w={86} h={5} color="#B8C7CB" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 23 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-24-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>24 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-24-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Compare broad launch, focused cohort, and staged rollout.</Text>
+          <Table id="product-launch-24-table" x={17} y={42} w={56} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#17152A" background="#FBFAFF" cellBackground="#EEEAFE" stripeBackground="#FBFAFF" borderColor="#6C5CE7" borderWidth={1} enter="fadeUp" />
+          <Text id="product-launch-24-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 24 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <ImageBlock id="product-launch-25-image" src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 25" fit="cover" x={0} y={0} w={30} h={100} radius={0} enter="fadeIn" />
+          <Text id="product-launch-25-label" x={37} y={13} w={56} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>25 · CONTEXT</Text>
+          <Text id="product-launch-25-title" role="title" x={37} y={30} w={56} h={33} color="#17152A" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">Launch where the clearest customer proof can emerge.</Text>
+          <Text id="product-launch-25-body" x={37} y={69} w={53} h={14} color="#625E78" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="product-launch-25-page" x={87} y={90} w={6} h={4} color="#625E78" fontFamily="Inter" fontSize={8.5}>25 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-26-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>26 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-26-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Sequence readiness, release, adoption, and learning.</Text>
+          <Table id="product-launch-26-table" x={27} y={42} w={66} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#17152A" background="#FBFAFF" cellBackground="#EEEAFE" stripeBackground="#FBFAFF" borderColor="#6C5CE7" borderWidth={1} enter="fadeUp" />
+          <Text id="product-launch-26-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 26 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-27-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>27 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-27-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Give every adoption milestone an owner.</Text>
+          <Table id="product-launch-27-table" x={27} y={42} w={56} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#17152A" background="#FBFAFF" cellBackground="#EEEAFE" stripeBackground="#FBFAFF" borderColor="#6C5CE7" borderWidth={1} enter="fadeUp" />
+          <Text id="product-launch-27-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 27 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-28-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>28 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-28-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Track retained use after attention fades.</Text>
+          <Chart id="product-launch-28-chart" type="area" x={7} y={50} w={50} h={36} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="draw" enter="fadeUp" />
+          <Text id="product-launch-28-insight" x={70} y={45} w={18} h={22} color="#17152A" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="product-launch-28-source" x={70} y={72} w={18} h={9} color="#625E78" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBFAFF" theme="light" slideTransition="fade">
+          <Text id="product-launch-29-label" x={7} y={10} w={45} h={5} color="#6C5CE7" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>29 · PRODUCT RELEASE</Text>
+          <Text id="product-launch-29-title" role="title" x={7} y={20} w={72} h={15} color="#17152A" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Document evidence sources, cohorts, and limitations.</Text>
+          <Table id="product-launch-29-table" x={27} y={42} w={46} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#17152A" background="#FBFAFF" cellBackground="#EEEAFE" stripeBackground="#FBFAFF" borderColor="#6C5CE7" borderWidth={1} enter="fadeUp" />
+          <Text id="product-launch-29-footer" x={7} y={88} w={86} h={5} color="#625E78" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 29 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#15132D" theme="dark" slideTransition="fade">
+          <ImageBlock id="product-launch-30-image" src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash closing photograph for Product Launch" fit="cover" x={45} y={0} w={55} h={100} radius={0} enter="fadeIn" />
+          <Text id="product-launch-30-label" x={7} y={13} w={33} h={6} color="#6C5CE7" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>30 · CLOSE</Text>
+          <Text id="product-launch-30-title" role="title" x={7} y={31} w={33} h={33} color="#F7FBFC" fontFamily="Inter" fontSize={28} fontWeight={790} lineHeight={1.04} enter="rise">Make the next useful action obvious.</Text>
+          <Text id="product-launch-30-body" x={7} y={69} w={32} h={14} color="#C4CFD2" fontFamily="Inter" fontSize={11} lineHeight={1.45}>Replace the teaching copy with the real commitment, owner, evidence, and next review date.</Text>
+          <Text id="product-launch-30-page" x={7} y={90} w={6} h={4} color="#6C5CE7" fontFamily="Inter" fontSize={8.5}>30 / 30</Text>
+        </Slide>
+      </Deck>
+    );
+  },
+});

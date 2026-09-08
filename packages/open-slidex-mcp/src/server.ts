@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { access, mkdir, readFile, readdir, realpath, stat, unlink, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, readdir, realpath, unlink, writeFile } from "node:fs/promises";
 
 import type { CallToolResult } from "@modelcontextprotocol/server";
 import { McpServer } from "@modelcontextprotocol/server";
@@ -17,15 +17,20 @@ import {
 
 import {
   applySlideXBatch,
+  isReactPresentationSource,
   motionDocChartMotions,
   motionDocChartTypes,
   motionDocSlideSourceRanges,
   parseMotionDoc,
+  reactPresentationToMotionDocSource,
   summarizeMotionDoc
 } from "@open-slidex/sdk";
 import {
   analyzeSlideXDocumentQuality,
+  ensureDirectoryInsideRoot,
   importSlideXImageAsset,
+  openExistingFileInsideRoot,
+  resolveExistingInsideRoot,
   resolveInsideRoot,
   SlideXFileDocumentAdapter,
   type SlideXQualityReport,
@@ -56,21 +61,21 @@ import {
   MAX_WORKSPACE_IMPORT_FILE_BYTES,
   packageHtmlAssets
 } from "@/packages/slidex-workbench/src/server/workspaceImport";
+import {
+  assertToolbarNativeDocument,
+  isPureHtmlPresentation,
+  listHtmlPresentationAssets,
+  removedMotionDocTags,
+  resolveAuthoringGuidanceRoot
+} from "./serverPolicy";
+import {
+  documentAdapterForRoot,
+  isNodeError,
+  OpenSlideXWorkspaceMcpScope
+} from "./serverWorkspace";
 
 const projectRoot = projectRootFromArgs(process.argv.slice(2));
-const adapter = new SlideXFileDocumentAdapter({ projectRoot });
 const workspaceRoot = workspaceRootFromArgs(process.argv.slice(2));
-const authorableMotionDocTags = new Set([
-  "Chart",
-  "ImageBlock",
-  "Shape",
-  "Slide",
-  "SvgBlock",
-  "Table",
-  "Text",
-  "VideoBlock"
-]);
-const removedMotionDocTags = ["Card", "Group", "Icon", "Metric", "Notes", "Stack", "Title"] as const;
 
 class SlideXVisualQualityGateError extends Error {
   readonly currentRevision: string;
@@ -104,7 +109,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   const projectContext = async () => {
     const resolvedRoot = fixedRoot ?? await workspace!.selectedRoot();
     return {
-      documentAdapter: resolvedRoot === projectRoot ? adapter : new SlideXFileDocumentAdapter({ projectRoot: resolvedRoot }),
+      documentAdapter: await documentAdapterForRoot(resolvedRoot),
       root: resolvedRoot
     };
   };
@@ -113,7 +118,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     {
       instructions: [
         "Select a deck with open_slidex_workspace.",
-        "Use open_slidex_read for source, revision, and skills.",
+        "Use open_slidex_read for canonical presentation.tsx, local components, revision, and skills.",
         "For HTML use sourceFormat html and open_slidex_edit target html; playback is opaque-origin.",
         "Re-read before mutation and pass expectedRevision to open_slidex_edit.",
         "Every Morph edge needs slideTransition morph and a same-type sharedId pair.",
@@ -152,13 +157,16 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
 
   server.registerTool("open_slidex_read", {
     title: "Read OpenSlideX source or one project resource",
-    description: "Read current MotionDoc MDX, canonical browser-native HTML, or one project resource. HTML reads preserve source bytes, page mapping, and online dependency boundaries; native reads include a compact skill manifest.",
+    description: "Read canonical React TSX, one deck-local React component, portable MotionDoc MDX, canonical browser-native HTML, or one project resource.",
     inputSchema: z.object({
       intent: z.enum(openSlideXGuidanceIntents).default("authoring").describe(
         "Task route for the manifest: import, create, redesign, design, authoring, html, motion, or qa."
       ),
-      sourceFormat: z.enum(["mdx", "html"]).default("mdx").describe(
-        "Read native MotionDoc MDX or canonical browser-native HTML. HTML routes to authoring, design, motion, and QA guidance."
+      sourceFormat: z.enum(["tsx", "mdx", "html"]).default("tsx").describe(
+        "Read canonical React TSX, a generated portable MDX view, or canonical browser-native HTML."
+      ),
+      componentPath: z.string().regex(/^components\/[A-Za-z0-9._/-]+\.tsx$/).optional().describe(
+        "Optional deck-local components/*.tsx source to read. Cannot be combined with slideIndex or HTML."
       ),
       htmlCursor: z.number().int().min(0).default(0).describe(
         "Character offset for an HTML chunk. Continue from nextCursor until it is absent."
@@ -185,7 +193,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         "Zero-based slide index for a focused source read; omit for the complete deck."
       )
     })
-  }, ({ htmlCursor, htmlMaxChars, htmlSource, intent, knowledgeQuery, resourceCursor, resourcePath, slideIndex, sourceFormat, templateQuery }) => runTool(async () => {
+  }, ({ componentPath, htmlCursor, htmlMaxChars, htmlSource, intent, knowledgeQuery, resourceCursor, resourcePath, slideIndex, sourceFormat, templateQuery }) => runTool(async () => {
     const { documentAdapter, root } = await projectContext();
     const guidanceRoot = await resolveAuthoringGuidanceRoot(root, configuredWorkspaceRoot);
     if (resourcePath) {
@@ -210,6 +218,20 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
     if (resourceCursor !== 0) throw new Error("resourceCursor requires a knowledge resourcePath.");
 
     const document = await documentAdapter.open();
+    if (componentPath) {
+      if (sourceFormat === "html" || slideIndex !== undefined || knowledgeQuery || templateQuery) {
+        throw new Error("componentPath cannot be combined with HTML, slideIndex, knowledgeQuery, or templateQuery.");
+      }
+      const componentSource = await readTextInsideRoot(root, componentPath);
+      return {
+        componentPath,
+        mode: "component",
+        revision: document.revision,
+        source: componentSource,
+        sourceFormat: "tsx",
+        title: document.title
+      };
+    }
     if (sourceFormat === "html") {
       if (slideIndex !== undefined || knowledgeQuery || templateQuery) {
         throw new Error("HTML source reads cannot be combined with slideIndex, knowledgeQuery, or templateQuery.");
@@ -220,11 +242,13 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         mode: "unavailable"
       }));
       const assets = listHtmlPresentationAssets(document.source);
-      const localAssets = await readdir(join(root, "assets"), { withFileTypes: true })
-        .then((entries) => entries.filter((entry) => entry.isFile()).map((entry) => entry.name), () => []);
+      const assetsRoot = await resolveExistingInsideRoot(root, join(root, "assets"), "directory").catch(() => undefined);
+      const localAssets = assetsRoot ? await readdir(assetsRoot, { withFileTypes: true })
+        .then((entries) => entries.filter((entry) => entry.isFile()).map((entry) => entry.name), () => [])
+        : [];
       const htmlAssets = await Promise.all(assets.map(async (record) => {
         try {
-          const html = await readFile(resolveInsideRoot(root, record.source), "utf8");
+          const html = await readTextInsideRoot(root, record.source);
           return { ...record, networkResources: inspectHtmlNetworkResources(html, { localAssets }), status: "ready" };
         } catch (error) {
           return {
@@ -245,8 +269,8 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         };
       }
       const record = assets.find((asset) => asset.source === selectedSource);
-      if (!record) throw new Error(`The HTML source is not referenced by presentation.mdx: ${selectedSource}`);
-      const html = await readFile(resolveInsideRoot(root, selectedSource), "utf8");
+      if (!record) throw new Error(`The HTML source is not referenced by presentation.tsx: ${selectedSource}`);
+      const html = await readTextInsideRoot(root, selectedSource);
       const chunk = html.slice(htmlCursor, htmlCursor + htmlMaxChars);
       const nextCursor = htmlCursor + chunk.length < html.length ? htmlCursor + chunk.length : undefined;
       return {
@@ -280,14 +304,15 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       })) : undefined
     ]);
     const ranges = motionDocSlideSourceRanges(document.source);
+    const canonicalFormat = isReactPresentationSource(document.source) ? "tsx" : "mdx";
     if (slideIndex !== undefined && !ranges[slideIndex]) throw new Error(`Slide index is out of range: ${slideIndex}`);
     const summary = summarizeMotionDoc(document.source);
     return {
       authoringContract: {
-        allowed: ["Text", "ImageBlock", "VideoBlock", "SvgBlock", "Chart", "Table", "Shape"],
+        allowed: ["Deck", "Slide", "Text", "Image", "Video", "Svg", "Chart", "Table", "Shape", "HtmlEmbed"],
         removed: removedMotionDocTags,
         geometry: "Every visible layer needs stable id plus explicit percentage x/y/w/h; fontSize uses pt.",
-        rule: "Removed tags are rejected, not parsed for compatibility. Put all visible copy inside positioned Text layers."
+        rule: "Import from @open-slidex/sdk/react. Registered local components need a props schema, asset references, and toMotionDoc(). Dynamic expressions remain code-only."
       },
       charts: { motions: motionDocChartMotions, types: motionDocChartTypes },
       designContract: {
@@ -300,14 +325,18 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       knowledge,
       templateRecommendations,
       revision: document.revision,
-      source: slideIndex === undefined ? document.source : ranges[slideIndex]!.source,
+      requiresMigration: canonicalFormat === "mdx",
+      source: slideIndex === undefined
+        ? sourceFormat === "mdx" ? reactPresentationToMotionDocSource(document.source) : document.source
+        : ranges[slideIndex]!.source,
+      sourceFormat: slideIndex === undefined ? (sourceFormat === "mdx" ? "mdx" : canonicalFormat) : canonicalFormat,
       stats: summary.stats,
       title: document.title,
       validation: summary.validation,
       workflow: [
         "Read the recommended SKILL.md files and only their task-relevant references.",
         "For a supplied document, search knowledge first, preserve evidence and gaps, then define audience, outcome, thesis, and narrative pattern.",
-        "For creation or redesign, use template recommendations and read exactly one thirty-page core MDX reference before composing slides.",
+        "For creation or redesign, use template recommendations and read exactly one componentized TSX reference before composing slides.",
         "Plan claim-specific hierarchy and geometry from the source; include a real cover image, vary image and card rhythm, and do not clone the specimen page-for-page.",
         "Submit one complete deck or slide source to open_slidex_edit with this revision.",
         "When changing a Morph sequence, re-read and submit the complete affected sequence so every adjacent edge keeps a compatible sharedId pair.",
@@ -362,7 +391,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         "Required for search-trusted. Describe the subject and useful visual context."
       )
     })
-  }, (input) => runTool(async () => {
+  }, (input, ctx) => runTool(async () => {
     if (input.action === "search-trusted") {
       if (!input.query) throw new Error("query is required when action is search-trusted.");
       return searchTrustedImages(input.query, { accessKey: process.env.UNSPLASH_ACCESS_KEY });
@@ -377,7 +406,8 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         expectedRevision: current.revision,
         filePath: input.filePath,
         inboxRoot,
-        projectRoot: root
+        projectRoot: root,
+        signal: ctx.mcpReq.signal
       });
     }
     if (input.action === "import-trusted") {
@@ -453,7 +483,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
 
   server.registerTool("open_slidex_edit", {
       title: "Edit OpenSlideX presentation",
-      description: "Revision-safely replace one complete native deck, one native slide, or canonical browser-native HTML. Native edits receive structural and rendered QA; HTML bytes are preserved in an opaque-origin playback asset.",
+      description: "Revision-safely replace one complete React TSX deck, one native React slide, or canonical browser-native HTML. Native edits receive structural and rendered QA.",
       inputSchema: z.object({
       expectedRevision: z.string().startsWith("sha256:").describe(
         "Latest revision returned by open_slidex_read. Never reuse a stale revision."
@@ -468,10 +498,10 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         "For target html, pass the exact canonical assets/*.html returned by open_slidex_read to replace it. Omit only to replace the selected deck with a new HTML presentation."
       ),
       htmlAssetRoot: z.string().trim().min(1).max(4096).optional().describe(
-        "Optional absolute local folder used to resolve relative PNG, SVG, JPEG, GIF, AVIF, and WebP references in source. Local absolute image paths work without this field. Images are copied into this deck's assets and PNG is converted to WebP."
+        "Optional folder inside the selected deck used to resolve relative PNG, SVG, JPEG, GIF, AVIF, and WebP references. Absolute and file: image references are rejected. Images are copied into this deck's assets and PNG is converted to WebP."
       ),
       source: z.string().min(1).describe(
-        "One complete MotionDoc deck, one complete Slide block, or one complete UTF-8 HTML document according to target. HTML may use inline, HTTP(S), packaged relative images, or local absolute image paths."
+        "One complete presentation.tsx candidate, one complete Slide JSX block, or one complete UTF-8 HTML document according to target."
       ),
       target: z.enum(["deck", "slide", "html"]).describe(
         "Choose whether source replaces the whole native deck, one complete native slide, or canonical browser-native HTML."
@@ -489,23 +519,24 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
       if (rejectedCandidateId) throw new Error("rejectedCandidateId is only used for native rendered-QA repairs.");
       if (slideIndex !== undefined) throw new Error("slideIndex cannot be combined with target html.");
       if (htmlSource && title) throw new Error("title is only used when htmlSource is omitted for a new HTML deck.");
-      if (htmlAssetRoot && !/^\/?(?:[A-Za-z]:[\\/]|\/)/.test(htmlAssetRoot)) {
-        throw new Error("htmlAssetRoot must be an absolute local folder.");
-      }
-      const packaged = await packageHtmlAssets(source, { assetRoot: htmlAssetRoot });
+      const safeHtmlAssetRoot = htmlAssetRoot
+        ? await resolveExistingInsideRoot(root, htmlAssetRoot, "directory")
+        : undefined;
+      const packaged = await packageHtmlAssets(source, { assetRoot: safeHtmlAssetRoot });
       const bytes = Buffer.from(packaged.source, "utf8");
       if (!bytes.byteLength || bytes.byteLength > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
         throw new Error("The HTML source must be between 1 byte and 50 MB.");
       }
-      const existingLocalAssets = await readdir(join(root, "assets"), { withFileTypes: true })
-        .then((entries) => entries.filter((entry) => entry.isFile()).map((entry) => entry.name), () => []);
+      const assetsRoot = await ensureDirectoryInsideRoot(root, join(root, "assets"));
+      const existingLocalAssets = await readdir(assetsRoot, { withFileTypes: true })
+        .then((entries) => entries.filter((entry) => entry.isFile()).map((entry) => entry.name));
       const localAssets = [...new Set([...existingLocalAssets, ...packaged.assets.map((asset) => asset.fileName)])];
       assertSandboxedHtml(packaged.source, { localAssets });
       const networkResources = inspectHtmlNetworkResources(packaged.source, { localAssets });
       const pages = analyzeHtmlPresentation(packaged.source);
       const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
       const nextSource = `assets/source-${hash}.html`;
-      const nextPath = resolveInsideRoot(root, nextSource);
+      const nextPath = resolveInsideRoot(assetsRoot, basename(nextSource));
       const createdAssets: string[] = [];
       const writeNewAsset = async (assetPath: string, assetBytes: Uint8Array) => {
         try {
@@ -513,12 +544,16 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
           createdAssets.push(assetPath);
         } catch (error) {
           if (!isNodeError(error) || error.code !== "EEXIST") throw error;
+          const handle = await openExistingFileInsideRoot(assetsRoot, assetPath);
+          const existingBytes = await handle.readFile().finally(() => handle.close());
+          if (!existingBytes.equals(Buffer.from(assetBytes))) {
+            throw new Error(`A packaged HTML asset already exists with different bytes: ${basename(assetPath)}`);
+          }
         }
       };
       try {
-        await mkdir(dirname(nextPath), { recursive: true });
         for (const asset of packaged.assets) {
-          await writeNewAsset(resolveInsideRoot(root, asset.source), asset.bytes);
+          await writeNewAsset(resolveInsideRoot(assetsRoot, basename(asset.source)), asset.bytes);
         }
         await writeNewAsset(nextPath, bytes);
         let candidateSource: string;
@@ -526,7 +561,7 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
         if (htmlSource) {
           const assets = listHtmlPresentationAssets(current.source);
           const record = assets.find((asset) => asset.source === htmlSource);
-          if (!record) throw new Error(`The HTML source is not referenced by presentation.mdx: ${htmlSource}`);
+          if (!record) throw new Error(`The HTML source is not referenced by presentation.tsx: ${htmlSource}`);
           replacedSource = htmlSource;
           candidateSource = isPureHtmlPresentation(current.source, htmlSource)
             ? createHtmlPresentationMdx(current.title, nextSource, hash, pages)
@@ -638,187 +673,13 @@ export function createOpenSlideXMcpServer(root: string | { workspaceRoot: string
   return server;
 }
 
-async function resolveAuthoringGuidanceRoot(deckRoot: string, configuredWorkspaceRoot?: string) {
-  const candidates = [
-    deckRoot,
-    ...(configuredWorkspaceRoot ? [dirname(configuredWorkspaceRoot), configuredWorkspaceRoot] : [])
-  ];
-  for (const candidate of [...new Set(candidates)]) {
-    try {
-      const skillDirectory = await stat(join(candidate, ".agents", "skills"));
-      if (skillDirectory.isDirectory()) return candidate;
-    } catch (error) {
-      if (!isNodeError(error) || error.code !== "ENOENT") throw error;
-    }
+async function readTextInsideRoot(root: string, requestedPath: string) {
+  const handle = await openExistingFileInsideRoot(root, requestedPath);
+  try {
+    return await handle.readFile("utf8");
+  } finally {
+    await handle.close();
   }
-  return deckRoot;
-}
-
-function assertToolbarNativeDocument(source: string) {
-  const removed = removedMotionDocTags.filter((tag) => new RegExp(`<${tag}\\b`).test(source));
-  if (removed.length > 0) {
-    throw new Error(
-      `Removed MotionDoc component${removed.length === 1 ? "" : "s"}: ${removed.join(", ")}. ` +
-      "These tags are no longer parsed or supported."
-    );
-  }
-  for (const [slideIndex, range] of motionDocSlideSourceRanges(source).entries()) {
-    assertToolbarNativeSlideSource(range.source, `slide ${slideIndex + 1}`);
-  }
-}
-
-function assertToolbarNativeSlideSource(source: string, label: string) {
-  const tags = [...source.matchAll(/<\/?([A-Z][A-Za-z0-9]*)\b/g)].map((match) => match[1]);
-  const forbidden = [...new Set(tags.filter((tag) => !authorableMotionDocTags.has(tag)))];
-  if (forbidden.length > 0) {
-    throw new Error(
-      `${label} may only use Workspace toolbar layers. ` +
-      `Unsupported component${forbidden.length === 1 ? "" : "s"}: ${forbidden.join(", ")}. ` +
-      "Use Text, ImageBlock, VideoBlock, SvgBlock, Chart, Table, or Shape with explicit geometry."
-    );
-  }
-
-  for (const match of source.matchAll(/<(Text|Chart|ImageBlock|Shape|SvgBlock|Table|VideoBlock)\b([^>]*)>/g)) {
-    const tag = match[1];
-    const attributes = match[2] ?? "";
-    const missing = ["id", "x", "y", "w", "h"].filter(
-      (key) => !new RegExp(`\\b${key}\\s*=`).test(attributes)
-    );
-    if (missing.length > 0) {
-      throw new Error(
-        `${label} <${tag}> is missing deterministic layer attributes: ${missing.join(", ")}. ` +
-        "Every MCP-authored visible layer needs a stable id and explicit percentage x/y/w/h geometry."
-      );
-    }
-  }
-
-  const visibleRemainder = source
-    .replace(/<Text\b[^>]*>[\s\S]*?<\/Text>/g, "")
-    .replace(/<(?:Chart|ImageBlock|Shape|SvgBlock|Table|VideoBlock)\b[^>]*\/>/g, "")
-    .replace(/<\/?Slide\b[^>]*>/g, "")
-    .trim();
-  if (visibleRemainder) {
-    throw new Error(
-      `${label} contains visible Markdown or malformed component markup outside toolbar-native layers. ` +
-      "Put visible copy inside positioned <Text> layers."
-    );
-  }
-}
-
-function listHtmlPresentationAssets(source: string) {
-  const records = new Map<string, {
-    blockIds: string[];
-    pages: number[];
-    sharedScenes: string[];
-    slideIndices: number[];
-    source: string;
-  }>();
-  const document = parseMotionDoc(source);
-  document.scenes.forEach((scene, slideIndex) => {
-    scene.blocks.forEach((block) => {
-      if (block.type !== "HtmlEmbedBlock") return;
-      const assetSource = typeof block.props.src === "string" ? block.props.src : "";
-      if (!/^assets\/[A-Za-z0-9._-]+\.html?$/i.test(assetSource)) return;
-      const record = records.get(assetSource) ?? {
-        blockIds: [],
-        pages: [],
-        sharedScenes: [],
-        slideIndices: [],
-        source: assetSource
-      };
-      const page = Number(block.props.page ?? 1);
-      record.blockIds.push(String(block.props.id ?? ""));
-      record.pages.push(Number.isInteger(page) && page > 0 ? page : 1);
-      record.slideIndices.push(slideIndex);
-      if (typeof block.props.sharedScene === "string" && block.props.sharedScene) {
-        record.sharedScenes.push(block.props.sharedScene);
-      }
-      records.set(assetSource, record);
-    });
-  });
-  return [...records.values()].map((record) => ({
-    ...record,
-    blockIds: [...new Set(record.blockIds.filter(Boolean))],
-    pageCount: new Set(record.pages).size,
-    pages: [...new Set(record.pages)].sort((left, right) => left - right),
-    sharedScenes: [...new Set(record.sharedScenes)],
-    slideIndices: [...new Set(record.slideIndices)].sort((left, right) => left - right)
-  }));
-}
-
-function isPureHtmlPresentation(source: string, assetSource: string) {
-  const document = parseMotionDoc(source);
-  return document.scenes.length > 0 && document.scenes.every((scene) => (
-    scene.blocks.length === 1
-    && scene.blocks[0]?.type === "HtmlEmbedBlock"
-    && scene.blocks[0].props.src === assetSource
-  ));
-}
-
-class OpenSlideXWorkspaceMcpScope {
-  private selectedPresentationId?: string;
-  readonly workspaceRoot: string;
-
-  constructor(workspaceRoot: string) {
-    this.workspaceRoot = resolve(workspaceRoot);
-  }
-
-  async list() {
-    // A freshly initialized starter may configure MCP before its first
-    // Workspace launch has created the local deck directory. Treat that as an
-    // empty Workspace instead of leaking ENOENT through the MCP tool call.
-    const entries = await readdir(this.workspaceRoot, { withFileTypes: true }).catch((error: unknown) => {
-      if (isNodeError(error) && error.code === "ENOENT") return [];
-      throw error;
-    });
-    const described = await Promise.all(entries.flatMap((entry) => {
-      if (!entry.isDirectory() || entry.name.startsWith(".") || !/^[A-Za-z0-9._-]+$/.test(entry.name)) return [];
-      return [this.describe(entry.name)];
-    }));
-    const presentations = described.filter((value) => value !== undefined);
-    presentations.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
-    if (!this.selectedPresentationId && presentations[0]) this.selectedPresentationId = presentations[0].id;
-    if (this.selectedPresentationId && !presentations.some((item) => item.id === this.selectedPresentationId)) {
-      this.selectedPresentationId = presentations[0]?.id;
-    }
-    return {
-      presentations,
-      selectedPresentationId: this.selectedPresentationId,
-      workspaceRoot: this.workspaceRoot
-    };
-  }
-
-  async select(presentationId: string) {
-    const snapshot = await this.list();
-    const presentation = snapshot.presentations.find((item) => item.id === presentationId);
-    if (!presentation) throw new Error(`Workspace presentation was not found: ${presentationId}`);
-    this.selectedPresentationId = presentation.id;
-    return { presentation, selectedPresentationId: presentation.id };
-  }
-
-  async selectedRoot() {
-    const snapshot = await this.list();
-    if (!snapshot.selectedPresentationId) {
-      throw new Error("This OpenSlideX workspace has no presentations. Create or import one in Workspace first.");
-    }
-    return resolve(this.workspaceRoot, snapshot.selectedPresentationId);
-  }
-
-  private async describe(id: string) {
-    const root = resolve(this.workspaceRoot, id);
-    const sourceStats = await stat(resolve(root, "presentation.mdx")).catch(() => undefined);
-    if (!sourceStats?.isFile()) return undefined;
-    try {
-      const document = await new SlideXFileDocumentAdapter({ projectRoot: root }).open();
-      return { id, root, title: document.title, updatedAt: sourceStats.mtime.toISOString() };
-    } catch {
-      return undefined;
-    }
-  }
-}
-
-function isNodeError(error: unknown): error is NodeJS.ErrnoException {
-  return error instanceof Error && "code" in error;
 }
 
 async function main() {
@@ -839,7 +700,7 @@ async function main() {
       : openSlideXMcpConfig(client, configurationRoot, platformFromArgs(process.argv))}\n`);
     return;
   }
-  if (!workspaceRoot) await adapter.open();
+  if (!workspaceRoot) await (await documentAdapterForRoot(projectRoot)).open();
   process.stderr.write(`OpenSlideX MCP ready for ${workspaceRoot ? `workspace ${workspaceRoot}` : projectRoot}\n`);
   await serveStdio(() => workspaceRoot
     ? createOpenSlideXMcpServer({ workspaceRoot })

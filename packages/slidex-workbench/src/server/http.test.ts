@@ -34,3 +34,25 @@ test("Workbench API can use a hidden operating-system-assigned port", async () =
     await rm(root, { force: true, recursive: true });
   }
 });
+
+test("Workbench mutations require the exact API or configured UI origin", async (context) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-origin-"));
+  const project = new SlideXProject(root);
+  await writeFile(path.join(root, "presentation.mdx"), "# Local deck\n\n<Slide><Text>Origin</Text></Slide>\n", "utf8");
+  await project.prepare();
+  const uiPort = 4317;
+  const running = await startWorkbenchServer({ clientRoot: root, port: 0, project, uiPort });
+  context.after(async () => {
+    await running.close();
+    await rm(root, { force: true, recursive: true });
+  });
+  const request = (origin: string | undefined) => fetch(`http://127.0.0.1:${running.port}/api/v1/not-found`, {
+    body: "{}",
+    headers: origin ? { origin } : undefined,
+    method: "POST"
+  });
+  assert.equal((await request(`http://127.0.0.1:${uiPort}`)).status, 404);
+  assert.equal((await request(`http://127.0.0.1:${running.port}`)).status, 404);
+  assert.equal((await request("https://attacker.invalid")).status, 403);
+  assert.equal((await request(undefined)).status, 403);
+});

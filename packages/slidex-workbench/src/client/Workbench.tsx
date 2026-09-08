@@ -15,7 +15,7 @@ export function Workbench() {
 function WorkbenchLoading({ workspaceRoute }: { workspaceRoute: boolean }) {
   return (
     <main className="flex h-[100dvh] items-center justify-center bg-black text-sm text-neutral-500">
-      {workspaceRoute ? "Opening Workspace…" : "Opening presentation.mdx…"}
+      {workspaceRoute ? "Opening Workspace…" : "Opening presentation.tsx…"}
     </main>
   );
 }

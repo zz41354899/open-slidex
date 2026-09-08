@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   access,
+  lstat,
   mkdir,
   readFile,
   rename,
@@ -8,6 +9,7 @@ import {
   writeFile
 } from "node:fs/promises";
 import path from "node:path";
+import { transform } from "esbuild";
 
 import {
   importSlideXImageAsset,
@@ -21,11 +23,18 @@ import {
   type ImportSlideXVideoAssetInput,
   type SlideXVideoAsset
 } from "./nodeVideoAsset";
-import { resolveInsideRoot } from "./nodePath";
+import {
+  ensureDirectoryInsideRoot,
+  openExistingFileInsideRoot,
+  resolveExistingInsideRoot,
+  resolveInsideRoot
+} from "./nodePath";
 import {
   applySlideXBatch,
   ensureMotionDocSourceBlockIds,
+  motionDocToReactPresentationSource,
   parseMotionDoc,
+  reactPresentationToMotionDocSource,
   summarizeMotionDoc,
   type SlideXDocument,
   type SlideXDocumentAdapter,
@@ -58,6 +67,9 @@ export { withSlideXFileLock } from "./nodeFileLock";
 
 export {
   importSlideXImageAsset,
+  ensureDirectoryInsideRoot,
+  openExistingFileInsideRoot,
+  resolveExistingInsideRoot,
   resolveInsideRoot,
   SlideXImageAssetError,
   type ImportSlideXImageAssetInput,
@@ -82,7 +94,7 @@ export class SlideXRevisionConflictError extends Error {
 
   constructor(currentRevision: SlideXRevision) {
     super(
-      `presentation.mdx changed. Current revision is ${currentRevision}; open it again before saving.`
+      `presentation.tsx changed. Current revision is ${currentRevision}; open it again before saving.`
     );
     this.name = "SlideXRevisionConflictError";
     this.currentRevision = currentRevision;
@@ -97,32 +109,39 @@ export class SlideXFileDocumentAdapter implements SlideXDocumentAdapter {
     this.projectRoot = path.resolve(options.projectRoot);
     this.documentPath = resolveInsideRoot(
       this.projectRoot,
-      options.documentPath ?? "presentation.mdx"
+      options.documentPath ?? "presentation.tsx"
     );
   }
 
   async exists() {
-    return access(this.documentPath).then(
+    return resolveExistingInsideRoot(this.projectRoot, this.documentPath, "file").then(
       () => true,
-      () => false
+      (error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") return false;
+        throw error;
+      }
     );
   }
 
   async open(): Promise<SlideXDocument> {
-    const source = await readFile(this.documentPath, "utf8").catch((error: NodeJS.ErrnoException) => {
+    const handle = await openExistingFileInsideRoot(this.projectRoot, this.documentPath).catch((error: NodeJS.ErrnoException) => {
       if (error.code === "ENOENT") {
-        throw new Error(`presentation.mdx does not exist at ${this.documentPath}.`);
+        throw new Error(`${path.basename(this.documentPath)} does not exist at ${this.documentPath}.`);
       }
       throw error;
     });
-    return createSlideXDocument(source);
+    try {
+      return createSlideXDocument(await handle.readFile("utf8"));
+    } finally {
+      await handle.close();
+    }
   }
 
   async create(source: string, replace = false) {
-    await mkdir(path.dirname(this.documentPath), { recursive: true });
+    await ensureDirectoryInsideRoot(this.projectRoot, path.dirname(this.documentPath));
     return this.withDocumentLock(async () => {
       if (!replace && (await this.exists())) {
-        throw new Error("presentation.mdx already exists. Pass replace=true to replace it.");
+        throw new Error(`${path.basename(this.documentPath)} already exists. Pass replace=true to replace it.`);
       }
       return this.writeValidated(source);
     });
@@ -158,10 +177,24 @@ export class SlideXFileDocumentAdapter implements SlideXDocumentAdapter {
   }
 
   private async writeValidated(source: string) {
-    const normalizedSource = ensureMotionDocSourceBlockIds(source);
+    const canonicalSource = path.extname(this.documentPath) === ".tsx"
+      ? motionDocToReactPresentationSource(source)
+      : source;
+    if (path.extname(this.documentPath) === ".tsx") {
+      await assertReactPresentationCompiles(canonicalSource, path.basename(this.documentPath));
+    }
+    const normalizedSource = ensureMotionDocSourceBlockIds(canonicalSource);
     const summary = summarizeMotionDoc(normalizedSource);
     if (!summary.validation.isValid) {
       throw new Error("The MotionDoc source is invalid and was not written.");
+    }
+
+    const existing = await lstat(this.documentPath).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === "ENOENT") return undefined;
+      throw error;
+    });
+    if (existing?.isSymbolicLink() || (existing && !existing.isFile())) {
+      throw new Error(`The presentation source path is unsafe: ${this.documentPath}`);
     }
 
     const temporaryPath = path.join(
@@ -181,6 +214,21 @@ export class SlideXFileDocumentAdapter implements SlideXDocumentAdapter {
 
   private async withDocumentLock<T>(action: () => Promise<T>): Promise<T> {
     return withSlideXFileLock(`${this.documentPath}.lock`, action);
+  }
+}
+
+async function assertReactPresentationCompiles(source: string, sourcefile: string) {
+  try {
+    await transform(source, {
+      format: "esm",
+      jsx: "automatic",
+      loader: "tsx",
+      sourcefile,
+      target: "es2022"
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`presentation.tsx did not compile and was not written: ${message}`);
   }
 }
 
@@ -214,14 +262,15 @@ export async function exportSlideXDocument(input: ExportSlideXDocumentInput) {
   }
   await mkdir(path.dirname(outputPath), { recursive: true });
 
+  const motionDocSource = reactPresentationToMotionDocSource(input.source);
   let portableSource = input.projectRoot
-    ? await embedSlideXProjectMedia(input.source, input.projectRoot, {
+    ? await embedSlideXProjectMedia(motionDocSource, input.projectRoot, {
         // Standalone MDX imports currently materialize embedded images. Keep
         // video paths as editable placeholders unless a project bundle carries
         // the video bytes.
         includeVideo: input.format !== "mdx"
       })
-    : input.source;
+    : motionDocSource;
 
   if (input.format === "pptx") {
     return exportMotionDocPptx({
@@ -257,24 +306,55 @@ export type RenderSlideXDocumentInput = {
 
 export type RenderSlideXHtmlThumbnailInput = {
   html: string;
+  additionalPages?: Array<{ page: number; outputPath: string }>;
   localAssets?: Array<{ bytes: Uint8Array; mimeType: string; name: string }>;
+  maximumDurationMs?: number;
   outputPath: string;
   page: number;
   signal?: AbortSignal;
 };
 
+const defaultHtmlThumbnailDurationMs = 30_000;
+const maximumHtmlThumbnailDurationMs = 60_000;
+
 /** Renders one sandbox-compatible HTML page with its browser-native network resources. */
 export async function renderSlideXHtmlThumbnail(input: RenderSlideXHtmlThumbnailInput) {
-  input.signal?.throwIfAborted();
-  if (!input.html.trim()) throw new Error("The HTML source is empty.");
-  if (!Number.isInteger(input.page) || input.page < 1) throw new Error("HTML thumbnail page must be a positive integer.");
-  await mkdir(path.dirname(input.outputPath), { recursive: true });
+  const maximumDurationMs = Math.min(
+    Number.isSafeInteger(input.maximumDurationMs) && input.maximumDurationMs! > 0
+      ? input.maximumDurationMs!
+      : defaultHtmlThumbnailDurationMs,
+    maximumHtmlThumbnailDurationMs
+  );
+  const deadlineController = new AbortController();
+  const deadlineTimer = setTimeout(() => {
+    deadlineController.abort(new Error(`HTML thumbnail rendering exceeded the ${maximumDurationMs} ms time budget.`));
+  }, maximumDurationMs);
+  deadlineTimer.unref?.();
+  const renderSignal = input.signal
+    ? AbortSignal.any([input.signal, deadlineController.signal])
+    : deadlineController.signal;
+  try {
+    renderSignal.throwIfAborted();
+    if (!input.html.trim()) throw new Error("The HTML source is empty.");
+    if (!Number.isInteger(input.page) || input.page < 1) throw new Error("HTML thumbnail page must be a positive integer.");
+    const targets = [{ page: input.page, outputPath: input.outputPath }, ...(input.additionalPages ?? [])];
+    for (const target of targets) {
+      if (!Number.isInteger(target.page) || target.page < 1) throw new Error("HTML thumbnail page must be a positive integer.");
+      await mkdir(path.dirname(target.outputPath), { recursive: true });
+    }
+    await mkdir(path.dirname(input.outputPath), { recursive: true });
 
-  return withSlideXChromiumPage({
+    return await withSlideXChromiumPage({
     viewport: { height: MOTION_DOC_PNG_HEIGHT, width: MOTION_DOC_PNG_WIDTH }
   }, async (page) => {
     const localAssetOrigin = "https://open-slidex.local";
     const localAssets = new Map((input.localAssets ?? []).map((asset) => [asset.name, asset]));
+    const browserSession = await page.context().newCDPSession(page);
+    await browserSession.send("Network.enable");
+    await browserSession.send("Network.setBlockedURLs", { urls: ["ws://*", "wss://*"] });
+    await page.routeWebSocket(/.*/, async (socket) => {
+      await socket.close({ code: 1008, reason: "OpenSlideX HTML thumbnails are offline" });
+    });
     await page.route("**/*", async (route) => {
       const url = route.request().url();
       const parsed = new URL(url);
@@ -287,13 +367,17 @@ export async function renderSlideXHtmlThumbnail(input: RenderSlideXHtmlThumbnail
         await route.abort("blockedbyclient");
         return;
       }
-      if (/^(?:about:|blob:|data:|https?:)/i.test(url)) await route.continue();
+      if (/^(?:about:|blob:|data:)/i.test(url)) await route.continue();
       else await route.abort("blockedbyclient");
     });
-    const html = localAssets.size ? injectThumbnailAssetBase(input.html, `${localAssetOrigin}/assets/`) : input.html;
+    const assetBasedHtml = localAssets.size ? injectThumbnailAssetBase(input.html, `${localAssetOrigin}/assets/`) : input.html;
+    const html = injectThumbnailOfflinePolicy(assetBasedHtml, localAssetOrigin);
     await page.setContent(html, { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => undefined);
+    for (const target of targets) {
+    renderSignal.throwIfAborted();
     await page.evaluate(async (requestedPage) => {
+      document.querySelectorAll("style[data-open-slidex-thumbnail]").forEach((node) => node.remove());
       const pageNumber = Math.max(1, Math.floor(requestedPage));
       const oldURL = location.href;
       const explicit = [...document.querySelectorAll<HTMLElement>("[data-slidex-page]")]
@@ -390,16 +474,40 @@ export async function renderSlideXHtmlThumbnail(input: RenderSlideXHtmlThumbnail
       freeze.textContent = "*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}";
       (document.head || document.documentElement).appendChild(freeze);
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-    }, input.page);
-    input.signal?.throwIfAborted();
-    await page.screenshot({ path: input.outputPath, type: "png" });
+    }, target.page);
+    renderSignal.throwIfAborted();
+    await page.screenshot({ path: target.outputPath, type: "png" });
+    }
     return {
       height: MOTION_DOC_PNG_HEIGHT,
       outputPath: input.outputPath,
       page: input.page,
       width: MOTION_DOC_PNG_WIDTH
     };
-  }, input.signal);
+    }, renderSignal);
+  } finally {
+    clearTimeout(deadlineTimer);
+  }
+}
+
+function injectThumbnailOfflinePolicy(source: string, localAssetOrigin: string) {
+  const policy = [
+    "default-src 'none'",
+    `base-uri ${localAssetOrigin}`,
+    "connect-src 'none'",
+    `font-src data: blob: ${localAssetOrigin}`,
+    "form-action 'none'",
+    "frame-src 'none'",
+    `img-src data: blob: ${localAssetOrigin}`,
+    `media-src data: blob: ${localAssetOrigin}`,
+    "object-src 'none'",
+    "script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' data: blob:",
+    "style-src 'unsafe-inline' data: blob:",
+    "worker-src data: blob:"
+  ].join("; ");
+  const meta = `<meta http-equiv="Content-Security-Policy" content="${policy}">`;
+  if (/<head\b[^>]*>/i.test(source)) return source.replace(/<head\b[^>]*>/i, (head) => `${head}${meta}`);
+  return source.replace(/<html\b[^>]*>/i, (html) => `${html}<head>${meta}</head>`);
 }
 
 function injectThumbnailAssetBase(html: string, href: string) {

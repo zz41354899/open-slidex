@@ -61,6 +61,11 @@ test("HTML page ranges ignore fake page markup in scripts and pair nested tags",
   assert.equal(source.slice(pages[1]?.from, pages[1]?.outerTo), `<section class="page gcard" id="g2">Two</section>`);
 });
 
+test("HTML page scanning stops safely at unterminated tags and directives", () => {
+  assert.deepEqual(htmlPageSourceLocations(`<html><body><section class="slide"`), []);
+  assert.deepEqual(htmlPageSourceLocations(`<!doctype html "unterminated`), []);
+});
+
 test("selected-page editing replaces only that page and preserves shared source bytes", () => {
   const source = `<style>.shared{color:red}</style>\n<section class="gcard page" id="g1">One</section>\n<script>window.shared=true</script>\n<section class="gcard page" id="g2">Two</section>`;
   const selected = htmlPageSourceSelection(source, 2);

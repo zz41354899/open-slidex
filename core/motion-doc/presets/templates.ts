@@ -21,7 +21,7 @@ export const motionTemplates: MotionTemplate[] = [
   },
   {
     category: "Community",
-    description: "A thirteen-slide browser-native church presentation with expressive type and projection-ready playback.",
+    description: "A thirteen-slide editable church presentation with expressive type and projection-ready playback.",
     duration: "65s",
     id: "church-presentation",
     name: "Church Presentation",

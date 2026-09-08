@@ -5,7 +5,7 @@ import { openSlideXProjectSkillNames } from "@/core/motion-doc/domain/openSlideX
 
 export async function discoverOpenSlideXSkillTargets(invocationRoot: string) {
   const root = path.resolve(invocationRoot);
-  if (await isFile(path.join(root, "presentation.mdx"))) return [root];
+  if (await isFile(path.join(root, "presentation.tsx")) || await isFile(path.join(root, "presentation.mdx"))) return [root];
 
   const targets = [root];
   const workspaceRoot = path.join(root, "open-slidex-workspace");
@@ -16,7 +16,7 @@ export async function discoverOpenSlideXSkillTargets(invocationRoot: string) {
   for (const entry of entries) {
     if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
     const candidate = path.join(workspaceRoot, entry.name);
-    if (await isFile(path.join(candidate, "presentation.mdx"))) targets.push(candidate);
+    if (await isFile(path.join(candidate, "presentation.tsx")) || await isFile(path.join(candidate, "presentation.mdx"))) targets.push(candidate);
   }
   return targets;
 }

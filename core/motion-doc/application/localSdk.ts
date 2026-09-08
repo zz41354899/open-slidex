@@ -33,6 +33,7 @@ import { parseMotionDoc } from "@/core/motion-doc/domain/motionDocParser";
 import { MOTION_DOC_CANVAS_PROPS } from "@/core/motion-doc/domain/typography";
 import { slideLayouts } from "@/core/motion-doc/domain/slideLayouts";
 import { paperShaderDefinitions } from "@/core/motion-doc/application/shaders/paperShaderCatalog";
+import { motionDocToReactPresentationSource } from "@/core/react-presentation/reactPresentationSource";
 
 export type SlideXRevision = `sha256:${string}`;
 
@@ -107,6 +108,8 @@ export const blankPresentationMdx = `# Untitled Presentation
 <Slide duration={5} width={1920} height={1080} fontSizeUnit="pt" background="#FFFFFF" theme="light">
 </Slide>`;
 
+export const blankPresentationTsx = motionDocToReactPresentationSource(blankPresentationMdx);
+
 const publicLayouts = slideLayouts.map(({ id, name, source }) => ({ id, name, source }));
 
 /**
@@ -164,7 +167,7 @@ export function inspectSlideXDocument(
       end <= start ||
       end > source.length
     ) {
-      throw new Error("sourceRange must be inside presentation.mdx.");
+      throw new Error("sourceRange must be inside presentation.tsx.");
     }
     return {
       kind: "source-range" as const,
@@ -280,7 +283,7 @@ export function getSlideXCatalog(input: {
       ...(input.includeLayoutSource ? { source: layout.source } : {})
     })),
     schema: {
-      document: "# Title followed by one or more <Slide> blocks.",
+      document: "A default definePresentation export that renders one <Deck> with one or more <Slide> components.",
       slide:
         '<Slide duration={5} width={1920} height={1080} fontSizeUnit="pt" background="#fff" theme="light">...</Slide>',
       authorableElements: [
@@ -386,7 +389,7 @@ function repathProjectAsset(source: string, from: string, to: string) {
   );
   const nextSource = source.replace(pattern, `$1${to}$2`).replace(expressionPattern, `$1${to}$2`);
   if (nextSource === source) {
-    throw new Error(`Asset ${from} is not referenced by presentation.mdx.`);
+    throw new Error(`Asset ${from} is not referenced by presentation.tsx.`);
   }
   return nextSource;
 }

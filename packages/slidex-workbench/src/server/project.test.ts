@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import {
   access,
+  mkdir,
   mkdtemp,
   readFile,
   readdir,
   rm,
+  symlink,
   writeFile
 } from "node:fs/promises";
 import os from "node:os";
@@ -24,6 +26,28 @@ const source = `# Workbench project
   <Text id="title" role="title">Local source</Text>
   <ImageBlock id="hero" src="assets/hero.webp" alt="Hero" />
 </Slide>`;
+
+test("Workbench upgrades legacy MDX once and preserves a read-only backup", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-migration-"));
+  try {
+    await writeFile(path.join(root, "presentation.mdx"), source, "utf8");
+    const project = new SlideXProject(root);
+    await project.prepare();
+    const legacy = await project.open();
+    assert.equal(legacy.sourceFormat, "mdx");
+    assert.equal(legacy.requiresMigration, true);
+
+    const upgraded = await project.migrateLegacyMdx(legacy.revision);
+    assert.equal(upgraded.sourceFormat, "tsx");
+    assert.equal(upgraded.requiresMigration, false);
+    assert.match(upgraded.source, /definePresentation/);
+    assert.deepEqual(parseMotionDoc(upgraded.source), parseMotionDoc(source));
+    assert.equal(await readFile(path.join(root, ".open-slidex", "legacy", "presentation.mdx"), "utf8"), source);
+    await assert.rejects(access(path.join(root, "presentation.mdx")));
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
 
 test("Workbench project keeps document, context, and asset renames revision-safe", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-project-"));
@@ -124,6 +148,28 @@ test("Workbench project rejects invalid saves and preserves the last valid file"
     assert.equal((await project.open()).revision, opened.revision);
   } finally {
     await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("Workbench rejects symlinked asset roots and asset files", async () => {
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-symlink-assets-"));
+  const root = path.join(workspace, "deck");
+  const outside = path.join(workspace, "outside");
+  try {
+    await Promise.all([mkdir(root), mkdir(outside)]);
+    await writeFile(path.join(root, "presentation.mdx"), source, "utf8");
+    await writeFile(path.join(outside, "secret.webp"), "secret", "utf8");
+    await symlink(outside, path.join(root, "assets"));
+    await assert.rejects(() => new SlideXProject(root).prepare(), /unsafe|Symbolic links/i);
+
+    await rm(path.join(root, "assets"));
+    const project = new SlideXProject(root);
+    await project.prepare();
+    await symlink(path.join(outside, "secret.webp"), path.join(root, "assets", "leak.webp"));
+    await assert.rejects(() => project.readAsset("leak.webp"), /Symbolic links are not allowed/);
+    await assert.rejects(() => project.assetPath("leak.webp"), /Symbolic links are not allowed/);
+  } finally {
+    await rm(workspace, { force: true, recursive: true });
   }
 });
 
@@ -281,10 +327,10 @@ test("Workbench project exports a just-pasted image as portable MDX while materi
   }
 });
 
-test("Workbench project downloads the original HTML bytes", async () => {
+test("Workbench project downloads an offline-hardened static HTML copy", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-html-"));
   try {
-    const html = Buffer.from("<!doctype html>\r\n<html><body><script>document.body.dataset.ok='1'</script></body></html>\r\n", "utf8");
+    const html = Buffer.from("<!doctype html>\r\n<html><body><p>Static source</p></body></html>\r\n", "utf8");
     const htmlSource = `# HTML source\n\n<Slide><HtmlEmbedBlock id="html" src="assets/original.html" x={0} y={0} w={100} h={100} /></Slide>\n`;
     await writeFile(path.join(root, "presentation.mdx"), htmlSource, "utf8");
     const project = new SlideXProject(root);
@@ -299,7 +345,8 @@ test("Workbench project downloads the original HTML bytes", async () => {
       target: "download"
     });
     assert.ok("bytes" in result);
-    assert.deepEqual(result.bytes, html);
+    assert.match(result.bytes.toString("utf8"), /data-open-slidex-offline-export/);
+    assert.match(result.bytes.toString("utf8"), /<p>Static source<\/p>/);
     await assert.rejects(
       project.export({
         fileName: "original",
@@ -315,7 +362,7 @@ test("Workbench project downloads the original HTML bytes", async () => {
   }
 });
 
-test("Workbench project downloads original HTML bytes for mapped shared pages", async () => {
+test("Workbench project downloads offline HTML for mapped shared pages", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-mapped-html-"));
   try {
     const html = Buffer.from("<!doctype html>\n<html><body>Mapped</body></html>\n", "utf8");
@@ -327,13 +374,14 @@ test("Workbench project downloads original HTML bytes for mapped shared pages", 
 
     const result = await project.export({ fileName: "mapped", format: "html", overwrite: false, source, target: "download" });
     assert.ok("bytes" in result);
-    assert.deepEqual(result.bytes, html);
+    assert.match(result.bytes.toString("utf8"), /data-open-slidex-offline-export/);
+    assert.match(result.bytes.toString("utf8"), />Mapped</);
   } finally {
     await rm(root, { force: true, recursive: true });
   }
 });
 
-test("untouched native HTML Text layers keep the original HTML bytes exact", async () => {
+test("untouched native HTML Text layers keep canonical source content in the secured export", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "slidex-workbench-untouched-html-text-"));
   try {
     const html = Buffer.from("<!doctype html>\r\n<html><body><h1>Original &amp;   copy</h1></body></html>\r\n", "utf8");
@@ -351,7 +399,8 @@ test("untouched native HTML Text layers keep the original HTML bytes exact", asy
 
     const result = await project.export({ fileName: "untouched", format: "html", overwrite: false, source, target: "download" });
     assert.ok("bytes" in result);
-    assert.deepEqual(result.bytes, html);
+    assert.match(result.bytes.toString("utf8"), /data-open-slidex-offline-export/);
+    assert.match(result.bytes.toString("utf8"), /<h1>Original &amp;   copy<\/h1>/);
   } finally {
     await rm(root, { force: true, recursive: true });
   }
@@ -373,11 +422,9 @@ test("legacy Canvas Text overlays cannot override the canonical HTML source", as
     await project.prepare();
     await writeFile(path.join(project.assetsRoot, "original.html"), html);
 
-    const result = await project.export({ fileName: "edited", format: "html", overwrite: false, source, target: "download" });
-    assert.ok("bytes" in result);
-    assert.deepEqual(
-      result.bytes,
-      html
+    await assert.rejects(
+      project.export({ fileName: "edited", format: "html", overwrite: false, source, target: "download" }),
+      /limited to static HTML/
     );
 
     const opened = await project.open();
@@ -389,17 +436,17 @@ test("legacy Canvas Text overlays cannot override the canonical HTML source", as
     });
     assert.doesNotMatch(replaced.document.source, /htmlSourceSelector|htmlSourceOriginalText/);
     assert.match(replaced.source, /^assets\/source-[a-f0-9]{16}\.html$/);
-    const exported = await project.export({
-      fileName: "direct-source-edit",
-      format: "html",
-      htmlMode: "original",
-      overwrite: false,
-      source: replaced.document.source,
-      target: "download"
-    });
-    assert.ok("bytes" in exported);
-    assert.ok(exported.bytes);
-    assert.equal(exported.bytes.toString("utf8"), directEdit);
+    await assert.rejects(
+      project.export({
+        fileName: "direct-source-edit",
+        format: "html",
+        htmlMode: "original",
+        overwrite: false,
+        source: replaced.document.source,
+        target: "download"
+      }),
+      /limited to static HTML/
+    );
   } finally {
     await rm(root, { force: true, recursive: true });
   }
@@ -433,7 +480,8 @@ test("Workbench project edits HTML through content-addressed revision-safe repla
       target: "download"
     });
     assert.ok("bytes" in exported);
-    assert.deepEqual(exported.bytes, Buffer.from(updated, "utf8"));
+    assert.match(exported.bytes.toString("utf8"), /data-open-slidex-offline-export/);
+    assert.match(exported.bytes.toString("utf8"), /id="g1">Edited/);
   } finally {
     await rm(root, { force: true, recursive: true });
   }

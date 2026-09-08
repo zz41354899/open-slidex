@@ -24,7 +24,7 @@ blocker and the checks relevant to the deck's source type.
 4. For review-only work, call `open_slidex_review` and inspect the complete
    montage plus every materially changed slide.
 5. Do one evidence pass and one visual pass. A deck is complete only when both
-   pass and the editable MDX preserves the intended hierarchy.
+   pass and the compiled React deck preserves the intended hierarchy.
 
 For a deck longer than 20 pages, inspect the complete montage and every slide,
 not only a representative sample. For browser-native HTML, verify the canonical

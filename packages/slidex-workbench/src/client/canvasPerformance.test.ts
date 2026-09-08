@@ -12,6 +12,7 @@ import {
   THUMBNAIL_SHADER_MIN_PIXEL_RATIO
 } from "../../../../features/pitch/application/canvasPerformance";
 import { EMPTY_BLOCK_FRAME_OVERRIDES } from "../../../../features/pitch/application/pitchGeometry";
+import { updatePositionedBlockFrames } from "../../../../features/pitch/application/motionDocCommands";
 import {
   canvasPointFromRect,
   interactionFrameUpdates,
@@ -104,6 +105,30 @@ test("hidden editable layer movement does not invalidate the scene preview", () 
 
   assert.equal(textOnly, EMPTY_BLOCK_FRAME_OVERRIDES);
   assert.equal(imageOnly.size, 1);
+});
+
+test("a transient rotation is applied with the final frame commit", () => {
+  const scene = {
+    blocks: [{ props: { h: 24, id: "shape", rotation: 0, w: 30, x: 12, y: 16, shape: "rectangle" }, type: "Shape" }],
+    duration: 5,
+    props: { id: "one" }
+  } satisfies MotionDocScene;
+
+  const updated = updatePositionedBlockFrames(scene, [{
+    blockIndex: 0,
+    frame: { h: 26, w: 32, x: 14, y: 18 },
+    rotation: 37
+  }]);
+
+  assert.deepEqual(updated.blocks[0]?.props, {
+    h: 26,
+    id: "shape",
+    rotation: 37,
+    shape: "rectangle",
+    w: 32,
+    x: 14,
+    y: 18
+  });
 });
 
 test("unchanged scene objects survive a one-slide source edit", () => {

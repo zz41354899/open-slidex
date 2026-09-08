@@ -42,7 +42,7 @@ test("asset upload retries the server-provided revision after a concurrent Canva
       return new Response(JSON.stringify({
         code: "revision_conflict",
         currentRevision: "saved-while-file-picker-open",
-        message: "presentation.mdx changed outside the workbench."
+        message: "The presentation source changed outside the Workbench."
       }), { headers: { "content-type": "application/json" }, status: 409 });
     }
     return new Response(JSON.stringify({

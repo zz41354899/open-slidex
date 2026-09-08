@@ -2,7 +2,7 @@
 
 [English](README.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md)
 
-OpenSlideX 是开源、local-first 的可编辑演示文稿工作区。每份演示文稿都存放在你拥有的文件夹中，并以 `presentation.mdx` 作为唯一源文件。
+OpenSlideX 是开源、local-first 的可编辑演示文稿工作区。每份演示文稿都存放在你拥有的文件夹中，并以 `presentation.tsx` 作为唯一可编辑源文件；MDX 保留用于兼容导入与便携导出。
 
 无需账号、后台同步或隐藏的云端依赖，即可创建、编辑、预览和导出演示文稿。MotionDoc 格式保持便携和易读，并能继续使用你自己的工具和 Git 工作流编辑。
 
@@ -19,13 +19,17 @@ OpenSlideX 是开源、local-first 的可编辑演示文稿工作区。每份演
 macOS：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.sh | sh
+curl -fLO https://github.com/zz41354899/open-slidex/releases/latest/download/install.sh
+gh attestation verify install.sh --repo zz41354899/open-slidex
+sh install.sh
 ```
 
 Windows PowerShell：
 
 ```powershell
-irm https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.ps1 | iex
+irm https://github.com/zz41354899/open-slidex/releases/latest/download/install.ps1 -OutFile install.ps1
+gh attestation verify install.ps1 --repo zz41354899/open-slidex
+.\install.ps1
 ```
 
 首次安装后，请打开新终端并执行：
@@ -33,6 +37,7 @@ irm https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.ps1 | 
 ```bash
 slidex             # 打开本地 Workspace
 slidex update      # 检查并安装最新版本
+slidex rollback    # 切回保留的上一个正常版本
 slidex uninstall   # 移除 runtime 和命令，保留你的演示文稿
 ```
 
@@ -49,7 +54,7 @@ npm install
 npm run dev
 ```
 
-这会启动本地 Workspace。空白和模板演示文稿默认创建在已忽略的 `open-slidex-workspace/` 中，每个 deck 都有自己的 `presentation.mdx`；不需要账号或 Supabase 项目。内置模板包括 **Summer Time Report** 和 **Moodboard**。
+这会启动本地 Workspace。空白和模板演示文稿默认创建在已忽略的 `open-slidex-workspace/` 中，每个 deck 都有自己的 `presentation.tsx`；不需要账号或 Supabase 项目。内置模板包括 **Summer Time Report** 和 **Moodboard**。
 
 ### 使用其他 Workspace 文件夹或端口
 
@@ -83,7 +88,7 @@ Starter 包含五项项目级 Agent Skills：PPTX 源文件导入、MDX 编写�
 - 通过 Vite HMR 预览、验证、render 和导出本地文件。
 - 为支持的 agent client 配置可选的 Workspace 范围 MCP 访问。
 
-Workspace Settings 可以为 Codex、Claude Code 或 Claude Desktop 生成用户级 MCP 配置。MCP 有六个工具：工作区选择、渐进式源文件／资源读取（包括浏览器原生 HTML）、PPTX 源文件导入、媒体、审查和编辑。`open_slidex_read` 会保留 canonical HTML bytes 并报告在线依赖；`open_slidex_edit` 会通过 revision 保护创建或替换 HTML。HTTP(S) 资源均在 opaque-origin sandbox 中运行。
+Workspace Settings 可以为 Codex、Claude Code 或 Claude Desktop 生成用户级 MCP 配置。MCP 有六个工具：工作区选择、渐进式源文件／资源读取（包括浏览器原生 HTML）、PPTX 源文件导入、媒体、审查和编辑。`open_slidex_read` 会保留 canonical HTML bytes 并报告检测到的网络依赖；`open_slidex_edit` 会通过 revision 保护创建或替换 HTML。导入的 HTML 只会通过离线 opaque-origin 缩略图 sandbox 生成静态预览，并拒绝远程资源、绝对路径、`file:` URL 和 symlink sidecar。
 
 ## Repository 命令
 

@@ -1,6 +1,6 @@
 import { useMemo, useRef } from "react";
 import { stringValue } from "@/common/util/valueUtils";
-import { materializeFreeformDocument } from "@/core/motion-doc/application/motionDocFreeform";
+import { createFreeformMaterializer } from "@/core/motion-doc/application/motionDocFreeform";
 import { defaultSlideBackground } from "@/core/motion-doc/application/slideTheme";
 import { numberValue } from "@/core/motion-doc/domain/frame";
 import { buildSlideRows } from "@/features/pitch/application/slideRows";
@@ -18,7 +18,8 @@ export function useMotionDocDocument({
   source: string;
 }) {
   const sceneCacheRef = useRef<MotionDocSceneCache | undefined>(undefined);
-  const materialized = useMemo(() => materializeFreeformDocument(source), [source]);
+  const materialize = useMemo(() => createFreeformMaterializer(), []);
+  const materialized = useMemo(() => materialize(source), [materialize, source]);
   const canvasSource = materialized.source;
   const sliderDocument = useMemo(() => {
     const sceneCache = stabilizeMotionDocScenes(

@@ -22,7 +22,9 @@ export type OfficialTemplateCatalog = {
 export type LocalWorkspacePresentation = {
   cover: string;
   id: string;
+  requiresMigration: boolean;
   slideCount: number;
+  sourceFormat: "mdx" | "tsx";
   title: string;
   updatedAt: string;
 };
@@ -83,6 +85,14 @@ export function localWorkbenchAssetUrl(source: string) {
 
 export function readDocument() {
   return requestJson<DocumentSnapshot>("/api/v1/document");
+}
+
+export function migrateDocument(expectedRevision: string) {
+  return requestJson<DocumentSnapshot>("/api/v1/document/migrate", {
+    body: JSON.stringify({ expectedRevision }),
+    headers: { "content-type": "application/json" },
+    method: "POST"
+  });
 }
 
 export function readLocalWorkspace(locale: "en" | "zh-TW") {
@@ -193,7 +203,7 @@ export async function uploadAsset(file: File, expectedRevision: string) {
   } catch (error) {
     const conflict = error as Error & { code?: string; currentRevision?: string };
     // Asset imports create a content-addressed file but do not alter
-    // presentation.mdx. A save can finish between the last React render and
+    // presentation.tsx. A save can finish between the last React render and
     // the file-picker change event, leaving that event with the previous
     // revision. Retrying once with the server-provided revision preserves the
     // user's upload without weakening conflicts for document writes.

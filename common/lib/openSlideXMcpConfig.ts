@@ -24,9 +24,16 @@ export function createOpenSlideXMcpConfig(input: {
   const workspace = input.scope === "workspace";
   const configKey = workspace ? "open_slidex_workspace" : "open_slidex";
   const option = workspace ? "--workspace" : "--project";
-  const command = input.platform === "windows" ? "cmd" : "npx";
+  const command = input.platform === "windows" ? "powershell.exe" : "npx";
   const args = input.platform === "windows"
-    ? ["/c", "npx", "-y", openSlideXMcpNpxPackage, "mcp", option, absoluteRoot]
+    ? [
+        "-NoLogo",
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        `& { param([string]$root) & npx.cmd -y ${openSlideXMcpNpxPackage} mcp ${option} $root }`,
+        absoluteRoot
+      ]
     : ["-y", openSlideXMcpNpxPackage, "mcp", option, absoluteRoot];
 
   if (input.client === "codex") {
@@ -41,7 +48,7 @@ export function createOpenSlideXMcpConfig(input: {
   }
 
   const launch = input.platform === "windows"
-    ? `cmd /c npx -y ${openSlideXMcpNpxPackage} mcp ${option} ${windowsQuote(absoluteRoot)}`
+    ? `npx.cmd -y ${openSlideXMcpNpxPackage} mcp ${option} ${powershellQuote(absoluteRoot)}`
     : `npx -y ${openSlideXMcpNpxPackage} mcp ${option} ${shellQuote(absoluteRoot)}`;
   return `claude mcp add --scope user ${configKey.replaceAll("_", "-")} -- ${launch}`;
 }
@@ -63,6 +70,6 @@ function shellQuote(value: string) {
   return `'${value.replaceAll("'", `'"'"'`)}'`;
 }
 
-function windowsQuote(value: string) {
-  return `"${value.replaceAll('"', '\\"')}"`;
+function powershellQuote(value: string) {
+  return `'${value.replaceAll("'", "''")}'`;
 }

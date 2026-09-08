@@ -76,11 +76,12 @@ export const officialTemplateDefinitions: readonly OfficialTemplateDefinition[] 
     { bytes: 15228, mediaType: "image/webp", path: "assets/images-cd6a8220608c3941.webp", sha256: "cd6a8220608c39411aff7d8f1f1e5fde4015803b10d54962ceb2a78d0a26b644" },
     { bytes: 11518, mediaType: "image/webp", path: "assets/images-1-d642064a78014f16.webp", sha256: "d642064a78014f16fd31d85a6f63e16f160eb65c39be081a39d6fd5d3fd4837c" }
   ]),
-  definition("church-presentation", "community", true, 40, 13, ["Church", "Worship", "HTML", "Welcome"], {
-    en: { description: "A thirteen-slide browser-native church presentation with expressive type, animated texture, and projection-ready playback.", name: "Church Presentation", useCase: "Church services, worship gatherings, and community welcomes" },
-    "zh-TW": { description: "具表現力字體、動態材質與投影播放能力的十三頁瀏覽器原生教會簡報模板。", name: "教會簡報", useCase: "教會聚會、敬拜活動與社群歡迎簡報" }
-  }, blueprint("Create an immersive welcome and message sequence for a live community gathering.", ["welcome", "message", "message", "message", "message", "message", "message", "message", "message", "message", "message", "message", "closing"], "Full-bleed browser-native canvas with theatrical typography, textured motion backgrounds, and projection-first spacing.", ["#000000", "#F8F0E6", "#6D63FF", "#261522"], "Bebas Neue display text paired with expressive script accents and high-contrast support copy.", "Preserve the browser-native HTML stage and its local playback behaviors; it is intentionally not converted to editable MotionDoc layers.", ["background", "type-treatment"]), [
-    { bytes: 435103, mediaType: "text/html", path: "assets/source-5ad7b364e098eba0.html", sha256: "5ad7b364e098eba0156b211f4c9fab6fe997e7fca98ca032badf3e56ffca32e5" }
+  definition("church-presentation", "community", true, 40, 13, ["Church", "Worship", "Editable", "Welcome"], {
+    en: { description: "A thirteen-slide editable church presentation with expressive type, textured motion, and projection-ready playback.", name: "Church Presentation", useCase: "Church services, worship gatherings, and community welcomes" },
+    "zh-TW": { description: "具表現力字體、動態材質、可直接編輯與投影播放能力的十三頁教會簡報模板。", name: "教會簡報", useCase: "教會聚會、敬拜活動與社群歡迎簡報" }
+  }, blueprint("Create an immersive welcome and message sequence for a live community gathering.", ["welcome", "message", "message", "message", "message", "message", "message", "message", "message", "message", "message", "message", "closing"], "Full-bleed native MotionDoc canvas with theatrical typography, textured motion backgrounds, and projection-first spacing.", ["#000000", "#F8F0E6", "#6D63FF", "#261522"], "Bebas Neue display text paired with expressive script accents and high-contrast support copy.", "Keep the native Text layers and portable WebP textures editable in the MotionDoc canvas.", ["background", "type-treatment"]), [
+    { bytes: 4168, mediaType: "image/webp", path: "assets/church-texture-light-afefb947ab83fb49.webp", sha256: "afefb947ab83fb49122c43ea6b2af4f527b64e92ccd651341bb4cd75ad48b400" },
+    { bytes: 3070, mediaType: "image/webp", path: "assets/church-texture-dark-4c1c1945678433e5.webp", sha256: "4c1c1945678433e5b4b983e8b9cb2210a10cfc789968a380ffc1b03a5fdba782" }
   ])
 ];
 

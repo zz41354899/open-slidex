@@ -1,15 +1,16 @@
 
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import { ensureMotionDocSourceBlockIds } from "@/core/motion-doc/application/motionDocSerialize";
+import { popSourceHistory, pushSourceHistory, type SourceHistoryEntry } from "@/features/pitch/application/sourceHistory";
 
 type UsePitchUndoArgs = {
   clearBlockSelection: () => void;
   markProjectDirty: () => void;
-  redoStackRef?: MutableRefObject<string[]>;
+  redoStackRef?: MutableRefObject<SourceHistoryEntry[]>;
   setNotice: Dispatch<SetStateAction<string>>;
   setSource: Dispatch<SetStateAction<string>>;
   source: string;
-  undoStackRef: MutableRefObject<string[]>;
+  undoStackRef: MutableRefObject<SourceHistoryEntry[]>;
 };
 
 type CommitSourceOptions = {
@@ -29,11 +30,12 @@ export function usePitchUndo({
     (snapshot = source) => {
       const undoStack = undoStackRef.current;
 
-      if (undoStack[undoStack.length - 1] === snapshot) {
+      const last = undoStack.at(-1);
+      if (last && "source" in last && last.source === snapshot) {
         return;
       }
 
-      undoStackRef.current = [...undoStack.slice(-79), snapshot];
+      undoStackRef.current = pushSourceHistory(undoStack, snapshot);
       if (redoStackRef) redoStackRef.current = [];
     },
     [redoStackRef, source, undoStackRef]
@@ -58,14 +60,14 @@ export function usePitchUndo({
   );
 
   const undoLastChange = useCallback(() => {
-    const previousSource = undoStackRef.current.pop();
+    const previousSource = popSourceHistory(undoStackRef.current);
 
-    if (!previousSource) {
+    if (previousSource === undefined) {
       setNotice("Nothing to undo");
       return;
     }
 
-    if (redoStackRef) redoStackRef.current = [...redoStackRef.current.slice(-79), source];
+    if (redoStackRef) redoStackRef.current = pushSourceHistory(redoStackRef.current, source);
     setSource(previousSource);
     markProjectDirty();
     clearBlockSelection();
@@ -73,14 +75,14 @@ export function usePitchUndo({
   }, [clearBlockSelection, markProjectDirty, redoStackRef, setNotice, setSource, source, undoStackRef]);
 
   const redoLastChange = useCallback(() => {
-    const nextSource = redoStackRef?.current.pop();
+    const nextSource = redoStackRef ? popSourceHistory(redoStackRef.current) : undefined;
 
-    if (!nextSource) {
+    if (nextSource === undefined) {
       setNotice("Nothing to redo");
       return;
     }
 
-    undoStackRef.current = [...undoStackRef.current.slice(-79), source];
+    undoStackRef.current = pushSourceHistory(undoStackRef.current, source);
     setSource(nextSource);
     markProjectDirty();
     clearBlockSelection();

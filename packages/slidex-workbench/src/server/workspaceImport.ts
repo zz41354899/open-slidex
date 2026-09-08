@@ -1,15 +1,17 @@
 import { createHash } from "node:crypto";
-import { readFile as readLocalFile, realpath, stat } from "node:fs/promises";
+import { lstat, readFile as readLocalFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import sharp from "sharp";
 
 import { analyzeHtmlPresentation, assertSandboxedHtml } from "./htmlImportPolicy";
+import { htmlAttributeToken, scanCssUrls, scanHtmlDocument } from "./htmlScanner";
 import { assertSafeMotionDocSvg } from "@/core/motion-doc/domain/svgPolicy";
 
 const MAX_WORKSPACE_MDX_BYTES = 2 * 1024 * 1024;
 export const MAX_WORKSPACE_IMPORT_FILE_BYTES = 50 * 1024 * 1024;
+const MAX_HTML_IMAGE_BYTES = 25 * 1024 * 1024;
+const MAX_HTML_IMAGE_PIXELS = 40_000_000;
 
 export type WorkspaceImportAsset = {
   bytes: Uint8Array;
@@ -33,7 +35,7 @@ export type PackageHtmlAssetsOptions = {
 export type WorkspaceImportPayload = {
   assets: WorkspaceImportAsset[];
   html?: { bytes: Uint8Array; fileName: string; source: string };
-  kind: "html" | "mdx";
+  kind: "html" | "mdx" | "tsx";
   source: string;
 };
 
@@ -46,7 +48,7 @@ export async function readWorkspaceImport(
   options: { htmlSidecars?: WorkspaceHtmlSidecar[]; mdxSidecars?: WorkspaceHtmlSidecar[] } = {}
 ): Promise<WorkspaceImportPayload> {
   const extension = path.extname(file.name).toLowerCase();
-  if (extension === ".mdx") {
+  if (extension === ".mdx" || extension === ".tsx") {
     const embedded = extractEmbeddedImageAssets(await readMdxFile(file));
     assertCanonicalMdxSize(embedded.source);
     const references = unique(referencedSources(embedded.source));
@@ -57,12 +59,12 @@ export async function readWorkspaceImport(
     const unresolvedReferences = missingReferences.filter((_, index) => !recoveredAssets[index]);
     return {
       assets: [...embedded.assets, ...sidecarAssets, ...recoveredAssets.filter((asset): asset is WorkspaceImportAsset => Boolean(asset))],
-      kind: "mdx",
+      kind: extension === ".tsx" ? "tsx" : "mdx",
       source: stripUnavailableAssetReferences(embedded.source, unresolvedReferences)
     };
   }
   if (extension !== ".html") {
-    throw badRequest("Import an .mdx or .html file.");
+    throw badRequest("Import a .tsx, .mdx, or .html file.");
   }
   if (!file.size || file.size > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
     throw badRequest("The HTML import must be between 1 byte and 50 MB.");
@@ -145,7 +147,7 @@ export async function packageHtmlAssets(source: string, options: PackageHtmlAsse
   for (const sidecar of sidecars) {
     const reference = normalizeSidecarReference(sidecar.path);
     if (assetsByReference.has(reference)) throw badRequest(`The HTML import includes the sidecar more than once: ${reference}`);
-    if (!sidecar.file.size || sidecar.file.size > 25 * 1024 * 1024) {
+    if (!sidecar.file.size || sidecar.file.size > MAX_HTML_IMAGE_BYTES) {
       throw badRequest(`HTML sidecar ${reference} must be between 1 byte and 25 MB.`);
     }
     const extension = localImageExtension(reference);
@@ -165,7 +167,7 @@ export async function packageHtmlAssets(source: string, options: PackageHtmlAsse
     const localPath = await resolveHtmlLocalImagePath(reference, options.assetRoot);
     if (!localPath) continue;
     const file = await stat(localPath).catch(() => undefined);
-    if (!file?.isFile() || !file.size || file.size > 25 * 1024 * 1024) {
+    if (!file?.isFile() || !file.size || file.size > MAX_HTML_IMAGE_BYTES) {
       throw badRequest(`HTML image ${reference} must be a readable file between 1 byte and 25 MB.`);
     }
     const extension = localImageExtension(localPath);
@@ -189,10 +191,30 @@ async function packageHtmlImage(bytes: Uint8Array, extension: string, reference:
   let outputExtension = extension === ".jpeg" ? ".jpg" : extension;
   if (extension === ".png") {
     try {
-      outputBytes = new Uint8Array(await sharp(bytes, { failOn: "error" })
+      const metadata = await sharp(bytes, {
+        animated: true,
+        failOn: "error",
+        limitInputPixels: MAX_HTML_IMAGE_PIXELS
+      }).metadata();
+      if (
+        metadata.format !== "png"
+        || !metadata.width
+        || !metadata.height
+        || metadata.width * metadata.height > MAX_HTML_IMAGE_PIXELS
+        || (metadata.pages ?? 1) !== 1
+      ) {
+        throw new Error("Invalid PNG dimensions or format.");
+      }
+      outputBytes = new Uint8Array(await sharp(bytes, {
+        failOn: "error",
+        limitInputPixels: MAX_HTML_IMAGE_PIXELS
+      })
         .rotate()
         .webp({ alphaQuality: 100, effort: 4, quality: 90 })
         .toBuffer());
+      if (outputBytes.byteLength > MAX_HTML_IMAGE_BYTES) {
+        throw new Error("Converted PNG exceeds the HTML image byte budget.");
+      }
       outputExtension = ".webp";
     } catch {
       throw badRequest(`HTML PNG image could not be converted to WebP: ${reference}`);
@@ -201,6 +223,17 @@ async function packageHtmlImage(bytes: Uint8Array, extension: string, reference:
     let svg: string;
     try { svg = new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { throw badRequest(`HTML SVG sidecar must use UTF-8: ${reference}`); }
     try { assertSafeMotionDocSvg(svg); } catch (error) { throw badRequest(error instanceof Error ? error.message : `HTML SVG sidecar is unsafe: ${reference}`); }
+  } else {
+    let format: string | undefined;
+    try {
+      format = (await sharp(bytes, { failOn: "error", limitInputPixels: 40_000_000 }).metadata()).format;
+    } catch {
+      throw badRequest(`HTML image bytes do not match a supported raster image: ${reference}`);
+    }
+    const expected = extension === ".jpg" || extension === ".jpeg" ? "jpeg" : extension.slice(1);
+    if (format !== expected) {
+      throw badRequest(`HTML image bytes do not match the ${extension} extension: ${reference}`);
+    }
   }
   const hash = createHash("sha256").update(outputBytes).digest("hex").slice(0, 16);
   const fileName = `html-asset-${hash}${outputExtension}`;
@@ -215,13 +248,20 @@ async function packageHtmlImage(bytes: Uint8Array, extension: string, reference:
 
 function htmlLocalImageReferences(source: string) {
   const values: string[] = [];
-  const attributes = /<[A-Za-z][^>]*?\s+(?:src|poster|data|href|xlink:href)\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))/gi;
-  const cssUrl = /\burl\(\s*(["']?)(.*?)\1\s*\)/gi;
-  const srcset = /<[A-Za-z][^>]*?\s+srcset\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))/gi;
-  for (const match of source.matchAll(attributes)) values.push(match[2] ?? match[3] ?? "");
-  for (const match of source.matchAll(cssUrl)) values.push(match[2] ?? "");
-  for (const match of source.matchAll(srcset)) {
-    values.push(...(match[2] ?? match[3] ?? "").split(",").map((candidate) => candidate.trim().split(/\s+/, 1)[0] ?? ""));
+  const inspected = scanHtmlDocument(source);
+  for (const tag of inspected.tags) {
+    for (const attribute of tag.attributes) {
+      if (["src", "poster", "data", "background", "href", "xlink:href"].includes(attribute.name)) {
+        values.push(attribute.value);
+      } else if (attribute.name === "srcset") {
+        values.push(...attribute.value.split(",").map((candidate) => candidate.trim().split(/\s+/, 1)[0] ?? ""));
+      } else if (attribute.name === "style") {
+        values.push(...scanCssUrls(attribute.value).map((token) => token.value));
+      }
+    }
+  }
+  for (const block of inspected.rawText.filter((token) => token.name === "style")) {
+    values.push(...scanCssUrls(source.slice(block.from, block.to)).map((token) => token.value));
   }
   return unique(values.map((value) => decodeHtmlReference(value).trim()))
     .filter((value) => localImageExtension(value));
@@ -233,18 +273,34 @@ async function resolveHtmlLocalImagePath(reference: string, assetRoot?: string) 
   try { value = decodeURIComponent(encodedValue); } catch { /* Keep literal filesystem characters. */ }
   if (!value || /^(?:https?:|data:|blob:|about:|\/\/)/i.test(value)) return undefined;
   if (/^file:/i.test(value)) {
-    try { return fileURLToPath(value); } catch { throw badRequest(`The HTML image uses an invalid file URL: ${reference}`); }
+    throw badRequest(`HTML image file URLs are not allowed: ${reference}`);
   }
-  if (path.isAbsolute(value) || path.win32.isAbsolute(value)) return value;
+  if (path.isAbsolute(value) || path.win32.isAbsolute(value)) {
+    throw badRequest(`HTML image absolute paths are not allowed: ${reference}`);
+  }
   if (!assetRoot) return undefined;
-  const root = await realpath(path.resolve(assetRoot)).catch(() => undefined);
+  const requestedRoot = path.resolve(assetRoot);
+  const rootStats = await lstat(requestedRoot).catch(() => undefined);
+  if (!rootStats?.isDirectory() || rootStats.isSymbolicLink()) {
+    throw badRequest(`The HTML asset root must be a real directory: ${assetRoot}`);
+  }
+  const root = await realpath(requestedRoot).catch(() => undefined);
   if (!root) throw badRequest(`The HTML asset root does not exist: ${assetRoot}`);
   const candidate = path.resolve(root, value.replace(/\\/g, path.sep));
   const relative = path.relative(root, candidate);
   if (relative.startsWith("..") || path.isAbsolute(relative)) {
     throw badRequest(`The HTML image escapes its asset root: ${reference}`);
   }
-  return candidate;
+  const candidateStats = await lstat(candidate).catch(() => undefined);
+  if (!candidateStats?.isFile() || candidateStats.isSymbolicLink()) {
+    throw badRequest(`The HTML image must be a regular non-symlink file: ${reference}`);
+  }
+  const canonical = await realpath(candidate);
+  const canonicalRelative = path.relative(root, canonical);
+  if (canonicalRelative.startsWith("..") || path.isAbsolute(canonicalRelative)) {
+    throw badRequest(`The HTML image escapes its asset root through a symbolic link: ${reference}`);
+  }
+  return canonical;
 }
 
 function localImageExtension(value: string) {
@@ -282,8 +338,9 @@ function htmlSidecarMimeType(extension: string) {
 
 function rewriteHtmlSidecarReferences(source: string, replacements: Map<string, string>) {
   if (!replacements.size) return source;
-  const baseMatch = source.match(/<base\b[^>]*\bhref\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))[^>]*>/i);
-  const baseValue = decodeHtmlReference(baseMatch?.[2] ?? baseMatch?.[3] ?? "").trim();
+  const inspected = scanHtmlDocument(source);
+  const baseTag = inspected.tags.find((tag) => tag.name === "base");
+  const baseValue = decodeHtmlReference(baseTag ? htmlAttributeToken(baseTag, "href")?.value ?? "" : "").trim();
   const remoteBase = /^https?:/i.test(baseValue) ? new URL(baseValue) : undefined;
   const replace = (value: string) => {
     const packaged = replacements.get(normalizeHtmlReference(value));
@@ -291,30 +348,48 @@ function rewriteHtmlSidecarReferences(source: string, replacements: Map<string, 
     if (!remoteBase || !value || value.startsWith("#") || /^(?:[A-Za-z][A-Za-z\d+.-]*:|\/\/)/.test(value)) return value;
     try { return new URL(value, remoteBase).href; } catch { return value; }
   };
-  const attributes = /(<[A-Za-z][^>]*?\s+(?:src|poster|data|href|xlink:href)\s*=\s*)(?:(['"])(.*?)\2|([^\s"'=<>`]+))/gi;
-  const cssUrl = /\burl\(\s*(['"]?)(.*?)\1\s*\)/gi;
-  const srcset = /(<[A-Za-z][^>]*?\s+srcset\s*=\s*)(?:(['"])(.*?)\2|([^\s"'=<>`]+))/gi;
-  const rewritten = source
-    .replace(attributes, (_match, prefix: string, quote: string | undefined, quoted: string | undefined, bare: string | undefined) => {
-      const value = quoted ?? bare ?? "";
-      const next = replace(value);
-      const delimiter = quote ?? '"';
-      return `${prefix}${delimiter}${next}${delimiter}`;
-    })
-    .replace(cssUrl, (_match, quote: string, value: string) => `url(${quote}${replace(value)}${quote})`)
-    .replace(srcset, (_match, prefix: string, quote: string | undefined, quoted: string | undefined, bare: string | undefined) => {
-      const value = quoted ?? bare ?? "";
-      const next = value.split(",").map((candidate) => {
-        const [reference, ...descriptor] = candidate.trim().split(/\s+/);
-        return [replace(reference ?? ""), ...descriptor].join(" ");
-      }).join(", ");
-      const delimiter = quote ?? '"';
-      return `${prefix}${delimiter}${next}${delimiter}`;
-    });
+  const edits: Array<{ from: number; to: number; value: string }> = [];
+  const editCss = (css: string, offset: number) => {
+    for (const token of scanCssUrls(css, offset)) {
+      const next = replace(token.value);
+      if (next !== token.value) edits.push({ from: token.from, to: token.to, value: next });
+    }
+  };
+  for (const tag of inspected.tags) {
+    for (const attribute of tag.attributes) {
+      if (["src", "poster", "data", "background", "href", "xlink:href"].includes(attribute.name)) {
+        const next = replace(attribute.value);
+        if (next !== attribute.value) edits.push({ from: attribute.valueFrom, to: attribute.valueTo, value: next });
+      } else if (attribute.name === "srcset") {
+        const next = attribute.value.split(",").map((candidate) => {
+          const [reference, ...descriptor] = candidate.trim().split(/\s+/);
+          return [replace(reference ?? ""), ...descriptor].join(" ");
+        }).join(", ");
+        if (next !== attribute.value) edits.push({ from: attribute.valueFrom, to: attribute.valueTo, value: next });
+      } else if (attribute.name === "style") {
+        editCss(attribute.value, attribute.valueFrom);
+      }
+    }
+  }
+  for (const block of inspected.rawText.filter((token) => token.name === "style")) {
+    editCss(source.slice(block.from, block.to), block.from);
+  }
   // A remote base would redirect packaged filenames away from the local deck.
   // Static relative resources were expanded above, so remove it only when a
   // local sidecar has actually been made portable.
-  return remoteBase && baseMatch ? rewritten.replace(baseMatch[0], "") : rewritten;
+  if (remoteBase && baseTag) edits.push({ from: baseTag.from, to: baseTag.to, value: "" });
+  return applyHtmlEdits(source, edits);
+}
+
+function applyHtmlEdits(source: string, edits: Array<{ from: number; to: number; value: string }>) {
+  let cursor = 0;
+  let output = "";
+  for (const edit of edits.sort((left, right) => left.from - right.from || left.to - right.to)) {
+    if (edit.from < cursor) continue;
+    output += source.slice(cursor, edit.from) + edit.value;
+    cursor = edit.to;
+  }
+  return output + source.slice(cursor);
 }
 
 function normalizeHtmlReference(value: string) {
@@ -342,11 +417,11 @@ export function createHtmlPresentationMdx(
 
 async function readMdxFile(file: File) {
   if (!file.size || file.size > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
-    throw badRequest("The MDX import must be between 1 byte and 50 MB. Embedded Base64 images are extracted during import.");
+    throw badRequest("The TSX or MDX import must be between 1 byte and 50 MB. Embedded Base64 images are extracted during import.");
   }
   const source = await file.text();
   if (!source || Buffer.byteLength(source, "utf8") > MAX_WORKSPACE_IMPORT_FILE_BYTES) {
-    throw badRequest("The MDX import must be between 1 byte and 50 MB. Embedded Base64 images are extracted during import.");
+    throw badRequest("The TSX or MDX import must be between 1 byte and 50 MB. Embedded Base64 images are extracted during import.");
   }
   return source;
 }
@@ -425,7 +500,7 @@ function decodeBase64(payload: string, maxBytes: number, label: string) {
 
 function assertCanonicalMdxSize(source: string) {
   if (!source || Buffer.byteLength(source, "utf8") > MAX_WORKSPACE_MDX_BYTES) {
-    throw badRequest("presentation.mdx must not exceed 2 MB after embedded images are extracted.");
+    throw badRequest("The canonical presentation source must not exceed 2 MB after embedded images are extracted.");
   }
 }
 

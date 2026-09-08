@@ -63,3 +63,43 @@ export function sha256File(filePath) {
     stream.once("end", () => resolve(hash.digest("hex")));
   });
 }
+
+export function lockedStandaloneDependencies(
+  lockfile,
+  installedPackages,
+  excludedNames = new Set(),
+  packagedApplication = { name: "open-slidex", workspacePath: "packages/open-slidex" }
+) {
+  const packages = lockfile?.packages;
+  if (!packages || typeof packages !== "object") {
+    throw new Error("The repository package-lock.json does not contain a packages map.");
+  }
+  return installedPackages
+    .filter((record) => !excludedNames.has(record.name))
+    .map((record) => {
+      const relativePath = record.relativePath.replaceAll("\\", "/");
+      const applicationPrefix = `${packagedApplication.name}/node_modules/`;
+      const lockPath = relativePath.startsWith(applicationPrefix)
+        ? `${packagedApplication.workspacePath}/node_modules/${relativePath.slice(applicationPrefix.length)}`
+        : `node_modules/${relativePath}`;
+      const locked = packages[lockPath];
+      if (
+        !locked
+        || locked.version !== record.version
+        || typeof locked.integrity !== "string"
+        || !locked.integrity
+        || typeof locked.resolved !== "string"
+        || !locked.resolved.startsWith("https://registry.npmjs.org/")
+      ) {
+        throw new Error(`The staged dependency is not exactly bound to package-lock.json: ${record.name}@${record.version} (${lockPath}).`);
+      }
+      return {
+        integrity: locked.integrity,
+        name: record.name,
+        relativePath,
+        resolved: locked.resolved,
+        version: record.version
+      };
+    })
+    .sort((left, right) => left.relativePath.localeCompare(right.relativePath));
+}

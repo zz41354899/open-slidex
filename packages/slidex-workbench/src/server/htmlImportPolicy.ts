@@ -1,15 +1,5 @@
 import { htmlPageSourceLocations } from "@/core/motion-doc/domain/htmlPageSource";
-
-const sourceAttributePattern = /<[A-Za-z][^>]*?\s+src\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))/gi;
-const posterAttributePattern = /<[A-Za-z][^>]*?\s+poster\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))/gi;
-const objectDataAttributePattern = /<object\b[^>]*?\s+data\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))/gi;
-const resourceHrefPattern = /<(?:base|link|image|use)\b[^>]*?\s+(?:href|xlink:href)\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))/gi;
-const srcsetAttributePattern = /<[A-Za-z][^>]*?\s+srcset\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))/gi;
-const inlineStyleAttributePattern = /<[A-Za-z][^>]*?\s+style\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))/gi;
-const styleBlockPattern = /<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi;
-const cssUrlPattern = /\burl\(\s*(["']?)(.*?)\1\s*\)/gi;
-const cssImportPattern = /@import\s+(?:url\(\s*)?(["'])(.*?)\1\s*\)?/gi;
-const remoteBasePattern = /<base\b[^>]*\bhref\s*=\s*(?:(["'])(.*?)\1|([^\s"'=<>`]+))/i;
+import { htmlAttributeToken, scanCssUrls, scanHtmlDocument, type HtmlTagToken } from "./htmlScanner";
 
 export type HtmlPresentationPage = {
   id?: string;
@@ -40,16 +30,58 @@ export function assertSandboxedHtml(source: string, options: HtmlImportPolicyOpt
   if (!/^\s*(?:<!doctype\s+html\b[^>]*>\s*)?<html\b/i.test(source)) {
     throw badRequest("The HTML import must contain a complete <html> document.");
   }
-  inspectHtmlNetworkResources(source, options);
+  const network = inspectHtmlNetworkResources(source, options);
+  if (network.requiresNetwork) {
+    throw badRequest(
+      "Remote HTML resources are disabled for local security. Package required images and scripts with the presentation instead."
+    );
+  }
+}
+
+/** Produces a static offline copy that is safe to open outside the Workbench sandbox. */
+export function secureHtmlForStandaloneExport(source: string, options: HtmlImportPolicyOptions = {}) {
+  assertSandboxedHtml(source, options);
+  const decoded = decodeHtmlAttributeValue(source);
+  if (/<script\b/i.test(decoded) || /\son[a-z][a-z\d:_-]*\s*=/i.test(decoded)) {
+    throw badRequest("Standalone HTML export is limited to static HTML; scripts and event handlers are not allowed.");
+  }
+  const decodedTags = scanHtmlDocument(decoded).tags;
+  if (decodedTags.some((tag) => ["base", "embed", "form", "frame", "iframe", "object"].includes(tag.name))
+    || decodedTags.some((tag) => tag.name === "meta" && htmlAttributeToken(tag, "http-equiv")?.value.toLowerCase() === "refresh")) {
+    throw badRequest("Standalone HTML export cannot contain navigation, forms, frames, objects, or refresh directives.");
+  }
+  for (const tag of decodedTags.filter((candidate) => candidate.name === "a" || candidate.name === "area")) {
+    const href = (htmlAttributeToken(tag, "href")?.value ?? "").trim();
+    if (href && !href.startsWith("#")) {
+      throw badRequest("Standalone HTML export permits only in-document navigation links.");
+    }
+  }
+  const policy = [
+    "default-src 'none'",
+    "base-uri 'none'",
+    "connect-src 'none'",
+    "font-src 'self' data:",
+    "form-action 'none'",
+    "frame-src 'none'",
+    "img-src 'self' data: blob:",
+    "media-src 'self' data: blob:",
+    "object-src 'none'",
+    "script-src 'none'",
+    "style-src 'self' 'unsafe-inline' data:",
+    "worker-src 'none'"
+  ].join("; ");
+  const meta = `<meta data-open-slidex-offline-export http-equiv="Content-Security-Policy" content="${policy}">`;
+  if (/<head\b[^>]*>/i.test(source)) return source.replace(/<head\b[^>]*>/i, (head) => `${head}${meta}`);
+  return source.replace(/<html\b[^>]*>/i, (html) => `${html}<head>${meta}</head>`);
 }
 
 /** Returns the online dependency boundary without changing canonical HTML. */
 export function inspectHtmlNetworkResources(source: string, options: HtmlImportPolicyOptions = {}): HtmlNetworkResourceSummary {
-  const inspectedSource = htmlInspectionSource(source);
-  const base = remoteBaseUrl(inspectedSource);
+  const inspected = scanHtmlDocument(source);
+  const base = remoteBaseUrl(inspected.tags);
   const localAssets = new Set(options.localAssets ?? []);
   const networkUrls: URL[] = [];
-  for (const reference of htmlResourceReferences(inspectedSource)) {
+  for (const reference of htmlResourceReferences(source, inspected)) {
     const resolved = networkResourceUrl(reference, base, localAssets);
     if (resolved) networkUrls.push(resolved);
   }
@@ -64,7 +96,7 @@ export function inspectHtmlNetworkResources(source: string, options: HtmlImportP
 /**
  * Recognizes the explicit OpenSlideX HTML page contract and the Gamma-style
  * page shell used by the IDAEO benchmark. The original document remains the
- * rendering source; these records only map its pages into presentation.mdx.
+ * rendering source; these records only map its pages into presentation.tsx.
  */
 export function analyzeHtmlPresentation(source: string): HtmlPresentationPage[] {
   return htmlPageSourceLocations(source).map(({ id, page, stage }) => ({
@@ -77,65 +109,46 @@ export function analyzeHtmlPresentation(source: string): HtmlPresentationPage[] 
 /** CSP for browser-native HTML without granting the iframe OpenSlideX origin access. */
 export const HTML_PLAYBACK_CONTENT_SECURITY_POLICY = [
   "default-src 'none'",
-  "base-uri http: https:",
-  "connect-src http: https: ws: wss: data: blob:",
-  "font-src http: https: data: blob:",
-  "form-action http: https:",
-  "frame-ancestors 'self'",
-  "frame-src http: https: data: blob:",
-  "img-src http: https: data: blob:",
-  "manifest-src http: https: data: blob:",
-  "media-src http: https: data: blob:",
-  "object-src http: https: data: blob:",
-  "script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' http: https: data: blob:",
-  "style-src 'unsafe-inline' http: https: data: blob:",
-  "worker-src http: https: data: blob:"
+  "base-uri 'none'",
+  "connect-src 'none'",
+  "font-src 'self' data: blob:",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+  "frame-src 'none'",
+  "img-src 'self' data: blob:",
+  "manifest-src 'none'",
+  "media-src 'self' data: blob:",
+  "object-src 'none'",
+  "script-src 'none'",
+  "style-src 'self' 'unsafe-inline' data: blob:",
+  "worker-src 'none'"
 ].join("; ");
 
-function htmlResourceReferences(source: string) {
-  const cssSources = [
-    ...matches(source, styleBlockPattern, 1),
-    ...attributeMatches(source, inlineStyleAttributePattern)
-  ];
-  const references = [
-    ...attributeMatches(source, sourceAttributePattern),
-    ...attributeMatches(source, posterAttributePattern),
-    ...attributeMatches(source, objectDataAttributePattern),
-    ...attributeMatches(source, resourceHrefPattern),
-    ...cssSources.flatMap(cssResourceReferences),
-    ...attributeMatches(source, srcsetAttributePattern).flatMap(srcsetReferences)
-  ];
+function htmlResourceReferences(source: string, inspected = scanHtmlDocument(source)) {
+  const references: string[] = [];
+  for (const tag of inspected.tags) {
+    for (const attribute of tag.attributes) {
+      if (
+        attribute.name === "src"
+        || attribute.name === "poster"
+        || attribute.name === "background"
+        || attribute.name === "href"
+        || attribute.name === "xlink:href"
+        || (tag.name === "object" && attribute.name === "data")
+      ) references.push(decodeHtmlAttributeValue(attribute.value));
+      else if (attribute.name === "srcset") references.push(...srcsetReferences(decodeHtmlAttributeValue(attribute.value)));
+      else if (attribute.name === "style") references.push(...cssResourceReferences(decodeHtmlAttributeValue(attribute.value)));
+    }
+  }
+  for (const block of inspected.rawText.filter((token) => token.name === "style")) {
+    references.push(...cssResourceReferences(source.slice(block.from, block.to)));
+  }
   return references.map((value) => value.trim()).filter(Boolean);
 }
 
-function matches(source: string, pattern: RegExp, group = 2) {
-  pattern.lastIndex = 0;
-  return [...source.matchAll(pattern)].map((match) => match[group] ?? "");
-}
-
-function attributeMatches(source: string, pattern: RegExp) {
-  pattern.lastIndex = 0;
-  return [...source.matchAll(pattern)].map((match) => decodeHtmlAttributeValue(match[2] ?? match[3] ?? ""));
-}
-
 function cssResourceReferences(source: string) {
-  cssImportPattern.lastIndex = 0;
-  const imports = [...source.matchAll(cssImportPattern)].map((match) => ({
-    end: (match.index ?? 0) + match[0].length,
-    start: match.index ?? 0,
-    value: match[2] ?? ""
-  }));
-  cssUrlPattern.lastIndex = 0;
-  const urls = [...source.matchAll(cssUrlPattern)]
-    .filter((match) => !imports.some(({ end, start }) => (match.index ?? 0) >= start && (match.index ?? 0) < end))
-    .map((match) => match[2] ?? "");
-  return [...imports.map(({ value }) => value), ...urls];
-}
-
-function htmlInspectionSource(source: string) {
-  return source
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/(<(script|textarea|title)\b[^>]*>)[\s\S]*?(<\/\2\s*>)/gi, "$1$3");
+  const imports = [...source.matchAll(/@import\s+(["'])([^"']*)\1/gi)].map((match) => match[2] ?? "");
+  return [...imports, ...scanCssUrls(source).map((token) => token.value)];
 }
 
 function srcsetReferences(value: string) {
@@ -145,9 +158,9 @@ function srcsetReferences(value: string) {
     .filter(Boolean);
 }
 
-function remoteBaseUrl(source: string) {
-  const match = source.match(remoteBasePattern);
-  const value = decodeHtmlAttributeValue(match?.[2] ?? match?.[3] ?? "").trim();
+function remoteBaseUrl(tags: HtmlTagToken[]) {
+  const base = tags.find((tag) => tag.name === "base");
+  const value = decodeHtmlAttributeValue(base ? htmlAttributeToken(base, "href")?.value ?? "" : "").trim();
   if (!value) return undefined;
   return networkResourceUrl(value);
 }

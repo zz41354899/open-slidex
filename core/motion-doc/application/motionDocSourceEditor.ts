@@ -17,7 +17,15 @@ export function motionDocSlideSourceRanges(source: string): MotionDocSlideSource
 }
 
 export function appendMotionDocSlideSource(source: string, slideSource: string) {
-  return joinMotionDocSources(source.trim() || "# Untitled Deck", slideSource);
+  if (/<Deck\b/.test(source) && /export\s+default\s+definePresentation\b/.test(source)) {
+    const closingDeck = source.lastIndexOf("</Deck>");
+    if (closingDeck < 0) return source;
+    const before = source.slice(0, closingDeck).trimEnd();
+    const after = source.slice(closingDeck);
+    const indented = adaptFragmentToReactImports(source, slideSource).trim().split("\n").map((line) => `        ${line}`).join("\n");
+    return `${before}\n\n${indented}\n      ${after.trimStart()}`;
+  }
+  return joinMotionDocSources(source.trim() || "# Untitled Deck", adaptFragmentToReactImports(source, slideSource));
 }
 
 export function insertMotionDocSlideSource(
@@ -38,13 +46,13 @@ export function insertMotionDocSlideSource(
   const insertAt = placement === "before" ? range.start : range.end;
   const before = normalizedSource.slice(0, insertAt).trimEnd();
   const after = normalizedSource.slice(insertAt).trimStart();
-  return [before, slideSource.trim(), after].filter(Boolean).join("\n\n");
+  return [before, adaptFragmentToReactImports(source, slideSource).trim(), after].filter(Boolean).join("\n\n");
 }
 
 export function replaceMotionDocSlideSource(source: string, slideIndex: number, slideSource: string) {
   const range = motionDocSlideSourceRanges(source)[slideIndex];
   if (!range) return source;
-  return `${source.slice(0, range.start)}${slideSource}${source.slice(range.end)}`;
+  return `${source.slice(0, range.start)}${adaptFragmentToReactImports(source, slideSource)}${source.slice(range.end)}`;
 }
 
 export function appendMotionDocSlideBodySource(
@@ -63,13 +71,27 @@ export function appendMotionDocSlideBodySource(
   const insertAt = range.start + closingTagStart;
   const before = source.slice(0, insertAt).trimEnd();
   const after = source.slice(insertAt);
-  const indentedFragment = fragmentSource
+  const indentedFragment = adaptFragmentToReactImports(source, fragmentSource)
     .trim()
     .split("\n")
     .map((line) => `  ${line}`)
     .join("\n");
 
   return `${before}\n${indentedFragment}\n${after}`;
+}
+
+function adaptFragmentToReactImports(source: string, fragment: string) {
+  if (!/<Deck\b/.test(source) || !/export\s+default\s+definePresentation\b/.test(source)) return fragment;
+  const mappings = [
+    ["ImageBlock", "Image"],
+    ["VideoBlock", "Video"],
+    ["SvgBlock", "Svg"],
+    ["HtmlEmbedBlock", "HtmlEmbed"]
+  ] as const;
+  return mappings.reduce((current, [motionDocName, reactName]) => {
+    if (new RegExp(`\\b${reactName}\\s+as\\s+${motionDocName}\\b`).test(source)) return current;
+    return current.replace(new RegExp(`<(/?)${motionDocName}(?=[\\s/>])`, "g"), `<$1${reactName}`);
+  }, fragment);
 }
 
 export function replaceMotionDocSlideOpeningTag(source: string, slideIndex: number, openingTag: string) {

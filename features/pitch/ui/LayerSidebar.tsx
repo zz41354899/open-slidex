@@ -1,7 +1,7 @@
 
 import { Bot, ChevronDown, ChevronRight, Copy, Diamond, Group, Layers, Link2, MoreHorizontal, MousePointerClick, Plus, Trash2, Unlink2 } from "lucide-react";
 import type { DragEvent, KeyboardEvent, MouseEvent, ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { LayerRow } from "@/features/pitch/ui/LayerRow";
 import { motionDocBlockKey } from "@/core/motion-doc/application/motionDocBlockIdentity";
 import type { MotionDocBlock, MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
@@ -16,7 +16,7 @@ import {
 } from "@/features/pitch/application/remoteMcpOperation";
 import type { RemoteMcpOperation } from "@/features/pitch/domain/remoteMcpOperation";
 
-export function LayerSidebar({
+export const LayerSidebar = memo(function LayerSidebar({
   activeSlideIndex,
   authoringDisabled = false,
   copySlide,
@@ -30,6 +30,7 @@ export function LayerSidebar({
   moveSlideIntoMorphGroup,
   moveSlideOutOfMorphGroup,
   onAddSlide,
+  onPreloadTemplateLibrary,
   onSelectBlock,
   onSelectSlide,
   reorderBlock,
@@ -43,7 +44,6 @@ export function LayerSidebar({
   setDragOverBlockIndex,
   setDraggedBlockIndex,
   slideRows,
-  source,
   templateLibraryEnabled,
   toggleBlockPositionLock,
   unlinkSharedMorphGroup
@@ -61,6 +61,7 @@ export function LayerSidebar({
   moveSlideIntoMorphGroup: (slideIndex: number, groupStartIndex: number) => void;
   moveSlideOutOfMorphGroup: (slideIndex: number, targetSlideIndex: number) => void;
   onAddSlide: () => void;
+  onPreloadTemplateLibrary?: () => void;
   onSelectBlock: (index: number, event: MouseEvent<HTMLDivElement>, target?: "group" | "layer") => void;
   onSelectSlide: (index: number) => void;
   reorderBlock: (fromIndex: number, toIndex: number) => void;
@@ -74,7 +75,6 @@ export function LayerSidebar({
   setDragOverBlockIndex: (index: number | null) => void;
   setDraggedBlockIndex: (index: number | null) => void;
   slideRows: SlideRow[];
-  source: string;
   templateLibraryEnabled: boolean;
   toggleBlockPositionLock: (index: number) => void;
   unlinkSharedMorphGroup: (startIndex: number, endIndex: number) => void;
@@ -92,6 +92,16 @@ export function LayerSidebar({
   useEffect(() => {
     if (authoringDisabled) setActiveTab("slides");
   }, [authoringDisabled]);
+
+  const sidebarSlides = useMemo(() => slideRows.map((slide) => ({
+    currentSlide: scenes[slide.index],
+    mcpActivity: remoteMcpOperations.find((activity) => (
+      remoteMcpOperationTargetsSlide(activity, slide.index, activeSlideIndex)
+    )),
+    morphGroup: morphGroupStartingAt(scenes, slideRows, slide.index),
+    morphRole: slideMorphRole(scenes, slide.index),
+    slide
+  })), [activeSlideIndex, remoteMcpOperations, scenes, slideRows]);
 
   function handleSlideShortcut(event: KeyboardEvent<HTMLDivElement>, slideIndex: number) {
     if (authoringDisabled) return;
@@ -149,6 +159,8 @@ export function LayerSidebar({
               className="group flex items-center justify-between rounded-[1rem] border border-white/[0.04] bg-white/[0.02] p-3.5 text-left text-neutral-400 shadow-[inset_0_1px_1px_0_rgba(255,255,255,0.05)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white/[0.06] hover:text-white active:scale-[0.96]"
               data-slide-library-trigger={templateLibraryEnabled ? "" : undefined}
               onClick={onAddSlide}
+              onFocus={onPreloadTemplateLibrary}
+              onPointerEnter={onPreloadTemplateLibrary}
               type="button"
             >
               <span className="flex items-center gap-3.5">
@@ -185,15 +197,9 @@ export function LayerSidebar({
 
           {/* Slides List Grid */}
           <div className="flex flex-col gap-1">
-            {slideRows.map((slide) => {
+            {sidebarSlides.map(({ currentSlide, mcpActivity, morphGroup, morphRole, slide }) => {
               const isActive = slide.index === activeSlideIndex;
-              const currentSlide = scenes[slide.index];
-              const morphRole = slideMorphRole(scenes, slide.index);
-              const morphGroup = morphGroupStartingAt(scenes, slideRows, slide.index);
               if (activeTab === "slides" && !morphGroup && slide.index > 0 && scenes[slide.index - 1]?.props.slideTransition === "morph") return null;
-              const mcpActivity = remoteMcpOperations.find((activity) => (
-                remoteMcpOperationTargetsSlide(activity, slide.index, activeSlideIndex)
-              ));
               if (activeTab === "slides" && morphGroup) {
                 const isExpanded = expandedMorphGroups.has(morphGroup.startIndex);
                 return (
@@ -514,7 +520,7 @@ export function LayerSidebar({
       </div>
     </div>
   );
-}
+});
 
 function slideMorphRole(scenes: MotionDocScene[], index: number): "root" | "child" | "end" | null {
   const continuesFromPrevious = index > 0 && scenes[index - 1]?.props.slideTransition === "morph";

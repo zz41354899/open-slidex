@@ -2,6 +2,7 @@ export {
   applySlideXBatch,
   applySlideXBatch as applyOpenSlideXBatch,
   blankPresentationMdx,
+  blankPresentationTsx,
   createBlankSlideSource,
   getSlideXCatalog,
   getSlideXCatalog as getOpenSlideXCatalog,
@@ -21,6 +22,17 @@ export {
   type SlideXRevision,
   type SlideXRevision as OpenSlideXRevision
 } from "@/core/motion-doc/application/localSdk";
+export {
+  LEGACY_MDX_PRESENTATION_FILE,
+  REACT_PRESENTATION_FILE,
+  isReactPresentationSource,
+  motionDocToReactPresentationSource,
+  reactPresentationTitle,
+  reactPresentationToMotionDocSource,
+  replaceReactPresentationTitle,
+  validateReactPresentationSource,
+  type ReactPresentationSourceIssue
+} from "@/core/react-presentation/reactPresentationSource";
 export {
   ensureMotionDocSourceBlockIds,
   generateBlockString,
@@ -85,6 +97,8 @@ export {
   formatMotionDocChartValue,
   isMotionDocChartMotion,
   isMotionDocChartType,
+  motionDocChartAnimationDuration,
+  motionDocChartMaximumRows,
   motionDocChartModel,
   motionDocChartBarGaps,
   motionDocChartColorModes,
@@ -95,18 +109,29 @@ export {
   motionDocChartPresetNames,
   motionDocChartPresetProps,
   motionDocChartSortModes,
+  motionDocChartThemeProps,
+  motionDocChartThemes,
   motionDocChartTypes,
+  defaultMotionDocChartDataForType,
+  motionDocChartDataForType,
+  motionDocChartMotionOptions,
+  normalizeMotionDocChartLocale,
   parseMotionDocChartData,
+  parseMotionDocChartDataByType,
   sortMotionDocChartData,
+  validateMotionDocChartProps,
   type MotionDocChartDatum,
+  type MotionDocChartDataByType,
   type MotionDocChartBarGap,
   type MotionDocChartColorMode,
   type MotionDocChartLabelMode,
+  type MotionDocChartLocale,
   type MotionDocChartModel,
   type MotionDocChartMotion,
   type MotionDocChartNumberFormat,
   type MotionDocChartPreset,
   type MotionDocChartSortMode,
+  type MotionDocChartTheme,
   type MotionDocChartType
 } from "@/core/motion-doc/domain/chart";
 export {

@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent } from "react";
 import { InteractiveDotField } from "@/common/ui/InteractiveDotField";
 import { applyImageCropRect, fullImageCropRect, type ImageCropRect } from "@/core/motion-doc/application/imageCrop";
 import { autoSizeTextFrameProps } from "@/core/motion-doc/application/textFrameSizing";
@@ -140,7 +140,7 @@ type PreviewCanvasProps = {
   slideRows: SlideRow[];
 };
 
-export function PreviewCanvas({
+export const PreviewCanvas = memo(function PreviewCanvas({
   assistantActivities,
   assistantTrace,
   assistantTone,
@@ -719,12 +719,17 @@ export function PreviewCanvas({
           transform.handle === "w" ? "start" : "end",
           getCanvasPosition(event, { allowOverflow: true })
         );
-        onUpdateBlock(
-          transform.blockIndex,
-          { ...block.props, ...update.frame, rotation: update.rotation },
-          undefined,
-          { transient: true }
-        );
+        const updates = [{
+          blockId: transform.blockId,
+          blockIndex: transform.blockIndex,
+          frame: update.frame,
+          rotation: update.rotation
+        }];
+        if (commit) {
+          transientFramePreview.commit(updates);
+          return;
+        }
+        transientFramePreview.preview(updates);
       }
       return;
     }
@@ -732,12 +737,17 @@ export function PreviewCanvas({
     if (transform?.mode === "rotate") {
       const block = activeSlide?.blocks[transform.blockIndex];
       if (block) {
-        onUpdateBlock(
-          transform.blockIndex,
-          { ...block.props, rotation: rotationForPointer(transform, getCanvasPosition(event, { allowOverflow: true }), event.shiftKey) },
-          "text" in block ? block.text : undefined,
-          { transient: true }
-        );
+        const updates = [{
+          blockId: transform.blockId,
+          blockIndex: transform.blockIndex,
+          frame: transform.startFrame,
+          rotation: rotationForPointer(transform, getCanvasPosition(event, { allowOverflow: true }), event.shiftKey)
+        }];
+        if (commit) {
+          transientFramePreview.commit(updates);
+          return;
+        }
+        transientFramePreview.preview(updates);
       }
       return;
     }
@@ -1197,7 +1207,7 @@ export function PreviewCanvas({
       /> : null}
     </div>
   );
-}
+});
 
 const emptyBlockIndices: number[] = [];
 const emptyBlocks: MotionDocScene["blocks"] = [];

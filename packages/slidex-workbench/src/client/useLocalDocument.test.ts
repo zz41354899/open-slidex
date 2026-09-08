@@ -4,9 +4,11 @@ import test from "node:test";
 import {
   INITIAL_DOCUMENT_READ_RETRY_DELAYS_MS,
   LOCAL_DRAFT_DELAY_MS,
+  SOURCE_VALIDATION_DELAY_MS,
   canBeginExternalDocumentMutation,
   readInitialDocument,
   scheduleLocalDraftPersist,
+  scheduleSourceValidation,
   shouldValidateDeferredSource
 } from "./useLocalDocument";
 
@@ -55,6 +57,27 @@ test("draft persistence is debounced and can be cancelled by the next source cha
 
     assert.deepEqual(writes, ["latest"]);
     assert.equal(LOCAL_DRAFT_DELAY_MS, 250);
+  } finally {
+    if (originalWindow) Object.defineProperty(globalThis, "window", originalWindow);
+    else Reflect.deleteProperty(globalThis, "window");
+  }
+});
+
+test("source validation is coalesced while the editor is receiving input", async () => {
+  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: { clearTimeout, setTimeout }
+  });
+  try {
+    const validations: string[] = [];
+    const cancelFirst = scheduleSourceValidation(() => validations.push("first"), 15);
+    cancelFirst();
+    scheduleSourceValidation(() => validations.push("latest"), 15);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    assert.deepEqual(validations, ["latest"]);
+    assert.equal(SOURCE_VALIDATION_DELAY_MS, 120);
   } finally {
     if (originalWindow) Object.defineProperty(globalThis, "window", originalWindow);
     else Reflect.deleteProperty(globalThis, "window");

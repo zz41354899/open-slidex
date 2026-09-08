@@ -701,7 +701,7 @@ export function appendTextBlockAtPosition(
 export function updatePositionedBlockFrames(slide: MotionDocScene, updates: BlockFramePatch[]) {
   const blocks = [...slide.blocks];
 
-  for (const { blockIndex, frame } of updates) {
+  for (const { blockIndex, frame, rotation } of updates) {
     const currentBlock = blocks[blockIndex];
 
     if (!currentBlock || !("props" in currentBlock) || isPositionLocked(currentBlock)) {
@@ -712,7 +712,8 @@ export function updatePositionedBlockFrames(slide: MotionDocScene, updates: Bloc
       ...currentBlock.props,
       w: currentBlock.props.w ?? defaultBlockWidth(currentBlock.type),
       h: currentBlock.props.h ?? defaultBlockHeight(currentBlock.type),
-      ...frame
+      ...frame,
+      ...(rotation === undefined ? {} : { rotation })
     };
 
     blocks[blockIndex] = { ...currentBlock, props: nextProps };

@@ -104,9 +104,9 @@ Usage:
   open-slidex mcp --workspace <directory> [--print-config <codex|claude-code|claude-desktop>]
   open-slidex mcp --project <directory> [--print-setup-prompt <codex|claude-code|claude-desktop>]
   open-slidex mcp --workspace <directory> [--print-setup-prompt <codex|claude-code|claude-desktop>]
-  open-slidex validate [presentation.mdx]
-  open-slidex render [presentation.mdx] --montage --out <file.png>
-  open-slidex export [presentation.mdx] --format <html|mdx|pptx> --out <file> [--overwrite]
+  open-slidex validate [presentation.tsx]
+  open-slidex render [presentation.tsx] --montage --out <file.png>
+  open-slidex export [presentation.tsx] --format <html|mdx|pptx> --out <file> [--overwrite]
 
 Examples:
   open-slidex workspace ~/Presentations

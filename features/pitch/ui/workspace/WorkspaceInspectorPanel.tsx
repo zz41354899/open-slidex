@@ -1,4 +1,5 @@
 
+import { memo, useCallback } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { PitchInspector } from "@/features/pitch/ui/PitchInspector";
 import { preloadMdxEditorPane } from "@/features/pitch/ui/workspace/WorkspaceCodeEditorOverlay";
@@ -13,7 +14,7 @@ import {
 
 type WorkspaceInspectorPanelProps = Pick<PitchWorkspaceProps, "commands" | "document" | "selection" | "view">;
 
-export function WorkspaceInspectorPanel(props: WorkspaceInspectorPanelProps) {
+export const WorkspaceInspectorPanel = memo(function WorkspaceInspectorPanel(props: WorkspaceInspectorPanelProps) {
   const { view } = props;
   const { tx } = usePitchI18n();
 
@@ -91,13 +92,17 @@ export function WorkspaceInspectorPanel(props: WorkspaceInspectorPanelProps) {
       </Dialog>
     </>
   );
-}
+});
 
 type PitchInspectorContentProps = WorkspaceInspectorPanelProps & {
   onOpenMdxEditor?: () => void;
 };
 
 function PitchInspectorContent({ commands, document, onOpenMdxEditor, selection, view }: PitchInspectorContentProps) {
+  const openMdxEditor = useCallback(
+    () => view.setIsCodeEditorOpen(true),
+    [view.setIsCodeEditorOpen]
+  );
   return (
     <PitchInspector
       activeSlide={document.activeSlide}
@@ -135,7 +140,7 @@ function PitchInspectorContent({ commands, document, onOpenMdxEditor, selection,
       isSafeAreaVisible={view.isCanvasSafeAreaVisible}
       isSnapEnabled={view.isCanvasSnapEnabled}
       moveSelectedBlocksToEdge={commands.moveSelectedBlocksToEdge}
-      onOpenMdxEditor={onOpenMdxEditor ?? (() => view.setIsCodeEditorOpen(true))}
+      onOpenMdxEditor={onOpenMdxEditor ?? openMdxEditor}
       onPreloadMdxEditor={preloadMdxEditorPane}
       pushUndoSnapshot={commands.pushUndoSnapshot}
       removeImageForBlock={commands.removeImageForBlock}

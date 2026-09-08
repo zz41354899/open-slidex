@@ -13,8 +13,10 @@ export type ValidationResult = {
 
 export type DocumentSnapshot = {
   projectId: string;
+  requiresMigration?: boolean;
   revision: string;
   source: string;
+  sourceFormat?: "mdx" | "tsx";
   title: string;
   validation: ValidationResult;
 };
@@ -48,7 +50,9 @@ export type AssetItem = {
 
 export type StoredDraft = {
   baseRevision: string;
+  schemaVersion: 2;
   source: string;
+  sourceFormat: "mdx" | "tsx";
   updatedAt: string;
 };
 

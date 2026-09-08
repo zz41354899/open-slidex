@@ -14,12 +14,11 @@ test("HtmlEmbedBlock supports one persistent source mapped across pages", () => 
   assert.equal(summarizeMotionDoc(source).validation.isValid, true);
   const html = buildMotionDocHtml(source);
   assert.equal(html.match(/data-html-shared-scene="html"/g)?.length, 1);
-  assert.match(html, /class="block-html-embed"/);
-  assert.match(html, /allow="autoplay; encrypted-media; fullscreen; picture-in-picture"/);
-  assert.match(html, /sandbox="[^"]*allow-downloads[^"]*allow-scripts"/);
-  assert.doesNotMatch(html, /allow-same-origin/);
-  assert.match(html, /open-slidex:html-page/);
-  assert.doesNotMatch(html, /Interactive HTML is available only/);
+  assert.match(html, /class="block-html-unsupported"/);
+  assert.match(html, /Browser-native HTML is not embedded in portable players/);
+  assert.doesNotMatch(html, /<iframe\b/i);
+  assert.match(html, /connect-src 'none'/);
+  assert.match(html, /frame-src 'none'/);
 });
 
 test("HtmlEmbedBlock rejects Base64 HTML and keeps document source as an asset path", () => {
@@ -35,9 +34,10 @@ test("HtmlEmbedBlock rejects Base64 HTML and keeps document source as an asset p
   assert.equal(document.scenes[0]?.blocks[1]?.props.src, "assets/source.html");
   const exported = buildMotionDocHtml(source);
   assert.doesNotMatch(exported, /data:text\/html;base64/i);
-  assert.match(exported, /src="assets\/source\.html"/);
-  assert.match(exported, /script-src 'unsafe-inline'[^;]+https:/);
-  assert.match(exported, /connect-src[^;]+wss:/);
+  assert.doesNotMatch(exported, /src="assets\/source\.html"/);
+  assert.doesNotMatch(exported, /<iframe\b/i);
+  assert.match(exported, /script-src 'nonce-slidex-[a-f0-9]+'/);
+  assert.match(exported, /connect-src 'none'/);
 });
 
 test("HtmlEmbedBlock shared pages require one source and positive integer pages", () => {

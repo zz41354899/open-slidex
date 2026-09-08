@@ -37,7 +37,9 @@ export async function ingestOpenSlideXSource(input: {
   inboxRoot: string;
   projectRoot: string;
   downloadImage?: (url: string) => Promise<PublicImageDownload>;
+  signal?: AbortSignal;
 }): Promise<SourceIntakeResult> {
+  input.signal?.throwIfAborted();
   if (/^https:/i.test(input.filePath)) {
     const downloaded = await (input.downloadImage ?? downloadPublicImage)(input.filePath);
     const asset = await importAsset(input.projectRoot, downloaded.bytes, downloaded.fileName, {
@@ -115,9 +117,12 @@ export async function ingestOpenSlideXSource(input: {
   }
   if (extension === ".pdf") {
     try {
-      const extracted = await extractPdfMedia(sourceBytes, path.basename(source.path, extension));
+      const extracted = await extractPdfMedia(sourceBytes, path.basename(source.path, extension), {
+        signal: input.signal
+      });
       warnings.push(...extracted.warnings);
       for (const candidate of extracted.candidates) {
+        input.signal?.throwIfAborted();
         try {
           const origin = {
             kind: candidate.kind === "embedded" ? "pdf-embedded" as const : "pdf-page" as const,
@@ -134,10 +139,12 @@ export async function ingestOpenSlideXSource(input: {
             source: asset.source
           });
         } catch (error) {
+          input.signal?.throwIfAborted();
           warnings.push(`PDF page ${candidate.page} ${candidate.kind}: ${error instanceof Error ? error.message : "image import failed"}`);
         }
       }
     } catch (error) {
+      input.signal?.throwIfAborted();
       warnings.push(`PDF visual extraction: ${error instanceof Error ? error.message : "unavailable"}`);
     }
   }

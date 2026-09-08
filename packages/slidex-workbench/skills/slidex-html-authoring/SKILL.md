@@ -1,6 +1,6 @@
 ---
 name: slidex-html-authoring
-description: Read, create, replace, or repair browser-native OpenSlideX HTML presentations. Use for canonical .html source, external browser resources, HTML page mapping, or opaque-origin playback; not for editable native MotionDoc MDX.
+description: Read, create, replace, or repair browser-native OpenSlideX HTML presentations. Use for canonical .html source, packaged offline resources, HTML page mapping, or opaque-origin playback; not for editable native MotionDoc MDX.
 ---
 
 # OpenSlideX HTML Authoring
@@ -28,10 +28,10 @@ recommended `slidex-deck-design`, `slidex-motion-direction`, and
 3. For a replacement, call `open_slidex_edit` with `target: "html"`, the
    complete HTML in `source`, the returned `htmlSource`, and `expectedRevision`.
    Omit `htmlSource` only when replacing the selected deck with a new HTML deck.
-   When `source` contains relative local images, also pass the absolute folder
-   containing those sidecars as `htmlAssetRoot`. Absolute local image paths do
-   not need an asset root. The edit copies those images into the selected
-   deck's `assets/`, converts PNG to WebP, and rewrites the canonical HTML.
+   When `source` contains relative local images, also pass their real directory
+   inside the selected deck as `htmlAssetRoot`. Absolute paths, `file:` URLs,
+   symlinks, and remote network resources are rejected. The edit copies approved
+   images into `assets/`, converts PNG to WebP, and rewrites the canonical HTML.
 4. Read the saved HTML again and inspect every mapped page in playback. Confirm
    the returned `pageCount` matches the source deck, including plain `.slide`
    HTML exports. For long decks, verify every page thumbnail plus first, middle,
@@ -53,6 +53,6 @@ recommended `slidex-deck-design`, `slidex-motion-direction`, and
   Base64 document storage, or browser extensions.
 
 Never author the generated `HtmlEmbedBlock` wrapper. Never use
-`open_slidex_edit` to convert arbitrary HTML into editable MDX. If native
+`open_slidex_edit` to convert arbitrary HTML into editable React layers. If native
 editing or portable PPTX is required, rebuild the visible meaning separately
-with `slidex-mdx-authoring`.
+with `slidex-react-authoring`.

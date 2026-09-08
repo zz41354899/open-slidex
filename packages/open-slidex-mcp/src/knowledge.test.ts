@@ -4,7 +4,11 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { readOpenSlideXKnowledgeResource, searchOpenSlideXKnowledge } from "./knowledge";
+import {
+  buildOpenSlideXKnowledgeIndex,
+  readOpenSlideXKnowledgeResource,
+  searchOpenSlideXKnowledge
+} from "./knowledge";
 
 test("local knowledge search returns compact citations and reads one resource on demand", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-knowledge-"));
@@ -64,5 +68,65 @@ test("knowledge index rejects a symlinked workspace state directory", async () =
   } finally {
     await rm(root, { force: true, recursive: true });
     await rm(outside, { force: true, recursive: true });
+  }
+});
+
+test("knowledge indexing enforces cumulative file, input, and output budgets", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-knowledge-budgets-"));
+  try {
+    await mkdir(path.join(root, "knowledge"));
+    await writeFile(path.join(root, "knowledge", "one.md"), "# One\n\nfirst", "utf8");
+    await writeFile(path.join(root, "knowledge", "two.md"), "# Two\n\nsecond", "utf8");
+
+    await assert.rejects(
+      () => buildOpenSlideXKnowledgeIndex(root, { maximumFiles: 1 }),
+      /1-file limit/
+    );
+    await assert.rejects(
+      () => buildOpenSlideXKnowledgeIndex(root, { maximumInputBytes: 1 }),
+      /cumulative input byte budget/
+    );
+    await assert.rejects(
+      () => buildOpenSlideXKnowledgeIndex(root, { maximumOutputBytes: 1 }),
+      /cumulative output byte budget/
+    );
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
+test("knowledge indexing bounds directory traversal, chunk creation, and serialized metadata", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-knowledge-structure-budgets-"));
+  try {
+    const knowledgeRoot = path.join(root, "knowledge");
+    await mkdir(path.join(knowledgeRoot, "one", "two"), { recursive: true });
+    await Promise.all([
+      writeFile(path.join(knowledgeRoot, "ignored-a.bin"), "a", "utf8"),
+      writeFile(path.join(knowledgeRoot, "ignored-b.bin"), "b", "utf8"),
+      writeFile(
+        path.join(knowledgeRoot, "many-lines.md"),
+        Array.from({ length: 200 }, (_, index) => `line ${index}`).join("\n"),
+        "utf8"
+      )
+    ]);
+
+    await assert.rejects(
+      () => buildOpenSlideXKnowledgeIndex(root, { maximumEntries: 1 }),
+      /1-entry traversal limit/
+    );
+    await assert.rejects(
+      () => buildOpenSlideXKnowledgeIndex(root, { maximumDepth: 1 }),
+      /1-level directory depth limit/
+    );
+    await assert.rejects(
+      () => buildOpenSlideXKnowledgeIndex(root, { maximumChunks: 1 }),
+      /cumulative chunk limit/
+    );
+
+    await buildOpenSlideXKnowledgeIndex(root, { maximumOutputBytes: 8_192 });
+    const serialized = await readFile(path.join(root, ".open-slidex", "knowledge-index.json"));
+    assert.ok(serialized.byteLength <= 8_192);
+  } finally {
+    await rm(root, { force: true, recursive: true });
   }
 });

@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSlideX React Authoring"
+  short_description: "Write safe editable React-first OpenSlideX decks"
+  default_prompt: "Use $slidex-react-authoring to create or edit canonical presentation.tsx."

@@ -2,9 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Copy } from "lucide-react";
 import CodeMirror from "@uiw/react-codemirror";
-import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { javascript } from "@codemirror/lang-javascript";
-import { html } from "@codemirror/lang-html";
 import { bracketMatching } from "@codemirror/language";
 import { EditorView, highlightActiveLine, highlightActiveLineGutter, keymap } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
@@ -46,13 +44,7 @@ export function MdxEditorPane({
 
   const extensions = useMemo(
     () => [
-      markdown({
-        base: markdownLanguage,
-        codeLanguages: [],
-        extensions: []
-      }),
-      javascript({ jsx: true }),
-      html(),
+      javascript({ jsx: true, typescript: true }),
       EditorView.lineWrapping,
       bracketMatching(),
       closeBrackets(),
@@ -100,7 +92,7 @@ export function MdxEditorPane({
       <div className="flex items-center justify-between border-b border-white/[0.04] px-5 py-4">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="rounded bg-white/[0.03] px-2 py-0.5 font-mono text-[11px] font-medium text-neutral-400">
-            {editorScope === "selection" ? selectionLabel : "deck.mdx"}
+            {editorScope === "selection" ? selectionLabel : "presentation.tsx"}
           </span>
           <span className="text-[12px] font-medium text-neutral-500">{locale === "zh-TW" ? `${lineCount} 行` : `${lineCount} lines`}</span>
           <span className="text-[12px] text-neutral-700">/</span>
@@ -112,7 +104,7 @@ export function MdxEditorPane({
           type="button"
         >
           <Copy size={12} />
-          {tx("Copy MDX")}
+          {tx("Copy TSX")}
         </button>
       </div>
       {/* Mode Tabs */}
@@ -152,7 +144,7 @@ export function MdxEditorPane({
       </div>
       <div className="flex items-center justify-between border-t border-white/[0.04] px-5 py-3 font-mono text-[11px] text-neutral-500">
         <span>{locale === "zh-TW" ? `第 ${cursorInfo.line} 行，第 ${cursorInfo.column} 欄` : `Ln ${cursorInfo.line}, Col ${cursorInfo.column}`}</span>
-        <span className="font-medium">{tx(editorScope === "selection" ? "Selection MDX" : "Full MDX")}</span>
+        <span className="font-medium">{tx(editorScope === "selection" ? "Selection TSX" : "Full TSX")}</span>
       </div>
     </div>
   );

@@ -1,0 +1,288 @@
+import {
+  Chart,
+  Deck,
+  HtmlEmbed as HtmlEmbedBlock,
+  Image as ImageBlock,
+  Shape,
+  Slide,
+  Svg as SvgBlock,
+  Table,
+  Text,
+  Video as VideoBlock,
+  definePresentation,
+} from "@open-slidex/sdk/react";
+
+export default definePresentation({
+  title: "Editorial Story Thirty-Page Reference",
+  component: function Presentation() {
+    return (
+      <Deck title="Editorial Story Thirty-Page Reference">
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <ImageBlock id="editorial-story-01-image" src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash cover photograph for Editorial Story" fit="cover" x={0} y={0} w={45} h={100} radius={0} enter="fadeIn" />
+          <Text id="editorial-story-01-label" x={54} y={13} w={39} h={6} color="#B36A4C" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>FIELD NOTES · EDITABLE REFERENCE</Text>
+          <Text id="editorial-story-01-title" role="title" x={54} y={29} w={39} h={35} color="#241D19" fontFamily="Inter" fontSize={34} fontWeight={790} lineHeight={1.0} enter="rise">Begin with a detail the audience can feel.</Text>
+          <Text id="editorial-story-01-thesis" x={54} y={69} w={37} h={12} color="#6F625B" fontFamily="Inter" fontSize={12} lineHeight={1.4} enter="fadeUp">The strongest story changes what the audience notices.</Text>
+          <Text id="editorial-story-01-meta" x={54} y={89} w={39} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>OPENSLIDEX · 30 NATIVE EDITABLE SLIDES · 01 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-02-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>02 · FIELD NOTES</Text>
+          <Text id="editorial-story-02-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Orient the story without explaining it away.</Text>
+          <Text id="editorial-story-02-statement" x={7} y={47} w={54} h={20} color="#B36A4C" fontFamily="Inter" fontSize={22} fontWeight={730} lineHeight={1.18} enter="rise">One claim, one proof, one implication.</Text>
+          <Text id="editorial-story-02-body" x={68} y={46} w={25} h={24} color="#6F625B" fontFamily="Inter" fontSize={11} lineHeight={1.45} enter="fadeUp">Replace this teaching copy with sourced evidence. Keep observation, interpretation, and action visually distinct.</Text>
+          <Text id="editorial-story-02-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 02 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-03-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>03 · FIELD NOTES</Text>
+          <Text id="editorial-story-03-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Open on one human moment.</Text>
+          <Text id="editorial-story-03-statement" x={7} y={47} w={54} h={20} color="#B36A4C" fontFamily="Inter" fontSize={22} fontWeight={730} lineHeight={1.18} enter="rise">One claim, one proof, one implication.</Text>
+          <Text id="editorial-story-03-body" x={68} y={46} w={25} h={24} color="#6F625B" fontFamily="Inter" fontSize={11} lineHeight={1.45} enter="fadeUp">Replace this teaching copy with sourced evidence. Keep observation, interpretation, and action visually distinct.</Text>
+          <Text id="editorial-story-03-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 03 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <ImageBlock id="editorial-story-04-image" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 4" fit="cover" x={0} y={0} w={45} h={100} radius={0} enter="fadeIn" />
+          <Text id="editorial-story-04-label" x={52} y={13} w={41} h={6} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>04 · CONTEXT</Text>
+          <Text id="editorial-story-04-title" role="title" x={52} y={34} w={41} h={33} color="#241D19" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">Name the setting, voice, and evidence boundary.</Text>
+          <Text id="editorial-story-04-body" x={52} y={69} w={38} h={14} color="#6F625B" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="editorial-story-04-page" x={87} y={90} w={6} h={4} color="#6F625B" fontFamily="Inter" fontSize={8.5}>04 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-05-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>05 · FIELD NOTES</Text>
+          <Text id="editorial-story-05-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Let the first pattern emerge slowly.</Text>
+          <Table id="editorial-story-05-table" x={7} y={42} w={86} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#241D19" background="#FBF8F3" cellBackground="#F6ECE6" stripeBackground="#FBF8F3" borderColor="#B36A4C" borderWidth={1} enter="fadeUp" />
+          <Text id="editorial-story-05-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 05 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-06-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>06 · FIELD NOTES</Text>
+          <Text id="editorial-story-06-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Use evidence to reveal recurrence.</Text>
+          <Chart id="editorial-story-06-chart" type="line" x={7} y={42} w={50} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="draw" enter="fadeUp" />
+          <Text id="editorial-story-06-insight" x={70} y={45} w={18} h={22} color="#241D19" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="editorial-story-06-source" x={70} y={72} w={18} h={9} color="#6F625B" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-07-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>07 · FIELD NOTES</Text>
+          <Text id="editorial-story-07-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Contrast the inherited frame with the new lens.</Text>
+          <Shape id="editorial-story-07-left-card" groupId="editorial-story-07-left-card-group" groupName="CURRENT card" shape="rectangle" x={7} y={43} w={41} h={35} fill="#F6ECE6" stroke="#B36A4C" strokeWidth={1} radius={10} enter="fadeUp" />
+          <Text id="editorial-story-07-left-label" groupId="editorial-story-07-left-card-group" groupName="CURRENT card" x={10} y={47} w={35} h={6} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1}>CURRENT</Text>
+          <Text id="editorial-story-07-left-body" groupId="editorial-story-07-left-card-group" groupName="CURRENT card" x={10} y={57} w={35} h={16} color="#241D19" fontFamily="Inter" fontSize={14} fontWeight={680} lineHeight={1.3}>State the observed condition and its evidence boundary.</Text>
+          <Shape id="editorial-story-07-right-card" groupId="editorial-story-07-right-card-group" groupName="TARGET card" shape="rectangle" x={52} y={43} w={41} h={35} fill="#F6ECE6" stroke="#B36A4C" strokeWidth={1} radius={10} enter="fadeUp" />
+          <Text id="editorial-story-07-right-label" groupId="editorial-story-07-right-card-group" groupName="TARGET card" x={55} y={47} w={35} h={6} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1}>TARGET</Text>
+          <Text id="editorial-story-07-right-body" groupId="editorial-story-07-right-card-group" groupName="TARGET card" x={55} y={57} w={35} h={16} color="#241D19" fontFamily="Inter" fontSize={14} fontWeight={680} lineHeight={1.3}>State the changed condition and proof required.</Text>
+          <Text id="editorial-story-07-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 07 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-08-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>08 · FIELD NOTES</Text>
+          <Text id="editorial-story-08-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Show the forces shaping the pattern.</Text>
+          <Shape id="editorial-story-08-1-card" groupId="editorial-story-08-1-card-group" groupName="Frame card" shape="rectangle" x={7} y={44} w={19} h={33} fill="#F6ECE6" stroke="#B36A4C" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="editorial-story-08-1-index" groupId="editorial-story-08-1-card-group" groupName="Frame card" x={9} y={48} w={15} h={7} color="#B36A4C" fontFamily="Inter" fontSize={13} fontWeight={780}>01</Text>
+          <Text id="editorial-story-08-1-title" groupId="editorial-story-08-1-card-group" groupName="Frame card" x={9} y={60} w={15} h={8} color="#241D19" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Frame</Text>
+          <Text id="editorial-story-08-1-body" groupId="editorial-story-08-1-card-group" groupName="Frame card" x={9} y={69} w={15} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="editorial-story-08-2-card" groupId="editorial-story-08-2-card-group" groupName="Evidence card" shape="rectangle" x={29} y={44} w={19} h={33} fill="#F6ECE6" stroke="#B36A4C" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="editorial-story-08-2-index" groupId="editorial-story-08-2-card-group" groupName="Evidence card" x={31} y={48} w={15} h={7} color="#B36A4C" fontFamily="Inter" fontSize={13} fontWeight={780}>02</Text>
+          <Text id="editorial-story-08-2-title" groupId="editorial-story-08-2-card-group" groupName="Evidence card" x={31} y={60} w={15} h={8} color="#241D19" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Evidence</Text>
+          <Text id="editorial-story-08-2-body" groupId="editorial-story-08-2-card-group" groupName="Evidence card" x={31} y={69} w={15} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="editorial-story-08-3-card" groupId="editorial-story-08-3-card-group" groupName="Choice card" shape="rectangle" x={51} y={44} w={19} h={33} fill="#F6ECE6" stroke="#B36A4C" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="editorial-story-08-3-index" groupId="editorial-story-08-3-card-group" groupName="Choice card" x={53} y={48} w={15} h={7} color="#B36A4C" fontFamily="Inter" fontSize={13} fontWeight={780}>03</Text>
+          <Text id="editorial-story-08-3-title" groupId="editorial-story-08-3-card-group" groupName="Choice card" x={53} y={60} w={15} h={8} color="#241D19" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Choice</Text>
+          <Text id="editorial-story-08-3-body" groupId="editorial-story-08-3-card-group" groupName="Choice card" x={53} y={69} w={15} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="editorial-story-08-4-card" groupId="editorial-story-08-4-card-group" groupName="Commit card" shape="rectangle" x={73} y={44} w={19} h={33} fill="#F6ECE6" stroke="#B36A4C" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="editorial-story-08-4-index" groupId="editorial-story-08-4-card-group" groupName="Commit card" x={75} y={48} w={15} h={7} color="#B36A4C" fontFamily="Inter" fontSize={13} fontWeight={780}>04</Text>
+          <Text id="editorial-story-08-4-title" groupId="editorial-story-08-4-card-group" groupName="Commit card" x={75} y={60} w={15} h={8} color="#241D19" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Commit</Text>
+          <Text id="editorial-story-08-4-body" groupId="editorial-story-08-4-card-group" groupName="Commit card" x={75} y={69} w={15} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Text id="editorial-story-08-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 08 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-09-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>09 · FIELD NOTES</Text>
+          <Text id="editorial-story-09-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Keep scene, pattern, and implication distinct.</Text>
+          <Chart id="editorial-story-09-chart" type="donut" x={17} y={42} w={50} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="sweep" enter="fadeUp" />
+          <Text id="editorial-story-09-insight" x={70} y={45} w={18} h={22} color="#241D19" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="editorial-story-09-source" x={70} y={72} w={18} h={9} color="#6F625B" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <ImageBlock id="editorial-story-10-image" src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 10" fit="cover" x={0} y={0} w={35} h={100} radius={0} enter="fadeIn" />
+          <Text id="editorial-story-10-label" x={42} y={13} w={51} h={6} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>10 · CONTEXT</Text>
+          <Text id="editorial-story-10-title" role="title" x={42} y={30} w={51} h={33} color="#241D19" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">Let the environment carry texture.</Text>
+          <Text id="editorial-story-10-body" x={42} y={69} w={48} h={14} color="#6F625B" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="editorial-story-10-page" x={87} y={90} w={6} h={4} color="#6F625B" fontFamily="Inter" fontSize={8.5}>10 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-11-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>11 · FIELD NOTES</Text>
+          <Text id="editorial-story-11-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Return to people whenever the story becomes abstract.</Text>
+          <Table id="editorial-story-11-table" x={7} y={42} w={76} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#241D19" background="#FBF8F3" cellBackground="#F6ECE6" stripeBackground="#FBF8F3" borderColor="#B36A4C" borderWidth={1} enter="fadeUp" />
+          <Text id="editorial-story-11-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 11 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#281D18" theme="dark" slideTransition="wipe">
+          <Text id="editorial-story-12-label" x={7} y={16} w={40} h={6} color="#B36A4C" fontFamily="Inter" fontSize={10} fontWeight={760} letterSpacing={1.6}>SECTION · 12</Text>
+          <Text id="editorial-story-12-title" role="title" x={7} y={36} w={77} h={27} color="#F7FBFC" fontFamily="Inter" fontSize={35} fontWeight={780} lineHeight={1.04} enter="rise">Widen the frame from one moment to a shared pattern.</Text>
+          <Text id="editorial-story-12-body" x={7} y={72} w={50} h={10} color="#BECACD" fontFamily="Inter" fontSize={11.5} lineHeight={1.4}>A quiet chapter reset creates rhythm across a long presentation.</Text>
+          <Text id="editorial-story-12-page" x={87} y={90} w={6} h={4} color="#B36A4C" fontFamily="Inter" fontSize={8.5} textAlign="right">12 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-13-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>13 · FIELD NOTES</Text>
+          <Text id="editorial-story-13-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>One detail can carry the emotional memory.</Text>
+          <Text id="editorial-story-13-value" x={7} y={44} w={36} h={23} color="#B36A4C" fontFamily="Inter" fontSize={52} fontWeight={800} letterSpacing={-1.4} enter="rise">72</Text>
+          <Text id="editorial-story-13-value-label" x={7} y={69} w={35} h={6} color="#6F625B" fontFamily="Inter" fontSize={9} fontWeight={700} letterSpacing={1}>ILLUSTRATIVE SIGNAL INDEX</Text>
+          <Chart id="editorial-story-13-chart" type="bar" x={51} y={42} w={42} h={39} data='[{"label":"Base","value":44},{"label":"Now","value":72},{"label":"Gate","value":61}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative hero metric comparison" chartMotion="grow" enter="fadeUp" />
+          <Text id="editorial-story-13-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 13 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-14-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>14 · FIELD NOTES</Text>
+          <Text id="editorial-story-14-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Reveal recurrence without flattening the people.</Text>
+          <Chart id="editorial-story-14-chart" type="line" x={27} y={42} w={50} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="draw" enter="fadeUp" />
+          <Text id="editorial-story-14-insight" x={7} y={45} w={18} h={22} color="#241D19" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="editorial-story-14-source" x={7} y={72} w={18} h={9} color="#6F625B" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-15-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>15 · FIELD NOTES</Text>
+          <Text id="editorial-story-15-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Keep every observation traceable to its source.</Text>
+          <Table id="editorial-story-15-table" x={7} y={42} w={66} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#241D19" background="#FBF8F3" cellBackground="#F6ECE6" stripeBackground="#FBF8F3" borderColor="#B36A4C" borderWidth={1} enter="fadeUp" />
+          <Text id="editorial-story-15-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 15 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <ImageBlock id="editorial-story-16-image" src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 16" fit="cover" x={0} y={0} w={50} h={100} radius={0} enter="fadeIn" />
+          <Text id="editorial-story-16-label" x={57} y={13} w={36} h={6} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>16 · CONTEXT</Text>
+          <Text id="editorial-story-16-title" role="title" x={57} y={31} w={36} h={33} color="#241D19" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">A concrete scene makes the system visible.</Text>
+          <Text id="editorial-story-16-body" x={57} y={69} w={33} h={14} color="#6F625B" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="editorial-story-16-page" x={87} y={90} w={6} h={4} color="#6F625B" fontFamily="Inter" fontSize={8.5}>16 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-17-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>17 · FIELD NOTES</Text>
+          <Text id="editorial-story-17-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Contrast what was noticed before and after.</Text>
+          <Shape id="editorial-story-17-left-card" groupId="editorial-story-17-left-card-group" groupName="CURRENT card" shape="rectangle" x={7} y={43} w={41} h={35} fill="#F6ECE6" stroke="#B36A4C" strokeWidth={1} radius={10} enter="fadeUp" />
+          <Text id="editorial-story-17-left-label" groupId="editorial-story-17-left-card-group" groupName="CURRENT card" x={10} y={47} w={35} h={6} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1}>CURRENT</Text>
+          <Text id="editorial-story-17-left-body" groupId="editorial-story-17-left-card-group" groupName="CURRENT card" x={10} y={57} w={35} h={16} color="#241D19" fontFamily="Inter" fontSize={14} fontWeight={680} lineHeight={1.3}>State the observed condition and its evidence boundary.</Text>
+          <Shape id="editorial-story-17-right-card" groupId="editorial-story-17-right-card-group" groupName="TARGET card" shape="rectangle" x={52} y={43} w={41} h={35} fill="#F6ECE6" stroke="#B36A4C" strokeWidth={1} radius={10} enter="fadeUp" />
+          <Text id="editorial-story-17-right-label" groupId="editorial-story-17-right-card-group" groupName="TARGET card" x={55} y={47} w={35} h={6} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1}>TARGET</Text>
+          <Text id="editorial-story-17-right-body" groupId="editorial-story-17-right-card-group" groupName="TARGET card" x={55} y={57} w={35} h={16} color="#241D19" fontFamily="Inter" fontSize={14} fontWeight={680} lineHeight={1.3}>State the changed condition and proof required.</Text>
+          <Text id="editorial-story-17-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 17 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-18-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>18 · FIELD NOTES</Text>
+          <Text id="editorial-story-18-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Show causality without pretending certainty.</Text>
+          <Chart id="editorial-story-18-chart" type="bar" x={37} y={42} w={50} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="grow" enter="fadeUp" />
+          <Text id="editorial-story-18-insight" x={7} y={45} w={18} h={22} color="#241D19" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="editorial-story-18-source" x={7} y={72} w={18} h={9} color="#6F625B" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <ImageBlock id="editorial-story-19-image" src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 19" fit="cover" x={60} y={0} w={40} h={100} radius={0} enter="fadeIn" />
+          <Text id="editorial-story-19-label" x={7} y={13} w={46} h={6} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>19 · CONTEXT</Text>
+          <Text id="editorial-story-19-title" role="title" x={7} y={34} w={46} h={33} color="#241D19" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">A field note can explain the wider system.</Text>
+          <Text id="editorial-story-19-body" x={7} y={69} w={43} h={14} color="#6F625B" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="editorial-story-19-page" x={7} y={90} w={6} h={4} color="#6F625B" fontFamily="Inter" fontSize={8.5}>19 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#281D18" theme="dark" slideTransition="wipe">
+          <Text id="editorial-story-20-label" x={7} y={16} w={40} h={6} color="#B36A4C" fontFamily="Inter" fontSize={10} fontWeight={760} letterSpacing={1.6}>SECTION · 20</Text>
+          <Text id="editorial-story-20-title" role="title" x={7} y={36} w={77} h={27} color="#F7FBFC" fontFamily="Inter" fontSize={35} fontWeight={780} lineHeight={1.04} enter="rise">Turn recognition into a new way of seeing.</Text>
+          <Text id="editorial-story-20-body" x={7} y={72} w={50} h={10} color="#BECACD" fontFamily="Inter" fontSize={11.5} lineHeight={1.4}>A quiet chapter reset creates rhythm across a long presentation.</Text>
+          <Text id="editorial-story-20-page" x={87} y={90} w={6} h={4} color="#B36A4C" fontFamily="Inter" fontSize={8.5} textAlign="right">20 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-21-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>21 · FIELD NOTES</Text>
+          <Text id="editorial-story-21-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Connect moment, pattern, and implication.</Text>
+          <Shape id="editorial-story-21-1-card" groupId="editorial-story-21-1-card-group" groupName="Frame card" shape="rectangle" x={7} y={44} w={19} h={33} fill="#F6ECE6" stroke="#B36A4C" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="editorial-story-21-1-index" groupId="editorial-story-21-1-card-group" groupName="Frame card" x={9} y={48} w={15} h={7} color="#B36A4C" fontFamily="Inter" fontSize={13} fontWeight={780}>01</Text>
+          <Text id="editorial-story-21-1-title" groupId="editorial-story-21-1-card-group" groupName="Frame card" x={9} y={60} w={15} h={8} color="#241D19" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Frame</Text>
+          <Text id="editorial-story-21-1-body" groupId="editorial-story-21-1-card-group" groupName="Frame card" x={9} y={69} w={15} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="editorial-story-21-2-card" groupId="editorial-story-21-2-card-group" groupName="Evidence card" shape="rectangle" x={29} y={44} w={19} h={33} fill="#F6ECE6" stroke="#B36A4C" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="editorial-story-21-2-index" groupId="editorial-story-21-2-card-group" groupName="Evidence card" x={31} y={48} w={15} h={7} color="#B36A4C" fontFamily="Inter" fontSize={13} fontWeight={780}>02</Text>
+          <Text id="editorial-story-21-2-title" groupId="editorial-story-21-2-card-group" groupName="Evidence card" x={31} y={60} w={15} h={8} color="#241D19" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Evidence</Text>
+          <Text id="editorial-story-21-2-body" groupId="editorial-story-21-2-card-group" groupName="Evidence card" x={31} y={69} w={15} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="editorial-story-21-3-card" groupId="editorial-story-21-3-card-group" groupName="Choice card" shape="rectangle" x={51} y={44} w={19} h={33} fill="#F6ECE6" stroke="#B36A4C" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="editorial-story-21-3-index" groupId="editorial-story-21-3-card-group" groupName="Choice card" x={53} y={48} w={15} h={7} color="#B36A4C" fontFamily="Inter" fontSize={13} fontWeight={780}>03</Text>
+          <Text id="editorial-story-21-3-title" groupId="editorial-story-21-3-card-group" groupName="Choice card" x={53} y={60} w={15} h={8} color="#241D19" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Choice</Text>
+          <Text id="editorial-story-21-3-body" groupId="editorial-story-21-3-card-group" groupName="Choice card" x={53} y={69} w={15} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="editorial-story-21-4-card" groupId="editorial-story-21-4-card-group" groupName="Commit card" shape="rectangle" x={73} y={44} w={19} h={33} fill="#F6ECE6" stroke="#B36A4C" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="editorial-story-21-4-index" groupId="editorial-story-21-4-card-group" groupName="Commit card" x={75} y={48} w={15} h={7} color="#B36A4C" fontFamily="Inter" fontSize={13} fontWeight={780}>04</Text>
+          <Text id="editorial-story-21-4-title" groupId="editorial-story-21-4-card-group" groupName="Commit card" x={75} y={60} w={15} h={8} color="#241D19" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Commit</Text>
+          <Text id="editorial-story-21-4-body" groupId="editorial-story-21-4-card-group" groupName="Commit card" x={75} y={69} w={15} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Text id="editorial-story-21-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 21 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-22-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>22 · FIELD NOTES</Text>
+          <Text id="editorial-story-22-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Give the story a carrier, ritual, and next encounter.</Text>
+          <Table id="editorial-story-22-table" x={17} y={42} w={76} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#241D19" background="#FBF8F3" cellBackground="#F6ECE6" stripeBackground="#FBF8F3" borderColor="#B36A4C" borderWidth={1} enter="fadeUp" />
+          <Text id="editorial-story-22-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 22 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#281D18" theme="dark" slideTransition="fade">
+          <Text id="editorial-story-23-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>23 · FIELD NOTES</Text>
+          <Text id="editorial-story-23-title" role="title" x={7} y={20} w={72} h={15} color="#F7FBFC" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Protect the story from unsupported universality.</Text>
+          <Table id="editorial-story-23-table" x={17} y={42} w={66} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#F7FBFC" background="#281D18" cellBackground="#17313A" stripeBackground="#102731" borderColor="#B36A4C" borderWidth={1} enter="fadeUp" />
+          <Text id="editorial-story-23-footer" x={7} y={88} w={86} h={5} color="#B8C7CB" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 23 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-24-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>24 · FIELD NOTES</Text>
+          <Text id="editorial-story-24-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Compare possible frames by truth and usefulness.</Text>
+          <Table id="editorial-story-24-table" x={17} y={42} w={56} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#241D19" background="#FBF8F3" cellBackground="#F6ECE6" stripeBackground="#FBF8F3" borderColor="#B36A4C" borderWidth={1} enter="fadeUp" />
+          <Text id="editorial-story-24-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 24 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <ImageBlock id="editorial-story-25-image" src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 25" fit="cover" x={70} y={0} w={30} h={100} radius={0} enter="fadeIn" />
+          <Text id="editorial-story-25-label" x={7} y={13} w={56} h={6} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>25 · CONTEXT</Text>
+          <Text id="editorial-story-25-title" role="title" x={7} y={30} w={56} h={33} color="#241D19" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">Choose the lens that changes what people notice.</Text>
+          <Text id="editorial-story-25-body" x={7} y={69} w={53} h={14} color="#6F625B" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="editorial-story-25-page" x={7} y={90} w={6} h={4} color="#6F625B" fontFamily="Inter" fontSize={8.5}>25 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-26-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>26 · FIELD NOTES</Text>
+          <Text id="editorial-story-26-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Sequence reveal, evidence, reflection, and commitment.</Text>
+          <Table id="editorial-story-26-table" x={27} y={42} w={66} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#241D19" background="#FBF8F3" cellBackground="#F6ECE6" stripeBackground="#FBF8F3" borderColor="#B36A4C" borderWidth={1} enter="fadeUp" />
+          <Text id="editorial-story-26-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 26 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-27-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>27 · FIELD NOTES</Text>
+          <Text id="editorial-story-27-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Name who carries the story forward.</Text>
+          <Table id="editorial-story-27-table" x={27} y={42} w={56} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#241D19" background="#FBF8F3" cellBackground="#F6ECE6" stripeBackground="#FBF8F3" borderColor="#B36A4C" borderWidth={1} enter="fadeUp" />
+          <Text id="editorial-story-27-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 27 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-28-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>28 · FIELD NOTES</Text>
+          <Text id="editorial-story-28-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Look for the behavior that proves it landed.</Text>
+          <Chart id="editorial-story-28-chart" type="area" x={7} y={50} w={50} h={36} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="draw" enter="fadeUp" />
+          <Text id="editorial-story-28-insight" x={70} y={45} w={18} h={22} color="#241D19" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="editorial-story-28-source" x={70} y={72} w={18} h={9} color="#6F625B" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#FBF8F3" theme="light" slideTransition="fade">
+          <Text id="editorial-story-29-label" x={7} y={10} w={45} h={5} color="#B36A4C" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>29 · FIELD NOTES</Text>
+          <Text id="editorial-story-29-title" role="title" x={7} y={20} w={72} h={15} color="#241D19" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>State sources, voices, limits, and unresolved tensions.</Text>
+          <Table id="editorial-story-29-table" x={27} y={42} w={46} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#241D19" background="#FBF8F3" cellBackground="#F6ECE6" stripeBackground="#FBF8F3" borderColor="#B36A4C" borderWidth={1} enter="fadeUp" />
+          <Text id="editorial-story-29-footer" x={7} y={88} w={86} h={5} color="#6F625B" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 29 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#281D18" theme="dark" slideTransition="fade">
+          <ImageBlock id="editorial-story-30-image" src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash closing photograph for Editorial Story" fit="cover" x={0} y={0} w={55} h={100} radius={0} enter="fadeIn" />
+          <Text id="editorial-story-30-label" x={60} y={13} w={33} h={6} color="#B36A4C" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>30 · CLOSE</Text>
+          <Text id="editorial-story-30-title" role="title" x={60} y={31} w={33} h={33} color="#F7FBFC" fontFamily="Inter" fontSize={28} fontWeight={790} lineHeight={1.04} enter="rise">Return to the opening detail with new meaning.</Text>
+          <Text id="editorial-story-30-body" x={60} y={69} w={32} h={14} color="#C4CFD2" fontFamily="Inter" fontSize={11} lineHeight={1.45}>Replace the teaching copy with the real commitment, owner, evidence, and next review date.</Text>
+          <Text id="editorial-story-30-page" x={87} y={90} w={6} h={4} color="#B36A4C" fontFamily="Inter" fontSize={8.5}>30 / 30</Text>
+        </Slide>
+      </Deck>
+    );
+  },
+});

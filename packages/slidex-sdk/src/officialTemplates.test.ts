@@ -7,6 +7,7 @@ import {
   validateOpenSlideXLocalMedia,
   validateTemplatePackageV1
 } from "./index";
+import { htmlPresentationAsset } from "../../../core/motion-doc/domain/htmlPresentation";
 
 const expectedTemplateSlides = new Map([
   ["summer-time-report", 7],
@@ -39,5 +40,20 @@ test("every official local template is complete, valid, and filesystem-safe", ()
       assert.deepEqual(validateOpenSlideXLocalMedia(source).issues, [], `${template.id} ${locale}`);
       assert.equal(parseMotionDoc(template.starterSources[locale]).scenes.length, 1, `${template.id} ${locale} starter`);
     }
+  }
+});
+
+test("church presentation is a portable native MotionDoc template", () => {
+  const church = officialTemplatePackages.find((template) => template.id === "church-presentation");
+  assert.ok(church);
+
+  for (const locale of ["en", "zh-TW"] as const) {
+    const source: string = church.sources[locale];
+    assert.doesNotMatch(source, /HtmlEmbedBlock|data:/i);
+    assert.deepEqual(
+      [...new Set(parseMotionDoc(source).scenes.flatMap((scene) => scene.blocks.map((block) => block.type)))],
+      ["Text"]
+    );
+    assert.equal(htmlPresentationAsset(parseMotionDoc(source)), undefined);
   }
 });

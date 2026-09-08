@@ -215,7 +215,8 @@ export function CanvasSelectionLayer({
         );
         const showIndividualControls = !isMultiSelection && isPrimarySelection;
         const blockKey = motionDocBlockKey(block, blockIndex);
-        const frame = frameOverrides.get(blockKey) ?? blockFrame(block);
+        const frameOverride = frameOverrides.get(blockKey);
+        const frame = frameOverride ?? blockFrame(block);
 
         return (
           <div
@@ -286,7 +287,7 @@ export function CanvasSelectionLayer({
             style={{
               height: `${frame.h}%`,
               left: `${frame.x}%`,
-              rotate: `${blockRotation(block.props)}deg`,
+              rotate: `${frameOverride?.rotation ?? blockRotation(block.props)}deg`,
               top: `${frame.y}%`,
               width: `${frame.w}%`
             }}

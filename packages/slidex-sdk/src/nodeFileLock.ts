@@ -32,7 +32,7 @@ export async function withSlideXFileLock<T>(
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
       if (await recoverStaleLock(lockPath, staleMilliseconds)) continue;
-      if (Date.now() >= deadline) throw new Error("presentation.mdx is busy. Open it again before retrying.");
+      if (Date.now() >= deadline) throw new Error("The presentation source is busy. Open it again before retrying.");
       await wait(20);
     }
   }

@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { PitchWorkspace } from "@/features/pitch/ui/PitchWorkspace";
 import type { PitchWorkspaceProps } from "@/features/pitch/ui/workspace/PitchWorkspaceTypes";
 
@@ -6,6 +7,6 @@ import type { PitchWorkspaceProps } from "@/features/pitch/ui/workspace/PitchWor
  * The single storage-neutral editor surface used by both Cloud Pitch and the
  * filesystem-backed OpenSlideX Workbench. Persistence belongs to the caller.
  */
-export function MotionDocEditor(props: PitchWorkspaceProps) {
+export const MotionDocEditor = memo(function MotionDocEditor(props: PitchWorkspaceProps) {
   return <PitchWorkspace {...props} />;
-}
+});

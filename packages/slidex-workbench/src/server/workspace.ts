@@ -11,6 +11,8 @@ import {
   writeFile
 } from "node:fs/promises";
 import path from "node:path";
+import { BoundedCache } from "@/common/util/boundedCache";
+import { fileFingerprint, mapConcurrent } from "./fileFingerprint";
 
 import {
   applySlideXBatch,
@@ -19,8 +21,10 @@ import {
   getOfficialTemplatePackage,
   isOpenSlideXLocalAssetSource,
   listSlideXAssetReferences,
+  motionDocToReactPresentationSource,
   officialTemplatePackages,
   parseMotionDoc,
+  replaceReactPresentationTitle,
   stripNonLocalMotionDocMedia,
   validateOpenSlideXLocalMedia,
   type TemplatePackageLocale
@@ -40,7 +44,9 @@ import { readWorkspaceImport, type WorkspaceHtmlSidecar } from "./workspaceImpor
 export type LocalWorkspacePresentation = {
   cover: string;
   id: string;
+  requiresMigration: boolean;
   slideCount: number;
+  sourceFormat: "mdx" | "tsx";
   title: string;
   updatedAt: string;
 };
@@ -85,6 +91,8 @@ export type DeleteWorkspacePresentationInput = {
 const PRESENTATION_COVER_RENDER_VERSION = 2;
 
 export class OpenSlideXWorkspace {
+  private readonly summaryCache = new BoundedCache<string, { fingerprint: string; summary: LocalWorkspacePresentation }>(1000, 2 * 1024 * 1024);
+  private readonly coverFingerprints = new Map<string, string>();
   private readonly presentationCoverCache = new Map<string, { revision: string; svg: string }>();
   private readonly presentationCoverRenders = new Map<string, Promise<string>>();
   readonly mcpPresentationRoot?: string;
@@ -130,10 +138,11 @@ export class OpenSlideXWorkspace {
 
   async listPresentations(): Promise<LocalWorkspacePresentation[]> {
     const entries = await readdir(this.root, { withFileTypes: true });
-    const presentations = await Promise.all(entries.flatMap((entry) => {
+    const ids = entries.flatMap((entry) => {
       if (!entry.isDirectory() || entry.name.startsWith(".")) return [];
-      return [this.presentationSummary(entry.name)];
-    }));
+      return [entry.name];
+    });
+    const presentations = await mapConcurrent(ids, 4, (id) => this.presentationSummary(id));
     return presentations
       .filter((item): item is LocalWorkspacePresentation => Boolean(item))
       .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
@@ -155,7 +164,7 @@ export class OpenSlideXWorkspace {
         template ? template.sources[locale] : blankPresentationMdx,
         title
       );
-      await writeFile(path.join(target, "presentation.mdx"), source, "utf8");
+      await writeFile(path.join(target, "presentation.tsx"), motionDocToReactPresentationSource(source), "utf8");
       if (template) {
         await writeJson(path.join(target, ".open-slidex", "template-lock.json"), {
           id: template.id,
@@ -242,7 +251,7 @@ export class OpenSlideXWorkspace {
       if (!localMedia.isValid) {
         throw Object.assign(new Error(localMedia.issues[0]?.message ?? "The imported presentation contains unsupported media."), { status: 400 });
       }
-      await writeFile(path.join(target, "presentation.mdx"), importedSource, "utf8");
+      await writeFile(path.join(target, "presentation.tsx"), motionDocToReactPresentationSource(importedSource), "utf8");
     } catch (error) {
       await rm(target, { force: true, recursive: true });
       throw error;
@@ -255,8 +264,10 @@ export class OpenSlideXWorkspace {
 
   async presentationCover(id: string) {
     const root = await this.existingProjectRoot(id);
-    const document = await new SlideXProject(root).open();
+    const fingerprint = await fileFingerprint(await canonicalDocumentPath(root));
     const cached = this.presentationCoverCache.get(id);
+    if (cached && this.coverFingerprints.get(id) === fingerprint) return cached.svg;
+    const document = await new SlideXProject(root).open();
     if (cached?.revision === document.revision) return cached.svg;
 
     const renderKey = `${id}:${document.revision}`;
@@ -271,6 +282,12 @@ export class OpenSlideXWorkspace {
       title: document.title
     }).then((svg) => {
       this.presentationCoverCache.set(id, { revision: document.revision, svg });
+      this.coverFingerprints.set(id, fingerprint);
+      if (this.presentationCoverCache.size > 100) {
+        const oldest = this.presentationCoverCache.keys().next().value!;
+        this.presentationCoverCache.delete(oldest);
+        this.coverFingerprints.delete(oldest);
+      }
       return svg;
     }).finally(() => {
       this.presentationCoverRenders.delete(renderKey);
@@ -334,15 +351,23 @@ export class OpenSlideXWorkspace {
   private async presentationSummary(id: string): Promise<LocalWorkspacePresentation | null> {
     try {
       const root = await this.existingProjectRoot(id);
-      const documentPath = path.join(root, "presentation.mdx");
+      const documentPath = await canonicalDocumentPath(root);
+      const fingerprint = await fileFingerprint(documentPath);
+      const cached = this.summaryCache.get(id);
+      if (cached?.fingerprint === fingerprint) return { ...cached.summary };
       const [document, fileStats] = await Promise.all([new SlideXProject(root).open(), stat(documentPath)]);
-      return {
+      const sourceFormat = documentPath.endsWith(".tsx") ? "tsx" : "mdx";
+      const summary: LocalWorkspacePresentation = {
         cover: `/api/v1/workspace/presentations/${encodeURIComponent(id)}/cover.svg`,
         id,
+        requiresMigration: sourceFormat === "mdx",
         slideCount: parseMotionDoc(document.source).scenes.length,
+        sourceFormat,
         title: document.title || id,
         updatedAt: fileStats.mtime.toISOString()
       };
+      this.summaryCache.set(id, { fingerprint, summary }, JSON.stringify(summary).length * 2);
+      return { ...summary };
     } catch {
       return null;
     }
@@ -407,7 +432,7 @@ export class OpenSlideXWorkspace {
     if (!canonicalProject || !canonicalProject.startsWith(`${canonicalWorkspace}${path.sep}`)) {
       throw Object.assign(new Error("The requested local presentation was not found."), { status: 404 });
     }
-    const documentStats = await stat(path.join(canonicalProject, "presentation.mdx")).catch(() => null);
+    const documentStats = await stat(await canonicalDocumentPath(canonicalProject)).catch(() => null);
     if (!documentStats?.isFile()) {
       throw Object.assign(new Error("The requested local presentation was not found."), { status: 404 });
     }
@@ -577,15 +602,29 @@ function assertProjectId(id: string) {
 }
 
 function withDocumentTitle(source: string, title: string) {
-  return /^#\s+.*$/m.test(source) ? source.replace(/^#\s+.*$/m, `# ${title}`) : `# ${title}\n\n${source}`;
+  if (/export\s+default\s+definePresentation\s*\(/.test(source)) {
+    return replaceReactPresentationTitle(source, title);
+  }
+  return /^#\s+.*$/m.test(source) ? source.replace(/^#\s+.*$/m, () => `# ${title}`) : `# ${title}\n\n${source}`;
+}
+
+async function canonicalDocumentPath(root: string) {
+  const tsx = path.join(root, "presentation.tsx");
+  if ((await stat(tsx).catch(() => null))?.isFile()) return tsx;
+  return path.join(root, "presentation.mdx");
 }
 
 async function resetGeneratedProjectState(root: string) {
   const stateRoot = path.join(root, ".open-slidex");
   await rm(stateRoot, { force: true, recursive: true });
   await Promise.all([
+    rm(path.join(root, "presentation.tsx"), { force: true }),
+    rm(path.join(root, "presentation.mdx"), { force: true })
+  ]);
+  await Promise.all([
     mkdir(stateRoot, { recursive: true }),
     mkdir(path.join(root, "assets"), { recursive: true }),
+    mkdir(path.join(root, "components"), { recursive: true }),
     mkdir(path.join(root, "dist"), { recursive: true }),
     mkdir(path.join(root, "knowledge"), { recursive: true })
   ]);

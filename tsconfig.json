@@ -12,7 +12,8 @@
       "@/*": ["./*"],
       "@open-slidex/editor-ui": ["./packages/editor-ui/src/index.ts"],
       "@open-slidex/sdk": ["./packages/slidex-sdk/src/index.ts"],
-      "@open-slidex/sdk/node": ["./packages/slidex-sdk/src/node.ts"]
+      "@open-slidex/sdk/node": ["./packages/slidex-sdk/src/node.ts"],
+      "@open-slidex/sdk/react": ["./packages/slidex-sdk/src/react/index.tsx"]
     },
     "resolveJsonModule": true,
     "skipLibCheck": true,

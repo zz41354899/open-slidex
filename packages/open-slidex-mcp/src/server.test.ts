@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { promisify } from "node:util";
 
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { blankPresentationMdx } from "@open-slidex/sdk";
@@ -25,6 +27,8 @@ import {
   workspaceRootFromArgs
 } from "./server";
 
+const execFileAsync = promisify(execFile);
+
 test("MCP rejects a flag where a project or workspace directory is required", () => {
   assert.throws(
     () => projectRootFromArgs(["--project", "--print-config"]),
@@ -34,6 +38,32 @@ test("MCP rejects a flag where a project or workspace directory is required", ()
     () => workspaceRootFromArgs(["--workspace", "--print-config"]),
     /--workspace must be followed by a directory/
   );
+});
+
+test("MCP refuses to read a component symlink outside the selected deck", async () => {
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "open-slidex-mcp-component-symlink-"));
+  const root = path.join(workspace, "deck");
+  const outside = path.join(workspace, "outside.tsx");
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const server = createOpenSlideXMcpServer(root);
+  const client = new Client({ name: "open-slidex-symlink-test", version: "1.0.0" });
+  try {
+    await mkdir(path.join(root, "components"), { recursive: true });
+    await writeFile(path.join(root, "presentation.mdx"), blankPresentationMdx, "utf8");
+    await writeFile(outside, "export const secret = 'outside';", "utf8");
+    await symlink(outside, path.join(root, "components", "leak.tsx"));
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    const result = await client.callTool({
+      arguments: { componentPath: "components/leak.tsx" },
+      name: "open_slidex_read"
+    });
+    assert.equal(result.isError, true);
+    assert.match(String(structured(result).message), /Symbolic links are not allowed/);
+  } finally {
+    await client.close().catch(() => undefined);
+    await server.close().catch(() => undefined);
+    await rm(workspace, { force: true, recursive: true });
+  }
 });
 
 test("MCP prints copyable Codex and Claude Code configuration", () => {
@@ -48,8 +78,20 @@ test("MCP prints copyable Codex and Claude Code configuration", () => {
   assert.equal(desktop.mcpServers.open_slidex.command, "npx");
   assert.equal(desktop.mcpServers.open_slidex.args.at(-1), root);
   const windows = JSON.parse(openSlideXMcpConfig("claude-desktop", "C:\\Decks\\Demo", "windows"));
-  assert.equal(windows.mcpServers.open_slidex.command, "cmd");
-  assert.deepEqual(windows.mcpServers.open_slidex.args.slice(0, 3), ["/c", "npx", "-y"]);
+  assert.equal(windows.mcpServers.open_slidex.command, "powershell.exe");
+  assert.deepEqual(windows.mcpServers.open_slidex.args.slice(0, 4), [
+    "-NoLogo",
+    "-NoProfile",
+    "-NonInteractive",
+    "-Command"
+  ]);
+  assert.match(windows.mcpServers.open_slidex.args[4], /param\(\[string\]\$root\)/);
+  assert.equal(windows.mcpServers.open_slidex.args.at(-1), "C:\\Decks\\Demo");
+  const metacharRoot = "C:\\Decks\\Research & Planning (100%)!";
+  const metacharConfig = JSON.parse(openSlideXMcpConfig("claude-desktop", metacharRoot, "windows"));
+  assert.equal(metacharConfig.mcpServers.open_slidex.command, "powershell.exe");
+  assert.equal(metacharConfig.mcpServers.open_slidex.args.at(-1), metacharRoot);
+  assert.doesNotMatch(JSON.stringify(metacharConfig), /cmd\s+\/c/i);
   const setupPrompt = openSlideXMcpSetupPrompt("codex", root);
   assert.match(setupPrompt, /Show me the exact proposed change/);
   assert.match(setupPrompt, /Replace an older open_slidex entry/);
@@ -66,6 +108,39 @@ test("MCP prints copyable Codex and Claude Code configuration", () => {
         workspaceMcpConfig(client, root, platform)
       );
     }
+  }
+});
+
+test("Windows MCP configuration launches npx with a metacharacter path as one argument", { skip: process.platform !== "win32" }, async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "OpenSlideX & 100%! 'workspace'-"));
+  const mockBin = await mkdtemp(path.join(os.tmpdir(), "open-slidex-npx-mock-"));
+  const capturePath = path.join(mockBin, "arguments.json");
+  try {
+    await writeFile(
+      path.join(mockBin, "capture.cjs"),
+      'require("node:fs").writeFileSync(process.env.OPEN_SLIDEX_CAPTURE_PATH, JSON.stringify(process.argv.slice(2)));\n',
+      "utf8"
+    );
+    await writeFile(path.join(mockBin, "npx.cmd"), '@echo off\r\nnode "%~dp0capture.cjs" %*\r\n', "utf8");
+    const generated = JSON.parse(openSlideXMcpConfig("claude-desktop", root, "windows"));
+    const serverConfig = generated.mcpServers.open_slidex;
+    await execFileAsync(serverConfig.command, serverConfig.args, {
+      env: {
+        ...process.env,
+        OPEN_SLIDEX_CAPTURE_PATH: capturePath,
+        PATH: `${mockBin};${process.env.PATH ?? ""}`
+      }
+    });
+    assert.deepEqual(JSON.parse(await readFile(capturePath, "utf8")), [
+      "-y",
+      "open-slidex@latest",
+      "mcp",
+      "--project",
+      root
+    ]);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+    await rm(mockBin, { force: true, recursive: true });
   }
 });
 
@@ -358,10 +433,44 @@ test("MCP reads, replaces, and creates browser-native HTML presentations with re
     assert.equal((packagedRead.htmlAssets as Array<Record<string, unknown>>)[0]?.status, "ready");
     assert.equal((packagedRead.htmlAssets as Array<{ pages?: unknown[] }>)[0]?.pages?.length, 52);
 
+    const rejectedFileUrl = await client.callTool({
+      arguments: {
+        expectedRevision: packaged.revision,
+        source: `<!doctype html><html><body><img src="file://${path.join(assetRoot, "cover.png")}"></body></html>`,
+        target: "html"
+      },
+      name: "open_slidex_edit"
+    });
+    assert.equal(rejectedFileUrl.isError, true);
+    assert.match(String(structured(rejectedFileUrl).message), /file URLs are not allowed/);
+
+    const rejectedOutsideRoot = await client.callTool({
+      arguments: {
+        expectedRevision: packaged.revision,
+        htmlAssetRoot: os.tmpdir(),
+        source: `<!doctype html><html><body><img src="outside.png"></body></html>`,
+        target: "html"
+      },
+      name: "open_slidex_edit"
+    });
+    assert.equal(rejectedOutsideRoot.isError, true);
+    assert.match(String(structured(rejectedOutsideRoot).message), /escapes the configured root/);
+
+    const rejectedRemote = await client.callTool({
+      arguments: {
+        expectedRevision: packaged.revision,
+        source: `<!doctype html><html><body><img src="https://images.example.com/remote.png"></body></html>`,
+        target: "html"
+      },
+      name: "open_slidex_edit"
+    });
+    assert.equal(rejectedRemote.isError, true);
+    assert.match(String(structured(rejectedRemote).message), /Remote HTML resources are disabled/);
+
     const created = structured(await client.callTool({
       arguments: {
         expectedRevision: packaged.revision,
-        source: `<!doctype html><html><head><script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script></head><body><h1>AI authored HTML</h1><img src="https://images.unsplash.com/photo.jpg"><video src="https://media.example.com/demo.mp4"></video><script>document.body.dataset.ready='yes'</script></body></html>`,
+        source: `<!doctype html><html><body><h1>AI authored HTML</h1><script>document.body.dataset.ready='yes'</script></body></html>`,
         target: "html",
         title: "AI HTML deck"
       },
@@ -370,9 +479,9 @@ test("MCP reads, replaces, and creates browser-native HTML presentations with re
     assert.equal(created.title, "AI HTML deck");
     assert.equal(created.pageCount, 1);
     assert.deepEqual(created.networkResources, {
-      origins: ["https://cdn.jsdelivr.net", "https://images.unsplash.com", "https://media.example.com"],
-      referenceCount: 3,
-      requiresNetwork: true
+      origins: [],
+      referenceCount: 0,
+      requiresNetwork: false
     });
     assert.match(await readFile(path.join(root, "presentation.mdx"), "utf8"), /^# AI HTML deck/);
   } finally {
@@ -428,7 +537,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     }));
     assert.match(String(opened.revision), /^sha256:/);
     const authoringContract = opened.authoringContract as Record<string, unknown>;
-    assert.deepEqual(authoringContract.allowed, ["Text", "ImageBlock", "VideoBlock", "SvgBlock", "Chart", "Table", "Shape"]);
+    assert.deepEqual(authoringContract.allowed, ["Deck", "Slide", "Text", "Image", "Video", "Svg", "Chart", "Table", "Shape", "HtmlEmbed"]);
     assert.deepEqual(authoringContract.removed, ["Card", "Group", "Icon", "Metric", "Notes", "Stack", "Title"]);
 
     const importedPptx = structured(await client.callTool({
@@ -566,7 +675,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     const recommendedTemplates = templateRecommendations.recommendations as Array<Record<string, unknown>>;
     assert.equal(recommendedTemplates.length, 3);
     assert.equal(recommendedTemplates[0]?.id, "consulting-financial-report");
-    assert.match(String(recommendedTemplates[0]?.mdxResourcePath), /consulting-financial-report\.mdx$/);
+    assert.match(String(recommendedTemplates[0]?.tsxResourcePath), /consulting-financial-report\.tsx$/);
 
     const knowledgeResource = structured(await client.callTool({
       arguments: { resourcePath: "knowledge/brief.md" },
@@ -685,7 +794,7 @@ async function writeTestTemplateCatalog(referenceRoot: string) {
       bestFor: isFinancial ? ["board update", "financial report"] : [id],
       id,
       keywords: isFinancial ? ["董事會", "財務", "營運", "報告", "風險", "情境", "決策"] : [id],
-      mdxResourcePath: `.agents/skills/slidex-deck-design/references/${id}.mdx`,
+      tsxResourcePath: `.agents/skills/slidex-deck-design/references/${id}.tsx`,
       name: id.replaceAll("-", " ")
     };
   });

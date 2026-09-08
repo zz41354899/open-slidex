@@ -61,21 +61,29 @@ const workbenchBrowserDependencyAliases = workbenchBrowserDependencies
 
 const workbenchVendorChunks = [
   ["vendor-shaders", ["/@paper-design/", "/three/"]],
-  ["vendor-motion", ["/framer-motion/", "/motion-dom/", "/motion-utils/"]],
-  ["vendor-ui", ["/@radix-ui/", "/radix-ui/", "/lucide-react/"]],
-  // Let Rolldown own the React and MDX dependency graphs. Their packages have
-  // internal cycles; forcing them into manual groups produced duplicate chunks.
+  // Let Rolldown own React, UI, motion and editor dependency cycles. Forced
+  // groups can execute CommonJS wrappers before their dependencies initialize.
 ];
 const workbenchEditorChunks = [
-  ["editor-preview", ["/features/pitch/ui/preview/", "/features/pitch/ui/PreviewCanvas.tsx"]],
-  ["editor-inspector", ["/features/pitch/ui/inspector/", "/features/pitch/ui/PitchInspector.tsx", "/packages/slidex-workbench/src/client/ChartInspector.tsx"]],
-  ["editor-templates", ["/core/motion-doc/presets/"]],
-  ["editor-export", ["/core/motion-doc/infrastructure/export/", "/features/pitch/infrastructure/"]]
+  ["editor-template-library", [
+    "/features/pitch/ui/sidebar/TemplateLibrarySlidePanel.tsx",
+    "/features/template-library/",
+    "/core/motion-doc/presets/templateLibrarySources.ts",
+    "/core/motion-doc/presets/templates.ts",
+    "/core/motion-doc/presets/templates/"
+  ]],
+  ["editor-chart-inspector", ["/packages/slidex-workbench/src/client/ChartInspector.tsx"]],
 ];
 const workbenchInitialPreloadPrefixes = [
   "I18nProvider-",
   "rolldown-runtime-",
   "vendor-ui-"
+];
+const workbenchDeferredPreloadPrefixes = [
+  "editor-template-library-",
+  "MdxEditorPane-",
+  "codeMirrorTheme-",
+  "HtmlSourceEditorPane-"
 ];
 
 export function createSlideXWorkbenchViteConfig(options = {}) {
@@ -196,11 +204,18 @@ export function workbenchEditorChunk(id) {
   return workbenchEditorChunks.find(([, fragments]) => fragments.some((fragment) => normalized.includes(fragment)))?.[0];
 }
 
-export function workbenchModulePreloadDependencies(_filename, dependencies, context) {
-  if (context.hostType !== "html") return dependencies;
-  return dependencies.filter((dependency) => {
+export function workbenchModulePreloadDependencies(filename, dependencies, context) {
+  if (context.hostType === "html") return dependencies.filter((dependency) => {
     const fileName = dependency.split("/").at(-1) ?? dependency;
     return workbenchInitialPreloadPrefixes.some((prefix) => fileName.startsWith(prefix));
+  });
+  const requestedFileName = filename.split("/").at(-1) ?? filename;
+  if (workbenchDeferredPreloadPrefixes.some((prefix) => requestedFileName.startsWith(prefix))) {
+    return dependencies;
+  }
+  return dependencies.filter((dependency) => {
+    const fileName = dependency.split("/").at(-1) ?? dependency;
+    return !workbenchDeferredPreloadPrefixes.some((prefix) => fileName.startsWith(prefix));
   });
 }
 
@@ -234,7 +249,6 @@ function resolvePackageRoot(specifier) {
 function localWorkbenchProxy(target, extra = {}) {
   return {
     changeOrigin: true,
-    headers: { origin: target },
     target,
     ...extra
   };

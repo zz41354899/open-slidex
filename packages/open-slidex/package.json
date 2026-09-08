@@ -1,7 +1,7 @@
 {
   "name": "open-slidex",
-  "version": "0.5.0",
-  "description": "Create a local-first MDX presentation workspace.",
+  "version": "0.6.0",
+  "description": "Create a local-first React presentation workspace with portable MDX export.",
   "type": "module",
   "bin": {
     "open-slidex": "dist/cli.mjs"
@@ -25,7 +25,9 @@
     "slidex",
     "open-slidex",
     "presentation",
+    "react",
     "starter",
+    "tsx",
     "mdx"
   ],
   "license": "MIT",
@@ -46,6 +48,7 @@
     "@vitejs/plugin-react": "^6.0.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "esbuild": "^0.28.0",
     "framer-motion": "11.18.2",
     "html2canvas-pro": "^2.2.3",
     "lucide-react": "^1.16.0",
@@ -67,7 +70,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "esbuild": "^0.28.0",
     "tsx": "^4.22.4"
   },
   "engines": {

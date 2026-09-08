@@ -2,7 +2,7 @@
 
 [English](README.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md)
 
-OpenSlideX は、編集可能なプレゼンテーションのための、オープンソースかつローカルファーストのワークスペースです。各プレゼンテーションは所有者のフォルダに保存され、`presentation.mdx` が唯一のソースになります。
+OpenSlideX は、編集可能なプレゼンテーションのための、オープンソースかつローカルファーストのワークスペースです。各プレゼンテーションは所有者のフォルダに保存され、`presentation.tsx` が唯一の編集ソースになります。MDX は互換インポートとポータブルなエクスポート用に維持されます。
 
 アカウント、バックグラウンド同期、隠れたクラウド依存なしで、デッキの作成、編集、プレビュー、エクスポートができます。MotionDoc 形式は可搬性と可読性を保ち、使い慣れたツールや Git のワークフローで編集を続けられます。
 
@@ -19,13 +19,17 @@ OpenSlideX は、編集可能なプレゼンテーションのための、オー
 macOS:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.sh | sh
+curl -fLO https://github.com/zz41354899/open-slidex/releases/latest/download/install.sh
+gh attestation verify install.sh --repo zz41354899/open-slidex
+sh install.sh
 ```
 
 Windows PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.ps1 | iex
+irm https://github.com/zz41354899/open-slidex/releases/latest/download/install.ps1 -OutFile install.ps1
+gh attestation verify install.ps1 --repo zz41354899/open-slidex
+.\install.ps1
 ```
 
 初回インストール後は新しいターミナルを開き、次を実行します。
@@ -33,6 +37,7 @@ irm https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.ps1 | 
 ```bash
 slidex             # ローカル Workspace を開く
 slidex update      # 最新版を確認してインストールする
+slidex rollback    # 保持している直前の正常バージョンへ戻す
 slidex uninstall   # ランタイムとコマンドを削除し、プレゼンテーションは残す
 ```
 
@@ -49,7 +54,7 @@ npm install
 npm run dev
 ```
 
-これでローカル Workspace が起動します。空のデッキとテンプレートベースのデッキは既定で gitignore 対象の `open-slidex-workspace/` に作成され、それぞれに `presentation.mdx` があります。アカウントや Supabase プロジェクトは不要です。同梱テンプレートは **Summer Time Report** と **Moodboard** です。
+これでローカル Workspace が起動します。空のデッキとテンプレートベースのデッキは既定で gitignore 対象の `open-slidex-workspace/` に作成され、それぞれに `presentation.tsx` があります。アカウントや Supabase プロジェクトは不要です。同梱テンプレートは **Summer Time Report** と **Moodboard** です。
 
 ### 別の Workspace フォルダまたはポートを使う
 
@@ -83,7 +88,7 @@ Starter には、PPTX ソースインポート、MDX 作成、ナラティブ設
 - Vite HMR でプレビュー、検証、render、export を行う。
 - 対応する agent client 向けに Workspace スコープの MCP を設定する。
 
-Workspace Settings は Codex、Claude Code、Claude Desktop 用のユーザーレベル MCP 設定を生成できます。MCP には 6 つのツールがあります。ワークスペース選択、段階的なソース／リソース読込（browser-native HTML を含む）、PPTX ソースインポート、メディア、レビュー、編集です。`open_slidex_read` は canonical HTML bytes を保持してオンライン依存を報告し、`open_slidex_edit` は revision 保護付きで HTML を作成または置換します。HTTP(S) リソースは opaque-origin sandbox で実行されます。
+Workspace Settings は Codex、Claude Code、Claude Desktop 用のユーザーレベル MCP 設定を生成できます。MCP には 6 つのツールがあります。ワークスペース選択、段階的なソース／リソース読込（browser-native HTML を含む）、PPTX ソースインポート、メディア、レビュー、編集です。`open_slidex_read` は canonical HTML bytes を保持して検出したネットワーク依存を報告し、`open_slidex_edit` は revision 保護付きで HTML を作成または置換します。インポートした HTML はオフラインの opaque-origin サムネイル sandbox で静的プレビューとしてのみ描画され、リモートリソース、絶対パス、`file:` URL、symlink sidecar は拒否されます。
 
 ## Repository コマンド
 

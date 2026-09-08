@@ -17,7 +17,7 @@ import { startWorkspaceServer } from "./workspaceHttp";
 
 const starterSkillNames = [
   "slidex-source-import",
-  "slidex-mdx-authoring",
+  "slidex-react-authoring",
   "slidex-deck-design",
   "slidex-motion-direction",
   "slidex-deck-qa"
@@ -66,7 +66,7 @@ test("local workspace creates isolated blank presentations without inherited run
 
   const created = await workspace.create({ locale: "zh-TW", title: "我的 新簡報" });
   const projectRoot = path.join(workspaceRoot, created.id);
-  const source = await readFile(path.join(projectRoot, "presentation.mdx"), "utf8");
+  const source = await readFile(path.join(projectRoot, "presentation.tsx"), "utf8");
 
   assert.equal(parseMotionDoc(source).title, "我的 新簡報");
   assert.equal(parseMotionDoc(source).scenes.length, 1);
@@ -99,9 +99,9 @@ test("local workspace still creates and imports decks when the starter folder is
   const created = await workspace.create({ locale: "en", title: "Recreated local deck" });
   const imported = await workspace.importMdx(new File([blankPresentationMdx], "imported.mdx", { type: "text/mdx" }));
 
-  await access(path.join(workspaceRoot, created.id, "presentation.mdx"));
+  await access(path.join(workspaceRoot, created.id, "presentation.tsx"));
   await access(path.join(workspaceRoot, created.id, "package.json"));
-  await access(path.join(workspaceRoot, imported.id, "presentation.mdx"));
+  await access(path.join(workspaceRoot, imported.id, "presentation.tsx"));
 });
 
 test("local workspace opens each deck through its stable same-origin route", async (context) => {
@@ -126,7 +126,7 @@ test("local workspace creates a new deck from the bundled public template", asyn
     templateVersion: "1.0.0",
     title: "Quarterly launch"
   });
-  const source = await readFile(path.join(workspaceRoot, created.id, "presentation.mdx"), "utf8");
+  const source = await readFile(path.join(workspaceRoot, created.id, "presentation.tsx"), "utf8");
   const lock = JSON.parse(await readFile(path.join(workspaceRoot, created.id, ".open-slidex", "template-lock.json"), "utf8"));
   const snapshot = await workspace.snapshot("en");
 
@@ -158,8 +158,9 @@ test("local workspace copies official template assets into each new deck", async
 
   await access(path.join(workspaceRoot, planetary.id, "assets", "planetarium-space-background-bf33da3348efa85f.webp"));
   await access(path.join(workspaceRoot, planetary.id, "assets", "Uranus_Voyager2_color_calibrated-ea1eab40a19cef79.webp"));
-  await access(path.join(workspaceRoot, church.id, "assets", "source-5ad7b364e098eba0.html"));
-  assert.equal(parseMotionDoc(await readFile(path.join(workspaceRoot, church.id, "presentation.mdx"), "utf8")).scenes.length, 13);
+  await access(path.join(workspaceRoot, church.id, "assets", "church-texture-light-afefb947ab83fb49.webp"));
+  await access(path.join(workspaceRoot, church.id, "assets", "church-texture-dark-4c1c1945678433e5.webp"));
+  assert.equal(parseMotionDoc(await readFile(path.join(workspaceRoot, church.id, "presentation.tsx"), "utf8")).scenes.length, 13);
 });
 
 test("local workspace renders each official template slide for the preview gallery", async (context) => {
@@ -302,11 +303,11 @@ test("local workspace imports only valid MotionDoc MDX into an isolated project"
 
   const source = blankPresentationMdx.replace(/^#\s+.*$/m, "# 匯入的簡報");
   const imported = await workspace.importMdx(new File([source], "launch.mdx", { type: "text/mdx" }));
-  const stored = await readFile(path.join(workspaceRoot, imported.id, "presentation.mdx"), "utf8");
+  const stored = await readFile(path.join(workspaceRoot, imported.id, "presentation.tsx"), "utf8");
 
   assert.equal(imported.title, "匯入的簡報");
   assert.equal(parseMotionDoc(stored).scenes.length, 1);
-  assert.equal(stored, source);
+  assert.deepEqual(parseMotionDoc(stored), parseMotionDoc(source));
   await assert.rejects(
     workspace.importMdx(new File([source], "launch.pptx", { type: "application/vnd.openxmlformats-officedocument.presentationml.presentation" })),
     /\.mdx.*\.html/i
@@ -326,12 +327,12 @@ test("local workspace preserves a sandboxed HTML import byte-for-byte", async (c
   const bytes = Buffer.from("<!doctype html>\n<html><body><svg><path d=\"M0 0L10 10\"/></svg><div style=\"background-image:url(&quot;data:image/webp;base64,UklGRkAQAABXRUJQ&quot;)\"></div><button>Next</button><script>document.body.dataset.ready='yes'</script></body></html>\n", "utf8");
   const imported = await workspace.importMdx(new File([bytes], "IDAEO.html", { type: "text/html" }));
   const projectRoot = path.join(workspaceRoot, imported.id);
-  const stored = await readFile(path.join(projectRoot, "presentation.mdx"), "utf8");
+  const stored = await readFile(path.join(projectRoot, "presentation.tsx"), "utf8");
   const assets = (await readdir(path.join(projectRoot, "assets"))).filter((name) => name.endsWith(".html"));
 
   assert.equal(imported.title, "IDAEO");
   assert.equal(assets.length, 1);
-  assert.match(stored, new RegExp(`<HtmlEmbedBlock[^>]+src="assets/${assets[0]}"`));
+  assert.match(stored, new RegExp(`<HtmlEmbed[^>]+src="assets/${assets[0]}"`));
   assert.doesNotMatch(stored, /;base64,/i);
   assert.deepEqual(await readFile(path.join(projectRoot, "assets", assets[0]!)), bytes);
 });
@@ -347,7 +348,7 @@ test("local workspace maps a multi-page HTML shell to shared first-class slides"
   </div></body></html>`;
   const imported = await workspace.importMdx(new File([html], "mapped.html", { type: "text/html" }));
   const projectRoot = path.join(workspaceRoot, imported.id);
-  const stored = await readFile(path.join(projectRoot, "presentation.mdx"), "utf8");
+  const stored = await readFile(path.join(projectRoot, "presentation.tsx"), "utf8");
   const document = parseMotionDoc(stored);
 
   assert.equal(document.scenes.length, 3);
@@ -370,7 +371,7 @@ test("local workspace maps every MDX-exported HTML slide and preserves its nonce
   </main></body></html>`;
   const imported = await workspace.importMdx(new File([html], "mdx-export.html", { type: "text/html" }));
   const projectRoot = path.join(workspaceRoot, imported.id);
-  const stored = await readFile(path.join(projectRoot, "presentation.mdx"), "utf8");
+  const stored = await readFile(path.join(projectRoot, "presentation.tsx"), "utf8");
   const document = parseMotionDoc(stored);
   const htmlAssets = (await readdir(path.join(projectRoot, "assets"))).filter((name) => name.endsWith(".html"));
 
@@ -396,7 +397,7 @@ test("local workspace extracts Base64 images from a standalone MDX import", asyn
 
   const imported = await workspace.importMdx(new File([source], "embedded.mdx", { type: "text/mdx" }));
   const projectRoot = path.join(workspaceRoot, imported.id);
-  const stored = await readFile(path.join(projectRoot, "presentation.mdx"), "utf8");
+  const stored = await readFile(path.join(projectRoot, "presentation.tsx"), "utf8");
   const assets = (await readdir(path.join(projectRoot, "assets"))).filter((name) => name.endsWith(".webp"));
 
   assert.equal(assets.length, 1);
@@ -414,7 +415,7 @@ test("portable MDX export carries project images through Workspace import", asyn
   const originalAsset = path.join(originalRoot, "assets", "portable.webp");
   await writeFile(originalAsset, await tinyWebp());
   const originalSource = `# Portable source\n\n<Slide><ImageBlock src="assets/portable.webp" alt="Portable" /><Shape shape="circle" shapeImageSrc="assets/portable.webp" /></Slide>\n`;
-  await writeFile(path.join(originalRoot, "presentation.mdx"), originalSource, "utf8");
+  await writeFile(path.join(originalRoot, "presentation.tsx"), originalSource, "utf8");
 
   const exportPath = path.join(root, "portable.mdx");
   await exportSlideXDocument({
@@ -428,7 +429,7 @@ test("portable MDX export carries project images through Workspace import", asyn
 
   const imported = await workspace.importMdx(new File([portableSource], "portable.mdx", { type: "text/mdx" }));
   const importedRoot = path.join(workspaceRoot, imported.id);
-  const storedSource = await readFile(path.join(importedRoot, "presentation.mdx"), "utf8");
+  const storedSource = await readFile(path.join(importedRoot, "presentation.tsx"), "utf8");
   const storedAssets = (await readdir(path.join(importedRoot, "assets"))).filter((name) => name.endsWith(".webp"));
   assert.equal(storedAssets.length, 1);
   assert.match(storedSource, new RegExp(`src="assets/${storedAssets[0]}"`));
@@ -451,7 +452,7 @@ test("MDX folder import carries referenced image sidecars into ImageBlock and Sh
     [{ file: new File([await tinyPng()], "planet.png", { type: "image/png" }), path: "assets/planet.png" }]
   );
   const importedRoot = path.join(workspaceRoot, imported.id);
-  const storedSource = await readFile(path.join(importedRoot, "presentation.mdx"), "utf8");
+  const storedSource = await readFile(path.join(importedRoot, "presentation.tsx"), "utf8");
   const storedAssets = (await readdir(path.join(importedRoot, "assets"))).filter((name) => name.endsWith(".webp"));
 
   assert.equal(storedAssets.length, 1);
@@ -476,7 +477,7 @@ test("portable MDX export restores safe SvgBlock assets", async (context) => {
 
   const imported = await workspace.importMdx(new File([portableSource], "portable-svg.mdx", { type: "text/mdx" }));
   const importedRoot = path.join(workspaceRoot, imported.id);
-  const storedSource = await readFile(path.join(importedRoot, "presentation.mdx"), "utf8");
+  const storedSource = await readFile(path.join(importedRoot, "presentation.tsx"), "utf8");
   const storedAssets = (await readdir(path.join(importedRoot, "assets"))).filter((name) => name.endsWith(".svg"));
   assert.equal(storedAssets.length, 1);
   assert.match(storedSource, new RegExp(`src="assets/${storedAssets[0]}"`));
@@ -502,7 +503,7 @@ test("MDX export keeps interactive HTML as an asset reference without Base64 inf
 
   const imported = await workspace.importMdx(new File([portableSource], "portable-html.mdx", { type: "text/mdx" }));
   const importedRoot = path.join(workspaceRoot, imported.id);
-  const importedSource = await readFile(path.join(importedRoot, "presentation.mdx"), "utf8");
+  const importedSource = await readFile(path.join(importedRoot, "presentation.tsx"), "utf8");
   const importedHtmlSource = htmlPresentationAsset(parseMotionDoc(importedSource));
 
   assert.ok(importedHtmlSource);
@@ -516,7 +517,7 @@ test("a lightweight HTML manifest MDX still opens in HTML source mode when its s
 
   const source = `# HTML manifest\n\n<Slide><HtmlEmbedBlock id="html" src="assets/missing-source.html" page={1} /></Slide>\n`;
   const imported = await workspace.importMdx(new File([source], "html-manifest.mdx", { type: "text/mdx" }));
-  const stored = await readFile(path.join(workspaceRoot, imported.id, "presentation.mdx"), "utf8");
+  const stored = await readFile(path.join(workspaceRoot, imported.id, "presentation.tsx"), "utf8");
 
   assert.match(stored, /src="assets\/missing-source\.html"/);
   assert.equal(htmlPresentationAsset(parseMotionDoc(stored)), "assets/missing-source.html");
@@ -538,7 +539,7 @@ test("local workspace extracts Base64 shape images from JSX literal expressions"
 
   const imported = await workspace.importMdx(new File([source], "embedded-shapes.mdx", { type: "text/mdx" }));
   const projectRoot = path.join(workspaceRoot, imported.id);
-  const stored = await readFile(path.join(projectRoot, "presentation.mdx"), "utf8");
+  const stored = await readFile(path.join(projectRoot, "presentation.tsx"), "utf8");
   const assets = (await readdir(path.join(projectRoot, "assets"))).filter((name) => name.endsWith(".webp"));
 
   assert.equal(assets.length, 1);
@@ -563,7 +564,7 @@ test("local workspace imports an MDX that reuses a recoverable local image asset
 `;
   const imported = await workspace.importMdx(new File([source], "recovered.mdx", { type: "text/mdx" }));
   const importedRoot = path.join(workspaceRoot, imported.id);
-  const stored = await readFile(path.join(importedRoot, "presentation.mdx"), "utf8");
+  const stored = await readFile(path.join(importedRoot, "presentation.tsx"), "utf8");
   const assets = (await readdir(path.join(importedRoot, "assets"))).filter((name) => name.endsWith(".webp"));
 
   assert.equal(assets.length, 1);
@@ -583,25 +584,23 @@ test("local workspace imports MDX with unavailable local assets as editable plac
 </Slide>
 `;
   const importedMdx = await workspace.importMdx(new File([source], "missing.mdx", { type: "text/mdx" }));
-  const standaloneSource = await readFile(path.join(workspace.root, importedMdx.id, "presentation.mdx"), "utf8");
+  const standaloneSource = await readFile(path.join(workspace.root, importedMdx.id, "presentation.tsx"), "utf8");
   assert.doesNotMatch(standaloneSource, /assets\/(?:background|missing|poster|shape)\./);
-  assert.match(standaloneSource, /<ImageBlock\s+alt="Missing"\s*\/>/);
-  assert.match(standaloneSource, /<VideoBlock\s*\/>/);
+  assert.match(standaloneSource, /<Image\s+alt="Missing"\s*\/>/);
+  assert.match(standaloneSource, /<Video\s*\/>/);
   assert.match(standaloneSource, /<Shape\s*\/>/);
 
 });
 
-test("local workspace preserves external HTTP(S) libraries, images, and video without rewriting", async (context) => {
-  const { root, workspace, workspaceRoot } = await fixture();
+test("local workspace rejects external HTTP(S) resources", async (context) => {
+  const { root, workspace } = await fixture();
   context.after(async () => rm(root, { force: true, recursive: true }));
 
   const html = `<!doctype html><html><head><script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script></head><body><img src="https://images.unsplash.com/photo.jpg"><video src="https://media.example.com/launch.mp4"></video></body></html>`;
-  const imported = await workspace.importMdx(new File([html], "online.html", { type: "text/html" }));
-  const projectRoot = path.join(workspaceRoot, imported.id);
-  const htmlAsset = (await readdir(path.join(projectRoot, "assets"))).find((name) => name.endsWith(".html"));
-
-  assert.ok(htmlAsset);
-  assert.equal(await readFile(path.join(projectRoot, "assets", htmlAsset), "utf8"), html);
+  await assert.rejects(
+    workspace.importMdx(new File([html], "online.html", { type: "text/html" })),
+    /Remote HTML resources are disabled/
+  );
 });
 
 test("local workspace converts selected HTML PNG sidecars to WebP and packages SVG into deck assets", async (context) => {
@@ -619,7 +618,7 @@ test("local workspace converts selected HTML PNG sidecars to WebP and packages S
   const assets = await readdir(path.join(projectRoot, "assets"));
   const pngAsset = assets.find((name) => /^html-asset-[a-f0-9]{16}\.webp$/.test(name));
   const svgAsset = assets.find((name) => /^html-asset-[a-f0-9]{16}\.svg$/.test(name));
-  const document = parseMotionDoc(await readFile(path.join(projectRoot, "presentation.mdx"), "utf8"));
+  const document = parseMotionDoc(await readFile(path.join(projectRoot, "presentation.tsx"), "utf8"));
   const htmlSource = String(document.scenes[0]?.blocks[0]?.props.src ?? "");
 
   assert.ok(pngAsset);
@@ -635,23 +634,19 @@ test("local workspace converts selected HTML PNG sidecars to WebP and packages S
   }
 });
 
-test("local workspace packages an absolute PNG path and rewrites it to a deck WebP asset", async (context) => {
-  const { root, workspace, workspaceRoot } = await fixture();
+test("local workspace rejects absolute and file URL image paths", async (context) => {
+  const { root, workspace } = await fixture();
   context.after(async () => rm(root, { force: true, recursive: true }));
 
   const absolutePng = path.join(root, "absolute cover.png");
   await writeFile(absolutePng, await tinyPng());
-  const html = `<!doctype html><html><body><section class="slide"><img src="${absolutePng}"></section></body></html>`;
-  const presentation = await workspace.importMdx(new File([html], "absolute.html", { type: "text/html" }));
-  const projectRoot = path.join(workspaceRoot, presentation.id);
-  const document = parseMotionDoc(await readFile(path.join(projectRoot, "presentation.mdx"), "utf8"));
-  const htmlSource = String(document.scenes[0]?.blocks[0]?.props.src ?? "");
-  const canonical = await readFile(path.join(projectRoot, htmlSource), "utf8");
-  const webp = canonical.match(/html-asset-[a-f0-9]{16}\.webp/)?.[0];
-
-  assert.ok(webp);
-  assert.doesNotMatch(canonical, new RegExp(absolutePng.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  assert.equal((await sharp(path.join(projectRoot, "assets", webp)).metadata()).format, "webp");
+  for (const reference of [absolutePng, `file://${absolutePng}`]) {
+    const html = `<!doctype html><html><body><section class="slide"><img src="${reference}"></section></body></html>`;
+    await assert.rejects(
+      workspace.importMdx(new File([html], "absolute.html", { type: "text/html" })),
+      /absolute paths are not allowed|file URLs are not allowed/
+    );
+  }
 });
 
 test("local workspace rejects unresolved relative HTML sidecars", async (context) => {
@@ -678,7 +673,7 @@ test("local workspace renames a presentation without changing its stable folder 
 
   const created = await workspace.create({ locale: "zh-TW", title: "原始名稱" });
   const renamed = await workspace.renamePresentation(created.id, { title: "新的簡報名稱" });
-  const source = await readFile(path.join(workspaceRoot, created.id, "presentation.mdx"), "utf8");
+  const source = await readFile(path.join(workspaceRoot, created.id, "presentation.tsx"), "utf8");
 
   assert.equal(renamed.id, created.id);
   assert.equal(renamed.title, "新的簡報名稱");
@@ -694,12 +689,12 @@ test("local workspace deletion requires the exact title and moves the deck to re
     workspace.deletePresentation(created.id, { confirmationTitle: "需要确认" }),
     /exact presentation title/i
   );
-  await access(path.join(workspaceRoot, created.id, "presentation.mdx"));
+  await access(path.join(workspaceRoot, created.id, "presentation.tsx"));
 
   const deleted = await workspace.deletePresentation(created.id, { confirmationTitle: "需要確認" });
   assert.equal(deleted.deleted, true);
-  await assert.rejects(access(path.join(workspaceRoot, created.id, "presentation.mdx")));
-  await access(path.join(deleted.recoverableFrom, "presentation.mdx"));
+  await assert.rejects(access(path.join(workspaceRoot, created.id, "presentation.tsx")));
+  await access(path.join(deleted.recoverableFrom, "presentation.tsx"));
 });
 
 test("local workspace accepts its assigned API port, MDX import, and proxied UI origin", async (context) => {
@@ -731,11 +726,18 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   });
   assert.equal(rejected.status, 403);
 
+  const missingOrigin = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/presentations`, {
+    body: "{}",
+    headers: { "content-type": "application/json" },
+    method: "POST"
+  });
+  assert.equal(missingOrigin.status, 403);
+
   const templateCover = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/templates/moodboard/cover.svg?locale=en&version=1.0.0`);
   const templateSlide = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/templates/moodboard/cover.svg?locale=en&version=1.0.0&slide=1`);
   assert.equal(templateCover.status, 200);
   assert.equal(templateSlide.status, 200);
-  assert.equal(templateCover.headers.get("cache-control"), "no-store");
+  assert.equal(templateCover.headers.get("cache-control"), "private, max-age=0, must-revalidate");
   assert.equal(templateCover.headers.get("content-type"), "image/svg+xml; charset=utf-8");
   assert.notEqual(await templateSlide.text(), await templateCover.text());
 
@@ -760,7 +762,8 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   const otherDeviceMcpPayload = await otherDeviceMcpSetup.json();
   assert.equal(otherDeviceMcpPayload.platform, "windows");
   assert.equal(otherDeviceMcpPayload.scopeRoot, "C:\\Users\\demo\\open-slidex-workspace");
-  assert.match(otherDeviceMcpPayload.config, /"cmd"/);
+  assert.match(otherDeviceMcpPayload.config, /"powershell\.exe"/);
+  assert.doesNotMatch(otherDeviceMcpPayload.config, /"\/c"/);
   assert.match(otherDeviceMcpPayload.config, /--workspace/);
   assert.match(otherDeviceMcpPayload.prompt, /Windows/);
   assert.match(otherDeviceMcpPayload.prompt, /%USERPROFILE%\\\.codex\\config\.toml/);
@@ -768,9 +771,11 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   const claudeCodeWindowsSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=claude-code&platform=windows&scopeRoot=${encodeURIComponent("C:\\Users\\demo\\open-slidex-workspace")}`);
   assert.equal(claudeCodeWindowsSetup.status, 200);
   const claudeCodeWindowsPayload = await claudeCodeWindowsSetup.json();
-  assert.match(claudeCodeWindowsPayload.prompt, /PowerShell or Command Prompt/);
+  assert.match(claudeCodeWindowsPayload.prompt, /PowerShell/);
+  assert.doesNotMatch(claudeCodeWindowsPayload.prompt, /Command Prompt/);
   assert.match(claudeCodeWindowsPayload.prompt, /Claude Code must be installed/);
-  assert.match(claudeCodeWindowsPayload.prompt, /cmd \/c npx/);
+  assert.match(claudeCodeWindowsPayload.prompt, /npx\.cmd -y/);
+  assert.doesNotMatch(claudeCodeWindowsPayload.prompt, /cmd \/c/);
   assert.equal(typeof claudeCodeWindowsPayload.clientAvailable, "boolean");
 
   const claudeDesktopMacSetup = await fetch(`http://127.0.0.1:${running.port}/api/v1/workspace/mcp/setup?client=claude-desktop&platform=macos`);
@@ -808,7 +813,10 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   assert.equal(imported.status, 201);
   const importedPayload = await imported.json();
   assert.equal(importedPayload.presentation.title, "Imported through API");
-  assert.equal(await readFile(path.join(workspaceRoot, importedPayload.presentation.id, "presentation.mdx"), "utf8"), importedSource);
+  assert.deepEqual(
+    parseMotionDoc(await readFile(path.join(workspaceRoot, importedPayload.presentation.id, "presentation.tsx"), "utf8")),
+    parseMotionDoc(importedSource)
+  );
 
   const mdxSidecarForm = new FormData();
   mdxSidecarForm.set("file", new File([
@@ -824,7 +832,7 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   assert.equal(mdxSidecarImport.status, 201);
   const mdxSidecarPayload = await mdxSidecarImport.json();
   const mdxSidecarRoot = path.join(workspaceRoot, mdxSidecarPayload.presentation.id);
-  const mdxSidecarSource = await readFile(path.join(mdxSidecarRoot, "presentation.mdx"), "utf8");
+  const mdxSidecarSource = await readFile(path.join(mdxSidecarRoot, "presentation.tsx"), "utf8");
   assert.match(mdxSidecarSource, /shapeImageSrc="assets\/[A-Za-z0-9._-]+\.webp"/);
   assert.doesNotMatch(mdxSidecarSource, /api-planet\.png/);
 
@@ -842,7 +850,7 @@ test("local workspace accepts its assigned API port, MDX import, and proxied UI 
   assert.equal(htmlSidecarImport.status, 201);
   const htmlSidecarPayload = await htmlSidecarImport.json();
   const htmlSidecarRoot = path.join(workspaceRoot, htmlSidecarPayload.presentation.id);
-  const htmlSidecarDocument = parseMotionDoc(await readFile(path.join(htmlSidecarRoot, "presentation.mdx"), "utf8"));
+  const htmlSidecarDocument = parseMotionDoc(await readFile(path.join(htmlSidecarRoot, "presentation.tsx"), "utf8"));
   const htmlSidecarSource = String(htmlSidecarDocument.scenes[0]?.blocks[0]?.props.src ?? "");
   assert.match(await readFile(path.join(htmlSidecarRoot, htmlSidecarSource), "utf8"), /html-asset-[a-f0-9]{16}\.webp/);
 
@@ -911,7 +919,7 @@ test("workspace editor proxy replaces source, rejects Canvas patches, and thumbn
   const originalHtml = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="script-src 'nonce-slidex-a292d497'; style-src 'unsafe-inline'"></head><body><main class="player"><section class="slide is-active" data-slidex-slide-index="0">First</section><section class="slide" data-slidex-slide-index="1">Second</section><script nonce="slidex-a292d497">window.runtimeReady=true</script></main></body></html>`;
   const imported = await workspace.importMdx(new File([originalHtml], "editable.html", { type: "text/html" }));
   const projectRoot = path.join(workspaceRoot, imported.id);
-  const originalDocument = parseMotionDoc(await readFile(path.join(projectRoot, "presentation.mdx"), "utf8"));
+  const originalDocument = parseMotionDoc(await readFile(path.join(projectRoot, "presentation.tsx"), "utf8"));
   const originalSource = String(originalDocument.scenes[0]?.blocks[0]?.props.src ?? "");
   const replacementHtml = originalHtml.replace("First", "Updated on Canvas");
   const running = await startWorkspaceServer({ port: 0, uiPort, workspace });
@@ -931,16 +939,16 @@ test("workspace editor proxy replaces source, rejects Canvas patches, and thumbn
   });
   assert.equal(bridgedResponse.status, 200);
   assert.equal(bridgedResponse.headers.get("cache-control"), "no-store");
+  assert.match(bridgedResponse.headers.get("content-disposition") ?? "", /^attachment;/);
   const playbackPolicy = bridgedResponse.headers.get("content-security-policy") ?? "";
-  assert.match(playbackPolicy, /script-src[^;]+https:/);
-  assert.match(playbackPolicy, /connect-src[^;]+wss:/);
-  assert.match(playbackPolicy, /img-src[^;]+https:/);
-  assert.match(playbackPolicy, /media-src[^;]+https:/);
+  assert.match(playbackPolicy, /connect-src 'none'/);
+  assert.match(playbackPolicy, /frame-src 'none'/);
+  assert.match(playbackPolicy, /form-action 'none'/);
+  assert.match(playbackPolicy, /object-src 'none'/);
+  assert.doesNotMatch(playbackPolicy, /https?:|wss?:/);
   const bridgedHtml = await bridgedResponse.text();
-  assert.match(bridgedHtml, /data-open-slidex-playback-bridge/);
-  assert.match(bridgedHtml, /data-open-slidex-playback-bridge nonce="slidex-a292d497"/);
-  assert.match(bridgedHtml, /data-open-slidex-native-projection/);
-  assert.doesNotMatch(bridgedHtml, /data-open-slidex-canvas-editor-bridge/);
+  assert.equal(bridgedHtml, originalHtml);
+  assert.doesNotMatch(bridgedHtml, /data-open-slidex-playback-bridge/);
   const updateUrl = `${editorPrefix}/api/v1/assets/html?expectedRevision=${encodeURIComponent(snapshot.revision)}&source=${encodeURIComponent(originalSource)}`;
   const updateResponse = await fetch(updateUrl, {
     body: replacementHtml,
@@ -955,7 +963,7 @@ test("workspace editor proxy replaces source, rejects Canvas patches, and thumbn
   const update = await updateResponse.json();
   assert.match(update.source, /^assets\/source-[a-f0-9]{16}\.html$/);
   assert.equal(await readFile(path.join(projectRoot, update.source), "utf8"), replacementHtml);
-  assert.match(await readFile(path.join(projectRoot, "presentation.mdx"), "utf8"), new RegExp(`src="${update.source}"`));
+  assert.match(await readFile(path.join(projectRoot, "presentation.tsx"), "utf8"), new RegExp(`src="${update.source}"`));
 
   const patchResponse = await fetch(`${editorPrefix}/api/v1/assets/html`, {
     body: JSON.stringify({
@@ -983,7 +991,7 @@ test("workspace editor proxy replaces source, rejects Canvas patches, and thumbn
     { headers: { origin: `http://127.0.0.1:${uiPort}` } }
   );
   assert.equal(thumbnailResponse.status, 200);
-  assert.equal(thumbnailResponse.headers.get("cache-control"), "no-store");
+  assert.equal(thumbnailResponse.headers.get("cache-control"), "private, max-age=0, must-revalidate");
   assert.equal(thumbnailResponse.headers.get("content-type"), "image/png");
   assert.ok((await thumbnailResponse.arrayBuffer()).byteLength > 10_000);
 
@@ -1055,7 +1063,7 @@ test("starter Workspace MCP setup uses the exact installed presentation path", a
   const { root, workspace, workspaceRoot } = await fixture();
   const projectRoot = path.join(root, "my-deck");
   await mkdir(projectRoot, { recursive: true });
-  await writeFile(path.join(projectRoot, "presentation.mdx"), blankPresentationMdx, "utf8");
+  await writeFile(path.join(projectRoot, "presentation.tsx"), blankPresentationMdx, "utf8");
   const projectScopedWorkspace = new OpenSlideXWorkspace({
     mcpPresentationRoot: projectRoot,
     root: workspaceRoot,
@@ -1074,7 +1082,7 @@ test("starter Workspace MCP setup uses the exact installed presentation path", a
   const setup = await response.json();
   assert.equal(setup.scopeType, "presentation");
   assert.equal(setup.scopeRoot, projectRoot);
-  assert.equal(setup.presentationPath, path.join(projectRoot, "presentation.mdx"));
+  assert.equal(setup.presentationPath, path.join(projectRoot, "presentation.tsx"));
   assert.equal(setup.workspaceRoot, workspaceRoot);
   assert.match(setup.config, /\[mcp_servers\.open_slidex\]/);
   assert.match(setup.config, /--project/);

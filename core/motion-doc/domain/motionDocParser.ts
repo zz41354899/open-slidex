@@ -4,40 +4,53 @@ import type {
   ParsedMotionDoc
 } from "@/core/motion-doc/domain/motionDocTypes";
 import { parseMotionDocMarkdown } from "@/core/motion-doc/domain/motionDocMarkdown";
+import { BoundedCache } from "@/common/util/boundedCache";
+import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
+
+const parsedScenes = new BoundedCache<string, MotionDocScene>(2048, 16 * 1024 * 1024);
 import {
   sanitizeMotionDocHtmlSource,
   sanitizeMotionDocMediaSource
 } from "@/core/motion-doc/domain/mediaSource";
 import { sanitizeMotionDocVideoSource } from "@/core/motion-doc/domain/videoSource";
+import {
+  isReactPresentationSource,
+  reactPresentationToMotionDocSource,
+  reactPresentationTitle
+} from "@/core/react-presentation/reactPresentationSource";
 
 const mediaSourcePropNames = new Set(["backgroundImage", "poster", "shapeImageSrc", "src"]);
 const removedComponentPattern = /<(Card|Metric|Stack|Group|Title|Icon|Notes)\b/;
 
 export function parseMotionDoc(source: string): ParsedMotionDoc {
-  const removedComponent = source.match(removedComponentPattern)?.[1];
+  const motionDocSource = reactPresentationToMotionDocSource(source);
+  const removedComponent = motionDocSource.match(removedComponentPattern)?.[1];
   if (removedComponent) {
     throw new Error(
       `Unsupported MotionDoc component: ${removedComponent}. ` +
       "Rebuild it with Text, ImageBlock, VideoBlock, SvgBlock, Chart, Table, or Shape."
     );
   }
-  const firstSlideOffset = source.search(/<(?:Slide|Scene)\b/);
+  const firstSlideOffset = motionDocSource.search(/<(?:Slide|Scene)\b/);
   const documentHeader =
-    firstSlideOffset >= 0 ? source.slice(0, firstSlideOffset) : source;
+    firstSlideOffset >= 0 ? motionDocSource.slice(0, firstSlideOffset) : motionDocSource;
   const title =
-    documentHeader.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? "Slider Preview";
+    documentHeader.match(/^#\s+(.+)$/m)?.[1]?.trim()
+    ?? (isReactPresentationSource(source) ? reactPresentationTitle(source) : "Slider Preview");
   const sceneMatches = Array.from(
-    source.matchAll(/<(?:Slide|Scene)\b([^>]*)>([\s\S]*?)<\/(?:Slide|Scene)>/g)
+    motionDocSource.matchAll(/<(?:Slide|Scene)\b([^>]*)>([\s\S]*?)<\/(?:Slide|Scene)>/g)
   );
 
   return {
     title,
     scenes: sceneMatches.map((match) => {
+      const cached = parsedScenes.get(match[0]);
+      if (cached) return structuredClone(cached);
       const props = parseProps(match[1] ?? "");
       const durationValue = props.duration;
       const sceneSource = match[2] ?? "";
 
-      return {
+      const scene = {
         duration:
           typeof durationValue === "number" && Number.isFinite(durationValue)
             ? durationValue
@@ -45,6 +58,8 @@ export function parseMotionDoc(source: string): ParsedMotionDoc {
         props,
         blocks: parseSceneBlocks(sceneSource)
       };
+      parsedScenes.set(match[0], scene, match[0].length * 6);
+      return structuredClone(scene);
     })
   };
 }

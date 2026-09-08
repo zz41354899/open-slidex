@@ -32,6 +32,14 @@ export async function documentRoutes(context: WorkbenchRouteContext) {
     }
   }
 
+  if (url.pathname === "/api/v1/document/migrate" && request.method === "POST") {
+    const body = await jsonBody<{ expectedRevision?: unknown }>(request);
+    if (typeof body.expectedRevision !== "string") {
+      return sendJson(outgoing, { code: "invalid_request", message: "expectedRevision is required." }, 400);
+    }
+    return sendJson(outgoing, await project.migrateLegacyMdx(body.expectedRevision, { renderedComparison: true }));
+  }
+
   if (url.pathname === "/api/v1/context" && request.method === "POST") {
     const body = await jsonBody<{
       blockIndex?: number;

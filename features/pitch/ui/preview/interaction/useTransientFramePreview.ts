@@ -56,7 +56,10 @@ export function useTransientFramePreview({ blocks, onCommit }: UseTransientFrame
       if (!pendingUpdates) return;
       const resolvedUpdates = resolveCurrentBlockIndices(pendingUpdates);
       setAlignmentGuides(findAlignmentGuides(blocksRef.current, resolvedUpdates));
-      setFrameOverrides(new Map(resolvedUpdates.map((update) => [update.blockId, update.frame])));
+      setFrameOverrides(new Map(resolvedUpdates.map((update) => [
+        update.blockId,
+        { ...update.frame, ...(update.rotation === undefined ? {} : { rotation: update.rotation }) }
+      ])));
     });
   }, [resolveCurrentBlockIndices]);
 
@@ -64,7 +67,11 @@ export function useTransientFramePreview({ blocks, onCommit }: UseTransientFrame
     cancelScheduledPreview();
     setAlignmentGuides([]);
     setFrameOverrides(EMPTY_BLOCK_FRAME_OVERRIDES);
-    onCommit(resolveCurrentBlockIndices(updates).map(({ blockIndex, frame }) => ({ blockIndex, frame })));
+    onCommit(resolveCurrentBlockIndices(updates).map(({ blockIndex, frame, rotation }) => ({
+      blockIndex,
+      frame,
+      ...(rotation === undefined ? {} : { rotation })
+    })));
   }, [cancelScheduledPreview, onCommit, resolveCurrentBlockIndices]);
 
   useEffect(() => () => cancelScheduledPreview(), [cancelScheduledPreview]);

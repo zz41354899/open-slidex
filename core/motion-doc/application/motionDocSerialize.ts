@@ -106,6 +106,7 @@ const sourceBlockTagNames = new Set([
   "Text",
   "SvgBlock",
   "VideoBlock"
+  , "Image", "Video", "Svg", "HtmlEmbed"
 ]);
 
 function sourceBlockIdentityCandidates(slideSource: string, sourceOffset: number) {

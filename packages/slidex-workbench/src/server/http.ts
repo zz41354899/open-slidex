@@ -20,10 +20,12 @@ type StartServerInput = {
   clientRoot: string;
   port: number;
   project: SlideXProject;
+  uiPort?: number;
 };
 
 export type WorkbenchRouter = {
   close(): void;
+  isIdle(now: number, idleMs: number): boolean;
   route(input: {
     incoming: import("node:http").IncomingMessage;
     outgoing: ServerResponse;
@@ -59,14 +61,20 @@ export async function startWorkbenchServer(input: StartServerInput) {
 
 export function createWorkbenchRouter(project: SlideXProject): WorkbenchRouter {
   const eventClients = new Set<ServerResponse>();
+  let lastActivity = Date.now();
+  let activeRequests = 0;
+  const notifications = new Map<string, ReturnType<typeof setTimeout>>();
   const notify = (event: "assets.changed" | "document.changed") => {
-    for (const client of eventClients) client.write(`event: ${event}\ndata: {}\n\n`);
+    const previous = notifications.get(event);
+    if (previous) clearTimeout(previous);
+    notifications.set(event, setTimeout(() => {
+      notifications.delete(event);
+      for (const client of eventClients) if (!client.destroyed) client.write(`event: ${event}\ndata: {}\n\n`);
+    }, 50));
   };
-  const documentWatcher = watch(
-    path.join(project.root, "presentation.mdx"),
-    { persistent: false },
-    () => notify("document.changed")
-  );
+  const documentWatcher = watch(project.root, { persistent: false }, (_event, fileName) => {
+    if (fileName === "presentation.tsx" || fileName === "presentation.mdx") notify("document.changed");
+  });
   const assetWatcher = watch(
     project.assetsRoot,
     { persistent: false },
@@ -74,13 +82,19 @@ export function createWorkbenchRouter(project: SlideXProject): WorkbenchRouter {
   );
 
   return {
+    isIdle(now, idleMs) { return activeRequests === 0 && eventClients.size === 0 && now - lastActivity >= idleMs; },
     close() {
+      for (const timer of notifications.values()) clearTimeout(timer);
+      notifications.clear();
       documentWatcher.close();
       assetWatcher.close();
       for (const client of eventClients) client.end();
       eventClients.clear();
     },
     async route({ incoming, outgoing, request, url }) {
+      activeRequests++;
+      lastActivity = Date.now();
+      try {
       const context: WorkbenchRouteContext = {
         eventClients,
         incoming,
@@ -95,6 +109,7 @@ export function createWorkbenchRouter(project: SlideXProject): WorkbenchRouter {
       if (await assetRoutes(context)) return true;
       if (await exportRoutes(context)) return true;
       return false;
+      } finally { activeRequests--; lastActivity = Date.now(); }
     }
   };
 }
@@ -107,7 +122,7 @@ async function routeRequest(
 ) {
   const request = await webRequest(incoming, input.port);
   const url = new URL(request.url);
-  assertLocalRequest(request, input.port);
+  assertLocalRequest(request, input.port, input.uiPort);
   if (await router.route({ incoming, outgoing, request, url })) return;
 
   if (request.method === "GET") {
@@ -145,14 +160,22 @@ async function webRequest(incoming: import("node:http").IncomingMessage, port: n
   } as RequestInit);
 }
 
-function assertLocalRequest(request: Request, port: number) {
+function assertLocalRequest(request: Request, port: number, uiPort?: number) {
   const host = request.headers.get("host");
   if (host && host !== `127.0.0.1:${port}` && host !== `localhost:${port}`) {
     throw Object.assign(new Error("Invalid Host header."), { status: 403 });
   }
   if (!["GET", "HEAD"].includes(request.method)) {
     const origin = request.headers.get("origin");
-    if (origin && origin !== `http://127.0.0.1:${port}` && origin !== `http://localhost:${port}`) {
+    const allowed = new Set([
+      `http://127.0.0.1:${port}`,
+      `http://localhost:${port}`,
+      ...(uiPort === undefined ? [] : [
+        `http://127.0.0.1:${uiPort}`,
+        `http://localhost:${uiPort}`
+      ])
+    ]);
+    if (!origin || !allowed.has(origin)) {
       throw Object.assign(new Error("Cross-origin mutation rejected."), { status: 403 });
     }
   }
@@ -167,7 +190,7 @@ export function sendWorkbenchError(response: ServerResponse, error: unknown) {
     sendJson(response, {
       code: "revision_conflict",
       currentRevision: error.currentRevision,
-      message: "presentation.mdx changed outside the workbench."
+      message: "The presentation source changed outside the Workbench."
     }, 409);
     return;
   }

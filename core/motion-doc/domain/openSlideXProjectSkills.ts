@@ -1,6 +1,6 @@
 export const openSlideXProjectSkillNames = [
   "slidex-source-import",
-  "slidex-mdx-authoring",
+  "slidex-react-authoring",
   "slidex-html-authoring",
   "slidex-deck-design",
   "slidex-motion-direction",
@@ -23,7 +23,7 @@ export const openSlideXGuidanceIntents = [
 export type OpenSlideXGuidanceIntent = (typeof openSlideXGuidanceIntents)[number];
 
 export const openSlideXGuidanceSkillsByIntent = {
-  authoring: ["slidex-mdx-authoring"],
+  authoring: ["slidex-react-authoring"],
   html: [
     "slidex-html-authoring",
     "slidex-deck-design",
@@ -32,22 +32,22 @@ export const openSlideXGuidanceSkillsByIntent = {
   ],
   import: [
     "slidex-source-import",
-    "slidex-mdx-authoring",
+    "slidex-react-authoring",
     "slidex-deck-design",
     "slidex-motion-direction",
     "slidex-deck-qa"
   ],
   create: [
-    "slidex-mdx-authoring",
+    "slidex-react-authoring",
     "slidex-deck-design",
     "slidex-motion-direction",
     "slidex-deck-qa"
   ],
-  design: ["slidex-mdx-authoring", "slidex-deck-design", "slidex-deck-qa"],
-  motion: ["slidex-mdx-authoring", "slidex-motion-direction", "slidex-deck-qa"],
+  design: ["slidex-react-authoring", "slidex-deck-design", "slidex-deck-qa"],
+  motion: ["slidex-react-authoring", "slidex-motion-direction", "slidex-deck-qa"],
   qa: ["slidex-deck-qa"],
   redesign: [
-    "slidex-mdx-authoring",
+    "slidex-react-authoring",
     "slidex-deck-design",
     "slidex-motion-direction",
     "slidex-deck-qa"

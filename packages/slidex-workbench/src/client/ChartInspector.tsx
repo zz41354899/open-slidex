@@ -1,13 +1,19 @@
 import { useEffect, useState, type ClipboardEvent } from "react";
 import {
+  defaultMotionDocChartDataForType,
+  motionDocChartDataForType,
+  motionDocChartMaximumRows,
   motionDocChartModel,
-  motionDocChartMotions,
+  motionDocChartMotionOptions,
   motionDocChartBarGaps,
   motionDocChartColorModes,
   motionDocChartLabelModes,
   motionDocChartPaletteNames,
   motionDocChartPresetNames,
   motionDocChartPresetProps,
+  motionDocChartThemeProps,
+  motionDocChartThemes,
+  parseMotionDocChartDataByType,
   parseMotionDocChartData,
   type MotionDocBlock,
   type MotionDocProps,
@@ -17,6 +23,7 @@ import {
   type MotionDocChartLabelMode,
   type MotionDocChartMotion,
   type MotionDocChartPreset,
+  type MotionDocChartTheme,
   type MotionDocChartType
 } from "@open-slidex/sdk";
 import {
@@ -42,6 +49,7 @@ const primaryChartTypes: MotionDocChartType[] = ["bar", "line", "area", "pie", "
 const chartPalettes = {
   aurora: ["#7c3aed", "#2563eb", "#06b6d4", "#10b981"],
   editorial: ["#111827", "#475569", "#94a3b8", "#e2e8f0"],
+  gilded: ["#f6df9a", "#d9ad4a", "#ae7926", "#fff0b8"],
   ocean: ["#2563eb", "#0ea5e9", "#14b8a6", "#84cc16"],
   sunset: ["#e11d48", "#f97316", "#f59e0b", "#a855f7"]
 } satisfies Record<(typeof motionDocChartPaletteNames)[number], string[]>;
@@ -54,6 +62,7 @@ const chartSmallLabelClass = "text-[11px] font-semibold text-[#9aa0a9]";
 const chartPaletteLabels = {
   aurora: "Aurora",
   editorial: "Editorial",
+  gilded: "Gilded",
   ocean: "Ocean",
   sunset: "Sunset"
 } satisfies Record<(typeof motionDocChartPaletteNames)[number], string>;
@@ -76,45 +85,70 @@ type ChartInspectorProps = {
 type ChartInspectorTab = "data" | "motion" | "style";
 
 export function ChartInspector({ block, onPreviewMotion, update }: ChartInspectorProps) {
-  const { tx } = usePitchI18n();
+  const { locale, tx } = usePitchI18n();
   const type = chartType(block.props.type);
-  const dataSource = String(block.props.data ?? "[]");
+  const maximumRows = motionDocChartMaximumRows(type);
+  const dataSource = JSON.stringify(motionDocChartDataForType(block.props, type, locale));
   const [tab, setTab] = useState<ChartInspectorTab>("data");
   const [rows, setRows] = useState(() => parseMotionDocChartData(dataSource));
-  const model = motionDocChartModel(block.props);
+  const model = motionDocChartModel(block.props, locale);
+  const availableMotions = motionDocChartMotionOptions(type);
 
   useEffect(() => {
     setRows(parseMotionDocChartData(dataSource));
   }, [dataSource]);
 
   const visibleTypes = type === "scatter" ? [...primaryChartTypes, "scatter" as const] : primaryChartTypes;
+  const visiblePalettes = model.theme === "dark-gold" ? ["gilded"] as const : motionDocChartPaletteNames;
 
   function updateChart(patch: MotionDocProps) {
-    update(mergeChartProps(block, patch));
+    update(mergeChartProps(block, { chartLocale: locale, ...patch }));
+  }
+
+  function chartDataPatch(nextRows: MotionDocChartDatum[], chartType = type): MotionDocProps {
+    const dataByType = parseMotionDocChartDataByType(block.props.chartDataByType);
+    dataByType[chartType] = nextRows;
+    return { data: JSON.stringify(nextRows), chartDataByType: JSON.stringify(dataByType) };
   }
 
   function commitRows(nextRows: MotionDocChartDatum[]) {
-    const normalized = nextRows.slice(0, 24).map((row, index) => ({
+    const normalized = nextRows.slice(0, maximumRows).map((row, index) => ({
       ...(row.color ? { color: row.color } : {}),
       label: row.label.trim() || tx("Item {index}", { index: index + 1 }),
       ...(type === "scatter" && Number.isFinite(row.size) ? { size: row.size } : {}),
-      value: finite(row.value, 0),
+      value: type === "pie" || type === "donut" ? Math.max(finite(row.value, 0), 0) : finite(row.value, 0),
       ...(type === "scatter" && Number.isFinite(row.x) ? { x: row.x } : {})
     }));
     setRows(normalized);
-    updateChart({ data: JSON.stringify(normalized) });
+    updateChart(chartDataPatch(normalized));
   }
 
   function applyPalette(palette: (typeof motionDocChartPaletteNames)[number]) {
     const nextRows = clearChartDatumColors(rows);
     setRows(nextRows);
-    updateChart({ data: JSON.stringify(nextRows), palette });
+    updateChart({ ...chartDataPatch(nextRows), palette });
   }
 
   function applyPreset(preset: MotionDocChartPreset) {
     const nextRows = clearChartDatumColors(rows);
     setRows(nextRows);
-    updateChart({ ...motionDocChartPresetProps(preset, type), data: JSON.stringify(nextRows) });
+    updateChart({ ...motionDocChartPresetProps(preset, type), ...chartDataPatch(nextRows) });
+  }
+
+  function applyTheme(theme: MotionDocChartTheme) {
+    const nextRows = clearChartDatumColors(rows);
+    setRows(nextRows);
+    updateChart({ ...motionDocChartThemeProps(theme), ...chartDataPatch(nextRows) });
+  }
+
+  function switchChartType(candidate: MotionDocChartType) {
+    if (candidate === type) return;
+    const dataByType = parseMotionDocChartDataByType(block.props.chartDataByType);
+    dataByType[type] = rows;
+    const nextRows = dataByType[candidate] ?? defaultMotionDocChartDataForType(candidate, locale);
+    dataByType[candidate] = nextRows;
+    setRows(nextRows);
+    updateChart({ chartDataByType: JSON.stringify(dataByType), data: JSON.stringify(nextRows), type: candidate });
   }
 
   function updateRow(index: number, patch: Partial<MotionDocChartDatum>, commit = false) {
@@ -150,7 +184,7 @@ export function ChartInspector({ block, onPreviewMotion, update }: ChartInspecto
             aria-pressed={type === candidate}
             className={`relative grid h-auto min-h-[60px] cursor-pointer place-items-center content-center gap-[3px] rounded-[10px] border border-white/[0.055] bg-[#0d0f12] p-0 text-[#747983] shadow-none transition-[border-color,background-color,color,transform] hover:-translate-y-px hover:border-white/[0.13] hover:bg-[#15181d] hover:text-[#d9dce2] ${type === candidate ? "border-[#8ea5ff]/35 bg-[#8ea5ff]/[0.09] text-[#c3cdff] shadow-[inset_0_1px_rgba(255,255,255,0.05)]" : ""}`}
             key={candidate}
-            onClick={() => updateChart({ type: candidate })}
+            onClick={() => switchChartType(candidate)}
             type="button"
           >
             <ChartGlyph type={candidate} />
@@ -172,7 +206,7 @@ export function ChartInspector({ block, onPreviewMotion, update }: ChartInspecto
         <TabsContent className="flex-none pt-3.5" value="data">
           <div className="overflow-hidden rounded-[10px] border border-white/[0.06] bg-[#0c0e11]">
             <div className={`${type === "scatter" ? "grid-cols-[minmax(48px,1.1fr)_38px_28px_38px_38px_25px] gap-[3px] px-1" : "grid-cols-[minmax(66px,1.35fr)_minmax(44px,0.72fr)_29px_27px] gap-1 px-1.5"} grid min-h-7 items-center border-b border-[var(--line)] bg-[#111419] font-mono text-[10px] text-[#666b74]`}>
-              <span>{tx("Label")}</span><span>{type === "scatter" ? "Y" : tx("Value")}</span><span>{tx("Color")}</span>
+              <span>{tx(dataLabelHeading(type))}</span><span>{type === "scatter" ? "Y" : tx(dataValueHeading(type))}</span><span>{tx("Color")}</span>
               {type === "scatter" ? <><span>X</span><span>{tx("Size")}</span></> : null}
               <span aria-hidden="true" />
             </div>
@@ -191,21 +225,33 @@ export function ChartInspector({ block, onPreviewMotion, update }: ChartInspecto
               </div>
             ))}
           </div>
-          <Button className="mt-2 h-[30px] min-h-[30px] cursor-pointer rounded-lg border border-white/[0.07] bg-[#101318] px-[9px] py-0 text-[11px] font-semibold text-[#989da7] shadow-none hover:border-white/[0.14] hover:bg-[#101318] hover:text-white" disabled={rows.length >= 24} onClick={() => commitRows([...rows, { label: "", value: 0 }])} variant="outline">
+          <Button className="mt-2 h-[30px] min-h-[30px] cursor-pointer rounded-lg border border-white/[0.07] bg-[#101318] px-[9px] py-0 text-[11px] font-semibold text-[#989da7] shadow-none hover:border-white/[0.14] hover:bg-[#101318] hover:text-white" disabled={rows.length >= maximumRows} onClick={() => commitRows([...rows, { label: "", value: 0 }])} variant="outline">
             <Plus size={13} /> {tx("Add row")}
           </Button>
-          <p className="mx-px mb-0 mt-2 text-[11px] leading-[1.55] text-[#626771]">{tx("Paste CSV or spreadsheet cells into any label field. Up to 24 rows.")}</p>
+          <p className="mx-px mb-0 mt-2 text-[11px] leading-[1.55] text-[#626771]">{tx("Paste CSV or spreadsheet cells into any label field. Up to {count} rows.", { count: maximumRows })}</p>
         </TabsContent>
 
         <TabsContent className="flex-none pt-3.5" value="style">
+          <ChartControlLabel detail={tx("Choose a light or dark foreground treatment for the slide")} label={tx("Visual theme")} />
+          <div className="mb-4 mt-2.5 grid gap-1.5">
+            {motionDocChartThemes.map((theme) => {
+              const selected = model.theme === theme;
+              const dark = theme === "dark-gold";
+              return <Button aria-pressed={selected} className={`${chartSelectionCardClass} grid min-h-[58px] grid-cols-[44px_minmax(0,1fr)_16px] items-center gap-2.5 px-3 py-2 text-left ${selected ? chartSelectionCardActiveClass : ""} ${dark ? "border-[#c69b46]/25 bg-[linear-gradient(135deg,#11100d,#292011)] text-[#ead7a4] hover:border-[#dfc375]/45 hover:bg-[linear-gradient(135deg,#18150f,#342815)]" : ""}`} key={theme} onClick={() => applyTheme(theme)}>
+                <span className={`block h-8 rounded-md ${dark ? "bg-[linear-gradient(135deg,#654516,#f4dc95_52%,#15100a)]" : "bg-[linear-gradient(135deg,#eff6ff,#ffffff_48%,#c7d2fe)]"}`} />
+                <span className="min-w-0"><strong className="block text-[11px] text-inherit">{tx(dark ? "Dark" : "Light")}</strong><small className={`mt-0.5 block truncate text-[10px] font-normal ${dark ? "text-[#bca979]" : "text-[#68707a]"}`}>{tx(dark ? "High contrast for dark slides" : "Clear everyday reporting")}</small></span>
+                {selected ? <Check className="size-3" size={12} /> : <span />}
+              </Button>;
+            })}
+          </div>
           <ChartControlLabel detail={tx("A polished starting point you can customize")} label={tx("Design preset")} />
           <div className="mb-4 mt-2.5 grid grid-cols-3 gap-1.5">
             {motionDocChartPresetNames.map((preset) => <Button aria-pressed={model.chartPreset === preset} className={`${chartSelectionCardClass} grid min-h-[58px] place-items-center content-center gap-[5px] p-0 ${model.chartPreset === preset ? chartSelectionCardActiveClass : ""}`} key={preset} onClick={() => applyPreset(preset)}><PresetGlyph preset={preset} /><span className="text-[11px] font-semibold text-inherit">{tx(presetLabel(preset))}</span>{model.chartPreset === preset ? <Check className="absolute right-1.5 top-1.5 size-2.5" size={11} /> : null}</Button>)}
           </div>
           <ChartControlLabel detail={tx("Applies to every data mark")} label={tx("Palette")} />
           <div className="mt-2.5 grid grid-cols-2 gap-1.5">
-            {motionDocChartPaletteNames.map((palette) => {
-              const selected = String(block.props.palette ?? "aurora") === palette;
+            {visiblePalettes.map((palette) => {
+              const selected = model.palette[0] === chartPalettes[palette][0];
               return (
                 <Button aria-pressed={selected} className={`${chartSelectionCardClass} grid min-h-[54px] grid-cols-[1fr_auto] content-center items-center gap-[5px] px-[9px] py-2 text-left ${selected ? "border-[#8ea5ff]/30 bg-[#15181c] text-[#e2e4e8]" : ""}`} key={palette} onClick={() => applyPalette(palette)}>
                   <span className="col-span-full flex gap-[3px]">{chartPalettes[palette].map((color) => <i className="h-[7px] w-[18px] rounded-sm" key={color} style={{ background: color }} />)}</span>
@@ -264,8 +310,9 @@ export function ChartInspector({ block, onPreviewMotion, update }: ChartInspecto
         <TabsContent className="flex-none pt-3.5" value="motion">
           <ChartControlLabel detail={tx("Plays when the slide becomes active")} label={tx("Build animation")} />
           <div className="mt-2.5 grid gap-[5px]">
-            {motionDocChartMotions.map((motion) => {
-              const selected = String(block.props.chartMotion ?? "auto") === motion;
+            {availableMotions.map((motion) => {
+              const requestedMotion = String(block.props.chartMotion ?? "auto");
+              const selected = motion === "auto" ? requestedMotion === "auto" : requestedMotion !== "auto" && model.motion === motion;
               return (
                 <Button aria-pressed={selected} className={`grid h-auto min-h-[49px] cursor-pointer grid-cols-[38px_minmax(0,1fr)_16px] items-center gap-[9px] rounded-[9px] border border-white/[0.05] bg-[#0d0f12] px-[9px] py-[5px] text-left text-[#777c85] shadow-none hover:border-white/[0.12] hover:bg-[#15181c] ${selected ? "border-[#8ea5ff]/30 bg-[#8ea5ff]/[0.07] text-[#b9c5ff]" : ""}`} key={motion} onClick={() => {
                   updateChart({ chartMotion: motion });
@@ -378,6 +425,14 @@ function chartType(value: unknown): MotionDocChartType {
 
 function chartTypeLabel(type: MotionDocChartType) {
   return type.charAt(0).toUpperCase() + type.slice(1);
+}
+
+function dataLabelHeading(type: MotionDocChartType) {
+  return type === "pie" || type === "donut" ? "Segment" : "Label";
+}
+
+function dataValueHeading(type: MotionDocChartType) {
+  return type === "pie" || type === "donut" ? "Amount" : "Value";
 }
 
 function chartColorMode(value: unknown): MotionDocChartColorMode {

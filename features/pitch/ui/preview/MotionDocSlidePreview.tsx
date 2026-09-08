@@ -1,5 +1,5 @@
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
 import { isHtmlSourceTextBlock } from "@/core/motion-doc/domain/htmlPresentation";
 import {
@@ -21,7 +21,7 @@ type MotionDocSlidePreviewProps = {
   scene: MotionDocScene;
 };
 
-export function MotionDocSlidePreview({
+export const MotionDocSlidePreview = memo(function MotionDocSlidePreview({
   activeSlideIndex,
   eager = false,
   interactive = false,
@@ -63,6 +63,10 @@ export function MotionDocSlidePreview({
   }, [eager]);
 
   useLayoutEffect(() => {
+    if (!shouldRender || isPureHtmlSlide) {
+      setScale(null);
+      return;
+    }
     const frame = frameRef.current;
     if (!frame) return;
 
@@ -78,7 +82,7 @@ export function MotionDocSlidePreview({
     const observer = new ResizeObserver(updateScale);
     observer.observe(frame);
     return () => observer.disconnect();
-  }, []);
+  }, [isPureHtmlSlide, shouldRender]);
 
   return (
     <div
@@ -125,4 +129,4 @@ export function MotionDocSlidePreview({
       ) : null}
     </div>
   );
-}
+});

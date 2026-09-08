@@ -1,0 +1,130 @@
+name: Security gates
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to scan for a release
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  source-and-audit:
+    name: Source tests and production audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.19.0
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run test:source
+      - run: npm run test:release
+      - run: npm audit --omit=dev --audit-level=moderate
+
+  installer-security:
+    name: Installer security (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.19.0
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - if: runner.os != 'Windows'
+        run: npm run test:standalone
+      - if: runner.os == 'Windows'
+        shell: powershell
+        run: ./scripts/test-standalone-windows.ps1
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4
+        with:
+          languages: javascript-typescript
+      - uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4
+
+  osv:
+    name: OSV dependency scan
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@8deb546fdb875b9996d27d4950be7312dac076a1 # v2.5.0
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      scan-args: |-
+        --lockfile=package-lock.json
+      fail-on-vuln: true
+
+  required:
+    name: Security gates passed
+    if: always()
+    needs: [source-and-audit, installer-security, dependency-review, codeql, osv]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every applicable security gate
+        env:
+          CODEQL_RESULT: ${{ needs.codeql.result }}
+          DEPENDENCY_REVIEW_REQUIRED: ${{ github.event_name == 'pull_request' }}
+          DEPENDENCY_REVIEW_RESULT: ${{ needs['dependency-review'].result }}
+          INSTALLER_RESULT: ${{ needs['installer-security'].result }}
+          OSV_RESULT: ${{ needs.osv.result }}
+          SOURCE_RESULT: ${{ needs['source-and-audit'].result }}
+        run: |
+          test "$SOURCE_RESULT" = success
+          test "$INSTALLER_RESULT" = success
+          test "$CODEQL_RESULT" = success
+          test "$OSV_RESULT" = success
+          if [ "$DEPENDENCY_REVIEW_REQUIRED" = true ]; then
+            test "$DEPENDENCY_REVIEW_RESULT" = success
+          else
+            test "$DEPENDENCY_REVIEW_RESULT" = skipped -o "$DEPENDENCY_REVIEW_RESULT" = success
+          fi

@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { createServer as createHttpServer } from "node:http";
+import { access, mkdtemp, readFile, rm } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
@@ -27,7 +29,7 @@ test("the checkout and published runtime own their Tailwind v4 PostCSS dependenc
     readFile(new URL("../scripts/build-slidex-workbench.mjs", import.meta.url), "utf8")
   ]);
 
-  assert.equal(rootManifest.devDependencies.shadcn, "4.17.0");
+  assert.equal(rootManifest.devDependencies.shadcn, undefined);
   assert.equal(rootManifest.devDependencies.postcss, "^8.5.26");
   assert.equal(rootManifest.devDependencies["tw-animate-css"], "^1.4.0");
   for (const manifest of [workbenchManifest, publishedManifest]) {
@@ -74,11 +76,12 @@ test("Workbench production and HMR builds share the same Vite client configurati
 });
 
 test("Workbench defers editor routes and leaves cyclic dependency graphs to Rolldown", async () => {
-  const [workbenchSource, workspaceSource, mainSource, overlaySource, buildSource, cliSource] = await Promise.all([
+  const [workbenchSource, workspaceSource, mainSource, overlaySource, sidebarSource, buildSource, cliSource] = await Promise.all([
     readFile(new URL("../packages/slidex-workbench/src/client/Workbench.tsx", import.meta.url), "utf8"),
     readFile(new URL("../packages/slidex-workbench/src/client/WorkspaceHome.tsx", import.meta.url), "utf8"),
     readFile(new URL("../packages/slidex-workbench/src/client/main.tsx", import.meta.url), "utf8"),
     readFile(new URL("../features/pitch/ui/workspace/WorkspaceCodeEditorOverlay.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../features/pitch/ui/workspace/WorkspaceLayerSidebar.tsx", import.meta.url), "utf8"),
     readFile(new URL("../scripts/build-slidex-workbench.mjs", import.meta.url), "utf8"),
     readFile(new URL("../packages/slidex-workbench/src/cli.ts", import.meta.url), "utf8")
   ]);
@@ -89,6 +92,8 @@ test("Workbench defers editor routes and leaves cyclic dependency graphs to Roll
   assert.doesNotMatch(mainSource, /from "@open-slidex\/editor-ui"/);
   assert.match(overlaySource, /preloadMdxEditorPane/);
   assert.match(overlaySource, /import\("@\/features\/pitch\/ui\/MdxEditorPane"\)/);
+  assert.match(sidebarSource, /lazy\(\(\) => preloadTemplateLibrarySlidePanel\(\)/);
+  assert.match(sidebarSource, /import\("@\/features\/pitch\/ui\/sidebar\/TemplateLibrarySlidePanel"\)/);
   assert.match(buildSource, /\.\.\.workbenchViteConfig\.build/);
   assert.match(buildSource, /packages\/slidex-sdk\/dist/);
   assert.match(buildSource, /path: "\.\/sdk\/node\.js"/);
@@ -97,8 +102,12 @@ test("Workbench defers editor routes and leaves cyclic dependency graphs to Roll
 
   assert.equal(workbenchVendorChunk("/repo/node_modules/@codemirror/view/dist/index.js"), undefined);
   assert.equal(workbenchVendorChunk("/repo/node_modules/@paper-design/shaders/dist/index.js"), "vendor-shaders");
-  assert.equal(workbenchEditorChunk("/repo/features/pitch/ui/preview/PreviewBlock.tsx"), "editor-preview");
-  assert.equal(workbenchEditorChunk("/repo/features/pitch/ui/inspector/ImageFields.tsx"), "editor-inspector");
+  assert.equal(workbenchEditorChunk("/repo/features/pitch/ui/preview/PreviewBlock.tsx"), undefined);
+  assert.equal(workbenchEditorChunk("/repo/features/pitch/ui/inspector/ImageFields.tsx"), undefined);
+  assert.equal(workbenchVendorChunk("/repo/node_modules/radix-ui/index.js"), undefined);
+  assert.equal(workbenchEditorChunk("/repo/packages/slidex-workbench/src/client/ChartInspector.tsx"), "editor-chart-inspector");
+  assert.equal(workbenchEditorChunk("/repo/features/pitch/ui/sidebar/TemplateLibrarySlidePanel.tsx"), "editor-template-library");
+  assert.equal(workbenchEditorChunk("/repo/core/motion-doc/presets/templateLibrarySources.ts"), "editor-template-library");
 
   const dependencies = [
     "_workbench/EditorWorkbench-abc.js",
@@ -113,6 +122,19 @@ test("Workbench defers editor routes and leaves cyclic dependency graphs to Roll
   assert.deepEqual(
     workbenchModulePreloadDependencies("EditorWorkbench.js", dependencies, { hostId: "index.js", hostType: "js" }),
     dependencies
+  );
+  const editorDependencies = [
+    "_workbench/editor-preview-abc.js",
+    "_workbench/editor-template-library-abc.js",
+    "_workbench/codeMirrorTheme-abc.js"
+  ];
+  assert.deepEqual(
+    workbenchModulePreloadDependencies("EditorWorkbench-abc.js", editorDependencies, { hostId: "index.js", hostType: "js" }),
+    ["_workbench/editor-preview-abc.js"]
+  );
+  assert.deepEqual(
+    workbenchModulePreloadDependencies("editor-template-library-abc.js", editorDependencies, { hostId: "EditorWorkbench.js", hostType: "js" }),
+    editorDependencies
   );
 });
 
@@ -143,12 +165,46 @@ test("Workbench HMR proxy preserves the local origin boundary and brand assets",
   );
   assert.equal(apiProxy.target, "http://127.0.0.1:4318");
   assert.equal(apiProxy.changeOrigin, true);
-  assert.equal(apiProxy.headers.origin, "http://127.0.0.1:4318");
+  assert.equal(apiProxy.headers, undefined);
   assert.equal(
     assetProxy.bypass({ url: "/assets/slidex-x-mark.png?import" }),
     "/assets/slidex-x-mark.png?import"
   );
   assert.equal(assetProxy.bypass({ url: "/assets/project-image.webp" }), undefined);
+});
+
+test("Workbench HMR proxy forwards the browser Origin without replacing it", async (context) => {
+  const cacheDir = await mkdtemp(path.join(os.tmpdir(), "open-slidex-vite-origin-"));
+  let receivedOrigin;
+  const target = createHttpServer((request, response) => {
+    receivedOrigin = request.headers.origin;
+    response.writeHead(204).end();
+  });
+  await new Promise((resolve, reject) => {
+    target.once("error", reject);
+    target.listen(0, "127.0.0.1", resolve);
+  });
+  const targetPort = target.address().port;
+  const { createServer } = await import("vite");
+  const vite = await createServer(createSlideXWorkbenchViteConfig({
+    apiPort: targetPort,
+    cacheDir,
+    port: 0
+  }));
+  context.after(async () => {
+    await vite.close();
+    await new Promise((resolve, reject) => target.close((error) => error ? reject(error) : resolve()));
+    await rm(cacheDir, { force: true, recursive: true });
+  });
+  await vite.listen();
+  const uiPort = vite.httpServer.address().port;
+  const response = await fetch(`http://127.0.0.1:${uiPort}/api/v1/origin-probe`, {
+    body: "{}",
+    headers: { "content-type": "text/plain", origin: "https://attacker.invalid" },
+    method: "POST"
+  });
+  assert.equal(response.status, 204);
+  assert.equal(receivedOrigin, "https://attacker.invalid");
 });
 
 async function readJson(url) {

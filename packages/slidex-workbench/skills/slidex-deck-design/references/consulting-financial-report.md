@@ -4,7 +4,7 @@ Use this route for a 24-32 page board update, earnings review, investment memo,
 consulting recommendation, or financial weekly. Thirty pages is a useful
 planning target, not a quota. Remove pages that do not earn a decision.
 
-Inspect [the complete native reference](consulting-financial-report.mdx) for
+Inspect [the complete native reference](consulting-financial-report.tsx) for
 all 30 editable pages. Its figures are illustrative and must be replaced with
 verified project evidence.
 

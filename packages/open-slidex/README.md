@@ -1,6 +1,6 @@
 # OpenSlideX
 
-OpenSlideX is a local-first, MDX presentation workspace with a visual Workbench,
+OpenSlideX is a local-first, React presentation workspace with a visual Workbench,
 deterministic HTML/PPTX export, local image optimization, and a project-scoped
 MCP server for Codex and Claude Code.
 
@@ -17,8 +17,8 @@ npx open-slidex@latest workspace ~/Presentations
 ```
 
 The Workspace can create a blank deck or start a new deck from a bundled public
-template. Each card maps to its own child folder with one `presentation.mdx` as
-the source of truth. The Workspace never requires an account or Supabase.
+template. Each card maps to its own child folder with one `presentation.tsx` as
+the editable source of truth. MDX remains available for compatible import and portable export.
 
 Bundled templates: Summer Time Report and Moodboard. Notion and Obsidian
 source-specific templates are not part of the local catalog.
@@ -64,7 +64,7 @@ npm install
 my-deck/
 ├── .agents/skills/        # skills plus on-demand references and examples
 ├── open-slidex-workspace/ # created on first launch; one folder per deck
-│   └── <deck>/presentation.mdx
+│   └── <deck>/presentation.tsx
 └── package.json
 ```
 
@@ -84,15 +84,15 @@ file and restored to `assets/*.webp` when that MDX is imported into a Workspace.
 Older MDX files that contain only missing asset paths still import with editable
 empty media frames instead of failing the complete presentation.
 
-Workspace import accepts `.mdx` and complete `.html` files up to 50 MB. HTML
-bytes are kept unchanged and run in an opaque-origin sandbox. Inline resources
-work offline; HTTP(S) libraries, styles, fonts, images, media, frames, workers,
-and connections stay browser-native and require network access. Relative
-sidecars require a remote `<base href>` or must be inlined. Native MDX may use `SvgBlock`
+Workspace import accepts `.tsx`, legacy `.mdx`, and complete `.html` files up to 50 MB. Legacy MDX becomes TSX after import. HTML
+previews are static images produced by an offline opaque-origin thumbnail sandbox.
+Inline resources and packaged sidecars work offline; remote network dependencies, absolute paths, `file:` URLs,
+and symlinked sidecars are rejected. Native MDX may use `SvgBlock`
 with local `assets/*.svg`, `sharedScene`, and integer `stage` props for
 script-free stage animation that remains mounted across slide changes.
-Portable MDX and PowerPoint do not retain `HtmlEmbedBlock` JavaScript;
-downloading HTML from an imported HTML deck returns the original file.
+Portable MDX and PowerPoint do not retain `HtmlEmbedBlock` JavaScript. HTML
+download produces an offline-hardened static copy; active scripts, event
+handlers, frames, forms, and automatic navigation must be removed first.
 
 `npm run dev` always opens `/workspace`. A fresh install starts with an empty
 library; creating or importing a deck adds an isolated child folder and then
@@ -116,7 +116,7 @@ programs. Workspace Settings generates a user-level MCP configuration with
 `--workspace <my-deck/open-slidex-workspace>`. The agent lists and selects one
 inner deck before using the presentation tools.
 
-The server is restricted to that deck's `presentation.mdx`, `assets/`,
+The server is restricted to that deck's `presentation.tsx`, legacy migration backup, `components/`, `assets/`,
 `knowledge/`, approved `.agents/skills/`, `.open-slidex/`, and `dist/`
 directories. Writes require an `expectedRevision`, validate the complete
 MotionDoc first, and return a revision conflict instead of overwriting newer
@@ -126,7 +126,7 @@ names and filesystem paths are rejected.
 
 For creation or redesign, pass a concise report or summary brief through
 `open_slidex_read.templateQuery`. The local server ranks six core thirty-page
-MotionDoc references and returns three exact MDX resource paths. The agent
+componentized React references and returns three exact TSX resource paths. The agent
 loads exactly one reference and submits the complete result through the normal
 revision and rendered-quality gate.
 
@@ -142,7 +142,7 @@ Optional trusted image search uses the server-side `UNSPLASH_ACCESS_KEY`.
 Search returns attribution and candidate IDs without downloading. Import
 requires a separate explicit user confirmation naming the candidate ID, then
 stores a content-addressed `assets/*.webp` file and provenance under
-`.open-slidex/`. Remote URLs never enter `presentation.mdx`.
+`.open-slidex/`. Remote URLs never enter `presentation.tsx`.
 
 To print the configuration for an installed Workspace from a terminal:
 
@@ -185,14 +185,14 @@ a presentation. Workspace scope loads six tools total:
 | Tool | Purpose |
 | --- | --- |
 | `open_slidex_workspace` | List local decks and select the target deck. |
-| `open_slidex_read` | Read current MotionDoc, canonical browser-native HTML, guided skill resources or local knowledge, and rank six core native references from `templateQuery`. |
+| `open_slidex_read` | Read canonical TSX, a deck-local component, portable MDX, browser-native HTML, guided skill resources or local knowledge, and rank six core native references. |
 | `open_slidex_source_import` | Inspect local PPTX text and image evidence, preserve geometry and type hints, and import embedded images as WebP. |
 | `open_slidex_media` | Ingest inbox documents and their WebP assets, or search/import trusted media. |
 | `open_slidex_review` | Run read-only structural and rendered visual QA. |
 | `open_slidex_edit` | Apply a revision-safe complete native deck or slide edit with rendered QA, or create/replace canonical browser-native HTML. |
 
 For a PPTX migration, put the source file inside the selected deck,
-inspect it with `open_slidex_source_import`, then author native MotionDoc MDX.
+inspect it with `open_slidex_source_import`, then author native React layers in `presentation.tsx`.
 `import-media` converts supported embedded images to portable `assets/*.webp`
 and returns their original percentage frame for `ImageBlock`; recovered text
 frames include native reviewable `Text` blocks plus geometry and type hints.

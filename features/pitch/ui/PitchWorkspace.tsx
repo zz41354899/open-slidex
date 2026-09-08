@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { PitchHeader } from "@/features/pitch/ui/PitchHeader";
 import { PreviewCanvas } from "@/features/pitch/ui/PreviewCanvas";
 import { useMobileEdgePanels } from "@/features/pitch/ui/hooks/useMobileEdgePanels";
@@ -14,19 +14,25 @@ import { useVisibleRemoteMcpOperations } from "@/features/pitch/ui/hooks/useVisi
 import { PreviewMediaPolicyProvider } from "@/features/pitch/ui/preview/PreviewMediaPolicy";
 import { MotionSequenceStrip } from "@/features/pitch/ui/MotionSequenceStrip";
 
-export function PitchWorkspace({ assistant, commands, document, remoteMcp, selection, toolRail, view }: PitchWorkspaceProps) {
+const emptyAssistantActivities = [] as const;
+const emptyRemoteMcpOperations = [] as const;
+const ignoreWorkspaceAction = () => undefined;
+
+export const PitchWorkspace = memo(function PitchWorkspace({ assistant, commands, document, remoteMcp, selection, toolRail, view }: PitchWorkspaceProps) {
   const { tx } = usePitchI18n();
   const sceneCount = document.scenes.length;
   const setActiveCanvasTool = view.setActiveCanvasTool;
   const [zoomLevel, setZoomLevel] = useState<number | "fit">("fit");
   const [fitScale, setFitScale] = useState(1);
-  const visibleRemoteMcpOperations = useVisibleRemoteMcpOperations(remoteMcp?.activities ?? []);
+  const visibleRemoteMcpOperations = useVisibleRemoteMcpOperations(remoteMcp?.activities ?? emptyRemoteMcpOperations);
   const canvasViewMode = view.canvasViewMode;
-  const exportOptions = commands.openExportWithFormat ? [
-    { description: tx("Interactive presentation"), id: "html" as const, label: "HTML" },
-    { description: tx("Editable PowerPoint"), id: "pptx" as const, label: "PowerPoint" },
-    { description: tx("Canonical source"), id: "mdx" as const, label: "MDX" }
-  ].filter((option) => !view.exportFormats || view.exportFormats.includes(option.id)) : undefined;
+  const exportOptions = useMemo(() => commands.openExportWithFormat ? [
+      { description: tx("Interactive presentation"), id: "html" as const, label: "HTML" },
+      { description: tx("Editable PowerPoint"), id: "pptx" as const, label: "PowerPoint" },
+      { description: tx("Canonical source"), id: "mdx" as const, label: "MDX" }
+    ].filter((option) => !view.exportFormats || view.exportFormats.includes(option.id)) : undefined,
+    [commands.openExportWithFormat, tx, view.exportFormats]
+  );
 
   useMobileEdgePanels({
     isLeftPanelOpen: view.isMobileSidebarOpen,
@@ -47,10 +53,36 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
     return () => mobileQuery.removeEventListener("change", syncMobileCanvasTool);
   }, [setActiveCanvasTool]);
 
-  function selectSlide(index: number) {
+  const selectSlide = useCallback((index: number) => {
     commands.setActiveSlideIndex(index);
     selection.selectSingleBlock(null);
-  }
+  }, [commands.setActiveSlideIndex, selection.selectSingleBlock]);
+  const handleExportOption = useCallback((format: string) => {
+    commands.openExportWithFormat?.(format as "html" | "mdx" | "pptx");
+  }, [commands.openExportWithFormat]);
+  const toggleMobileInspector = useCallback(() => {
+    view.setIsMobileInspectorOpen((value) => !value);
+    view.setIsMobileSidebarOpen(false);
+  }, [view.setIsMobileInspectorOpen, view.setIsMobileSidebarOpen]);
+  const toggleMobileSidebar = useCallback(() => {
+    view.setIsMobileSidebarOpen((value) => !value);
+    view.setIsMobileInspectorOpen(false);
+  }, [view.setIsMobileInspectorOpen, view.setIsMobileSidebarOpen]);
+  const openMobileInspector = useCallback(() => {
+    view.setIsMobileInspectorOpen(true);
+    view.setIsMobileSidebarOpen(false);
+  }, [view.setIsMobileInspectorOpen, view.setIsMobileSidebarOpen]);
+  const openMobileLayers = useCallback(() => {
+    view.setIsMobileSidebarOpen(true);
+    view.setIsMobileInspectorOpen(false);
+  }, [view.setIsMobileInspectorOpen, view.setIsMobileSidebarOpen]);
+  const selectMotionBlock = useCallback((index: number) => {
+    selection.selectSingleBlock(index);
+  }, [selection.selectSingleBlock]);
+  const projectDisplayName = useMemo(
+    () => `${document.projectName === "Untitled presentation" ? tx("Untitled presentation") : document.projectName}${document.isProjectDirty ? ` - ${tx("Edited")}` : ""}`,
+    [document.isProjectDirty, document.projectName, tx]
+  );
 
   return (
     <PreviewMediaPolicyProvider assetUrl={view.assetUrl} animateCharts={view.localChartAnimationsActive} localAssetsOnly={view.localAssetsOnly === true}>
@@ -69,21 +101,15 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
         isMobileSidebarOpen={view.isMobileSidebarOpen}
         notice={view.notice}
         onExport={commands.openExport}
-        onExportOption={commands.openExportWithFormat ? (format) => commands.openExportWithFormat?.(format as "html" | "mdx" | "pptx") : undefined}
+        onExportOption={commands.openExportWithFormat ? handleExportOption : undefined}
         onPlay={commands.openPresentationPreview}
         onProjectNameChange={view.onProjectNameChange}
         onReplay={view.onReplayAnimations}
         onRedo={view.interactionDisabled || view.authoringDisabled ? undefined : commands.redoLastChange}
-        onToggleInspector={() => {
-          view.setIsMobileInspectorOpen((value) => !value);
-          view.setIsMobileSidebarOpen(false);
-        }}
-        onToggleSidebar={() => {
-          view.setIsMobileSidebarOpen((value) => !value);
-          view.setIsMobileInspectorOpen(false);
-        }}
-        onUndo={view.interactionDisabled || view.authoringDisabled ? () => undefined : commands.undoLastChange}
-        projectName={`${document.projectName === "Untitled presentation" ? tx("Untitled presentation") : document.projectName}${document.isProjectDirty ? ` - ${tx("Edited")}` : ""}`}
+        onToggleInspector={toggleMobileInspector}
+        onToggleSidebar={toggleMobileSidebar}
+        onUndo={view.interactionDisabled || view.authoringDisabled ? ignoreWorkspaceAction : commands.undoLastChange}
+        projectName={projectDisplayName}
         projectNameEditValue={document.projectName}
         setZoomLevel={setZoomLevel}
         showFitScale={canvasViewMode !== "grid"}
@@ -104,7 +130,7 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
 
         <div className="relative flex min-w-0 flex-1">
           <PreviewCanvas
-            assistantActivities={assistant?.activities ?? []}
+            assistantActivities={assistant?.activities ?? emptyAssistantActivities}
             assistantTrace={assistant?.trace}
             assistantTone={assistant?.tone}
             activeCanvasTool={view.activeCanvasTool}
@@ -132,14 +158,8 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
             onInsertSlideNearActive={commands.insertSlideNearActive}
             onMoveSelectedBlocksToEdge={commands.moveSelectedBlocksToEdge}
             onNextSlide={commands.goToNextSlide}
-            onOpenMobileInspector={() => {
-              view.setIsMobileInspectorOpen(true);
-              view.setIsMobileSidebarOpen(false);
-            }}
-            onOpenMobileLayers={() => {
-              view.setIsMobileSidebarOpen(true);
-              view.setIsMobileInspectorOpen(false);
-            }}
+            onOpenMobileInspector={openMobileInspector}
+            onOpenMobileLayers={openMobileLayers}
             onPasteCopiedBlock={commands.pasteCopiedBlock}
             onPreviousSlide={commands.goToPreviousSlide}
             onShaderFrameCapture={commands.persistActiveSlideShaderFrame}
@@ -170,7 +190,7 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
           <MotionSequenceStrip
             onPreview={view.onReplayAnimations}
             onReorder={commands.reorderMotionActions}
-            onSelectBlock={(index) => selection.selectSingleBlock(index)}
+            onSelectBlock={selectMotionBlock}
             scene={document.activeSlide}
           />
           {view.commentsEnabled ? <DesktopSlideNoteFab
@@ -189,4 +209,4 @@ export function PitchWorkspace({ assistant, commands, document, remoteMcp, selec
       </main>
     </PreviewMediaPolicyProvider>
   );
-}
+});

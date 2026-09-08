@@ -62,11 +62,14 @@ export function htmlPageSourceLocations(source: string): HtmlPageSourceLocation[
       continue;
     }
     if (source[from + 1] === "!" || source[from + 1] === "?") {
-      cursor = htmlTagEnd(source, from + 2);
+      const to = htmlTagEnd(source, from + 2);
+      if (to < 0) break;
+      cursor = to;
       continue;
     }
 
     const token = htmlTagToken(source, from);
+    if (token === "unterminated") break;
     if (!token) {
       cursor = from + 1;
       continue;
@@ -175,20 +178,21 @@ export function replaceHtmlSourceRange(
   return `${source.slice(0, range.from)}${replacement}${source.slice(range.outerTo)}`;
 }
 
-function htmlTagToken(source: string, from: number): HtmlTagToken | null {
+function htmlTagToken(source: string, from: number): HtmlTagToken | "unterminated" | null {
   let cursor = from + 1;
   let closing = false;
   if (source[cursor] === "/") {
     closing = true;
     cursor += 1;
   }
-  const nameMatch = source.slice(cursor).match(/^[A-Za-z][\w:-]*/);
-  if (!nameMatch) return null;
-  const name = nameMatch[0].toLowerCase();
-  cursor += nameMatch[0].length;
+  if (!/[A-Za-z]/.test(source[cursor] ?? "")) return null;
+  const nameFrom = cursor;
+  cursor += 1;
+  while (/[A-Za-z0-9_:-]/.test(source[cursor] ?? "")) cursor += 1;
+  const name = source.slice(nameFrom, cursor).toLowerCase();
   const attributesFrom = cursor;
   const to = htmlTagEnd(source, cursor);
-  if (to <= cursor || source[to - 1] !== ">") return null;
+  if (to < 0) return "unterminated";
   const beforeClose = source.slice(attributesFrom, to - 1);
   return {
     attributes: beforeClose,
@@ -214,13 +218,14 @@ function htmlTagEnd(source: string, from: number) {
     }
     if (character === ">") return cursor + 1;
   }
-  return source.length;
+  return -1;
 }
 
 function rawTextClosingOffset(source: string, from: number, tagName: string) {
   const escaped = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = new RegExp(`</${escaped}\\s*>`, "i").exec(source.slice(from));
-  return match?.index === undefined ? -1 : from + match.index;
+  const pattern = new RegExp(`</${escaped}\\s*>`, "gi");
+  pattern.lastIndex = from;
+  return pattern.exec(source)?.index ?? -1;
 }
 
 function findOpenElement(stack: OpenHtmlElement[], tagName: string) {

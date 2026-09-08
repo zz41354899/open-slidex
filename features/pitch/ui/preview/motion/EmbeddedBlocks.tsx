@@ -1,15 +1,10 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { assertSafeMotionDocSvg } from "@/core/motion-doc/domain/svgPolicy";
-import {
-  canvasKeyboardIntentFromUnknown,
-  emitCanvasKeyboardIntent
-} from "@/features/pitch/application/canvasKeyboard";
 import { usePreviewMediaSource } from "@/features/pitch/ui/preview/PreviewMediaPolicy";
+import { HtmlPageThumbnail } from "@/features/pitch/ui/preview/HtmlPageThumbnail";
 
 export function HtmlEmbedBlock({
-  onNavigate,
   page = 1,
-  replayNonce = 0,
   src
 }: {
   onNavigate?: (page: number) => void;
@@ -17,75 +12,7 @@ export function HtmlEmbedBlock({
   replayNonce?: number;
   src: string;
 }) {
-  return <HtmlEmbedRuntime onNavigate={onNavigate} page={page} replayNonce={replayNonce} src={src} />;
-}
-
-type HtmlEmbedRuntimeProps = {
-  onNavigate?: (page: number) => void;
-  page: number;
-  replayNonce: number;
-  src: string;
-};
-
-function HtmlEmbedRuntime({
-  onNavigate,
-  page,
-  replayNonce,
-  src
-}: HtmlEmbedRuntimeProps) {
-  const resolved = usePreviewMediaSource(src);
-  const frameRef = useRef<HTMLIFrameElement | null>(null);
-  const sendPage = useCallback((replay = false) => {
-    frameRef.current?.contentWindow?.postMessage({
-      page: Math.max(1, Math.floor(Number.isFinite(page) ? page : 1)),
-      replay,
-      type: "open-slidex:html-page"
-    }, "*");
-  }, [page]);
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.source !== frameRef.current?.contentWindow || !event.data) return;
-      if (event.data.type === "open-slidex:html-ready") {
-        sendPage(replayNonce > 0);
-      }
-      if (event.data.type === "open-slidex:html-canvas-keyboard") {
-        const intent = canvasKeyboardIntentFromUnknown(event.data.intent);
-        if (intent) emitCanvasKeyboardIntent(intent);
-      }
-      if (event.data.type === "open-slidex:html-page-change" && Number.isInteger(event.data.page)) {
-        onNavigate?.(Math.max(1, event.data.page));
-      }
-    };
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [onNavigate, replayNonce, sendPage]);
-
-  useEffect(() => {
-    sendPage(replayNonce > 0);
-  }, [replayNonce, sendPage]);
-
-  return resolved ? (
-    <iframe
-      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-      className="h-full w-full border-0 bg-white"
-      onLoad={() => sendPage(replayNonce > 0)}
-      ref={frameRef}
-      referrerPolicy="strict-origin-when-cross-origin"
-      sandbox="allow-downloads allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-presentation allow-scripts"
-      src={htmlPlaybackSource(resolved)}
-      title="Imported HTML presentation"
-    />
-  ) : (
-    <div className="flex h-full w-full items-center justify-center bg-neutral-950 text-neutral-500">HTML source unavailable</div>
-  );
-}
-
-function htmlPlaybackSource(source: string) {
-  const hashIndex = source.indexOf("#");
-  const beforeHash = hashIndex >= 0 ? source.slice(0, hashIndex) : source;
-  const hash = hashIndex >= 0 ? source.slice(hashIndex) : "";
-  const query = new URLSearchParams({ slidexBridge: "1", slidexBridgeVersion: "8" });
-  return `${beforeHash}${beforeHash.includes("?") ? "&" : "?"}${query}${hash}`;
+  return <HtmlPageThumbnail eager page={page} source={src} />;
 }
 
 export type SvgStageBlockProps = {

@@ -9,7 +9,7 @@ import {
 test("SDK CLI parses validate, montage, slide, and export commands", () => {
   assert.deepEqual(parseSlideXCliArguments(["validate"]), {
     action: "validate",
-    file: "presentation.mdx"
+    file: "presentation.tsx"
   });
   assert.deepEqual(
     parseSlideXCliArguments(["render", "deck.mdx", "--montage", "--out", "deck.png"]),
@@ -30,7 +30,7 @@ test("SDK CLI parses validate, montage, slide, and export commands", () => {
     ]),
     {
       action: "export",
-      file: "presentation.mdx",
+      file: "presentation.tsx",
       format: "mdx",
       outputPath: "deck.mdx",
       overwrite: false
@@ -40,7 +40,7 @@ test("SDK CLI parses validate, montage, slide, and export commands", () => {
     parseSlideXCliArguments(["render", "--slide", "2", "--out", "slide.png"]),
     {
       action: "render",
-      file: "presentation.mdx",
+      file: "presentation.tsx",
       mode: "slide",
       outputPath: "slide.png",
       slideIndex: 2
@@ -57,7 +57,7 @@ test("SDK CLI parses validate, montage, slide, and export commands", () => {
     ]),
     {
       action: "export",
-      file: "presentation.mdx",
+      file: "presentation.tsx",
       format: "pptx",
       outputPath: "deck.pptx",
       overwrite: true
@@ -87,5 +87,5 @@ test("SDK CLI rejects ambiguous or incomplete output commands", () => {
       parseSlideXCliArguments(["export", "--format", "pdf", "--out", "deck.pdf"]),
     /html, mdx, or pptx/
   );
-  assert.match(createSlideXCliHelp(), /open-slidex validate \[presentation\.mdx\]/);
+  assert.match(createSlideXCliHelp(), /open-slidex validate \[presentation\.tsx\]/);
 });

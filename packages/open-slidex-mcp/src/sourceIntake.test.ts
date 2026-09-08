@@ -7,6 +7,7 @@ import test from "node:test";
 import { createCanvas, PDFDocument } from "@napi-rs/canvas";
 
 import { searchOpenSlideXKnowledge } from "./knowledge";
+import { extractPdfMedia, extractPdfTextPages } from "./pdfContent";
 import { ingestOpenSlideXSource } from "./sourceIntake";
 
 const revision = `sha256:${"a".repeat(64)}`;
@@ -91,6 +92,93 @@ test("source intake extracts PDF text, embedded images, and a vector page fallba
   } finally {
     await rm(workspace, { force: true, recursive: true });
   }
+});
+
+test("PDF visual extraction enforces cumulative pixel, output, and cancellation budgets", async () => {
+  const pdf = new PDFDocument();
+  const page = pdf.beginPage(640, 360);
+  page.fillStyle = "#3366cc";
+  page.fillRect(0, 0, 640, 360);
+  page.fillStyle = "#111111";
+  page.font = "18px sans-serif";
+  page.fillText("First knowledge item", 20, 40);
+  page.fillText("Second knowledge item", 20, 80);
+  pdf.endPage();
+  const bytes = new Uint8Array(pdf.close());
+
+  await assert.rejects(
+    () => extractPdfMedia(bytes, "budget", { maximumDecodedPixels: 1 }),
+    /cumulative decoded pixel budget/
+  );
+  await assert.rejects(
+    () => extractPdfMedia(bytes, "budget", { maximumOutputBytes: 1 }),
+    /cumulative output byte budget/
+  );
+  await assert.rejects(
+    () => extractPdfMedia(bytes, "budget", { maximumDurationMs: 1 }),
+    /time budget/
+  );
+  const controller = new AbortController();
+  controller.abort(new Error("cancelled"));
+  await assert.rejects(
+    () => extractPdfMedia(bytes, "budget", { signal: controller.signal }),
+    /cancelled/
+  );
+
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "open-slidex-pdf-cancel-"));
+  const projectRoot = path.join(workspace, "deck");
+  const inboxRoot = path.join(workspace, ".open-slidex-inbox");
+  try {
+    await Promise.all([mkdir(projectRoot), mkdir(inboxRoot)]);
+    const sourcePath = path.join(inboxRoot, "cancelled.pdf");
+    await writeFile(sourcePath, bytes);
+    const intakeController = new AbortController();
+    intakeController.abort(new Error("intake cancelled"));
+    await assert.rejects(
+      () => ingestOpenSlideXSource({
+        expectedRevision: revision,
+        filePath: "cancelled.pdf",
+        inboxRoot,
+        projectRoot,
+        signal: intakeController.signal
+      }),
+      /intake cancelled/
+    );
+    assert.equal((await stat(sourcePath)).isFile(), true);
+  } finally {
+    await rm(workspace, { force: true, recursive: true });
+  }
+});
+
+test("PDF text extraction enforces cumulative output, item, time, and cancellation budgets", async () => {
+  const pdf = new PDFDocument();
+  const page = pdf.beginPage(640, 360);
+  page.fillStyle = "#111111";
+  page.font = "18px sans-serif";
+  page.fillText("First knowledge item", 20, 40);
+  page.fillText("Second knowledge item", 20, 80);
+  pdf.endPage();
+  const bytes = new Uint8Array(pdf.close());
+
+  assert.match((await extractPdfTextPages(bytes))[0] ?? "", /First.*knowledge.*item/);
+  await assert.rejects(
+    () => extractPdfTextPages(bytes, { maximumOutputBytes: 1 }),
+    /PDF text extraction exceeded the cumulative output byte budget/
+  );
+  await assert.rejects(
+    () => extractPdfTextPages(bytes, { maximumItems: 1 }),
+    /PDF text extraction exceeded the cumulative text item budget/
+  );
+  await assert.rejects(
+    () => extractPdfTextPages(bytes, { maximumDurationMs: 1 }),
+    /PDF text extraction exceeded the 1 ms time budget/
+  );
+  const controller = new AbortController();
+  controller.abort(new Error("text extraction cancelled"));
+  await assert.rejects(
+    () => extractPdfTextPages(bytes, { signal: controller.signal }),
+    /text extraction cancelled/
+  );
 });
 
 test("source intake imports one public AI image URL and rejects inbox escape", async () => {

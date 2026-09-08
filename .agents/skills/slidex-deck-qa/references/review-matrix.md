@@ -31,9 +31,8 @@ Run an evidence pass and a visual pass. Fix blockers before polish.
 - Read the canonical source through `open_slidex_read` with
   `sourceFormat: "html"`; do not infer it from the generated wrapper. Write it
   through `open_slidex_edit` with `target: "html"`.
-- Confirm scripts and HTTP(S) resources run only inside the opaque-origin
-  sandbox. Libraries, fonts, images, video, frames, workers, and connections
-  may require network access at playback time.
+- Confirm inline scripts affect only the offline opaque-origin thumbnail render,
+  Workbench playback stays static, and every network attempt fails.
 - Package required local HTML images through folder import or MCP
   `htmlAssetRoot`; verify PNG became WebP and no original local path remains.
 - Distinguish inline resources from sidecars. Inline SVG and CSS correctly stay

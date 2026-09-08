@@ -2,7 +2,7 @@
 
 [English](README.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md)
 
-OpenSlideX 是開源、local-first 的可編輯簡報工作區。每一份簡報都放在你擁有的資料夾中，並以 `presentation.mdx` 作為唯一的原始檔。
+OpenSlideX 是開源、local-first 的可編輯簡報工作區。每一份簡報都放在你擁有的資料夾中，並以 `presentation.tsx` 作為唯一可編輯來源；MDX 保留做相容匯入與可攜匯出。
 
 你可以在沒有帳號、背景同步或隱藏雲端依賴的情況下建立、編輯、預覽與匯出簡報。MotionDoc 格式保持可攜、可閱讀，並能使用你自己的工具與 Git 工作流程繼續編輯。
 
@@ -19,13 +19,17 @@ OpenSlideX 是開源、local-first 的可編輯簡報工作區。每一份簡報
 macOS：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.sh | sh
+curl -fLO https://github.com/zz41354899/open-slidex/releases/latest/download/install.sh
+gh attestation verify install.sh --repo zz41354899/open-slidex
+sh install.sh
 ```
 
 Windows PowerShell：
 
 ```powershell
-irm https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.ps1 | iex
+irm https://github.com/zz41354899/open-slidex/releases/latest/download/install.ps1 -OutFile install.ps1
+gh attestation verify install.ps1 --repo zz41354899/open-slidex
+.\install.ps1
 ```
 
 首次安裝後請開啟新的終端機，再執行：
@@ -33,10 +37,11 @@ irm https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.ps1 | 
 ```bash
 slidex             # 開啟本機 Workspace
 slidex update      # 檢查並安裝最新版本
+slidex rollback    # 切回保留的上一個正常版本
 slidex uninstall   # 移除執行環境與指令，保留你的簡報
 ```
 
-預設簡報庫在 macOS 為 `~/Documents/OpenSlideX Workspace`，Windows 則在目前使用者的 Documents 資料夾。每個下載的 release archive 都會先通過 SHA-256 checksum 驗證。
+預設簡報庫在 macOS 為 `~/Documents/OpenSlideX Workspace`，Windows 則在目前使用者的 Documents 資料夾。每個下載的 release archive 必須同時通過 SHA-256 checksum 與 GitHub artifact attestation 才能切換目前版本，並會附上經 attestation 綁定的 SPDX SBOM。因此從 GitHub 正式安裝時需要 GitHub CLI（`gh`）；本機測試 mirror 則走明確隔離的測試路徑。
 
 ## 開發者快速開始
 
@@ -49,7 +54,7 @@ npm install
 npm run dev
 ```
 
-這會啟動本機 Workspace。空白或範本簡報預設會建立在被忽略的 `open-slidex-workspace/` 中，每個 deck 都有自己的 `presentation.mdx`；不需要帳號或 Supabase 專案。內建範本包括 **Summer Time Report** 與 **Moodboard**。
+這會啟動本機 Workspace。空白或範本簡報預設會建立在被忽略的 `open-slidex-workspace/` 中，每個 deck 都有自己的 `presentation.tsx`；不需要帳號或 Supabase 專案。內建範本包括 **Summer Time Report** 與 **Moodboard**。
 
 ### 使用其他 Workspace 資料夾或連接埠
 
@@ -85,7 +90,7 @@ Starter 內含五項專案層級的 Agent Skills：PPTX 原始檔匯入、MDX �
 - 透過 Vite HMR 預覽、驗證、render 與匯出本機檔案。
 - 為支援的 agent client 設定選用的 Workspace 範圍 MCP 存取。
 
-Workspace Settings 可以為 Codex、Claude Code 或 Claude Desktop 產生使用者層級 MCP 設定。MCP 有六個工具：工作區選取、漸進式原始檔／資源讀取（包含瀏覽器原生 HTML）、PPTX 原始檔匯入、媒體、審查與編輯。`open_slidex_read` 會保存 canonical HTML 位元組並報告線上依賴；`open_slidex_edit` 會透過 revision 保護建立或取代 HTML。HTTP(S) 資源會在 opaque-origin sandbox 中執行。
+Workspace Settings 可以為 Codex、Claude Code 或 Claude Desktop 產生使用者層級 MCP 設定。MCP 有六個工具：工作區選取、漸進式原始檔／資源讀取（包含瀏覽器原生 HTML）、PPTX 原始檔匯入、媒體、審查與編輯。`open_slidex_read` 會保存 canonical HTML 位元組並報告偵測到的網路依賴；`open_slidex_edit` 會透過 revision 保護建立或取代 HTML。匯入的 HTML 只會透過離線 opaque-origin 縮圖 sandbox 產生靜態預覽，並拒絕遠端資源、絕對路徑、`file:` URL 與 symlink sidecar。
 
 ## Repository 指令
 

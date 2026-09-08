@@ -1,7 +1,7 @@
 {
   "name": "@open-slidex/sdk",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "MotionDoc authoring, revision, inspection, rendering, and export primitives for OpenSlideX.",
   "type": "module",
   "bin": {
@@ -13,14 +13,22 @@
     },
     "./node": {
       "import": "./dist/node.js"
+    },
+    "./react": {
+      "import": "./dist/react.js"
     }
   },
   "scripts": {
     "build": "node ../../scripts/build-slidex-sdk.mjs"
   },
   "dependencies": {
+    "esbuild": "^0.28.0",
     "playwright-core": "1.61.1",
     "sharp": "^0.35.3"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
   },
   "engines": {
     "node": ">=18"

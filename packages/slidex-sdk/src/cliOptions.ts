@@ -42,10 +42,10 @@ export function createSlideXCliHelp() {
   return `Validate, render, and export an OpenSlideX MotionDoc.
 
 Usage:
-  open-slidex validate [presentation.mdx]
-  open-slidex render [presentation.mdx] --montage --out <file.png>
-  open-slidex render [presentation.mdx] --slide <index> --out <file.png>
-  open-slidex export [presentation.mdx] --format <html|mdx|pptx> --out <file> [--overwrite]
+  open-slidex validate [presentation.tsx]
+  open-slidex render [presentation.tsx] --montage --out <file.png>
+  open-slidex render [presentation.tsx] --slide <index> --out <file.png>
+  open-slidex export [presentation.tsx] --format <html|mdx|pptx> --out <file> [--overwrite]
 
 Options:
   --montage       Render every slide into one contact sheet
@@ -98,7 +98,7 @@ function parseRenderArguments(args: readonly string[]): SlideXCliOptions {
   if (!outputPath) throw new Error("render requires --out <file.png>.");
   return {
     action: "render",
-    file: file ?? "presentation.mdx",
+    file: file ?? "presentation.tsx",
     mode,
     outputPath,
     ...(slideIndex === undefined ? {} : { slideIndex })
@@ -142,7 +142,7 @@ function parseExportArguments(args: readonly string[]): SlideXCliOptions {
   if (!outputPath) throw new Error("export requires --out <file>.");
   return {
     action: "export",
-    file: file ?? "presentation.mdx",
+    file: file ?? "presentation.tsx",
     format,
     outputPath,
     overwrite
@@ -154,7 +154,7 @@ function singleInputFile(args: readonly string[], command: string) {
   const option = args.find((argument) => argument.startsWith("-"));
   if (option) throw new Error(`Unknown ${command} option: ${option}.`);
   if (files.length > 1) throw new Error(`${command} accepts only one presentation file.`);
-  return files[0] ?? "presentation.mdx";
+  return files[0] ?? "presentation.tsx";
 }
 
 function requiredOptionValue(

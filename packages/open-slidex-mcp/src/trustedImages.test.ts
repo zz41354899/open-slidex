@@ -34,6 +34,19 @@ test("trusted image search returns attributable candidates without downloading",
   assert.equal(requests.length, 1);
 });
 
+test("trusted searches coalesce repeated queries and isolate credentials and mutable results", async () => {
+  let calls = 0;
+  const fetcher: typeof fetch = async () => { calls++; return Response.json({ results: [photo] }); };
+  const options = { accessKey: "cache-test", fetch: fetcher };
+  const [first, second] = await Promise.all([searchTrustedImages("team", options), searchTrustedImages("team", options)]);
+  assert.equal(calls, 1);
+  first.candidates.length = 0;
+  assert.equal(second.candidates.length, 1);
+  assert.equal((await searchTrustedImages("team", options)).candidates.length, 1);
+  await searchTrustedImages("team", { ...options, accessKey: "another-key" });
+  assert.equal(calls, 2);
+});
+
 test("trusted image download rejects non-image bytes before import", async () => {
   await assert.rejects(() => downloadTrustedImage("photo_123", {
     accessKey: "test-key",

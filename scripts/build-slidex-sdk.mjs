@@ -27,6 +27,20 @@ await build({
 await build({
   absWorkingDir: rootDir,
   bundle: true,
+  entryPoints: [path.join(packageDir, "src/react/index.tsx")],
+  external: ["react", "react-dom", "react/jsx-runtime"],
+  format: "esm",
+  logLevel: "info",
+  minify: true,
+  outfile: path.join(outdir, "react.js"),
+  platform: "browser",
+  target: "es2020",
+  treeShaking: true
+});
+
+await build({
+  absWorkingDir: rootDir,
+  bundle: true,
   entryPoints: [path.join(packageDir, "src/pptxBrowserEntry.ts")],
   format: "iife",
   logLevel: "info",
@@ -42,7 +56,7 @@ await build({
   absWorkingDir: rootDir,
   bundle: true,
   entryPoints: [path.join(packageDir, "src/node.ts")],
-  external: ["playwright-core", "sharp"],
+  external: ["esbuild", "playwright-core", "sharp"],
   format: "esm",
   logLevel: "info",
   minify: true,
@@ -58,7 +72,7 @@ await build({
   banner: { js: "#!/usr/bin/env node" },
   bundle: true,
   entryPoints: [path.join(packageDir, "src/cli.ts")],
-  external: ["playwright-core", "sharp"],
+  external: ["esbuild", "playwright-core", "sharp"],
   format: "esm",
   logLevel: "info",
   minify: true,
@@ -70,7 +84,7 @@ await build({
 });
 
 await Promise.all(
-  ["index.js", "pptx-browser.js", "node.js", "cli.js"]
+  ["index.js", "react.js", "pptx-browser.js", "node.js", "cli.js"]
     .map((fileName) => normalizeGeneratedText(path.join(outdir, fileName)))
 );
 await chmod(path.join(outdir, "node.js"), 0o644);

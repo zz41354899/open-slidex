@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import os from "node:os";
@@ -49,8 +50,11 @@ export async function startWorkspaceServer(input: StartWorkspaceServerInput) {
     server.listen(input.port, "127.0.0.1", resolve);
   });
   listeningPort = (server.address() as { port: number }).port;
+  const sweep = setInterval(() => evictIdleEditorRouters(editorRouters), 30_000);
+  sweep.unref();
   return {
     close: async () => {
+      clearInterval(sweep);
       await Promise.allSettled(editorRouterLoads.values());
       for (const router of editorRouters.values()) router.close();
       editorRouters.clear();
@@ -59,6 +63,12 @@ export async function startWorkspaceServer(input: StartWorkspaceServerInput) {
     },
     port: listeningPort
   };
+}
+
+export function evictIdleEditorRouters(routers: Map<string, WorkbenchRouter>, now = Date.now(), idleMs = 5 * 60_000) {
+  for (const [id, router] of routers) {
+    if (router.isIdle(now, idleMs)) { router.close(); routers.delete(id); }
+  }
 }
 
 async function routeWorkspaceRequest(
@@ -116,7 +126,7 @@ async function routeWorkspaceRequest(
       configPath,
       hostPlatform,
       platform,
-      presentationPath: presentationRoot ? platform === "windows" ? path.win32.join(root, "presentation.mdx") : path.join(root, "presentation.mdx") : undefined,
+      presentationPath: presentationRoot ? platform === "windows" ? path.win32.join(root, "presentation.tsx") : path.join(root, "presentation.tsx") : undefined,
       prompt: presentationRoot
         ? presentationMcpPrompt(client, root, platform)
         : workspaceMcpPrompt(client, root, platform),
@@ -205,7 +215,7 @@ async function routeWorkspaceRequest(
 
   const presentationCoverMatch = url.pathname.match(/^\/api\/v1\/workspace\/presentations\/([A-Za-z0-9._-]+)\/cover\.svg$/);
   if (presentationCoverMatch?.[1] && request.method === "GET") {
-    sendSvg(outgoing, await input.workspace.presentationCover(presentationCoverMatch[1]), "no-store");
+    sendSvg(outgoing, await input.workspace.presentationCover(presentationCoverMatch[1]), "private, max-age=0, must-revalidate", request);
     return;
   }
 
@@ -218,7 +228,7 @@ async function routeWorkspaceRequest(
       locale: parseLocale(url.searchParams.get("locale")),
       slideIndex: parseSlideIndex(url.searchParams.get("slide")),
       version
-    }), "no-store");
+    }), "private, max-age=0, must-revalidate", request);
     return;
   }
 
@@ -325,7 +335,7 @@ function assertLocalRequest(request: Request, apiPort: number, uiPort: number) {
     `http://127.0.0.1:${uiPort}`,
     `http://localhost:${uiPort}`
   ]);
-  if (origin && !allowed.has(origin)) throw Object.assign(new Error("Invalid local workspace origin."), { status: 403 });
+  if (!origin || !allowed.has(origin)) throw Object.assign(new Error("Invalid local workspace origin."), { status: 403 });
 }
 
 async function jsonBody<T>(request: Request) {
@@ -365,8 +375,13 @@ function sendJson(response: ServerResponse, value: unknown, status = 200) {
   response.end(JSON.stringify(value));
 }
 
-function sendSvg(response: ServerResponse, value: string, cacheControl: string) {
+function sendSvg(response: ServerResponse, value: string, cacheControl: string, request?: Request) {
+  const etag = `"${createHash("sha256").update(value).digest("hex")}"`;
+  if (request?.headers.get("if-none-match") === etag) {
+    response.writeHead(304, { etag, "cache-control": cacheControl }); response.end(); return;
+  }
   response.writeHead(200, {
+    etag,
     "cache-control": cacheControl,
     "content-security-policy": "default-src 'none'; img-src data:; style-src 'unsafe-inline'",
     "content-type": "image/svg+xml; charset=utf-8",

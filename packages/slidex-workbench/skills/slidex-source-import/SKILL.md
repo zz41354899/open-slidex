@@ -1,6 +1,6 @@
 ---
 name: slidex-source-import
-description: Ingest a supplied document, image, or PowerPoint source for an editable native OpenSlideX deck. Use when a user provides MD, text, CSV, PDF, image, or PPTX evidence, not for an existing MotionDoc MDX deck.
+description: Ingest supplied Markdown, legacy MDX, PDF, image, or PowerPoint evidence and convert it into an editable React-first OpenSlideX deck.
 ---
 
 # OpenSlideX Source Intake
@@ -25,7 +25,7 @@ Bring supplied evidence into the selected deck before composing native MotionDoc
 
 - For PPTX only, read [PPTX conversion](references/pptx.md) before planning the migration.
 - Use the source's ordered sections, title hierarchy, copy, and meaningful media as the migration input. Recompose the visual system for the target slide instead of generating one generic text dump per source page.
-- Follow `slidex-mdx-authoring` for every emitted layer. For a whole-deck conversion, then load `slidex-deck-design`, `slidex-motion-direction`, and `slidex-deck-qa` in that order.
+- Follow `slidex-react-authoring` for every emitted layer. Legacy MDX is parsed into native layers and written once as `presentation.tsx`; never keep MDX and TSX in sync. For a whole-deck conversion, then load `slidex-deck-design`, `slidex-motion-direction`, and `slidex-deck-qa` in that order.
 - Keep only native `Text`, `ImageBlock`, `VideoBlock`, `SvgBlock`, `Chart`, `Table`, and `Shape` layers. Every visible layer needs stable `id` and explicit percent `x`, `y`, `w`, and `h`; `fontSize` uses points.
 - Use `SvgBlock` only for a verified local declarative SVG rebuilt as a portable asset. Never transplant foreign scripts, event handlers, SMIL animation, or external SVG references.
 - Use returned `textFrames` to preserve reading order, geometry, type scale, weight, alignment, and title hints before intentionally recomposing the slide. Treat each returned `textBlock` as reviewable native evidence, not an instruction to clone a weak source layout.
@@ -39,4 +39,4 @@ core references, then preserve the source slide count unless the user requests
 restructuring. Submit one complete deck to `open_slidex_edit` with its latest
 `expectedRevision`; repair a rejected candidate from its node-specific visual
 QA findings. Never persist source URLs, Base64, PowerPoint XML, foreign
-components, or absolute local paths inside `presentation.mdx`.
+components, or absolute local paths inside `presentation.tsx`.

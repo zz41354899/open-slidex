@@ -1,4 +1,5 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import { BoundedCache } from "@/common/util/boundedCache";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -29,6 +30,28 @@ type UnsplashPhoto = TrustedImageCandidate & {
 const maximumImageBytes = 25 * 1024 * 1024;
 
 export async function searchTrustedImages(
+  query: string,
+  options: { accessKey?: string; fetch?: typeof fetch } = {}
+) {
+  if (!options.accessKey?.trim()) return searchTrustedImagesUncached(query, options);
+  const fetcher = options.fetch ?? fetch;
+  let cache = imageSearchCaches.get(fetcher);
+  if (!cache) { cache = new BoundedCache(64, 512 * 1024); imageSearchCaches.set(fetcher, cache); }
+  const normalized = query.trim();
+  const key = createHash("sha256").update(options.accessKey.trim()).update("\0").update(normalized).digest("hex");
+  const cached = cache.get(key);
+  if (cached && cached.expires > Date.now()) return structuredClone(await cached.result);
+  const result = searchTrustedImagesUncached(normalized, options);
+  cache.set(key, { expires: Date.now() + 60_000, result }, 8192);
+  try { return structuredClone(await result); }
+  catch (error) { cache.delete(key); throw error; }
+}
+
+const imageSearchCaches = new WeakMap<typeof fetch, BoundedCache<string, {
+  expires: number; result: Promise<Awaited<ReturnType<typeof searchTrustedImagesUncached>>>;
+}>>();
+
+async function searchTrustedImagesUncached(
   query: string,
   options: { accessKey?: string; fetch?: typeof fetch } = {}
 ) {

@@ -16,7 +16,7 @@ const expectedSkills = [
   "slidex-deck-design",
   "slidex-deck-qa",
   "slidex-html-authoring",
-  "slidex-mdx-authoring",
+  "slidex-react-authoring",
   "slidex-motion-direction",
   "slidex-source-import"
 ];
@@ -49,11 +49,18 @@ try {
   const packedFiles = new Set(
     packed.files.map(({ path: filePath }) => filePath.replace(/^package\//, ""))
   );
+  const packedMcpServer = packed.files.find(({ path: filePath }) => filePath === "runtime/mcp/server.mjs");
+  assert.ok(packedMcpServer, "packed release is missing the MCP server");
+  assert.ok(
+    packedMcpServer.size <= 400 * 1024,
+    `MCP server must reuse runtime/sdk rather than bundle it again (got ${packedMcpServer.size} bytes)`
+  );
   for (const required of [
     "dist/cli.mjs",
     "dist/create.mjs",
     "runtime/mcp/server.mjs",
     "runtime/sdk/index.js",
+    "runtime/sdk/react.js",
     "runtime/workbench/cli.mjs",
     "runtime/workbench/sdk/index.js",
     "runtime/workbench/sdk/node.js",
@@ -69,12 +76,12 @@ try {
   }
   for (const reference of [
     "slidex-deck-design/references/consulting-financial-report.md",
-    "slidex-deck-design/references/consulting-financial-report.mdx",
-    "slidex-deck-design/references/data-brief.mdx",
-    "slidex-deck-design/references/editorial-story.mdx",
-    "slidex-deck-design/references/product-launch.mdx",
-    "slidex-deck-design/references/strategy-proposal.mdx",
-    "slidex-deck-design/references/training-workshop.mdx",
+    "slidex-deck-design/references/consulting-financial-report.tsx",
+    "slidex-deck-design/references/data-brief.tsx",
+    "slidex-deck-design/references/editorial-story.tsx",
+    "slidex-deck-design/references/product-launch.tsx",
+    "slidex-deck-design/references/strategy-proposal.tsx",
+    "slidex-deck-design/references/training-workshop.tsx",
     "slidex-deck-design/references/template-catalog.json",
     "slidex-html-authoring/references/ref-idaeo-nov.md",
     "slidex-motion-direction/references/long-deck-motion.md"

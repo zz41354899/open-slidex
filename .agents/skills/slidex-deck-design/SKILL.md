@@ -18,7 +18,7 @@ place in the story, and remains editable with native MotionDoc layers.
 2. Read [narrative patterns](references/narrative-patterns.md) and choose one of
    the six core deck patterns. If the best fit is unclear, pass the brief,
    audience, evidence type, and outcome as `templateQuery` to
-   `open_slidex_read`, then inspect only the top recommended MDX reference.
+   `open_slidex_read`, then inspect only the top recommended TSX reference.
    The MCP consumes [the six-template catalog](references/template-catalog.json);
    do not load it when the returned recommendation already identifies a match.
    For consulting, investment, earnings, or financial weekly work, also read
@@ -27,14 +27,14 @@ place in the story, and remains editable with native MotionDoc layers.
    composition, type, color, image, and data rules.
 4. Read exactly one closest core reference:
 
-   - Consulting, investment, earnings, financial weekly: [consulting financial report](references/consulting-financial-report.mdx)
-   - Keynote, vision, brand story: [editorial story](references/editorial-story.mdx)
-   - KPI, research, status, operations: [data brief](references/data-brief.mdx)
-   - Product, sales, feature launch: [product launch](references/product-launch.mdx)
-   - Recommendation, board memo, plan: [strategy proposal](references/strategy-proposal.mdx)
-   - Lesson, onboarding, workshop: [training workshop](references/training-workshop.mdx)
+   - Consulting, investment, earnings, financial weekly: [consulting financial report](references/consulting-financial-report.tsx)
+   - Keynote, vision, brand story: [editorial story](references/editorial-story.tsx)
+   - KPI, research, status, operations: [data brief](references/data-brief.tsx)
+   - Product, sales, feature launch: [product launch](references/product-launch.tsx)
+   - Recommendation, board memo, plan: [strategy proposal](references/strategy-proposal.tsx)
+   - Lesson, onboarding, workshop: [training workshop](references/training-workshop.tsx)
 
-The six resources contain 30 pages each: 180 maintained editable teaching
+The six componentized TSX resources contain 30 pages each: 180 maintained editable teaching
 slides in total. They are complete narrative and visual systems, not content to
 copy wholesale. Borrow the closest reading path, composition logic, and motion
 grammar—not sample wording, figures, IDs, or claims. Preserve the source deck's

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { materializeFreeformSource } from "@/core/motion-doc/application/motionDocFreeform";
 import { summarizeMotionDoc } from "@/core/motion-doc/application/motionDocAutomation";
+import { downloadPublicHttpsResource } from "@/common/util/publicHttpsDownload";
 import {
   closeSlideXChromiumPool,
   withSlideXChromiumPage
@@ -38,6 +39,14 @@ export async function exportMotionDocPptx({
   const portableSource = await prepareNodePptxSource(normalizedSource);
   try {
     return await withSlideXChromiumPage({ acceptDownloads: true }, async (page) => {
+      await page.route("**/*", async (route) => {
+        const protocol = new URL(route.request().url()).protocol;
+        if (protocol === "about:" || protocol === "blob:" || protocol === "data:") {
+          await route.continue();
+          return;
+        }
+        await route.abort("blockedbyclient");
+      });
       await page.setContent("<!doctype html><html><head><meta charset=\"utf-8\"></head><body></body></html>");
       await page.evaluate(() => {
         if (!globalThis.crypto.randomUUID) {
@@ -102,23 +111,21 @@ function browserBundlePath() {
 
 async function prepareNodePptxSource(source: string) {
   const replacements: Array<{ end: number; start: number; value: string }> = [];
-  const blockPattern = /<(ImageBlock|VideoBlock)\b([^>]*)\/>/g;
+  const mediaAttributePattern = /\b(src|poster|backgroundImage|shapeImageSrc)\s*=\s*(?:"([^"]*)"|'([^']*)'|\{\s*"([^"]*)"\s*\}|\{\s*'([^']*)'\s*\}|\{\s*(https:\/\/[^{}\s]+)\s*\})/g;
 
-  for (const blockMatch of source.matchAll(blockPattern)) {
-    const blockType = blockMatch[1];
-    const attributes = blockMatch[2] ?? "";
-    const blockOffset = (blockMatch.index ?? 0) + blockMatch[0].indexOf(attributes);
+  for (const attributeMatch of source.matchAll(mediaAttributePattern)) {
+    const matchStart = attributeMatch.index ?? 0;
+    const tagStart = source.lastIndexOf("<", matchStart);
+    if (tagStart < 0 || tagStart < source.lastIndexOf(">", matchStart)) continue;
+    const attributeName = attributeMatch[1]!;
+    const mediaSource = attributeMatch.slice(2).find((value) => value !== undefined) ?? "";
+    const valueOffset = attributeMatch[0].indexOf(mediaSource);
+    const start = matchStart + valueOffset;
+    const tagPrefix = source.slice(tagStart, matchStart);
+    const kind = attributeName === "src" && /^<VideoBlock\b/.test(tagPrefix) ? "video" : "image";
+    const value = await portableMediaSource(mediaSource, kind);
 
-    for (const attributeMatch of attributes.matchAll(/\b(src|poster)\s*=\s*(["'])([^"']*)\2/g)) {
-      const attributeName = attributeMatch[1];
-      const mediaSource = attributeMatch[3];
-      const valueOffset = attributeMatch[0].indexOf(mediaSource);
-      const start = blockOffset + (attributeMatch.index ?? 0) + valueOffset;
-      const kind = blockType === "VideoBlock" && attributeName === "src" ? "video" : "image";
-      const value = await portableMediaSource(mediaSource, kind);
-
-      replacements.push({ end: start + mediaSource.length, start, value });
-    }
+    replacements.push({ end: start + mediaSource.length, start, value });
   }
 
   return replacements
@@ -142,17 +149,19 @@ async function portableMediaSource(source: string, kind: "image" | "video") {
   }
 
   if (/^https:\/\//i.test(source)) {
-    if (kind === "video") return source;
-    const response = await fetch(source);
-    if (!response.ok) throw new Error("A PowerPoint image could not be downloaded.");
-    const contentLength = Number(response.headers.get("content-length"));
-    if (Number.isFinite(contentLength) && contentLength > MAX_MEDIA_BYTES) {
-      throw new Error("A PowerPoint media source is too large.");
+    const downloaded = await downloadPublicHttpsResource(source, {
+      headers: {
+        Accept: kind === "video"
+          ? "video/mp4,video/webm,video/ogg,video/*;q=0.8"
+          : "image/avif,image/webp,image/png,image/jpeg,image/svg+xml,image/*;q=0.8"
+      },
+      maximumBytes: MAX_MEDIA_BYTES,
+      userAgent: "OpenSlideX/0.6 pptx-export"
+    });
+    if (!downloaded.mediaType?.startsWith(`${kind}/`)) {
+      throw new Error(`A PowerPoint ${kind} URL did not return ${kind} content.`);
     }
-    const buffer = Buffer.from(await response.arrayBuffer());
-    if (buffer.byteLength > MAX_MEDIA_BYTES) throw new Error("A PowerPoint media source is too large.");
-    const mimeType = response.headers.get("content-type")?.split(";", 1)[0] || "image/png";
-    return `data:${mimeType};base64,${buffer.toString("base64")}`;
+    return `data:${downloaded.mediaType};base64,${Buffer.from(downloaded.bytes).toString("base64")}`;
   }
 
   if (path.isAbsolute(source)) {

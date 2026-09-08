@@ -83,11 +83,11 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
   const chooseImportFile = useCallback((file?: File) => {
     setImportError("");
     if (!file) return;
-    const extension = file.name.toLowerCase().match(/\.(mdx|html)$/)?.[1];
+    const extension = file.name.toLowerCase().match(/\.(tsx|mdx|html)$/)?.[1];
     if (!extension) {
       setImportFile(undefined);
       setImportSidecars([]);
-      setImportError(zh ? "只支援 .mdx 或 .html。" : "Use an .mdx or .html file.");
+      setImportError(zh ? "只支援 .tsx、.mdx 或 .html。" : "Use a .tsx, .mdx, or .html file.");
       return;
     }
     const maximumBytes = 50 * 1024 * 1024;
@@ -103,14 +103,14 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
   const chooseImportFolder = useCallback((files?: FileList | null) => {
     setImportError("");
     const candidates = [...(files ?? [])];
-    const mdxSources = candidates.filter((file) => /\.mdx$/i.test(file.name));
-    const sources = mdxSources.length > 0
-      ? mdxSources
+    const nativeSources = candidates.filter((file) => /\.(?:tsx|mdx)$/i.test(file.name));
+    const sources = nativeSources.length > 0
+      ? nativeSources
       : candidates.filter((file) => /\.html$/i.test(file.name));
     if (sources.length !== 1) {
       setImportFile(undefined);
       setImportSidecars([]);
-      setImportError(zh ? "請選擇只包含一份 .html 或 .mdx 的簡報資料夾。" : "Choose a presentation folder containing exactly one .html or .mdx file.");
+      setImportError(zh ? "請選擇只包含一份 .tsx、.mdx 或 .html 的簡報資料夾。" : "Choose a presentation folder containing exactly one .tsx, .mdx, or .html file.");
       return;
     }
     const source = sources[0]!;
@@ -120,7 +120,7 @@ export function useWorkspaceActions({ locale, setLoadError, setWorkspace, zh }: 
       setImportError(zh ? "匯入檔案大小必須介於 1 byte 與 50 MB 之間。" : "The import file must be between 1 byte and 50 MB.");
       return;
     }
-    const sidecarPattern = /\.mdx$/i.test(source.name)
+    const sidecarPattern = /\.(?:tsx|mdx)$/i.test(source.name)
       ? /\.(?:avif|gif|jpe?g|png|webp|svg|mp4|html?)$/i
       : /\.(?:avif|gif|jpe?g|png|webp|svg)$/i;
     const sidecars = candidates

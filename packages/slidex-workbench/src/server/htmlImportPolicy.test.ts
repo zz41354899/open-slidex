@@ -11,7 +11,8 @@ import {
   analyzeHtmlPresentation,
   assertSandboxedHtml,
   inspectHtmlNetworkResources,
-  injectHtmlPlaybackBridge
+  injectHtmlPlaybackBridge,
+  secureHtmlForStandaloneExport
 } from "./htmlImportPolicy";
 
 test.after(async () => closeSlideXChromiumPool());
@@ -33,7 +34,7 @@ test("HTML import decodes character references in inline CSS resource values", (
   });
 });
 
-test("HTML import supports browser-native HTTP(S) images, libraries, fonts, media, and frames", () => {
+test("HTML import reports but rejects remote browser resources", () => {
   const source = `<!doctype html><html><head>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter">
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
@@ -44,7 +45,7 @@ test("HTML import supports browser-native HTTP(S) images, libraries, fonts, medi
     <iframe src="https://www.youtube-nocookie.com/embed/demo"></iframe>
   </body></html>`;
 
-  assert.doesNotThrow(() => assertSandboxedHtml(source));
+  assert.throws(() => assertSandboxedHtml(source), /Remote HTML resources are disabled/);
   assert.deepEqual(inspectHtmlNetworkResources(source), {
     origins: [
       "https://cdn.example.com",
@@ -62,7 +63,7 @@ test("HTML import supports browser-native HTTP(S) images, libraries, fonts, medi
 
 test("HTML import resolves relative CDN resources through a remote base", () => {
   const source = `<html><head><base href="https://cdn.example.com/deck/"><script src="runtime.js"></script></head><body><img src="images/hero.webp"></body></html>`;
-  assert.doesNotThrow(() => assertSandboxedHtml(source));
+  assert.throws(() => assertSandboxedHtml(source), /Remote HTML resources are disabled/);
   assert.deepEqual(inspectHtmlNetworkResources(source), {
     origins: ["https://cdn.example.com"],
     referenceCount: 3,
@@ -78,9 +79,9 @@ test("HTML import permits only explicitly packaged local sidecars", () => {
   assert.throws(() => assertSandboxedHtml(source), /relative or unsupported resource/i);
 });
 
-test("HTML dependency inspection supports valid unquoted and protocol-relative resource attributes", () => {
+test("HTML dependency inspection reports unquoted and protocol-relative resources while import rejects them", () => {
   const source = `<html><head><script src=//cdn.example.com/runtime.js></script></head><body><img src=https://images.example.com/hero.webp></body></html>`;
-  assert.doesNotThrow(() => assertSandboxedHtml(source));
+  assert.throws(() => assertSandboxedHtml(source), /Remote HTML resources are disabled/);
   assert.deepEqual(inspectHtmlNetworkResources(source), {
     origins: ["https://cdn.example.com", "https://images.example.com"],
     referenceCount: 2,
@@ -99,13 +100,11 @@ test("HTML import still rejects unresolved local sidecars and browser-unsupporte
   }
 });
 
-test("HTML import permits navigation links that do not load presentation assets", () => {
-  assert.doesNotThrow(() => assertSandboxedHtml(`<html><body><a href="https://example.com/details">Details</a></body></html>`));
-  assert.deepEqual(inspectHtmlNetworkResources(`<html><body><a href="https://example.com/details">Details</a></body></html>`), {
-    origins: [],
-    referenceCount: 0,
-    requiresNetwork: false
-  });
+test("HTML import rejects navigation links that can leave the offline document", () => {
+  assert.throws(
+    () => assertSandboxedHtml(`<html><body><a href="https://example.com/details">Details</a></body></html>`),
+    /Remote HTML resources are disabled/
+  );
 });
 
 test("HTML dependency inspection ignores inert script text, comments, and non-resource data attributes", () => {
@@ -123,13 +122,47 @@ test("HTML dependency inspection ignores inert script text, comments, and non-re
   });
 });
 
-test("HTML playback policy enables remote browser resources without same-origin access", () => {
-  assert.match(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /script-src[^;]+https:/);
-  assert.match(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /connect-src[^;]+wss:/);
-  assert.match(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /img-src[^;]+https:/);
-  assert.match(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /media-src[^;]+https:/);
-  assert.match(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /frame-src[^;]+https:/);
-  assert.doesNotMatch(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /allow-same-origin/);
+test("HTML dependency inspection handles a large attribute-free tag in one scan", () => {
+  const source = `<html><body><div ${" ".repeat(50_000)}></div></body></html>`;
+  assert.deepEqual(inspectHtmlNetworkResources(source), {
+    origins: [],
+    referenceCount: 0,
+    requiresNetwork: false
+  });
+});
+
+test("HTML playback policy blocks network, forms, frames, and objects", () => {
+  assert.match(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /connect-src 'none'/);
+  assert.match(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /form-action 'none'/);
+  assert.match(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /frame-src 'none'/);
+  assert.match(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /frame-ancestors 'none'/);
+  assert.match(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /object-src 'none'/);
+  assert.match(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /script-src 'none'/);
+  assert.doesNotMatch(HTML_PLAYBACK_CONTENT_SECURITY_POLICY, /https?:|wss?:/);
+});
+
+test("standalone HTML export injects an offline CSP and rejects active navigation", () => {
+  const secured = secureHtmlForStandaloneExport(`<html><head><style>body{color:red}</style></head><body><a href="#details">Details</a></body></html>`);
+  assert.match(secured, /data-open-slidex-offline-export/);
+  assert.match(secured, /connect-src 'none'/);
+  assert.match(secured, /script-src 'none'/);
+  for (const html of [
+    `<html><body><script>location.href='http://127.0.0.1/private'</script></body></html>`,
+    `<html><body onload="location.href='http://127.0.0.1/private'"></body></html>`,
+    `<html><head><meta http-equiv="refresh" content="0;url=http://127.0.0.1/private"></head><body></body></html>`,
+    `<html><body><a href="data:text/html,unsafe">Open</a></body></html>`
+  ]) {
+    assert.throws(() => secureHtmlForStandaloneExport(html), /static HTML|navigation|in-document/);
+  }
+});
+
+test("HTML policy catches legacy background and SVG feImage resources", () => {
+  for (const html of [
+    `<html><body background="http://127.0.0.1/secret.png"></body></html>`,
+    `<html><body><svg><filter><feImage href="http://127.0.0.1/secret.png" /></filter></svg></body></html>`
+  ]) {
+    assert.throws(() => assertSandboxedHtml(html), /Remote HTML resources are disabled/);
+  }
 });
 
 test("HTML presentation analysis maps explicit and IDAEO Gamma-style pages", () => {

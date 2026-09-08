@@ -1,0 +1,8 @@
+{
+  "name": "image-size",
+  "version": "2.0.3-open-slidex.0",
+  "description": "Fail-closed OpenSlideX replacement for the unused vulnerable image-size transitive dependency.",
+  "main": "index.cjs",
+  "types": "index.d.ts",
+  "license": "MIT"
+}

@@ -19,7 +19,7 @@ export {
 
 const maximumGuidanceBytes = 256 * 1024;
 const guidanceCache = new Map<string, { signature: string; value: OpenSlideXGuidanceResource }>();
-const referenceExtensions = new Set([".json", ".md", ".mdx", ".txt"]);
+const referenceExtensions = new Set([".json", ".md", ".tsx", ".txt"]);
 
 export type OpenSlideXGuidanceResource = {
   bytes: number;
@@ -34,7 +34,7 @@ export type OpenSlideXGuidanceResource = {
 export type OpenSlideXTemplateRecommendation = {
   bestFor: string[];
   id: string;
-  mdxResourcePath: string;
+  tsxResourcePath: string;
   name: string;
   score: number;
 };
@@ -209,15 +209,15 @@ function parseTemplateCatalog(content: string): TemplateCatalogEntry[] {
     const template = value as Record<string, unknown>;
     const id = stringField(template, "id");
     if (!/^[a-z0-9-]+$/.test(id)) throw new Error(`Template catalog entry ${index + 1} has an invalid ID.`);
-    const mdxResourcePath = stringField(template, "mdxResourcePath");
-    if (mdxResourcePath !== `.agents/skills/slidex-deck-design/references/${id}.mdx`) {
-      throw new Error(`Template catalog entry ${id} has an invalid MDX resource path.`);
+    const tsxResourcePath = stringField(template, "tsxResourcePath");
+    if (tsxResourcePath !== `.agents/skills/slidex-deck-design/references/${id}.tsx`) {
+      throw new Error(`Template catalog entry ${id} has an invalid TSX resource path.`);
     }
     return {
       bestFor: stringArrayField(template, "bestFor"),
       id,
       keywords: stringArrayField(template, "keywords"),
-      mdxResourcePath,
+      tsxResourcePath,
       name: stringField(template, "name")
     };
   });

@@ -65,16 +65,16 @@ test("starter ships the six focused OpenSlideX skills", async () => {
 
   const designSkillUrl = new URL("slidex-deck-design/", skillsUrl);
   const designFiles = await relativeFiles(designSkillUrl);
-  const coreFiles = designFiles.filter((file) => file.endsWith(".mdx"));
+  const coreFiles = designFiles.filter((file) => file.endsWith(".tsx"));
   assert.deepEqual(
     coreFiles,
     [
-      "references/consulting-financial-report.mdx",
-      "references/data-brief.mdx",
-      "references/editorial-story.mdx",
-      "references/product-launch.mdx",
-      "references/strategy-proposal.mdx",
-      "references/training-workshop.mdx"
+      "references/consulting-financial-report.tsx",
+      "references/data-brief.tsx",
+      "references/editorial-story.tsx",
+      "references/product-launch.tsx",
+      "references/strategy-proposal.tsx",
+      "references/training-workshop.tsx"
     ]
   );
   assert.equal(designFiles.some((file) => /style-(?:catalog|selection|s\d{2})/.test(file)), false);
@@ -156,16 +156,16 @@ test("canonical skills expose the current SvgBlock and browser-native HTML archi
   const readSkillFile = (skill: string, relativePath = "SKILL.md") =>
     readFile(new URL(`${skill}/${relativePath}`, skillsUrl), "utf8");
 
-  const [sourceImport, mdxAuthoring, htmlAuthoring, htmlRuntime, htmlReferenceGrammar, deckDesign, financialBlueprint, motionDocContract, mediaAndData, motionDirection, motionPatterns, longDeckMotion, deckQa, reviewMatrix] = await Promise.all([
+  const [sourceImport, reactAuthoring, htmlAuthoring, htmlRuntime, htmlReferenceGrammar, deckDesign, financialBlueprint, reactContract, mediaAndData, motionDirection, motionPatterns, longDeckMotion, deckQa, reviewMatrix] = await Promise.all([
     readSkillFile("slidex-source-import"),
-    readSkillFile("slidex-mdx-authoring"),
+    readSkillFile("slidex-react-authoring"),
     readSkillFile("slidex-html-authoring"),
     readSkillFile("slidex-html-authoring", "references/browser-runtime.md"),
     readSkillFile("slidex-html-authoring", "references/ref-idaeo-nov.md"),
     readSkillFile("slidex-deck-design"),
     readSkillFile("slidex-deck-design", "references/consulting-financial-report.md"),
-    readSkillFile("slidex-mdx-authoring", "references/motiondoc-contract.md"),
-    readSkillFile("slidex-mdx-authoring", "references/media-and-data.md"),
+    readSkillFile("slidex-react-authoring", "references/react-presentation-contract.md"),
+    readSkillFile("slidex-react-authoring", "references/media-and-data.md"),
     readSkillFile("slidex-motion-direction"),
     readSkillFile("slidex-motion-direction", "references/motion-patterns.md"),
     readSkillFile("slidex-motion-direction", "references/long-deck-motion.md"),
@@ -173,11 +173,11 @@ test("canonical skills expose the current SvgBlock and browser-native HTML archi
     readSkillFile("slidex-deck-qa", "references/review-matrix.md")
   ]);
 
-  for (const source of [sourceImport, mdxAuthoring, motionDocContract]) {
-    assert.match(source, /`SvgBlock`/, "native authoring guidance must include SvgBlock");
+  for (const source of [sourceImport, reactAuthoring, reactContract]) {
+    assert.match(source, /`Svg(?:Block)?`/, "native authoring guidance must include Svg");
   }
-  assert.match(motionDocContract, /`sharedScene`/);
-  assert.match(motionDocContract, /`stage`/);
+  assert.match(reactContract, /Shared Morph/);
+  assert.match(reactContract, /defineSlideXComponent/);
   assert.match(mediaAndData, /script-free/i);
   assert.match(mediaAndData, /assets\/\*\.svg/);
   assert.match(motionDirection, /`SvgBlock`/);
@@ -207,7 +207,7 @@ test("agent guides keep source import conditional and the full-design skill orde
     new URL("../template/AGENTS.md", import.meta.url)
   ];
   const expectedOrder = [
-    "slidex-mdx-authoring",
+    "slidex-react-authoring",
     "slidex-deck-design",
     "slidex-motion-direction",
     "slidex-deck-qa"
@@ -219,10 +219,10 @@ test("agent guides keep source import conditional and the full-design skill orde
     assert.match(guide, /For browser-native HTML, load `slidex-html-authoring`/);
     assert.match(guide, /`open_slidex_read` with `sourceFormat: "html"`/);
     assert.match(guide, /`open_slidex_edit` with `target: "html"`/);
-    assert.match(guide, /HTTP\(S\) libraries,\s+fonts, images, media, frames, workers/);
-    assert.match(guide, /opaque-origin\s+sandbox/);
-    assert.match(guide, /Pass `htmlAssetRoot` for relative local\s+images/);
-    assert.match(guide, /PNG is converted to\s+WebP/);
+    assert.match(guide, /remote network resources are rejected/);
+    assert.match(guide, /opaque-origin(?:\s+thumbnail)?\s+sandbox/);
+    assert.match(guide, /Pass `htmlAssetRoot` only for relative local\s+images/);
+    assert.match(guide, /PNG is\s+converted to\s+WebP/);
     assert.match(guide, /For a full HTML creation or redesign, then load `slidex-deck-design`,\s+`slidex-motion-direction`, and `slidex-deck-qa` in that order/);
     const workflow = guide.split("Apply the project-local skills in this order for a full creation or redesign:")[1] ?? "";
     const orderedSkills = [...workflow.matchAll(/^\d+\. `([^`]+)`$/gm)].map((match) => match[1]);
@@ -243,14 +243,14 @@ test("the template catalog contains exactly the six MCP-consumed core references
     "bestFor",
     "id",
     "keywords",
-    "mdxResourcePath",
-    "name"
+    "name",
+    "tsxResourcePath"
   ];
   for (const template of catalog.templates ?? []) {
     assert.deepEqual(Object.keys(template).sort(), allowedTemplateFields);
-    const resourcePath = String(template.mdxResourcePath ?? "");
-    const fileName = resourcePath.match(/\/references\/([^/]+\.mdx)$/)?.[1];
-    assert.ok(fileName, `${String(template.id)} needs one direct core MDX resource path`);
+    const resourcePath = String(template.tsxResourcePath ?? "");
+    const fileName = resourcePath.match(/\/references\/([^/]+\.tsx)$/)?.[1];
+    assert.ok(fileName, `${String(template.id)} needs one direct core TSX resource path`);
     await access(new URL(`references/${fileName}`, designSkillUrl));
   }
 });
@@ -365,8 +365,8 @@ test("published README documents single-package install and workspace-global MCP
   assert.match(readme, /six tools total/);
   assert.match(readme, /`open_slidex_read` with\s+`sourceFormat: "html"`/);
   assert.match(readme, /`open_slidex_edit` with `target: "html"`/);
-  assert.match(readme, /HTTP\(S\) libraries, styles, fonts, images, media, frames, workers/);
-  assert.match(readme, /opaque-origin sandbox/);
+  assert.match(readme, /remote network dependencies, absolute paths/);
+  assert.match(readme, /opaque-origin(?:\s+thumbnail)?\s+sandbox/);
   assert.match(readme, /open_slidex_source_import/);
   assert.match(readme, /Installation does not download Chromium/);
   assert.doesNotMatch(readme, /Installation attempts to download/);
@@ -450,7 +450,7 @@ test("init with an official template creates the complete localized deck", async
       "open-slidex-workspace",
       "summer-time-report"
     );
-    const source = await readFile(path.join(deckRoot, "presentation.mdx"), "utf8");
+    const source = await readFile(path.join(deckRoot, "presentation.tsx"), "utf8");
     assert.equal(source.match(/<Slide\b/g)?.length, 7);
     assert.deepEqual(
       JSON.parse(await readFile(path.join(deckRoot, ".open-slidex", "template-lock.json"), "utf8")),

@@ -1,4 +1,7 @@
 import { getMotionDocStats } from "@/core/motion-doc/application/mdxStats";
+import { BoundedCache } from "@/common/util/boundedCache";
+
+const summaryCache = new BoundedCache<string, MotionDocSummary>(4, 8 * 1024 * 1024);
 import {
   createMotionDocBlock,
   type AddBlockType
@@ -37,6 +40,12 @@ import {
   legacyFontPixelsToPoints,
   MOTION_DOC_CANVAS_PROPS
 } from "@/core/motion-doc/domain/typography";
+import {
+  isReactPresentationSource,
+  reactPresentationToMotionDocSource,
+  replaceReactPresentationTitle,
+  validateReactPresentationSource
+} from "@/core/react-presentation/reactPresentationSource";
 
 export const motionDocAddBlockTypes = [
   "Text",
@@ -115,11 +124,17 @@ const nonCanonicalMotionDocPropAliases = {
 } as const satisfies Readonly<Record<string, string>>;
 
 export function summarizeMotionDoc(source: string): MotionDocSummary {
+  const cached = summaryCache.get(source);
+  if (cached) return structuredClone(cached);
   const document = parseMotionDoc(source);
   const stats = getMotionDocStats(source);
-  const issues = validateMotionDocSource(source, document);
+  const motionDocSource = reactPresentationToMotionDocSource(source);
+  const issues = [
+    ...validateReactPresentationSource(source),
+    ...validateMotionDocSource(motionDocSource, document)
+  ];
 
-  return {
+  const summary = {
     document,
     stats,
     validation: {
@@ -127,6 +142,8 @@ export function summarizeMotionDoc(source: string): MotionDocSummary {
       issues
     }
   };
+  summaryCache.set(source, summary, source.length * 8);
+  return structuredClone(summary);
 }
 
 export function createMotionDocFromOutline(input: MotionDocDeckInput) {
@@ -149,6 +166,9 @@ export function createMotionDocFromOutline(input: MotionDocDeckInput) {
 }
 
 export function applyMotionDocTitle(source: string, title: string) {
+  if (isReactPresentationSource(source)) {
+    return withSummary(replaceReactPresentationTitle(source, title));
+  }
   const nextTitle = safeMdxText(title || "Untitled Deck");
   const nextSource = source.match(/^#\s+.+$/m)
     ? source.replace(/^#\s+.+$/m, `# ${nextTitle}`)

@@ -19,7 +19,7 @@ test("guidance manifest exposes metadata and routes resources without eager cont
 
     assert.equal(manifest.mode, "manifest");
     assert.deepEqual(manifest.recommended, [
-      "slidex-mdx-authoring",
+      "slidex-react-authoring",
       "slidex-deck-design",
       "slidex-motion-direction",
       "slidex-deck-qa"
@@ -33,14 +33,14 @@ test("guidance manifest exposes metadata and routes resources without eager cont
     assert.deepEqual(
       designSkill.references.map((resource) => resource.path),
       [
-        ".agents/skills/slidex-deck-design/references/data-brief.mdx",
+        ".agents/skills/slidex-deck-design/references/data-brief.tsx",
         ".agents/skills/slidex-deck-design/references/source-to-story.md"
       ]
     );
     const imported = await readOpenSlideXProjectGuidanceManifest(root, "import");
     assert.deepEqual(imported.recommended, [
       "slidex-source-import",
-      "slidex-mdx-authoring",
+      "slidex-react-authoring",
       "slidex-deck-design",
       "slidex-motion-direction",
       "slidex-deck-qa"
@@ -101,11 +101,11 @@ test("an older project without the source-import skill remains readable", async 
     await seedSkills(root);
     await rm(path.join(root, ".agents", "skills", "slidex-source-import"), { force: true, recursive: true });
     const authoring = await readOpenSlideXProjectGuidanceManifest(root, "authoring");
-    assert.deepEqual(authoring.recommended, ["slidex-mdx-authoring"]);
+    assert.deepEqual(authoring.recommended, ["slidex-react-authoring"]);
     const imported = await readOpenSlideXProjectGuidanceManifest(root, "import");
     assert.deepEqual(imported.missingSkills, ["slidex-source-import"]);
     assert.deepEqual(imported.recommended, [
-      "slidex-mdx-authoring",
+      "slidex-react-authoring",
       "slidex-deck-design",
       "slidex-motion-direction",
       "slidex-deck-qa"
@@ -115,7 +115,7 @@ test("an older project without the source-import skill remains readable", async 
   }
 });
 
-test("template recommendation ranks one of six core thirty-page MDX references from a Chinese report summary", async () => {
+test("template recommendation ranks one of six core thirty-page TSX references from a Chinese report summary", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-template-recommendation-"));
   try {
     await seedSkills(root);
@@ -124,7 +124,7 @@ test("template recommendation ranks one of six core thirty-page MDX references f
 
     assert.equal(result.recommendations.length, 3);
     assert.equal(result.recommendations[0]?.id, "consulting-financial-report");
-    assert.match(result.recommendations[0]?.mdxResourcePath ?? "", /consulting-financial-report\.mdx$/);
+    assert.match(result.recommendations[0]?.tsxResourcePath ?? "", /consulting-financial-report\.tsx$/);
   } finally {
     await rm(root, { force: true, recursive: true });
   }
@@ -141,7 +141,7 @@ async function seedSkills(root: string) {
     );
     if (skill === "slidex-deck-design") {
       await writeFile(path.join(skillRoot, "references", "source-to-story.md"), "# Source to story\n", "utf8");
-      await writeFile(path.join(skillRoot, "references", "data-brief.mdx"), "# Data brief\n", "utf8");
+      await writeFile(path.join(skillRoot, "references", "data-brief.tsx"), "// Data brief\n", "utf8");
     }
   }));
 }
@@ -155,7 +155,7 @@ async function writeTemplateCatalog(root: string) {
       bestFor: isFinancial ? ["board update", "financial report"] : [id],
       id,
       keywords: isFinancial ? ["董事會", "財務", "營運", "報告", "風險", "情境", "決策"] : [id],
-      mdxResourcePath: `.agents/skills/slidex-deck-design/references/${id}.mdx`,
+      tsxResourcePath: `.agents/skills/slidex-deck-design/references/${id}.tsx`,
       name: id.replaceAll("-", " ")
     };
   });

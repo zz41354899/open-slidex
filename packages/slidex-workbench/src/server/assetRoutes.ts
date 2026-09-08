@@ -1,7 +1,8 @@
 import { jsonBody, sendJson, type WorkbenchRouteContext } from "./httpRoute";
+import { streamAsset } from "./streamAsset";
+import { createHash } from "node:crypto";
 import {
-  HTML_PLAYBACK_CONTENT_SECURITY_POLICY,
-  injectHtmlPlaybackBridge
+  HTML_PLAYBACK_CONTENT_SECURITY_POLICY
 } from "./htmlImportPolicy";
 
 export async function assetRoutes(context: WorkbenchRouteContext) {
@@ -27,8 +28,13 @@ export async function assetRoutes(context: WorkbenchRouteContext) {
       return sendJson(outgoing, { code: "invalid_request", message: "source and a valid page are required." }, 400);
     }
     const bytes = await project.renderHtmlThumbnail(source, page);
+    const etag = `"${createHash("sha256").update(bytes).digest("hex")}"`;
+    if (request.headers.get("if-none-match") === etag) {
+      outgoing.writeHead(304, { etag, "cache-control": "private, max-age=0, must-revalidate" }); outgoing.end(); return true;
+    }
     outgoing.writeHead(200, {
-      "cache-control": "no-store",
+      "cache-control": "private, max-age=0, must-revalidate",
+      etag,
       "content-type": "image/png",
       "x-content-type-options": "nosniff"
     });
@@ -73,16 +79,19 @@ export async function assetRoutes(context: WorkbenchRouteContext) {
     }
   }
 
-  if (request.method === "GET" && url.pathname.startsWith("/assets/")) {
+  if ((request.method === "GET" || request.method === "HEAD") && url.pathname.startsWith("/assets/")) {
     const name = decodeURIComponent(url.pathname.slice("/assets/".length));
-    const storedBytes = await project.readAsset(name);
     const mimeType = project.assetMimeType(name);
-    const bytes = mimeType.startsWith("text/html") && url.searchParams.get("slidexBridge") === "1"
-      ? Buffer.from(injectHtmlPlaybackBridge(storedBytes.toString("utf8")), "utf8")
-      : storedBytes;
+    if (!mimeType.startsWith("text/html")) {
+      await streamAsset(await project.openAsset(name), mimeType, request, outgoing);
+      return true;
+    }
+    const storedBytes = await project.readAsset(name);
+    const bytes = storedBytes;
     outgoing.writeHead(200, {
-      "cache-control": url.searchParams.get("slidexBridge") === "1" ? "no-store" : "public, max-age=31536000, immutable",
+      "cache-control": mimeType.startsWith("text/html") ? "no-store" : "public, max-age=31536000, immutable",
       ...(mimeType.startsWith("text/html") ? {
+        "content-disposition": `attachment; filename="${name}"`,
         "content-security-policy": HTML_PLAYBACK_CONTENT_SECURITY_POLICY
       } : mimeType === "image/svg+xml" ? {
         "content-security-policy": "default-src 'none'; object-src 'none'; script-src 'none'; style-src 'unsafe-inline'"

@@ -3,8 +3,8 @@
 [English](README.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md)
 
 OpenSlideX is an open-source, local-first workspace for editable presentations.
-Every presentation lives in a folder you own, and its `presentation.mdx` file is
-the source of truth.
+Every presentation lives in a folder you own, and its `presentation.tsx` file is
+the editable source of truth. MDX remains a portable import and export format.
 
 Create, edit, preview, and export decks without an account, background sync, or
 hidden cloud dependency. The MotionDoc format stays portable, readable, and
@@ -25,13 +25,17 @@ Git, or system-wide Node.js and does not require administrator access.
 macOS:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.sh | sh
+curl -fLO https://github.com/zz41354899/open-slidex/releases/latest/download/install.sh
+gh attestation verify install.sh --repo zz41354899/open-slidex
+sh install.sh
 ```
 
 Windows PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/zz41354899/open-slidex/main/install.ps1 | iex
+irm https://github.com/zz41354899/open-slidex/releases/latest/download/install.ps1 -OutFile install.ps1
+gh attestation verify install.ps1 --repo zz41354899/open-slidex
+.\install.ps1
 ```
 
 Open a new terminal after the first install, then run:
@@ -39,13 +43,17 @@ Open a new terminal after the first install, then run:
 ```bash
 slidex             # open the local Workspace
 slidex update      # verify and install the newest release
+slidex rollback    # switch back to the retained previous version
 slidex uninstall   # remove the runtime and command, but keep presentations
 ```
 
 The default presentation library is `~/Documents/OpenSlideX Workspace` on
 macOS and the current user's Documents folder on Windows. Every downloaded
-release archive is verified against the release's SHA-256 checksum before it
-can replace the active version.
+release archive must pass both SHA-256 integrity and GitHub artifact-attestation
+verification before it can replace the active version. Release archives include
+an attested SPDX SBOM. The installer therefore requires GitHub CLI (`gh`) for
+normal GitHub releases; local test mirrors remain explicitly isolated from this
+production verification path.
 
 ## Developer quick start
 
@@ -60,7 +68,7 @@ npm run dev
 
 This starts the local Workspace. By default, new blank and template-based decks
 are created in the ignored `open-slidex-workspace/` directory. Each deck has its
-own `presentation.mdx` file. No account or Supabase project is required.
+own `presentation.tsx` file. No account or Supabase project is required.
 
 The bundled catalog includes **Summer Time Report** and **Moodboard**. Notion-
 and Obsidian-specific templates are intentionally excluded.
@@ -96,18 +104,18 @@ Generated Workbench source and dependency cache stay in the ignored
 and exports.
 
 The starter includes six project-local Agent Skills: source intake and PPTX
-conversion, MDX authoring, browser-native HTML authoring, narrative design, motion
+conversion, React authoring, browser-native HTML authoring, narrative design, motion
 direction, and visual QA. Detailed
 guidance and verified native-layer examples live inside each skill's
 `references/` directory. Narrative design includes exactly six core
 thirty-page references—180 editable teaching slides covering financial, data,
 editorial, product, strategy, and training work. Agents rank the templates from
-a brief and load only one selected MDX resource.
+a brief and load only one selected componentized TSX resource.
 
 ## What you can do locally
 
 - Start a blank deck or an official template.
-- Edit a native MotionDoc MDX presentation in the local Workbench.
+- Edit a React-first `presentation.tsx` deck in the local Workbench.
 - Compose curated Start, Action, and End effects—including Text number ranges and softened shape-to-shape Morph—without a video timeline.
 - Turn any native layer into a safe click area for slide navigation or links, preserving the same interaction in MDX and exported HTML.
 - Preview changes through Vite HMR.
@@ -124,10 +132,10 @@ Generated MCP configuration uses `open-slidex@latest`, so a client restart
 loads the newest published server without editing the config. Workspace scope
 exposes six workflow tools: workspace selection, progressive source/resource
 read (including browser-native HTML), PPTX source import, media, review, and
-edit. `open_slidex_read` preserves canonical HTML bytes and reports online
-dependencies; `open_slidex_edit` creates or replaces that HTML with revision
-protection. HTTP(S) libraries, styles, fonts, images, media, frames, workers,
-and connections run in an opaque-origin sandbox. Source intake moves staged
+edit. `open_slidex_read` preserves canonical HTML bytes and reports attempted
+network dependencies; `open_slidex_edit` creates or replaces that HTML with revision
+protection. Imported HTML is previewed as static images from an offline opaque-origin
+thumbnail sandbox; remote network resources, absolute paths, `file:` URLs, and symlinked sidecars are rejected. Source intake moves staged
 Markdown, text, CSV, and PDF attachments into the selected deck's `knowledge/`
 and converts local, public Notion/CDN, AI-generated, and PDF visual evidence to
 content-addressed WebP assets. PPTX import separately inspects text geometry,
@@ -143,7 +151,7 @@ under `.open-slidex-inbox/` and call `open_slidex_media` with
 
 For creation or redesign, `open_slidex_read` accepts a `templateQuery`
 containing the source brief, audience, outcome, and evidence type. It ranks the
-six core thirty-page native references and returns three exact MDX resource
+six core thirty-page componentized references and returns three exact TSX resource
 paths; the agent reads one reference before composing the complete deck.
 
 ## Repository commands

@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 
 import { getOfficialTemplatePackage } from "@/core/motion-doc/presets/officialTemplatePackages";
 import { openSlideXProjectSkillNames } from "@/core/motion-doc/domain/openSlideXProjectSkills";
+import { motionDocToReactPresentationSource } from "@/core/react-presentation/reactPresentationSource";
 
 import {
   assertSupportedNodeVersion,
@@ -92,7 +93,7 @@ function completionMessage({
   const install = installCommand();
   return [
     "",
-    `Created OpenSlideX MDX-first Local Workbench in ${targetDir}`,
+    `Created OpenSlideX React-first Local Workbench in ${targetDir}`,
     ...(templateId ? [`Official template: ${templateId}`] : []),
     "",
     `  cd ${path.relative(process.cwd(), targetDir) || "."}`,
@@ -122,8 +123,8 @@ async function applyOfficialTemplate(
   }
   await copyBundledTemplateAssets(root, template);
   await writeFile(
-    path.join(root, "presentation.mdx"),
-    template.sources[reference.locale],
+    path.join(root, "presentation.tsx"),
+    motionDocToReactPresentationSource(template.sources[reference.locale]),
     "utf8"
   );
   const stateRoot = path.join(root, ".open-slidex");

@@ -781,7 +781,7 @@ export const motionDocExportStyles = `      :root {
         width: 100%;
       }
       .chart-grid {
-        stroke: var(--slide-fg);
+        stroke: var(--chart-grid-color, var(--slide-fg));
         stroke-opacity: .1;
         stroke-width: 1;
       }
@@ -796,13 +796,13 @@ export const motionDocExportStyles = `      :root {
       }
       .chart-value,
       .chart-legend-value {
-        fill: var(--slide-fg);
+        fill: var(--chart-value-color, var(--slide-fg));
         font-size: 18px;
         font-variant-numeric: tabular-nums;
         font-weight: 650;
       }
       .chart-value--radial {
-        fill: #ffffff;
+        fill: var(--chart-radial-value-color, #ffffff);
         font-size: 16px;
         paint-order: stroke;
         stroke: rgba(0,0,0,.3);
@@ -836,19 +836,19 @@ export const motionDocExportStyles = `      :root {
         opacity: .13;
       }
       .motion-chart--modern .chart-point {
-        stroke: var(--slide-bg, #ffffff);
+        stroke: var(--chart-surface-color, var(--slide-bg, #ffffff));
         stroke-width: 2.5;
       }
       .motion-chart--modern .chart-bubble {
-        stroke: var(--slide-bg, #ffffff);
+        stroke: var(--chart-surface-color, var(--slide-bg, #ffffff));
         stroke-width: 3;
       }
       .motion-chart--modern .chart-slice {
-        stroke: var(--slide-bg, #ffffff);
+        stroke: var(--chart-surface-color, var(--slide-bg, #ffffff));
         stroke-width: 2;
       }
       .motion-chart--modern .chart-center-metric {
-        fill: var(--slide-fg, currentColor);
+        fill: var(--chart-value-color, var(--slide-fg, currentColor));
         font-family: Geist, "SF Pro Display", "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
         font-size: var(--chart-center-size, 32px);
         font-variant-numeric: tabular-nums;
@@ -856,10 +856,23 @@ export const motionDocExportStyles = `      :root {
         letter-spacing: -.04em;
       }
       .motion-chart--modern .chart-center-label {
-        fill: var(--slide-muted, #94a3b8);
+        fill: var(--chart-label-color, var(--slide-muted, #94a3b8));
         font-size: 13px;
         font-weight: 500;
         letter-spacing: .02em;
+      }
+      .motion-chart--theme-dark-gold {
+        --chart-grid-color: #d9b85d;
+        --chart-label-color: #d8c8a2;
+        --chart-radial-value-color: #fff4d2;
+        --chart-surface-color: #17120b;
+        --chart-value-color: #fff0bc;
+      }
+      .motion-chart--theme-dark-gold .chart-grid {
+        stroke-opacity: .16;
+      }
+      .motion-chart--theme-dark-gold .chart-grid--baseline {
+        stroke-opacity: .34;
       }
       .chart-reference line {
         stroke: var(--chart-reference-color, #dc2626);
@@ -911,12 +924,28 @@ export const motionDocExportStyles = `      :root {
         transform-box: fill-box;
         transform-origin: center;
       }
+      .motion-chart--grow .chart-legend-item {
+        animation-name: chart-fade;
+      }
+      .motion-chart--grow .chart-center-metric,
+      .motion-chart--sweep .chart-center-metric,
+      .motion-chart--pop .chart-center-metric {
+        animation: chart-fade-up .42s var(--chart-delay, 0ms) cubic-bezier(.22, 1, .36, 1) both;
+        transform-box: fill-box;
+        transform-origin: center;
+      }
       .motion-chart--draw .chart-line {
         animation: chart-draw 1.05s cubic-bezier(.22, 1, .36, 1) both;
         stroke-dasharray: 1;
       }
       .motion-chart--draw .chart-area {
         animation: chart-area .85s .18s cubic-bezier(.22, 1, .36, 1) both;
+      }
+      .motion-chart--draw.motion-chart--line .chart-series,
+      .motion-chart--draw.motion-chart--area .chart-series {
+        animation: chart-fade-up .42s calc(var(--chart-delay, 0ms) + .24s) cubic-bezier(.22, 1, .36, 1) both;
+        transform-box: fill-box;
+        transform-origin: center;
       }
       .motion-chart--draw.motion-chart--bar .chart-series,
       .motion-chart--draw.motion-chart--scatter .chart-series,
@@ -925,11 +954,13 @@ export const motionDocExportStyles = `      :root {
         transform-box: fill-box;
         transform-origin: left center;
       }
-      .motion-chart--pop .chart-series,
-      .motion-chart--pop .chart-slice {
+      .motion-chart--pop .chart-series:not(.chart-legend-item) {
         animation-name: chart-pop;
         transform-box: fill-box;
         transform-origin: center;
+      }
+      .motion-chart--pop .chart-legend-item {
+        animation-name: chart-fade;
       }
       .motion-chart--sweep.motion-chart--bar .chart-content,
       .motion-chart--sweep.motion-chart--line .chart-content,
@@ -941,6 +972,9 @@ export const motionDocExportStyles = `      :root {
         animation: chart-sweep .9s cubic-bezier(.22, 1, .36, 1) both;
         transform-box: fill-box;
         transform-origin: center;
+      }
+      .motion-chart--sweep .chart-legend-item {
+        animation-name: chart-fade;
       }
       @keyframes chart-grow {
         from { opacity: .2; transform: scaleY(.04); }
@@ -966,6 +1000,14 @@ export const motionDocExportStyles = `      :root {
       @keyframes chart-reveal {
         from { opacity: 0; transform: translateX(-14px); }
         to { opacity: 1; transform: translateX(0); }
+      }
+      @keyframes chart-fade-up {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes chart-fade {
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
       @keyframes chart-sweep-x {
         from { clip-path: inset(0 100% 0 0); }

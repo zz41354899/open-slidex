@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
 import { MotionDocSlidePreview } from "@/features/pitch/ui/preview/MotionDocSlidePreview";
 
@@ -8,7 +9,7 @@ type SlideThumbnailPreviewProps = {
   scene: MotionDocScene;
 };
 
-export function SlideThumbnailPreview({
+export const SlideThumbnailPreview = memo(function SlideThumbnailPreview({
   activeSlideIndex,
   eager = false,
   replayNonce,
@@ -22,4 +23,4 @@ export function SlideThumbnailPreview({
       scene={scene}
     />
   );
-}
+});

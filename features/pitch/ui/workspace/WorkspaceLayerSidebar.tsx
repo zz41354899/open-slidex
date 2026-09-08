@@ -1,47 +1,69 @@
 
-import { useState } from "react";
+import { lazy, memo, Suspense, useCallback, useState } from "react";
 import { X } from "lucide-react";
 import { LayerSidebar } from "@/features/pitch/ui/LayerSidebar";
-import { TemplateLibrarySlidePanel } from "@/features/pitch/ui/sidebar/TemplateLibrarySlidePanel";
 import type { PitchWorkspaceProps } from "@/features/pitch/ui/workspace/PitchWorkspaceTypes";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import type { RemoteMcpOperation } from "@/features/pitch/domain/remoteMcpOperation";
+
+let templateLibraryPanelPromise: Promise<typeof import("@/features/pitch/ui/sidebar/TemplateLibrarySlidePanel")> | undefined;
+
+export function preloadTemplateLibrarySlidePanel() {
+  templateLibraryPanelPromise ??= import("@/features/pitch/ui/sidebar/TemplateLibrarySlidePanel")
+    .catch((error) => {
+      templateLibraryPanelPromise = undefined;
+      throw error;
+    });
+  return templateLibraryPanelPromise;
+}
+
+const TemplateLibrarySlidePanel = lazy(() => preloadTemplateLibrarySlidePanel().then((module) => ({
+  default: module.TemplateLibrarySlidePanel
+})));
+
+function requestTemplateLibraryPreload() {
+  void preloadTemplateLibrarySlidePanel().catch(() => undefined);
+}
 
 type WorkspaceLayerSidebarProps = Pick<PitchWorkspaceProps, "commands" | "document" | "selection" | "view"> & {
   onSelectSlide: (index: number) => void;
   remoteMcpOperations: readonly RemoteMcpOperation[];
 };
 
-export function WorkspaceLayerSidebar(props: WorkspaceLayerSidebarProps) {
+export const WorkspaceLayerSidebar = memo(function WorkspaceLayerSidebar(props: WorkspaceLayerSidebarProps) {
   const { view } = props;
   const { locale, tx } = usePitchI18n();
   const [isSlideLibraryOpen, setIsSlideLibraryOpen] = useState(false);
   const templateLibraryEnabled = view.accessMode === "authenticated";
   const resolvedTemplateLibraryEnabled = !view.authoringDisabled && (view.templateLibraryEnabled ?? templateLibraryEnabled);
+  const addSlideFromTemplate = props.commands.addSlideFromTemplate;
+  const applyTemplateDeckCommand = props.commands.applyTemplateDeck;
+  const insertSlideNearActive = props.commands.insertSlideNearActive;
+  const setIsMobileSidebarOpen = view.setIsMobileSidebarOpen;
 
-  function addBlankSlide() {
-    props.commands.insertSlideNearActive("after");
-    view.setIsMobileSidebarOpen(false);
-  }
+  const addBlankSlide = useCallback(() => {
+    insertSlideNearActive("after");
+    setIsMobileSidebarOpen(false);
+  }, [insertSlideNearActive, setIsMobileSidebarOpen]);
 
-  function handleAddSlide() {
+  const handleAddSlide = useCallback(() => {
     if (!resolvedTemplateLibraryEnabled) {
       addBlankSlide();
       return;
     }
     setIsSlideLibraryOpen((current) => !current);
-  }
+  }, [addBlankSlide, resolvedTemplateLibraryEnabled]);
 
-  function addTemplateSlide(templateId: string, templateSlideSource: string) {
-    props.commands.addSlideFromTemplate(templateId, templateSlideSource);
-    view.setIsMobileSidebarOpen(false);
-  }
+  const addTemplateSlide = useCallback((templateId: string, templateSlideSource: string) => {
+    addSlideFromTemplate(templateId, templateSlideSource);
+    setIsMobileSidebarOpen(false);
+  }, [addSlideFromTemplate, setIsMobileSidebarOpen]);
 
-  function applyTemplateDeck(templateId: string, templateSlideSources: string[]) {
-    props.commands.applyTemplateDeck(templateId, templateSlideSources);
+  const applyTemplateDeck = useCallback((templateId: string, templateSlideSources: string[]) => {
+    applyTemplateDeckCommand(templateId, templateSlideSources);
     setIsSlideLibraryOpen(false);
-    view.setIsMobileSidebarOpen(false);
-  }
+    setIsMobileSidebarOpen(false);
+  }, [applyTemplateDeckCommand, setIsMobileSidebarOpen]);
 
   return (
     <>
@@ -52,15 +74,17 @@ export function WorkspaceLayerSidebar(props: WorkspaceLayerSidebarProps) {
           templateLibraryEnabled={resolvedTemplateLibraryEnabled}
         />
         {isSlideLibraryOpen && resolvedTemplateLibraryEnabled ? (
-          <TemplateLibrarySlidePanel
-            activeTemplateId={props.document.selectedTemplateId}
-            locale={locale}
-            onAddBlank={addBlankSlide}
-            onAddTemplateSlide={addTemplateSlide}
-            onApplyTemplateDeck={applyTemplateDeck}
-            onClose={() => setIsSlideLibraryOpen(false)}
-            replayNonce={view.replayNonce}
-          />
+          <Suspense fallback={<TemplateLibraryLoading label={tx("Loading templates…")} />}>
+            <TemplateLibrarySlidePanel
+              activeTemplateId={props.document.selectedTemplateId}
+              locale={locale}
+              onAddBlank={addBlankSlide}
+              onAddTemplateSlide={addTemplateSlide}
+              onApplyTemplateDeck={applyTemplateDeck}
+              onClose={() => setIsSlideLibraryOpen(false)}
+              replayNonce={view.replayNonce}
+            />
+          </Suspense>
         ) : null}
       </div>
 
@@ -100,19 +124,32 @@ export function WorkspaceLayerSidebar(props: WorkspaceLayerSidebarProps) {
 
       {isSlideLibraryOpen && resolvedTemplateLibraryEnabled && view.isMobileSidebarOpen ? (
         <div className="fixed inset-0 z-[90] md:hidden">
-          <TemplateLibrarySlidePanel
-            activeTemplateId={props.document.selectedTemplateId}
-            isMobile
-            locale={locale}
-            onAddBlank={addBlankSlide}
-            onAddTemplateSlide={addTemplateSlide}
-            onApplyTemplateDeck={applyTemplateDeck}
-            onClose={() => setIsSlideLibraryOpen(false)}
-            replayNonce={view.replayNonce}
-          />
+          <Suspense fallback={<TemplateLibraryLoading label={tx("Loading templates…")} mobile />}>
+            <TemplateLibrarySlidePanel
+              activeTemplateId={props.document.selectedTemplateId}
+              isMobile
+              locale={locale}
+              onAddBlank={addBlankSlide}
+              onAddTemplateSlide={addTemplateSlide}
+              onApplyTemplateDeck={applyTemplateDeck}
+              onClose={() => setIsSlideLibraryOpen(false)}
+              replayNonce={view.replayNonce}
+            />
+          </Suspense>
         </div>
       ) : null}
     </>
+  );
+});
+
+function TemplateLibraryLoading({ label, mobile = false }: { label: string; mobile?: boolean }) {
+  return (
+    <div
+      aria-live="polite"
+      className={`${mobile ? "h-full w-full" : "h-full w-[320px] border-l border-white/[0.08]"} flex items-center justify-center bg-[#111] px-6 text-center text-sm text-neutral-400`}
+    >
+      {label}
+    </div>
   );
 }
 
@@ -146,6 +183,7 @@ function LayerSidebarContent({
       moveSlideIntoMorphGroup={commands.moveSlideIntoMorphGroup}
       moveSlideOutOfMorphGroup={commands.moveSlideOutOfMorphGroup}
       onAddSlide={onAddSlide}
+      onPreloadTemplateLibrary={templateLibraryEnabled ? requestTemplateLibraryPreload : undefined}
       onSelectBlock={selection.selectBlockFromLayer}
       onSelectSlide={onSelectSlide}
       renameBlock={commands.renameBlock}
@@ -159,7 +197,6 @@ function LayerSidebarContent({
       setDraggedBlockIndex={selection.setDraggedBlockIndex}
       setDragOverBlockIndex={selection.setDragOverBlockIndex}
       slideRows={document.slideRows}
-      source={document.canvasSource}
       templateLibraryEnabled={templateLibraryEnabled}
       toggleBlockPositionLock={commands.toggleBlockPositionLock}
       unlinkSharedMorphGroup={commands.unlinkSharedMorphGroup}

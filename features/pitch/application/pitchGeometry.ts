@@ -8,14 +8,18 @@ export type PositionDelta = {
 export type BlockFramePatch = {
   blockIndex: number;
   frame: MotionDocFramePatch;
+  rotation?: number;
 };
 
 export type ResolvedBlockFrameUpdate = {
   blockId: string;
   blockIndex: number;
   frame: MotionDocFrame;
+  rotation?: number;
 };
 
-export type BlockFrameOverrides = ReadonlyMap<string, MotionDocFrame>;
+export type BlockFrameOverride = MotionDocFrame & { rotation?: number };
+
+export type BlockFrameOverrides = ReadonlyMap<string, BlockFrameOverride>;
 
 export const EMPTY_BLOCK_FRAME_OVERRIDES: BlockFrameOverrides = new Map();

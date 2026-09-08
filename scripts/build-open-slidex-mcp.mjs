@@ -14,7 +14,17 @@ await build({
   banner: { js: "#!/usr/bin/env node" },
   bundle: true,
   entryPoints: [path.join(packageDir, "src/server.ts")],
-  external: ["@napi-rs/canvas", "pdf-to-img", "pdfjs-dist", "playwright-core", "sharp"],
+  external: [
+    "@modelcontextprotocol/server",
+    "@modelcontextprotocol/server/stdio",
+    "@napi-rs/canvas",
+    "esbuild",
+    "pdf-to-img",
+    "pdfjs-dist",
+    "playwright-core",
+    "sharp",
+    "zod/v4"
+  ],
   format: "esm",
   logLevel: "info",
   minify: true,
@@ -37,11 +47,17 @@ function sourceAliases() {
   return {
     name: "open-slidex-source-aliases",
     setup(context) {
+      // The published runtime already ships the SDK once at runtime/sdk. Keep
+      // the MCP entrypoint thin instead of inlining another copy in server.mjs.
+      // This artifact is copied to runtime/mcp, so these sibling paths resolve
+      // in the published package rather than the private build workspace.
       context.onResolve({ filter: /^@open-slidex\/sdk\/node$/ }, () => ({
-        path: path.join(rootDir, "packages/slidex-sdk/src/node.ts")
+        path: "../sdk/node.js",
+        external: true
       }));
       context.onResolve({ filter: /^@open-slidex\/sdk$/ }, () => ({
-        path: path.join(rootDir, "packages/slidex-sdk/src/index.ts")
+        path: "../sdk/index.js",
+        external: true
       }));
       context.onResolve({ filter: /^@\// }, (args) => {
         const base = path.join(rootDir, args.path.slice(2));

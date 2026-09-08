@@ -7,23 +7,20 @@ asset and maps its detected pages through a generated, non-authorable
 ## Resource boundary
 
 - Inline SVG, CSS, SMIL, and JavaScript may run in playback.
-- Absolute HTTP(S) and protocol-relative libraries, styles, fonts, images,
-  audio, video, frames, workers, and connections may load at playback time.
-- A remote `<base href>` may resolve relative remote resources.
+- Direct HTTP(S), protocol-relative resources, and remote `<base href>` values
+  are rejected so imported HTML cannot pivot through the host network.
 - Workspace folder import copies relative AVIF, GIF, JPEG, PNG, WebP, and SVG
   sidecars into the selected deck's `assets/`. PNG bytes are converted to WebP
   before the HTML reference is rewritten.
-- `open_slidex_edit` packages absolute local image paths directly. For relative
-  local image references, pass their absolute containing folder as
-  `htmlAssetRoot`. The saved canonical HTML must refer only to the packaged
-  filenames, not the original filesystem paths.
+- `open_slidex_edit` accepts relative local image references only when
+  `htmlAssetRoot` is a real directory inside the selected deck. Absolute paths,
+  `file:` URLs, and symlinks are rejected. Saved HTML refers only to packaged names.
 - Base64 document storage and browser-unsupported protocols are not portable
   inputs. Blob URLs may exist only as runtime values created by the document.
 
-Playback uses an opaque-origin sandbox with scripts but without
-`allow-same-origin`. Remote resources cannot receive OpenSlideX local-origin
-access. Availability still depends on network access, CORS, framing policy,
-authentication, and the remote URL remaining valid.
+Workbench playback uses static images produced by the offline opaque-origin
+thumbnail sandbox. Scripts may affect that isolated render, but cannot open
+connections; no live untrusted iframe is mounted in the editor.
 
 ## Page and export boundary
 

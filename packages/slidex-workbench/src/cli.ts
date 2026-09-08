@@ -37,7 +37,10 @@ async function main() {
     }
     const invocationRoot = path.resolve(process.cwd());
     const workspaceRoot = path.resolve(invocationRoot, positionalOption(args) ?? "open-slidex-workspace");
-    const invocationPresentation = await stat(path.join(invocationRoot, "presentation.mdx")).catch(() => undefined);
+    const invocationPresentation = await Promise.all([
+      stat(path.join(invocationRoot, "presentation.tsx")).catch(() => undefined),
+      stat(path.join(invocationRoot, "presentation.mdx")).catch(() => undefined)
+    ]).then((files) => files.find((file) => file?.isFile()));
     const mcpPresentationRoot = invocationPresentation?.isFile() ? invocationRoot : undefined;
     const packagedSourceRoot = fileURLToPath(new URL("./source/", import.meta.url));
     const checkoutRoot = path.resolve(fileURLToPath(new URL("../../../", import.meta.url)));
@@ -109,7 +112,7 @@ async function main() {
     const checkoutRoot = path.resolve(fileURLToPath(new URL("../../../", import.meta.url)));
     const configPath = await resolveWorkbenchViteConfigPath();
     const sourceRoot = await prepareWorkbenchSource(project, packagedSourceRoot, checkoutRoot);
-    const running = await startWorkbenchServer({ clientRoot, port: 0, project });
+    const running = await startWorkbenchServer({ clientRoot, port: 0, project, uiPort: port });
     const { createServer: createViteServer } = await import("vite");
     const { createSlideXWorkbenchViteConfig } = await import(configPath.href) as {
       createSlideXWorkbenchViteConfig(options: {

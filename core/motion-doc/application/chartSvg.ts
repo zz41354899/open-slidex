@@ -2,6 +2,7 @@ import {
   chartDatumColor,
   formatMotionDocChartValue,
   motionDocChartModel,
+  type MotionDocChartLocale,
   type MotionDocChartModel
 } from "@/core/motion-doc/domain/chart";
 import type { MotionDocProps } from "@/core/motion-doc/domain/motionDocTypes";
@@ -10,17 +11,19 @@ import { MOTION_DOC_CANVAS_HEIGHT, MOTION_DOC_CANVAS_WIDTH } from "@/core/motion
 
 const WIDTH = 800;
 const HEIGHT = 420;
+const RADIAL_LEGEND_MAX_ITEMS = 8;
 type ChartLayout = { height: number; labelY: number; plot: { bottom: number; left: number; right: number; top: number }; width: number };
 type MotionDocChartAppearance = "default" | "editor-modern";
 
 export type MotionDocChartRenderOptions = {
   appearance?: MotionDocChartAppearance;
   frame?: MotionDocFrame;
+  locale?: MotionDocChartLocale;
   motionMode?: "animated" | "editor-static";
 };
 
 export function renderMotionDocChartSvg(props: MotionDocProps, options: MotionDocChartRenderOptions = {}) {
-  const model = motionDocChartModel(props);
+  const model = motionDocChartModel(props, options.locale);
   const appearance = options.appearance ?? "default";
   const layout = chartLayout(options.frame, appearance);
   const title = escapeXml(String(props.ariaLabel ?? `${model.type} chart`));
@@ -34,6 +37,7 @@ export function renderMotionDocChartSvg(props: MotionDocProps, options: MotionDo
 
   const staticClass = options.motionMode === "editor-static" ? " motion-chart--editor-static" : "";
   const appearanceClass = appearance === "editor-modern" ? " motion-chart--modern" : "";
+  const themeClass = ` motion-chart--theme-${model.theme}`;
   const styleVariables = [
     ...(appearance === "editor-modern" ? [
       `--chart-label-size:${round(clamp(Math.min(layout.width, layout.height) * 0.052, 19, 32))}px`,
@@ -43,7 +47,7 @@ export function renderMotionDocChartSvg(props: MotionDocProps, options: MotionDo
     ...(model.labelColor ? [`--chart-label-color:${model.labelColor}`] : [])
   ];
   const appearanceStyle = styleVariables.length > 0 ? ` style="${styleVariables.join(";")}"` : "";
-  return `<svg class="motion-chart motion-chart--${model.type} motion-chart--${model.motion}${appearanceClass}${staticClass}"${appearanceStyle} role="img" aria-label="${title}" viewBox="0 0 ${layout.width} ${layout.height}"><title>${title}</title><g class="chart-content">${content}</g></svg>`;
+  return `<svg class="motion-chart motion-chart--${model.type} motion-chart--${model.motion}${themeClass}${appearanceClass}${staticClass}"${appearanceStyle} role="img" aria-label="${title}" viewBox="0 0 ${layout.width} ${layout.height}"><title>${title}</title><g class="chart-content">${content}</g></svg>`;
 }
 
 function renderBars(model: MotionDocChartModel, layout: ChartLayout, appearance: MotionDocChartAppearance) {
@@ -72,12 +76,9 @@ function renderBars(model: MotionDocChartModel, layout: ChartLayout, appearance:
     const y = plot.bottom - height;
     const delay = `${index * 70}ms`;
     const fill = model.colorMode === "gradient" ? `url(#${gradientBaseId}-${index})` : chartColor(model, index, appearance);
-    const defaultRadius = appearance === "editor-modern"
-      ? Math.min(barWidth / 7, 10)
-      : Math.min(barWidth / 4, 18);
     const radius = model.barRadiusCustom
       ? model.barRadius >= 999 ? barWidth / 2 : Math.min(model.barRadius, barWidth / 2)
-      : defaultRadius;
+      : 0;
     return `<g class="chart-series" style="--chart-delay:${delay}"><rect class="chart-bar" fill="${fill}" fill-opacity="${chartOpacity(model, index)}" height="${round(height)}" rx="${round(radius)}" width="${round(barWidth)}" x="${round(x)}" y="${round(y)}" />${valueLabel(model, item.value, round(x + barWidth / 2), round(Math.max(y - 12, 18)))}${categoryLabel(model, item.label, round(x + barWidth / 2), layout.labelY)}</g>`;
   }).join("");
   const annotationIndex = model.annotationIndex ?? model.emphasisIndex;
@@ -117,45 +118,66 @@ function renderTrend(model: MotionDocChartModel, area: boolean, layout: ChartLay
 
 function renderRadial(model: MotionDocChartModel, donut: boolean, layout: ChartLayout, appearance: MotionDocChartAppearance) {
   const wide = layout.width / layout.height >= 1.45 && layout.width >= 520;
-  const chartWidth = wide ? layout.width * 0.62 : layout.width;
+  const denseLegend = model.showLabels && model.data.length > 4;
+  const chartWidth = wide ? layout.width * (denseLegend ? .5 : .62) : layout.width;
   const cx = wide ? chartWidth * 0.5 : layout.width * 0.5;
-  const cy = wide ? layout.height * 0.5 : layout.height * 0.37;
+  const cy = wide ? layout.height * .5 : layout.height * (denseLegend ? .28 : .37);
   const availableRadius = wide
-    ? Math.min(chartWidth * 0.34, layout.height * 0.38)
-    : Math.min(layout.width * 0.34, layout.height * 0.27);
+    ? Math.min(chartWidth * .34, layout.height * .38)
+    : Math.min(layout.width * .34, layout.height * (denseLegend ? .2 : .27));
   const outerRadius = Math.max(42, availableRadius);
   const innerRadius = donut
     ? outerRadius * (model.donutHoleCustom ? model.donutHole : appearance === "editor-modern" ? .64 : .53)
     : 0;
-  const total = model.data.reduce((sum, item) => sum + Math.max(item.value, 0), 0) || 1;
+  const total = model.data.reduce((sum, item) => sum + Math.max(item.value, 0), 0);
+  const totalForAngles = total || 1;
   let startAngle = -90;
   const slices = model.data.map((item, index) => {
-    const angle = Math.max(item.value, 0) / total * 360;
+    const angle = Math.max(item.value, 0) / totalForAngles * 360;
     const endAngle = startAngle + angle;
     const path = radialSlicePath(cx, cy, outerRadius, innerRadius, startAngle, endAngle);
     const labelRadius = donut ? (outerRadius + innerRadius) / 2 : outerRadius * 0.66;
     const middle = polar(cx, cy, labelRadius, startAngle + angle / 2);
-    const slice = `<path class="chart-slice" d="${path}" fill="${chartColor(model, index, appearance)}" fill-opacity="${chartOpacity(model, index)}" style="--chart-delay:${index * 75}ms" />${showValueLabel(model) && angle > 12 ? `<text class="chart-value chart-value--radial" text-anchor="middle" x="${round(middle.x)}" y="${round(middle.y)}">${Math.round(angle / 3.6)}%</text>` : ""}`;
+    const slice = `<g class="chart-series" style="--chart-delay:${index * 75}ms"><path class="chart-slice" d="${path}" fill="${chartColor(model, index, appearance)}" fill-opacity="${chartOpacity(model, index)}" />${showValueLabel(model) && angle > 12 ? `<text class="chart-value chart-value--radial" text-anchor="middle" x="${round(middle.x)}" y="${round(middle.y)}">${Math.round(angle / 3.6)}%</text>` : ""}</g>`;
     startAngle = endAngle;
     return slice;
   }).join("");
-  const legend = model.showLabels ? model.data.map((item, index) => {
-    const itemHeight = clamp(layout.height * 0.115, 32, 48);
+  const visibleLegendItems = model.data.length > RADIAL_LEGEND_MAX_ITEMS
+    ? model.data.slice(0, RADIAL_LEGEND_MAX_ITEMS - 1)
+    : model.data;
+  const hiddenLegendItemCount = model.data.length - visibleLegendItems.length;
+  const legendEntries = hiddenLegendItemCount > 0
+    ? [...visibleLegendItems.map((item) => ({ item, label: item.label })), { item: null, label: model.locale === "zh-TW" ? `＋${hiddenLegendItemCount} 個其他項目` : `+${hiddenLegendItemCount} more` }]
+    : visibleLegendItems.map((item) => ({ item, label: item.label }));
+  const legendColumns = denseLegend ? 2 : 1;
+  const legendRows = Math.max(Math.ceil(legendEntries.length / legendColumns), 1);
+  const legend = model.showLabels ? legendEntries.map((entry, index) => {
+    const column = Math.floor(index / legendRows);
+    const row = index % legendRows;
+    const legendX = wide
+      ? layout.width * (denseLegend ? .54 : .66) + column * ((layout.width * (denseLegend ? .42 : .3)) / legendColumns)
+      : layout.width * .1 + column * (layout.width * .8 / legendColumns);
+    const legendHeight = wide ? layout.height * .68 : layout.height * (denseLegend ? .4 : .25);
+    const itemHeight = clamp(legendHeight / legendRows, 22, 48);
     const markerSize = clamp(itemHeight * 0.38, 12, 18);
-    const legendX = wide ? layout.width * 0.66 : layout.width * 0.12;
-    const legendY = wide
-      ? layout.height * 0.18 + index * itemHeight
-      : layout.height * 0.7 + index * itemHeight;
-    const valueX = wide ? layout.width * 0.28 : layout.width * 0.72;
-    return `<g class="chart-legend-item" transform="translate(${round(legendX)} ${round(legendY)})"><rect fill="${chartColor(model, index, appearance)}" fill-opacity="${chartOpacity(model, index)}" height="${round(markerSize)}" rx="${round(appearance === "editor-modern" ? markerSize / 2 : markerSize / 3)}" width="${round(markerSize)}"/>${showCategoryLabel(model) ? `<text class="chart-legend" x="${round(markerSize + 14)}" y="${round(markerSize * 0.78)}">${escapeXml(item.label)}</text>` : ""}${showValueLabel(model) ? `<text class="chart-legend-value" text-anchor="end" x="${round(valueX)}" y="${round(markerSize * 0.78)}">${formatMotionDocChartValue(model, item.value)}</text>` : ""}</g>`;
+    const legendY = (wide ? layout.height * .17 : denseLegend ? layout.height * .55 : layout.height * .7) + row * itemHeight;
+    const legendWidth = wide ? layout.width * (denseLegend ? .42 : .3) / legendColumns : layout.width * .8 / legendColumns;
+    const valueX = legendWidth - 8;
+    const label = truncateLegendLabel(entry.label, legendColumns);
+    return `<g class="chart-series chart-legend-item" style="--chart-delay:${320 + index * 75}ms" transform="translate(${round(legendX)} ${round(legendY)})"><rect fill="${entry.item ? chartColor(model, index, appearance) : "none"}" fill-opacity="${entry.item ? chartOpacity(model, index) : 0}" height="${round(markerSize)}" rx="${round(appearance === "editor-modern" ? markerSize / 2 : markerSize / 3)}" stroke="${entry.item ? "none" : "currentColor"}" stroke-dasharray="3 2" width="${round(markerSize)}"/>${showCategoryLabel(model) ? `<text class="chart-legend" x="${round(markerSize + 14)}" y="${round(markerSize * 0.78)}">${escapeXml(label)}</text>` : ""}${entry.item && showValueLabel(model) ? `<text class="chart-legend-value" text-anchor="end" x="${round(valueX)}" y="${round(markerSize * 0.78)}">${formatMotionDocChartValue(model, entry.item.value)}</text>` : ""}</g>`;
   }).join("") : "";
   const centerMetric = donut && appearance === "editor-modern"
-    ? `<g class="chart-center-metric"><text text-anchor="middle" x="${round(cx)}" y="${round(cy - 2)}">${formatMotionDocChartValue(model, total)}</text><text class="chart-center-label" text-anchor="middle" x="${round(cx)}" y="${round(cy + 22)}">Total</text></g>`
+    ? `<g class="chart-center-metric" style="--chart-delay:220ms"><text text-anchor="middle" x="${round(cx)}" y="${round(cy - 2)}">${formatMotionDocChartValue(model, total)}</text><text class="chart-center-label" text-anchor="middle" x="${round(cx)}" y="${round(cy + 22)}">${model.locale === "zh-TW" ? "總計" : "Total"}</text></g>`
     : "";
   const annotation = model.annotationText
     ? `<text class="chart-annotation-text" fill="${model.annotationColor}" text-anchor="end" x="${round(layout.width - 20)}" y="${round(layout.height * .08)}">${escapeXml(model.annotationText)}</text>`
     : "";
   return `<g class="chart-radial">${slices}</g>${centerMetric}${legend}${annotation}`;
+}
+
+function truncateLegendLabel(value: string, columns: number) {
+  const maximum = columns > 1 ? 11 : 24;
+  return value.length > maximum ? `${value.slice(0, maximum - 1)}…` : value;
 }
 
 function renderScatter(model: MotionDocChartModel, layout: ChartLayout, appearance: MotionDocChartAppearance) {

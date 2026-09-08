@@ -138,8 +138,9 @@ test("HTML export loads selected Google Fonts for base and inline text", () => {
 
   assert.match(html, /https:\/\/fonts\.googleapis\.com\/css2\?family=Dancing\+Script:wght@400;500;600;700;800;900&amp;display=swap/);
   assert.match(html, /https:\/\/fonts\.googleapis\.com\/css2\?family=Playfair\+Display:wght@400;500;600;700;800;900&amp;display=swap/);
-  assert.match(html, /style-src 'unsafe-inline' http: https: data: blob:/);
-  assert.match(html, /font-src http: https: data: blob:/);
+  assert.match(html, /style-src 'self' 'unsafe-inline' data: https:\/\/fonts\.googleapis\.com/);
+  assert.match(html, /font-src 'self' data: https:\/\/fonts\.gstatic\.com/);
+  assert.match(html, /connect-src 'none'/);
 });
 
 test("static exports remove an unavailable image-filter canvas instead of freezing black pixels", () => {

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { constants } from "node:fs";
+import { constants, existsSync } from "node:fs";
 import {
   access,
   copyFile,
@@ -21,6 +21,7 @@ import {
   getOfficialTemplatePackage,
   listSlideXAssetReferences,
   officialTemplatePackages,
+  motionDocToReactPresentationSource,
   parseMotionDoc,
   parseTemplateRef,
   summarizeMotionDoc,
@@ -35,19 +36,25 @@ import {
   exportSlideXDocument,
   importOpenSlideXImageAsset,
   importOpenSlideXVideoAsset,
+  ensureDirectoryInsideRoot,
+  openExistingFileInsideRoot,
   renderSlideXHtmlThumbnail,
   renderSlideXDocument,
+  resolveExistingInsideRoot,
   resolveInsideRoot,
   SlideXFileDocumentAdapter,
   SlideXRevisionConflictError
 } from "@open-slidex/sdk/node";
 
-import { analyzeHtmlPresentation, assertSandboxedHtml } from "./htmlImportPolicy";
+import { analyzeHtmlPresentation, assertSandboxedHtml, secureHtmlForStandaloneExport } from "./htmlImportPolicy";
 import { createHtmlPresentationMdx, extractEmbeddedImageAssets, MAX_WORKSPACE_IMPORT_FILE_BYTES } from "./workspaceImport";
 import { renderOfficialTemplateCover } from "./templateCover";
+import { fileFingerprint } from "./fileFingerprint";
+import { BoundedCache } from "@/common/util/boundedCache";
 
 export type ProjectSnapshot = ReturnType<SlideXProject["snapshot"]>;
 const HTML_THUMBNAIL_RENDER_VERSION = "v3";
+type ThumbnailJob = { page: number; outputPath: string; resolve: (bytes: Buffer) => void; reject: (error: unknown) => void };
 
 export class OpenSlideXLocalMediaError extends Error {
   constructor(readonly issues: ReturnType<typeof validateOpenSlideXLocalMedia>["issues"]) {
@@ -57,7 +64,7 @@ export class OpenSlideXLocalMediaError extends Error {
 }
 
 export class SlideXProject {
-  readonly adapter: SlideXFileDocumentAdapter;
+  adapter: SlideXFileDocumentAdapter;
   readonly assetsRoot: string;
   readonly distRoot: string;
   readonly projectId: string;
@@ -65,6 +72,12 @@ export class SlideXProject {
   readonly stateRoot: string;
   private readonly htmlThumbnailRenders = new Map<string, Promise<Buffer>>();
   private htmlThumbnailRenderQueue: Promise<void> = Promise.resolve();
+  private opened?: { fingerprint: string; snapshot: ReturnType<SlideXProject["snapshot"]> };
+  private currentWriteQueue: Promise<void> = Promise.resolve();
+  private currentKey = "";
+  private readonly thumbnailSources = new BoundedCache<string, { html: string; hash: string; htmlSidecars: string[] }>(8, 16 * 1024 * 1024);
+  private readonly thumbnailSourceLoads = new Map<string, Promise<{ html: string; hash: string; htmlSidecars: string[] }>>();
+  private readonly thumbnailBatches = new Map<string, ThumbnailJob[]>();
 
   constructor(root: string) {
     this.root = path.resolve(root);
@@ -72,30 +85,94 @@ export class SlideXProject {
     this.distRoot = path.join(this.root, "dist");
     this.stateRoot = path.join(this.root, ".open-slidex");
     this.projectId = createHash("sha256").update(this.root).digest("hex").slice(0, 20);
-    this.adapter = new SlideXFileDocumentAdapter({ projectRoot: this.root });
+    this.adapter = new SlideXFileDocumentAdapter({
+      documentPath: existsSync(path.join(this.root, "presentation.tsx"))
+        ? "presentation.tsx"
+        : "presentation.mdx",
+      projectRoot: this.root
+    });
   }
 
   async prepare() {
     await Promise.all([
-      mkdir(this.assetsRoot, { recursive: true }),
-      mkdir(this.distRoot, { recursive: true }),
-      mkdir(this.stateRoot, { recursive: true })
+      ensureDirectoryInsideRoot(this.root, this.assetsRoot),
+      ensureDirectoryInsideRoot(this.root, this.distRoot),
+      ensureDirectoryInsideRoot(this.root, this.stateRoot)
     ]);
     if (!(await this.adapter.exists())) {
-      throw new Error(`presentation.mdx was not found in ${this.root}.`);
+      throw new Error(`presentation.tsx or legacy presentation.mdx was not found in ${this.root}.`);
     }
   }
 
   snapshot(document: SlideXDocument) {
+    const sourceFormat = path.extname(this.adapter.documentPath) === ".tsx" ? "tsx" : "mdx";
     return {
       ...document,
       projectId: this.projectId,
+      requiresMigration: sourceFormat === "mdx",
+      sourceFormat,
       validation: summarizeMotionDoc(document.source).validation
     };
   }
 
   async open() {
-    return this.snapshot(await this.adapter.open());
+    const documentPath = await resolveExistingInsideRoot(this.root, this.adapter.documentPath, "file");
+    const fingerprint = await fileFingerprint(documentPath);
+    if (this.opened?.fingerprint === fingerprint) return structuredClone(this.opened.snapshot);
+    const snapshot = this.snapshot(await this.adapter.open());
+    this.opened = { fingerprint, snapshot };
+    return structuredClone(snapshot);
+  }
+
+  async migrateLegacyMdx(expectedRevision: string, options: { renderedComparison?: boolean } = {}) {
+    if (path.extname(this.adapter.documentPath) === ".tsx") return this.open();
+    const legacy = await this.adapter.open();
+    if (legacy.revision !== expectedRevision) throw new SlideXRevisionConflictError(legacy.revision);
+
+    const candidate = motionDocToReactPresentationSource(legacy.source);
+    const validation = summarizeMotionDoc(candidate).validation;
+    if (!validation.isValid) {
+      throw badRequest(`Legacy MDX could not be upgraded: ${validation.issues.map((issue) => issue.message).join("; ")}`);
+    }
+    if (JSON.stringify(parseMotionDoc(candidate)) !== JSON.stringify(parseMotionDoc(legacy.source))) {
+      throw badRequest("Legacy MDX conversion changed the native slide structure; the original file was not modified.");
+    }
+    if (options.renderedComparison) {
+      await this.assertRenderedMigrationEquivalent(legacy.source, candidate, legacy.title);
+    }
+
+    const nextAdapter = new SlideXFileDocumentAdapter({ documentPath: "presentation.tsx", projectRoot: this.root });
+    const legacyBackupRoot = path.join(this.stateRoot, "legacy");
+    const legacyBackupPath = path.join(legacyBackupRoot, "presentation.mdx");
+    if (await exists(legacyBackupPath)) {
+      throw badRequest(".open-slidex/legacy/presentation.mdx already exists; move that backup before upgrading again.");
+    }
+    await nextAdapter.create(candidate);
+    try {
+      await mkdir(legacyBackupRoot, { recursive: true });
+      await rename(this.adapter.documentPath, legacyBackupPath);
+    } catch (error) {
+      await rm(nextAdapter.documentPath, { force: true });
+      throw error;
+    }
+    this.adapter = nextAdapter;
+    return this.open();
+  }
+
+  private async assertRenderedMigrationEquivalent(legacySource: string, reactSource: string, title: string) {
+    const comparisonRoot = await mkdtemp(path.join(os.tmpdir(), "slidex-react-migration-"));
+    const legacyPath = path.join(comparisonRoot, "legacy.png");
+    const reactPath = path.join(comparisonRoot, "react.png");
+    try {
+      await renderSlideXDocument({ mode: "montage", outputPath: legacyPath, projectRoot: this.root, source: legacySource, title });
+      await renderSlideXDocument({ mode: "montage", outputPath: reactPath, projectRoot: this.root, source: reactSource, title });
+      const [legacyRender, reactRender] = await Promise.all([readFile(legacyPath), readFile(reactPath)]);
+      if (!legacyRender.equals(reactRender)) {
+        throw badRequest("Rendered comparison changed after React conversion; the original MDX was not modified.");
+      }
+    } finally {
+      await rm(comparisonRoot, { force: true, recursive: true });
+    }
   }
 
   async templateCatalog(locale: TemplatePackageLocale) {
@@ -154,14 +231,15 @@ export class SlideXProject {
   async listAssets() {
     const document = await this.adapter.open();
     const references = listSlideXAssetReferences(document.source);
-    const entries = await readdir(this.assetsRoot, { withFileTypes: true });
+    const assetsRoot = await this.safeAssetsRoot();
+    const entries = await readdir(assetsRoot, { withFileTypes: true });
     const assets = await Promise.all(
       entries
         .filter((entry) => entry.isFile() && isAssetFileName(entry.name))
         .map(async (entry) => {
           const source = `assets/${entry.name}`;
           return {
-            bytes: (await stat(path.join(this.assetsRoot, entry.name))).size,
+            bytes: (await stat(path.join(assetsRoot, entry.name))).size,
             mimeType: assetMimeType(entry.name),
             name: entry.name,
             source,
@@ -195,7 +273,8 @@ export class SlideXProject {
       const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
       const base = safeExportName(file.name.replace(/\.svg$/i, "")) || "scene";
       const name = `${base.slice(0, 56)}-${hash}.svg`;
-      await writeFile(path.join(this.assetsRoot, name), bytes, { flag: "wx" }).catch(async (error: NodeJS.ErrnoException) => {
+      const assetsRoot = await this.safeAssetsRoot();
+      await writeFile(resolveInsideRoot(assetsRoot, name), bytes, { flag: "wx" }).catch(async (error: NodeJS.ErrnoException) => {
         if (error.code !== "EEXIST") throw error;
       });
       return { bytes: bytes.byteLength, mimeType: "image/svg+xml", name, source: `assets/${name}`, usedBy: [] };
@@ -231,8 +310,9 @@ export class SlideXProject {
     }
     const toName = normalizedAssetName(input.to);
     if (fromName === toName) return this.open();
-    const fromPath = resolveInsideRoot(this.assetsRoot, fromName);
-    const toPath = resolveInsideRoot(this.assetsRoot, toName);
+    const assetsRoot = await this.safeAssetsRoot();
+    const fromPath = await resolveExistingInsideRoot(assetsRoot, fromName, "file");
+    const toPath = resolveInsideRoot(assetsRoot, toName);
     if (await exists(toPath)) throw new Error("An asset with that name already exists.");
 
     await copyFile(fromPath, toPath, constants.COPYFILE_EXCL);
@@ -264,7 +344,7 @@ export class SlideXProject {
     const referenced = document.scenes.some((scene) => scene.blocks.some(
       (block) => block.type === "HtmlEmbedBlock" && block.props.src === input.source
     ));
-    if (!referenced) throw badRequest("The selected HTML source is no longer referenced by presentation.mdx.");
+    if (!referenced) throw badRequest("The selected HTML source is no longer referenced by presentation.tsx.");
 
     const bytes = Buffer.from(input.html, "utf8");
     const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
@@ -272,8 +352,9 @@ export class SlideXProject {
     const nextSource = `assets/${nextName}`;
     const pureHtmlSource = originalHtmlAsset(document) === input.source;
     const pages = analyzeHtmlPresentation(input.html);
+    const assetsRoot = await this.safeAssetsRoot();
     if (nextSource === input.source) {
-      await writeFile(resolveInsideRoot(this.assetsRoot, nextName), bytes, { flag: "wx" }).catch(async (error: NodeJS.ErrnoException) => {
+      await writeFile(resolveInsideRoot(assetsRoot, nextName), bytes, { flag: "wx" }).catch(async (error: NodeJS.ErrnoException) => {
         if (error.code !== "EEXIST") throw error;
       });
       const nextDocument = pureHtmlSource
@@ -286,7 +367,7 @@ export class SlideXProject {
       return { document: this.snapshot(nextDocument), source: nextSource };
     }
 
-    const nextPath = resolveInsideRoot(this.assetsRoot, nextName);
+    const nextPath = resolveInsideRoot(assetsRoot, nextName);
     await writeFile(nextPath, bytes, { flag: "wx" }).catch(async (error: NodeJS.ErrnoException) => {
       if (error.code !== "EEXIST") throw error;
     });
@@ -300,7 +381,7 @@ export class SlideXProject {
         : await this.adapter.edit(input.expectedRevision, [
             { from: input.source, to: nextSource, type: "asset.repath" }
           ]);
-      await unlink(resolveInsideRoot(this.assetsRoot, fromName)).catch(() => undefined);
+      await unlink(await resolveExistingInsideRoot(assetsRoot, fromName, "file")).catch(() => undefined);
       return { document: this.snapshot(nextDocument), source: nextSource };
     } catch (error) {
       // The path is content-addressed and may already have been committed by a
@@ -320,7 +401,7 @@ export class SlideXProject {
       (reference) => reference.source === `assets/${name}`
     );
     if (used || await this.htmlSidecarIsReferenced(name)) throw new Error("The asset is still referenced by this presentation.");
-    await unlink(resolveInsideRoot(this.assetsRoot, name));
+    await unlink(await resolveExistingInsideRoot(await this.safeAssetsRoot(), name, "file"));
   }
 
   private async assertRevision(expectedRevision: string) {
@@ -334,13 +415,26 @@ export class SlideXProject {
   async readAsset(name: string) {
     const safeName = assetName(`assets/${name}`);
     try {
-      return await readFile(resolveInsideRoot(this.assetsRoot, safeName));
+      const handle = await this.openAsset(safeName);
+      try {
+        return await handle.readFile();
+      } finally {
+        await handle.close();
+      }
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         throw Object.assign(new Error("The requested local asset was not found."), { status: 404 });
       }
       throw error;
     }
+  }
+
+  async assetPath(name: string) {
+    return resolveExistingInsideRoot(await this.safeAssetsRoot(), assetName(`assets/${name}`), "file");
+  }
+
+  async openAsset(name: string) {
+    return openExistingFileInsideRoot(await this.safeAssetsRoot(), assetName(`assets/${name}`));
   }
 
   assetMimeType(name: string) {
@@ -351,11 +445,33 @@ export class SlideXProject {
     const name = assetName(source);
     if (!/\.html?$/i.test(name)) throw badRequest("HTML thumbnails require an imported HTML source.");
     if (!Number.isInteger(page) || page < 1 || page > 200) throw badRequest("HTML thumbnail page must be between 1 and 200.");
-    const bytes = await this.readAsset(name);
-    const html = bytes.toString("utf8");
     const htmlSidecars = await this.htmlSidecarNames();
-    assertSandboxedHtml(html, { localAssets: htmlSidecars });
-    const hash = createHash("sha256").update(bytes).digest("hex").slice(0, 24);
+    const stamps = await Promise.all([name, ...htmlSidecars].map(async (asset) => {
+      const handle = await this.openAsset(asset);
+      try {
+        return await fileFingerprint(handle);
+      } finally {
+        await handle.close();
+      }
+    }));
+    const sourceKey = JSON.stringify([name, htmlSidecars, stamps]);
+    let prepared = this.thumbnailSources.get(sourceKey);
+    if (!prepared) {
+      let loading = this.thumbnailSourceLoads.get(sourceKey);
+      if (!loading) {
+        loading = this.readAsset(name).then((bytes) => {
+          const html = bytes.toString("utf8");
+          assertSandboxedHtml(html, { localAssets: htmlSidecars });
+          const hash = createHash("sha256").update(bytes).update(sourceKey).digest("hex").slice(0, 24);
+          const result = { html, hash, htmlSidecars };
+          this.thumbnailSources.set(sourceKey, result, (html.length + sourceKey.length) * 2);
+          return result;
+        }).finally(() => this.thumbnailSourceLoads.delete(sourceKey));
+        this.thumbnailSourceLoads.set(sourceKey, loading);
+      }
+      prepared = await loading;
+    }
+    const { html, hash } = prepared;
     const cacheRoot = path.join(this.stateRoot, "html-thumbnails", HTML_THUMBNAIL_RENDER_VERSION, hash);
     const outputPath = path.join(cacheRoot, `page-${page}.png`);
     const cached = await stat(outputPath).catch(() => null);
@@ -364,27 +480,34 @@ export class SlideXProject {
     const key = `${hash}:${page}`;
     const existing = this.htmlThumbnailRenders.get(key);
     if (existing) return existing;
-    const render = this.htmlThumbnailRenderQueue.then(async () => {
-      await mkdir(cacheRoot, { recursive: true });
-      const temporaryPath = `${outputPath}.${process.pid}.${Date.now()}.tmp.png`;
-      try {
-        await renderSlideXHtmlThumbnail({
-          html,
-          localAssets: await Promise.all(htmlSidecars.map(async (asset) => ({
-            bytes: await this.readAsset(asset),
-            mimeType: this.assetMimeType(asset),
-            name: asset
-          }))),
-          outputPath: temporaryPath,
-          page
-        });
-        await rename(temporaryPath, outputPath);
-        return readFile(outputPath);
-      } finally {
-        await rm(temporaryPath, { force: true }).catch(() => undefined);
-      }
+    const render = new Promise<Buffer>((resolve, reject) => {
+      const pending = this.thumbnailBatches.get(hash);
+      const job = { page, outputPath, resolve, reject };
+      if (pending) { pending.push(job); return; }
+      const jobs = [job];
+      this.thumbnailBatches.set(hash, jobs);
+      const batch = this.htmlThumbnailRenderQueue.then(async () => {
+        // Collect requests from nearby visible pages into one browser load.
+        await new Promise((done) => setTimeout(done, 10));
+        this.thumbnailBatches.delete(hash);
+        const targets = jobs.map((item) => ({ page: item.page, outputPath: `${item.outputPath}.${process.pid}.${Date.now()}.tmp.png` }));
+        try {
+          await mkdir(cacheRoot, { recursive: true });
+          await renderSlideXHtmlThumbnail({
+            html,
+            localAssets: await Promise.all(htmlSidecars.map(async (asset) => ({ bytes: await this.readAsset(asset), mimeType: this.assetMimeType(asset), name: asset }))),
+            ...targets[0],
+            additionalPages: targets.slice(1)
+          });
+          for (let index = 0; index < jobs.length; index++) {
+            await rename(targets[index].outputPath, jobs[index].outputPath);
+            jobs[index].resolve(await readFile(jobs[index].outputPath));
+          }
+        } catch (error) { jobs.forEach((item) => item.reject(error)); }
+        finally { await Promise.all(targets.map((item) => rm(item.outputPath, { force: true }).catch(() => undefined))); }
+      });
+      this.htmlThumbnailRenderQueue = batch.catch(() => undefined);
     });
-    this.htmlThumbnailRenderQueue = render.then(() => undefined, () => undefined);
     this.htmlThumbnailRenders.set(key, render);
     try {
       return await render;
@@ -394,20 +517,25 @@ export class SlideXProject {
   }
 
   private async htmlSidecarNames() {
-    const entries = await readdir(this.assetsRoot, { withFileTypes: true });
+    const entries = await readdir(await this.safeAssetsRoot(), { withFileTypes: true });
     return entries
       .filter((entry) => entry.isFile() && /^html-asset-[a-f0-9]{16}\.(?:avif|gif|jpe?g|png|webp|svg)$/i.test(entry.name))
       .map((entry) => entry.name);
   }
 
   private async htmlSidecarIsReferenced(name: string) {
-    const entries = await readdir(this.assetsRoot, { withFileTypes: true });
+    const assetsRoot = await this.safeAssetsRoot();
+    const entries = await readdir(assetsRoot, { withFileTypes: true });
     const expression = new RegExp(`(?:["'(\\s]|^)${escapeRegExp(name)}(?:["')\\s,]|$)`);
     for (const entry of entries) {
       if (!entry.isFile() || !/^source-[a-f0-9]{16}\.html?$/i.test(entry.name)) continue;
-      if (expression.test(await readFile(path.join(this.assetsRoot, entry.name), "utf8"))) return true;
+      if (expression.test(await readFile(await resolveExistingInsideRoot(assetsRoot, entry.name, "file"), "utf8"))) return true;
     }
     return false;
+  }
+
+  private async safeAssetsRoot() {
+    return resolveExistingInsideRoot(this.root, this.assetsRoot, "directory");
   }
 
   async writeCurrent(input: {
@@ -416,7 +544,15 @@ export class SlideXProject {
     revision: string;
     slideIndex: number;
   }) {
-    const document = await this.adapter.open();
+    const next = this.currentWriteQueue.then(() => this.writeCurrentNow(input));
+    this.currentWriteQueue = next.catch(() => undefined);
+    return next;
+  }
+
+  private async writeCurrentNow(input: { blockIndex?: number; nodeId?: string; revision: string; slideIndex: number }) {
+    const document = await this.open();
+    const key = JSON.stringify([document.revision, input.slideIndex, input.nodeId, input.blockIndex]);
+    if (key === this.currentKey) return;
     // Selection is advisory metadata, not a document mutation. A save can
     // advance the revision between React scheduling this request and the
     // server receiving it; resolve against the newest document instead of
@@ -440,7 +576,7 @@ export class SlideXProject {
     const value = {
       blockId: resolvedBlock ? input.nodeId : undefined,
       blockType: resolvedBlock?.type,
-      document: "presentation.mdx",
+      document: path.basename(this.adapter.documentPath),
       revision: document.revision,
       slideId: String(slide.props?.id ?? `slide-${input.slideIndex + 1}`),
       slideIndex: input.slideIndex,
@@ -450,6 +586,7 @@ export class SlideXProject {
     const temporary = path.join(this.stateRoot, `.current.${process.pid}.${Date.now()}.tmp`);
     await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");
     await rename(temporary, path.join(this.stateRoot, "current.json"));
+    this.currentKey = key;
   }
 
   async export(input: {
@@ -475,10 +612,11 @@ export class SlideXProject {
     const originalHtml = input.format === "html" && input.htmlMode !== "player" ? htmlSource : undefined;
     if (originalHtml) {
       const bytes = await this.readAsset(originalHtml.slice("assets/".length));
-      if (input.target === "download") return { bytes, output: `${fileName}.html` };
+      const securedBytes = Buffer.from(secureHtmlForStandaloneExport(bytes.toString("utf8")), "utf8");
+      if (input.target === "download") return { bytes: securedBytes, output: `${fileName}.html` };
       const outputPath = path.join(this.distRoot, `${fileName}.html`);
       if (!input.overwrite && await exists(outputPath)) throw new Error(`dist/${fileName}.html already exists.`);
-      await writeFile(outputPath, bytes);
+      await writeFile(outputPath, securedBytes);
       return { output: `dist/${fileName}.html` };
     }
     const root =

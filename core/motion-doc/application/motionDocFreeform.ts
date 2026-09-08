@@ -1,4 +1,6 @@
 import { generateSlideString } from "@/core/motion-doc/application/motionDocSerialize";
+import { reactPresentationToMotionDocSource } from "@/core/react-presentation/reactPresentationSource";
+import { BoundedCache } from "@/common/util/boundedCache";
 import {
   parseColOverrides,
   parseRowOverrides,
@@ -45,6 +47,29 @@ export function materializeFreeformDocument(source: string): { document: ParsedM
   };
 }
 
+/** Editor-owned incremental materializer. An unchanged slide retains its object and emitted bytes. */
+export function createFreeformMaterializer() {
+  const cache = new BoundedCache<string, { scene: MotionDocScene; source: string }>(2048, 16 * 1024 * 1024);
+  return (source: string): { document: ParsedMotionDoc; source: string } => {
+    const mdx = reactPresentationToMotionDocSource(source);
+    // Parse the header separately: cached slide identities must not hide title changes.
+    if (/<(Card|Metric|Stack|Group|Title|Icon|Notes)\b/.test(mdx)) return materializeFreeformDocument(source);
+    const firstSlide = mdx.search(/<(?:Slide|Scene)\b/);
+    const header = firstSlide < 0 ? mdx : mdx.slice(0, firstSlide);
+    const title = parseMotionDoc(header).title;
+    const entries = Array.from(mdx.matchAll(/<(?:Slide|Scene)\b[^>]*>[\s\S]*?<\/(?:Slide|Scene)>/g), ([key]) => {
+      const cached = cache.get(key);
+      if (cached) return cached;
+      const parsed = parseMotionDoc(key).scenes[0];
+      const scene = ensureMotionDocSceneBlockIds(materializeFreeformScene(parsed));
+      const entry = { scene, source: generateSlideString(scene) };
+      cache.set(key, entry, (key.length + entry.source.length) * 6);
+      return entry;
+    });
+    return { document: { title, scenes: entries.map((entry) => entry.scene) }, source: `# ${title}\n\n${entries.map((entry) => entry.source).join("\n\n")}` };
+  };
+}
+
 export function materializeFreeformScene(scene: MotionDocScene): MotionDocScene {
   const blocksWithProps = scene.blocks.filter((block) => "props" in block);
   const hasCenteredCopy = scene.props.alignX === "center" || scene.props.textAlign === "center";
@@ -64,7 +89,9 @@ export function materializeFreeformScene(scene: MotionDocScene): MotionDocScene 
         return block;
       }
 
-      const layout = layoutBlock(block, index, blocksWithProps, hasCenteredCopy);
+      const layout = block.props.x !== undefined && block.props.y !== undefined && block.props.w !== undefined && block.props.h !== undefined
+        ? defaultBlockFrame(block)
+        : layoutBlock(block, index, blocksWithProps, hasCenteredCopy);
       const props = usesPointFontSizes
         ? block.props
         : migrateFontSizeToPoints(block.props, isFullHdSource);

@@ -7,12 +7,12 @@ import {
   Timer,
   Users
 } from "lucide-react";
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { memo, useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
 import { motionSequenceFromProps } from "@/core/motion-doc/domain/motionSequence";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 
-export function MotionSequenceStrip({ onPreview, onReorder, onSelectBlock, scene }: {
+export const MotionSequenceStrip = memo(function MotionSequenceStrip({ onPreview, onReorder, onSelectBlock, scene }: {
   onPreview?: () => void;
   onReorder: (sourceActionId: string, targetActionId: string) => void;
   onSelectBlock: (blockIndex: number) => void;
@@ -153,7 +153,7 @@ export function MotionSequenceStrip({ onPreview, onReorder, onSelectBlock, scene
       ) : null}
     </section>
   );
-}
+});
 
 function layerLabel(block: MotionDocScene["blocks"][number], index: number) {
   if ("text" in block && block.text.trim()) return block.text.trim().slice(0, 24);

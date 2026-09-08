@@ -308,27 +308,20 @@ function exportRuntimeSecurity(source: string) {
   // otherwise identical exports differ. A stable per-source nonce retains the
   // CSP boundary while making HTML output reproducible.
   const nonce = `slidex-${stableNonce(source)}`;
-  // A sandboxed data: iframe inherits the parent's CSP. Imported browser-native
-  // HTML therefore needs its inline code and HTTP(S) libraries, media, workers,
-  // and connections. The iframe still has no same-origin capability, so these
-  // resources cannot directly control the OpenSlideX parent document.
-  const scriptPolicy = /<HtmlEmbedBlock\b/.test(source)
-    ? "script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' http: https: data: blob:"
-    : `script-src 'nonce-${nonce}'`;
   const policy = [
     "default-src 'none'",
-    "base-uri http: https:",
-    "connect-src http: https: ws: wss: data: blob:",
-    "font-src http: https: data: blob:",
-    "form-action http: https:",
-    "frame-src 'self' http: https: data: blob:",
-    "img-src 'self' http: https: data: blob:",
-    "manifest-src http: https: data: blob:",
-    "media-src 'self' http: https: data: blob:",
-    "object-src http: https: data: blob:",
-    scriptPolicy,
-    "style-src 'unsafe-inline' http: https: data: blob:",
-    "worker-src http: https: data: blob:"
+    "base-uri 'none'",
+    "connect-src 'none'",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "form-action 'none'",
+    "frame-src 'none'",
+    "img-src 'self' data: blob:",
+    "manifest-src 'none'",
+    "media-src 'self' data: blob:",
+    "object-src 'none'",
+    `script-src 'nonce-${nonce}'`,
+    "style-src 'self' 'unsafe-inline' data: https://fonts.googleapis.com",
+    "worker-src 'none'"
   ].join("; ");
 
   return { nonce, policy };
@@ -853,7 +846,7 @@ function renderBlock(block: MotionDocBlock, blockIndex: number, options: RenderS
     if (!options.rasterMode) return renderMotionBlock(block, renderHtmlEmbedSurface(block));
     return renderMotionBlock(
       block,
-      `<div class="block-html-unsupported" role="note"><strong>Interactive HTML is available only in the local OpenSlideX Workbench.</strong><span>Download the original HTML to retain its JavaScript animation and controls.</span></div>`
+      `<div class="block-html-unsupported" role="note"><strong>Browser-native HTML is not embedded in portable players.</strong><span>Open the source in the local Workbench for an offline thumbnail preview.</span></div>`
     );
   }
 
@@ -929,7 +922,7 @@ function renderBlock(block: MotionDocBlock, blockIndex: number, options: RenderS
 }
 
 function renderHtmlEmbedSurface(block: Extract<MotionDocBlock, { type: "HtmlEmbedBlock" }>) {
-  return `<iframe allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen class="block-html-embed" data-html-page="${Math.max(1, Math.floor(numberProp(block.props.page, 1)))}" referrerpolicy="strict-origin-when-cross-origin" sandbox="allow-downloads allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-presentation allow-scripts" src="${escapeAttribute(stringProp(block.props.src) ?? "")}" title="Imported HTML presentation"></iframe>`;
+  return `<div class="block-html-unsupported" data-html-page="${Math.max(1, Math.floor(numberProp(block.props.page, 1)))}" role="note"><strong>Browser-native HTML is not embedded in portable players.</strong><span>Open the source in the local Workbench for an offline thumbnail preview.</span></div>`;
 }
 
 function renderCroppedImageMedia(

@@ -1,0 +1,288 @@
+import {
+  Chart,
+  Deck,
+  HtmlEmbed as HtmlEmbedBlock,
+  Image as ImageBlock,
+  Shape,
+  Slide,
+  Svg as SvgBlock,
+  Table,
+  Text,
+  Video as VideoBlock,
+  definePresentation,
+} from "@open-slidex/sdk/react";
+
+export default definePresentation({
+  title: "Strategy Proposal Thirty-Page Reference",
+  component: function Presentation() {
+    return (
+      <Deck title="Strategy Proposal Thirty-Page Reference">
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <ImageBlock id="strategy-proposal-01-image" src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash cover photograph for Strategy Proposal" fit="cover" x={0} y={0} w={45} h={100} radius={0} enter="fadeIn" />
+          <Text id="strategy-proposal-01-label" x={54} y={13} w={39} h={6} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>DECISION MEMO · EDITABLE REFERENCE</Text>
+          <Text id="strategy-proposal-01-title" role="title" x={54} y={29} w={39} h={35} color="#10212D" fontFamily="Inter" fontSize={34} fontWeight={790} lineHeight={1.0} enter="rise">Lead with the decision the audience must make.</Text>
+          <Text id="strategy-proposal-01-thesis" x={54} y={69} w={37} h={12} color="#596B76" fontFamily="Inter" fontSize={12} lineHeight={1.4} enter="fadeUp">Lead with the decision and make the trade-off visible.</Text>
+          <Text id="strategy-proposal-01-meta" x={54} y={89} w={39} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>OPENSLIDEX · 30 NATIVE EDITABLE SLIDES · 01 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-02-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>02 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-02-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Orient the choice around explicit criteria.</Text>
+          <Text id="strategy-proposal-02-statement" x={7} y={47} w={54} h={20} color="#2587B5" fontFamily="Inter" fontSize={22} fontWeight={730} lineHeight={1.18} enter="rise">One claim, one proof, one implication.</Text>
+          <Text id="strategy-proposal-02-body" x={68} y={46} w={25} h={24} color="#596B76" fontFamily="Inter" fontSize={11} lineHeight={1.45} enter="fadeUp">Replace this teaching copy with sourced evidence. Keep observation, interpretation, and action visually distinct.</Text>
+          <Text id="strategy-proposal-02-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 02 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-03-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>03 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-03-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Frame the recommendation before the analysis.</Text>
+          <Text id="strategy-proposal-03-statement" x={7} y={47} w={54} h={20} color="#2587B5" fontFamily="Inter" fontSize={22} fontWeight={730} lineHeight={1.18} enter="rise">One claim, one proof, one implication.</Text>
+          <Text id="strategy-proposal-03-body" x={68} y={46} w={25} h={24} color="#596B76" fontFamily="Inter" fontSize={11} lineHeight={1.45} enter="fadeUp">Replace this teaching copy with sourced evidence. Keep observation, interpretation, and action visually distinct.</Text>
+          <Text id="strategy-proposal-03-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 03 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <ImageBlock id="strategy-proposal-04-image" src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 4" fit="cover" x={0} y={0} w={45} h={100} radius={0} enter="fadeIn" />
+          <Text id="strategy-proposal-04-label" x={52} y={13} w={41} h={6} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>04 · CONTEXT</Text>
+          <Text id="strategy-proposal-04-title" role="title" x={52} y={34} w={41} h={33} color="#10212D" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">Define scope, constraints, and decision rights.</Text>
+          <Text id="strategy-proposal-04-body" x={52} y={69} w={38} h={14} color="#596B76" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="strategy-proposal-04-page" x={87} y={90} w={6} h={4} color="#596B76" fontFamily="Inter" fontSize={8.5}>04 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-05-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>05 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-05-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Show why the status quo no longer earns inaction.</Text>
+          <Table id="strategy-proposal-05-table" x={7} y={42} w={86} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#10212D" background="#F8FAFB" cellBackground="#E7F2F7" stripeBackground="#F8FAFB" borderColor="#2587B5" borderWidth={1} enter="fadeUp" />
+          <Text id="strategy-proposal-05-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 05 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-06-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>06 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-06-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Name the strategic opportunity and evidence.</Text>
+          <Chart id="strategy-proposal-06-chart" type="line" x={7} y={42} w={50} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="draw" enter="fadeUp" />
+          <Text id="strategy-proposal-06-insight" x={70} y={45} w={18} h={22} color="#10212D" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="strategy-proposal-06-source" x={70} y={72} w={18} h={9} color="#596B76" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-07-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>07 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-07-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Compare options with one set of criteria.</Text>
+          <Shape id="strategy-proposal-07-left-card" groupId="strategy-proposal-07-left-card-group" groupName="CURRENT card" shape="rectangle" x={7} y={43} w={41} h={35} fill="#E7F2F7" stroke="#2587B5" strokeWidth={1} radius={10} enter="fadeUp" />
+          <Text id="strategy-proposal-07-left-label" groupId="strategy-proposal-07-left-card-group" groupName="CURRENT card" x={10} y={47} w={35} h={6} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1}>CURRENT</Text>
+          <Text id="strategy-proposal-07-left-body" groupId="strategy-proposal-07-left-card-group" groupName="CURRENT card" x={10} y={57} w={35} h={16} color="#10212D" fontFamily="Inter" fontSize={14} fontWeight={680} lineHeight={1.3}>State the observed condition and its evidence boundary.</Text>
+          <Shape id="strategy-proposal-07-right-card" groupId="strategy-proposal-07-right-card-group" groupName="TARGET card" shape="rectangle" x={52} y={43} w={41} h={35} fill="#E7F2F7" stroke="#2587B5" strokeWidth={1} radius={10} enter="fadeUp" />
+          <Text id="strategy-proposal-07-right-label" groupId="strategy-proposal-07-right-card-group" groupName="TARGET card" x={55} y={47} w={35} h={6} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1}>TARGET</Text>
+          <Text id="strategy-proposal-07-right-body" groupId="strategy-proposal-07-right-card-group" groupName="TARGET card" x={55} y={57} w={35} h={16} color="#10212D" fontFamily="Inter" fontSize={14} fontWeight={680} lineHeight={1.3}>State the changed condition and proof required.</Text>
+          <Text id="strategy-proposal-07-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 07 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-08-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>08 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-08-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Make every trade-off visible.</Text>
+          <Shape id="strategy-proposal-08-1-card" groupId="strategy-proposal-08-1-card-group" groupName="Frame card" shape="rectangle" x={7} y={44} w={19} h={33} fill="#E7F2F7" stroke="#2587B5" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="strategy-proposal-08-1-index" groupId="strategy-proposal-08-1-card-group" groupName="Frame card" x={9} y={48} w={15} h={7} color="#2587B5" fontFamily="Inter" fontSize={13} fontWeight={780}>01</Text>
+          <Text id="strategy-proposal-08-1-title" groupId="strategy-proposal-08-1-card-group" groupName="Frame card" x={9} y={60} w={15} h={8} color="#10212D" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Frame</Text>
+          <Text id="strategy-proposal-08-1-body" groupId="strategy-proposal-08-1-card-group" groupName="Frame card" x={9} y={69} w={15} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="strategy-proposal-08-2-card" groupId="strategy-proposal-08-2-card-group" groupName="Evidence card" shape="rectangle" x={29} y={44} w={19} h={33} fill="#E7F2F7" stroke="#2587B5" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="strategy-proposal-08-2-index" groupId="strategy-proposal-08-2-card-group" groupName="Evidence card" x={31} y={48} w={15} h={7} color="#2587B5" fontFamily="Inter" fontSize={13} fontWeight={780}>02</Text>
+          <Text id="strategy-proposal-08-2-title" groupId="strategy-proposal-08-2-card-group" groupName="Evidence card" x={31} y={60} w={15} h={8} color="#10212D" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Evidence</Text>
+          <Text id="strategy-proposal-08-2-body" groupId="strategy-proposal-08-2-card-group" groupName="Evidence card" x={31} y={69} w={15} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="strategy-proposal-08-3-card" groupId="strategy-proposal-08-3-card-group" groupName="Choice card" shape="rectangle" x={51} y={44} w={19} h={33} fill="#E7F2F7" stroke="#2587B5" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="strategy-proposal-08-3-index" groupId="strategy-proposal-08-3-card-group" groupName="Choice card" x={53} y={48} w={15} h={7} color="#2587B5" fontFamily="Inter" fontSize={13} fontWeight={780}>03</Text>
+          <Text id="strategy-proposal-08-3-title" groupId="strategy-proposal-08-3-card-group" groupName="Choice card" x={53} y={60} w={15} h={8} color="#10212D" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Choice</Text>
+          <Text id="strategy-proposal-08-3-body" groupId="strategy-proposal-08-3-card-group" groupName="Choice card" x={53} y={69} w={15} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="strategy-proposal-08-4-card" groupId="strategy-proposal-08-4-card-group" groupName="Commit card" shape="rectangle" x={73} y={44} w={19} h={33} fill="#E7F2F7" stroke="#2587B5" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="strategy-proposal-08-4-index" groupId="strategy-proposal-08-4-card-group" groupName="Commit card" x={75} y={48} w={15} h={7} color="#2587B5" fontFamily="Inter" fontSize={13} fontWeight={780}>04</Text>
+          <Text id="strategy-proposal-08-4-title" groupId="strategy-proposal-08-4-card-group" groupName="Commit card" x={75} y={60} w={15} h={8} color="#10212D" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Commit</Text>
+          <Text id="strategy-proposal-08-4-body" groupId="strategy-proposal-08-4-card-group" groupName="Commit card" x={75} y={69} w={15} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Text id="strategy-proposal-08-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 08 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-09-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>09 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-09-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Identify the conditions that make one option win.</Text>
+          <Chart id="strategy-proposal-09-chart" type="donut" x={17} y={42} w={50} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="sweep" enter="fadeUp" />
+          <Text id="strategy-proposal-09-insight" x={70} y={45} w={18} h={22} color="#10212D" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="strategy-proposal-09-source" x={70} y={72} w={18} h={9} color="#596B76" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <ImageBlock id="strategy-proposal-10-image" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 10" fit="cover" x={0} y={0} w={35} h={100} radius={0} enter="fadeIn" />
+          <Text id="strategy-proposal-10-label" x={42} y={13} w={51} h={6} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>10 · CONTEXT</Text>
+          <Text id="strategy-proposal-10-title" role="title" x={42} y={30} w={51} h={33} color="#10212D" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">Ground strategy in operating reality.</Text>
+          <Text id="strategy-proposal-10-body" x={42} y={69} w={48} h={14} color="#596B76" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="strategy-proposal-10-page" x={87} y={90} w={6} h={4} color="#596B76" fontFamily="Inter" fontSize={8.5}>10 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-11-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>11 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-11-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Make a bounded pilot test the thesis.</Text>
+          <Table id="strategy-proposal-11-table" x={7} y={42} w={76} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#10212D" background="#F8FAFB" cellBackground="#E7F2F7" stripeBackground="#F8FAFB" borderColor="#2587B5" borderWidth={1} enter="fadeUp" />
+          <Text id="strategy-proposal-11-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 11 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#0B1E2D" theme="dark" slideTransition="wipe">
+          <Text id="strategy-proposal-12-label" x={7} y={16} w={40} h={6} color="#2587B5" fontFamily="Inter" fontSize={10} fontWeight={760} letterSpacing={1.6}>SECTION · 12</Text>
+          <Text id="strategy-proposal-12-title" role="title" x={7} y={36} w={77} h={27} color="#F7FBFC" fontFamily="Inter" fontSize={35} fontWeight={780} lineHeight={1.04} enter="rise">Move from context to the trade-off the audience must own.</Text>
+          <Text id="strategy-proposal-12-body" x={7} y={72} w={50} h={10} color="#BECACD" fontFamily="Inter" fontSize={11.5} lineHeight={1.4}>A quiet chapter reset creates rhythm across a long presentation.</Text>
+          <Text id="strategy-proposal-12-page" x={87} y={90} w={6} h={4} color="#2587B5" fontFamily="Inter" fontSize={8.5} textAlign="right">12 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-13-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>13 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-13-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Value matters only if commitment stays reversible.</Text>
+          <Text id="strategy-proposal-13-value" x={7} y={44} w={36} h={23} color="#2587B5" fontFamily="Inter" fontSize={52} fontWeight={800} letterSpacing={-1.4} enter="rise">72</Text>
+          <Text id="strategy-proposal-13-value-label" x={7} y={69} w={35} h={6} color="#596B76" fontFamily="Inter" fontSize={9} fontWeight={700} letterSpacing={1}>ILLUSTRATIVE SIGNAL INDEX</Text>
+          <Chart id="strategy-proposal-13-chart" type="bar" x={51} y={42} w={42} h={39} data='[{"label":"Base","value":44},{"label":"Now","value":72},{"label":"Gate","value":61}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative hero metric comparison" chartMotion="grow" enter="fadeUp" />
+          <Text id="strategy-proposal-13-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 13 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-14-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>14 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-14-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Show the trajectory that makes action necessary.</Text>
+          <Chart id="strategy-proposal-14-chart" type="line" x={27} y={42} w={50} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="draw" enter="fadeUp" />
+          <Text id="strategy-proposal-14-insight" x={7} y={45} w={18} h={22} color="#10212D" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="strategy-proposal-14-source" x={7} y={72} w={18} h={9} color="#596B76" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-15-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>15 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-15-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Score every option with the same criteria.</Text>
+          <Table id="strategy-proposal-15-table" x={7} y={42} w={66} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#10212D" background="#F8FAFB" cellBackground="#E7F2F7" stripeBackground="#F8FAFB" borderColor="#2587B5" borderWidth={1} enter="fadeUp" />
+          <Text id="strategy-proposal-15-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 15 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <ImageBlock id="strategy-proposal-16-image" src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 16" fit="cover" x={0} y={0} w={50} h={100} radius={0} enter="fadeIn" />
+          <Text id="strategy-proposal-16-label" x={57} y={13} w={36} h={6} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>16 · CONTEXT</Text>
+          <Text id="strategy-proposal-16-title" role="title" x={57} y={31} w={36} h={33} color="#10212D" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">A real operating scene makes abstraction testable.</Text>
+          <Text id="strategy-proposal-16-body" x={57} y={69} w={33} h={14} color="#596B76" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="strategy-proposal-16-page" x={87} y={90} w={6} h={4} color="#596B76" fontFamily="Inter" fontSize={8.5}>16 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-17-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>17 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-17-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Put value, control, speed, and risk on one page.</Text>
+          <Shape id="strategy-proposal-17-left-card" groupId="strategy-proposal-17-left-card-group" groupName="CURRENT card" shape="rectangle" x={7} y={43} w={41} h={35} fill="#E7F2F7" stroke="#2587B5" strokeWidth={1} radius={10} enter="fadeUp" />
+          <Text id="strategy-proposal-17-left-label" groupId="strategy-proposal-17-left-card-group" groupName="CURRENT card" x={10} y={47} w={35} h={6} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1}>CURRENT</Text>
+          <Text id="strategy-proposal-17-left-body" groupId="strategy-proposal-17-left-card-group" groupName="CURRENT card" x={10} y={57} w={35} h={16} color="#10212D" fontFamily="Inter" fontSize={14} fontWeight={680} lineHeight={1.3}>State the observed condition and its evidence boundary.</Text>
+          <Shape id="strategy-proposal-17-right-card" groupId="strategy-proposal-17-right-card-group" groupName="TARGET card" shape="rectangle" x={52} y={43} w={41} h={35} fill="#E7F2F7" stroke="#2587B5" strokeWidth={1} radius={10} enter="fadeUp" />
+          <Text id="strategy-proposal-17-right-label" groupId="strategy-proposal-17-right-card-group" groupName="TARGET card" x={55} y={47} w={35} h={6} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1}>TARGET</Text>
+          <Text id="strategy-proposal-17-right-body" groupId="strategy-proposal-17-right-card-group" groupName="TARGET card" x={55} y={57} w={35} h={16} color="#10212D" fontFamily="Inter" fontSize={14} fontWeight={680} lineHeight={1.3}>State the changed condition and proof required.</Text>
+          <Text id="strategy-proposal-17-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 17 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-18-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>18 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-18-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Separate assumptions that drive the choice.</Text>
+          <Chart id="strategy-proposal-18-chart" type="bar" x={37} y={42} w={50} h={40} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="grow" enter="fadeUp" />
+          <Text id="strategy-proposal-18-insight" x={7} y={45} w={18} h={22} color="#10212D" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="strategy-proposal-18-source" x={7} y={72} w={18} h={9} color="#596B76" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <ImageBlock id="strategy-proposal-19-image" src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 19" fit="cover" x={60} y={0} w={40} h={100} radius={0} enter="fadeIn" />
+          <Text id="strategy-proposal-19-label" x={7} y={13} w={46} h={6} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>19 · CONTEXT</Text>
+          <Text id="strategy-proposal-19-title" role="title" x={7} y={34} w={46} h={33} color="#10212D" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">A bounded pilot can make a claim testable.</Text>
+          <Text id="strategy-proposal-19-body" x={7} y={69} w={43} h={14} color="#596B76" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="strategy-proposal-19-page" x={7} y={90} w={6} h={4} color="#596B76" fontFamily="Inter" fontSize={8.5}>19 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#0B1E2D" theme="dark" slideTransition="wipe">
+          <Text id="strategy-proposal-20-label" x={7} y={16} w={40} h={6} color="#2587B5" fontFamily="Inter" fontSize={10} fontWeight={760} letterSpacing={1.6}>SECTION · 20</Text>
+          <Text id="strategy-proposal-20-title" role="title" x={7} y={36} w={77} h={27} color="#F7FBFC" fontFamily="Inter" fontSize={35} fontWeight={780} lineHeight={1.04} enter="rise">Approve the smallest reversible move that unlocks learning.</Text>
+          <Text id="strategy-proposal-20-body" x={7} y={72} w={50} h={10} color="#BECACD" fontFamily="Inter" fontSize={11.5} lineHeight={1.4}>A quiet chapter reset creates rhythm across a long presentation.</Text>
+          <Text id="strategy-proposal-20-page" x={87} y={90} w={6} h={4} color="#2587B5" fontFamily="Inter" fontSize={8.5} textAlign="right">20 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-21-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>21 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-21-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Use value, confidence, and reversibility.</Text>
+          <Shape id="strategy-proposal-21-1-card" groupId="strategy-proposal-21-1-card-group" groupName="Frame card" shape="rectangle" x={7} y={44} w={19} h={33} fill="#E7F2F7" stroke="#2587B5" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="strategy-proposal-21-1-index" groupId="strategy-proposal-21-1-card-group" groupName="Frame card" x={9} y={48} w={15} h={7} color="#2587B5" fontFamily="Inter" fontSize={13} fontWeight={780}>01</Text>
+          <Text id="strategy-proposal-21-1-title" groupId="strategy-proposal-21-1-card-group" groupName="Frame card" x={9} y={60} w={15} h={8} color="#10212D" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Frame</Text>
+          <Text id="strategy-proposal-21-1-body" groupId="strategy-proposal-21-1-card-group" groupName="Frame card" x={9} y={69} w={15} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="strategy-proposal-21-2-card" groupId="strategy-proposal-21-2-card-group" groupName="Evidence card" shape="rectangle" x={29} y={44} w={19} h={33} fill="#E7F2F7" stroke="#2587B5" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="strategy-proposal-21-2-index" groupId="strategy-proposal-21-2-card-group" groupName="Evidence card" x={31} y={48} w={15} h={7} color="#2587B5" fontFamily="Inter" fontSize={13} fontWeight={780}>02</Text>
+          <Text id="strategy-proposal-21-2-title" groupId="strategy-proposal-21-2-card-group" groupName="Evidence card" x={31} y={60} w={15} h={8} color="#10212D" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Evidence</Text>
+          <Text id="strategy-proposal-21-2-body" groupId="strategy-proposal-21-2-card-group" groupName="Evidence card" x={31} y={69} w={15} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="strategy-proposal-21-3-card" groupId="strategy-proposal-21-3-card-group" groupName="Choice card" shape="rectangle" x={51} y={44} w={19} h={33} fill="#E7F2F7" stroke="#2587B5" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="strategy-proposal-21-3-index" groupId="strategy-proposal-21-3-card-group" groupName="Choice card" x={53} y={48} w={15} h={7} color="#2587B5" fontFamily="Inter" fontSize={13} fontWeight={780}>03</Text>
+          <Text id="strategy-proposal-21-3-title" groupId="strategy-proposal-21-3-card-group" groupName="Choice card" x={53} y={60} w={15} h={8} color="#10212D" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Choice</Text>
+          <Text id="strategy-proposal-21-3-body" groupId="strategy-proposal-21-3-card-group" groupName="Choice card" x={53} y={69} w={15} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Shape id="strategy-proposal-21-4-card" groupId="strategy-proposal-21-4-card-group" groupName="Commit card" shape="rectangle" x={73} y={44} w={19} h={33} fill="#E7F2F7" stroke="#2587B5" strokeWidth={1} radius={9} enter="fadeUp" />
+          <Text id="strategy-proposal-21-4-index" groupId="strategy-proposal-21-4-card-group" groupName="Commit card" x={75} y={48} w={15} h={7} color="#2587B5" fontFamily="Inter" fontSize={13} fontWeight={780}>04</Text>
+          <Text id="strategy-proposal-21-4-title" groupId="strategy-proposal-21-4-card-group" groupName="Commit card" x={75} y={60} w={15} h={8} color="#10212D" fontFamily="Inter" fontSize={12.5} fontWeight={720}>Commit</Text>
+          <Text id="strategy-proposal-21-4-body" groupId="strategy-proposal-21-4-card-group" groupName="Commit card" x={75} y={69} w={15} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>One clear job.</Text>
+          <Text id="strategy-proposal-21-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 21 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-22-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>22 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-22-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Translate the choice into rights and milestones.</Text>
+          <Table id="strategy-proposal-22-table" x={17} y={42} w={76} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#10212D" background="#F8FAFB" cellBackground="#E7F2F7" stripeBackground="#F8FAFB" borderColor="#2587B5" borderWidth={1} enter="fadeUp" />
+          <Text id="strategy-proposal-22-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 22 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#0B1E2D" theme="dark" slideTransition="fade">
+          <Text id="strategy-proposal-23-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>23 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-23-title" role="title" x={7} y={20} w={72} h={15} color="#F7FBFC" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Pre-commit the stop condition before funding.</Text>
+          <Table id="strategy-proposal-23-table" x={17} y={42} w={66} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#F7FBFC" background="#0B1E2D" cellBackground="#17313A" stripeBackground="#102731" borderColor="#2587B5" borderWidth={1} enter="fadeUp" />
+          <Text id="strategy-proposal-23-footer" x={7} y={88} w={86} h={5} color="#B8C7CB" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 23 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-24-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>24 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-24-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Show why alternatives lose, not only why one wins.</Text>
+          <Table id="strategy-proposal-24-table" x={17} y={42} w={56} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#10212D" background="#F8FAFB" cellBackground="#E7F2F7" stripeBackground="#F8FAFB" borderColor="#2587B5" borderWidth={1} enter="fadeUp" />
+          <Text id="strategy-proposal-24-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 24 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <ImageBlock id="strategy-proposal-25-image" src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash contextual photograph for slide 25" fit="cover" x={70} y={0} w={30} h={100} radius={0} enter="fadeIn" />
+          <Text id="strategy-proposal-25-label" x={7} y={13} w={56} h={6} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>25 · CONTEXT</Text>
+          <Text id="strategy-proposal-25-title" role="title" x={7} y={30} w={56} h={33} color="#10212D" fontFamily="Inter" fontSize={26.5} fontWeight={780} lineHeight={1.05} enter="rise">Recommend one option with an explicit boundary.</Text>
+          <Text id="strategy-proposal-25-body" x={7} y={69} w={53} h={14} color="#596B76" fontFamily="Inter" fontSize={11.5} lineHeight={1.45}>Use imagery for evidence, setting, emotion, or memory—not decoration.</Text>
+          <Text id="strategy-proposal-25-page" x={7} y={90} w={6} h={4} color="#596B76" fontFamily="Inter" fontSize={8.5}>25 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-26-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>26 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-26-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Sequence proof before scale and scale before lock-in.</Text>
+          <Table id="strategy-proposal-26-table" x={27} y={42} w={66} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#10212D" background="#F8FAFB" cellBackground="#E7F2F7" stripeBackground="#F8FAFB" borderColor="#2587B5" borderWidth={1} enter="fadeUp" />
+          <Text id="strategy-proposal-26-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 26 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-27-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>27 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-27-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Assign every decision gate to one owner.</Text>
+          <Table id="strategy-proposal-27-table" x={27} y={42} w={56} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#10212D" background="#F8FAFB" cellBackground="#E7F2F7" stripeBackground="#F8FAFB" borderColor="#2587B5" borderWidth={1} enter="fadeUp" />
+          <Text id="strategy-proposal-27-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 27 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-28-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>28 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-28-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Track the assumption most likely to invalidate the strategy.</Text>
+          <Chart id="strategy-proposal-28-chart" type="area" x={7} y={50} w={50} h={36} data='[{"label":"A","value":42},{"label":"B","value":57},{"label":"C","value":49},{"label":"D","value":68}]' palette="ocean" showAxes="true" showLabels="true" ariaLabel="Illustrative chart; replace with verified data" chartMotion="draw" enter="fadeUp" />
+          <Text id="strategy-proposal-28-insight" x={70} y={45} w={18} h={22} color="#10212D" fontFamily="Inter" fontSize={16} fontWeight={720} lineHeight={1.25}>Put the conclusion beside the evidence.</Text>
+          <Text id="strategy-proposal-28-source" x={70} y={72} w={18} h={9} color="#596B76" fontFamily="Inter" fontSize={8.5} lineHeight={1.4}>ILLUSTRATIVE · replace unit, period, source, and status.</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#F8FAFB" theme="light" slideTransition="fade">
+          <Text id="strategy-proposal-29-label" x={7} y={10} w={45} h={5} color="#2587B5" fontFamily="Inter" fontSize={9} fontWeight={760} letterSpacing={1.4}>29 · DECISION MEMO</Text>
+          <Text id="strategy-proposal-29-title" role="title" x={7} y={20} w={72} h={15} color="#10212D" fontFamily="Inter" fontSize={28} fontWeight={780} lineHeight={1.08}>Document sources, scoring method, and limitations.</Text>
+          <Table id="strategy-proposal-29-table" x={27} y={42} w={46} h={36} rows={4} columns={4} cells="Item|Evidence|Implication|Owner;Primary|Illustrative|Replace|Named;Secondary|Illustrative|Replace|Named;Boundary|Illustrative|Limit|Named" fontSize={10} fontWeight={520} color="#10212D" background="#F8FAFB" cellBackground="#E7F2F7" stripeBackground="#F8FAFB" borderColor="#2587B5" borderWidth={1} enter="fadeUp" />
+          <Text id="strategy-proposal-29-footer" x={7} y={88} w={86} h={5} color="#596B76" fontFamily="Inter" fontSize={8.5}>ILLUSTRATIVE TEACHING CONTENT · REPLACE WITH VERIFIED EVIDENCE · 29 / 30</Text>
+        </Slide>
+
+        <Slide duration={7} canvasWidth={1920} canvasHeight={1080} fontSizeUnit="pt" background="#0B1E2D" theme="dark" slideTransition="fade">
+          <ImageBlock id="strategy-proposal-30-image" src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=82" alt="Verified Unsplash closing photograph for Strategy Proposal" fit="cover" x={0} y={0} w={55} h={100} radius={0} enter="fadeIn" />
+          <Text id="strategy-proposal-30-label" x={60} y={13} w={33} h={6} color="#2587B5" fontFamily="Inter" fontSize={9.5} fontWeight={760} letterSpacing={1.5}>30 · CLOSE</Text>
+          <Text id="strategy-proposal-30-title" role="title" x={60} y={31} w={33} h={33} color="#F7FBFC" fontFamily="Inter" fontSize={28} fontWeight={790} lineHeight={1.04} enter="rise">Approve the next reversible step.</Text>
+          <Text id="strategy-proposal-30-body" x={60} y={69} w={32} h={14} color="#C4CFD2" fontFamily="Inter" fontSize={11} lineHeight={1.45}>Replace the teaching copy with the real commitment, owner, evidence, and next review date.</Text>
+          <Text id="strategy-proposal-30-page" x={87} y={90} w={6} h={4} color="#2587B5" fontFamily="Inter" fontSize={8.5}>30 / 30</Text>
+        </Slide>
+      </Deck>
+    );
+  },
+});
