@@ -262,7 +262,7 @@ export function readBoundedPptxEntry(
 ): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
     const chunks: Uint8Array[] = [];
-    const stream = entry.internalStream("uint8array");
+    const stream = entry.nodeStream("nodebuffer");
     let bytes = 0;
     let settled = false;
     const fail = (error: unknown) => {
@@ -272,7 +272,7 @@ export function readBoundedPptxEntry(
       reject(error);
     };
     stream
-      .on("data", (chunk) => {
+      .on("data", (chunk: Buffer) => {
         if (settled) return;
         try {
           if (bytes + chunk.byteLength > maximumEntryBytes) {
@@ -285,7 +285,7 @@ export function readBoundedPptxEntry(
           fail(error);
         }
       })
-      .on("error", (error) => fail(new Error(`The source .pptx entry could not be expanded safely: ${entry.name}`, { cause: error })))
+      .on("error", (error: Error) => fail(new Error(`The source .pptx entry could not be expanded safely: ${entry.name}`, { cause: error })))
       .on("end", () => {
         if (settled) return;
         settled = true;
