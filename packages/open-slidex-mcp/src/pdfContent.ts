@@ -51,6 +51,7 @@ export async function extractPdfTextPages(
     signal: limits.signal,
     startedAt: Date.now()
   };
+  const pendingOperations = new Set<Promise<unknown>>();
   const { document } = await openPdf(bytes, deadline);
   try {
     const pages: string[] = [];
@@ -63,7 +64,7 @@ export async function extractPdfTextPages(
       const reader = page.streamTextContent({ disableNormalization: false }).getReader();
       try {
         while (true) {
-          const chunk = await withPdfDeadline(reader.read(), deadline);
+          const chunk = await withPdfDeadline(trackPdfOperation(reader.read(), pendingOperations), deadline);
           if (chunk.done) {
             break;
           }
@@ -78,9 +79,11 @@ export async function extractPdfTextPages(
           }
         }
       } finally {
-        // Keep the stream detachable before document destruction. pdf.js owns
-        // worker cancellation; cancelling this Node ReadableStream directly
-        // races its controller while it is closing.
+        // A deadline can reject while the underlying read is still pending.
+        // Let it settle before detaching it; direct cancellation races pdf.js's
+        // Node stream controller, while releaseLock during a read is rejected
+        // by Node 24.
+        await settlePdfOperations(pendingOperations);
         reader.releaseLock();
       }
       pages.push(strings
@@ -90,6 +93,7 @@ export async function extractPdfTextPages(
     }
     return pages;
   } finally {
+    await settlePdfOperations(pendingOperations);
     await document.destroy().catch(() => undefined);
   }
 }
@@ -111,6 +115,7 @@ export async function extractPdfMedia(
     signal: limits.signal,
     startedAt
   };
+  const pendingOperations = new Set<Promise<unknown>>();
   const { document, pdfjs } = await openPdf(bytes, deadline);
   const candidates: PdfMediaCandidate[] = [];
   const warnings: string[] = [];
@@ -122,8 +127,8 @@ export async function extractPdfMedia(
   try {
     for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
       assertWithinDuration(deadline);
-      const page = await withPdfDeadline(document.getPage(pageNumber), deadline);
-      const operatorList = await withPdfDeadline(page.getOperatorList(), deadline);
+      const page = await withPdfDeadline(trackPdfOperation(document.getPage(pageNumber), pendingOperations), deadline);
+      const operatorList = await withPdfDeadline(trackPdfOperation(page.getOperatorList(), pendingOperations), deadline);
       const imageObjects = new Map<string, unknown>();
       let needsFallback = hasNonImageVisualPainting(operatorList.fnArray, pdfjs.OPS);
 
@@ -145,7 +150,7 @@ export async function extractPdfMedia(
           }
           identity = objectId;
           if (imageObjects.has(objectId)) continue;
-          image = await withPdfDeadline(pageObject(page.objs, objectId), deadline).catch(() => undefined);
+          image = await withPdfDeadline(trackPdfOperation(pageObject(page.objs, objectId), pendingOperations), deadline).catch(() => undefined);
           imageObjects.set(objectId, image);
         } else if (
           operation === pdfjs.OPS.paintImageMaskXObject
@@ -190,11 +195,11 @@ export async function extractPdfMedia(
         assertWithinBudget(decodedPixels, fallbackPixels, maximumDecodedPixels, "decoded pixel", deadline.label);
         assertWithinBudget(outputBytes, maximumPngAllocation(fallbackPixels, Math.ceil(viewport.height)), maximumOutputBytes, "output byte", deadline.label);
         fallbackCount += 1;
-        fallbackDocument ??= await withPdfDeadline(rasterizePdf(new Uint8Array(bytes), { scale: 2 }), deadline);
+        fallbackDocument ??= await withPdfDeadline(trackPdfOperation(rasterizePdf(new Uint8Array(bytes), { scale: 2 }), pendingOperations), deadline);
         if (fallbackDocument.length < pageNumber) {
           throw new Error(`PDF page ${pageNumber} is unavailable for fallback rendering.`);
         }
-        const fallbackBytes = new Uint8Array(await withPdfDeadline(fallbackDocument.getPage(pageNumber), deadline));
+        const fallbackBytes = new Uint8Array(await withPdfDeadline(trackPdfOperation(fallbackDocument.getPage(pageNumber), pendingOperations), deadline));
         assertWithinDuration(deadline);
         assertWithinBudget(outputBytes, fallbackBytes.byteLength, maximumOutputBytes, "output byte", deadline.label);
         decodedPixels += fallbackPixels;
@@ -214,6 +219,7 @@ export async function extractPdfMedia(
     }
     return { candidates, warnings };
   } finally {
+    await settlePdfOperations(pendingOperations);
     await document.destroy().catch(() => undefined);
   }
 }
@@ -326,6 +332,20 @@ function assertWithinDuration(deadline: PdfDeadline) {
   if (Date.now() - deadline.startedAt > deadline.maximumDurationMs) {
     throw new Error(`${deadline.label} exceeded the ${deadline.maximumDurationMs} ms time budget.`);
   }
+}
+
+function trackPdfOperation<T>(operation: Promise<T>, pendingOperations: Set<Promise<unknown>>) {
+  const settled = operation.then(
+    () => undefined,
+    () => undefined
+  );
+  pendingOperations.add(settled);
+  void settled.then(() => pendingOperations.delete(settled));
+  return operation;
+}
+
+async function settlePdfOperations(pendingOperations: Set<Promise<unknown>>) {
+  await Promise.all([...pendingOperations]);
 }
 
 async function withPdfDeadline<T>(operation: Promise<T>, deadline: PdfDeadline): Promise<T> {
