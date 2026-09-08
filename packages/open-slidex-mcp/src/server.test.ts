@@ -72,11 +72,11 @@ test("MCP prints copyable Codex and Claude Code configuration", () => {
   assert.match(openSlideXMcpConfig("codex", root), /OpenSlideX demo/);
   assert.equal(
     openSlideXMcpConfig("claude", root, "macos"),
-    "claude mcp add --scope user open-slidex -- npx -y open-slidex@latest mcp --project '/tmp/OpenSlideX demo'"
+    "claude mcp add --scope user open-slidex -- npx -y open-slidex@latest mcp --project '" + path.resolve(root) + "'"
   );
   const desktop = JSON.parse(openSlideXMcpConfig("claude-desktop", root, "macos"));
   assert.equal(desktop.mcpServers.open_slidex.command, "npx");
-  assert.equal(desktop.mcpServers.open_slidex.args.at(-1), root);
+  assert.equal(desktop.mcpServers.open_slidex.args.at(-1), path.resolve(root));
   const windows = JSON.parse(openSlideXMcpConfig("claude-desktop", "C:\\Decks\\Demo", "windows"));
   assert.equal(windows.mcpServers.open_slidex.command, "powershell.exe");
   assert.deepEqual(windows.mcpServers.open_slidex.args.slice(0, 4), [
@@ -140,7 +140,7 @@ test("Windows MCP configuration launches npx with a metacharacter path as one ar
       root
     ]);
   } finally {
-    await rm(root, { force: true, recursive: true });
+    await rm(root, { force: true, maxRetries: 5, recursive: true, retryDelay: 200 });
     await rm(mockBin, { force: true, recursive: true });
   }
 });
@@ -488,7 +488,7 @@ test("MCP reads, replaces, and creates browser-native HTML presentations with re
   } finally {
     await client.close().catch(() => undefined);
     await server.close().catch(() => undefined);
-    await rm(root, { force: true, recursive: true });
+    await rm(root, { force: true, maxRetries: 5, recursive: true, retryDelay: 200 });
   }
 });
 
@@ -751,7 +751,7 @@ test("MCP performs a real open, CAS edit, render, asset import, and knowledge qu
     }));
     assert.notEqual(recovered.revision, edited.revision);
     assert.equal((recovered.candidateQuality as Record<string, unknown>).passed, true);
-    assert.match(String((recovered.preview as Record<string, unknown>).outputPath).replaceAll("\\\\", "/"), /dist\/renders\/.+\/slide-0\.png$/);
+    assert.match(String((recovered.preview as Record<string, unknown>).outputPath).replaceAll("\\", "/"), /dist\/renders\/.+\/slide-0\.png$/);
 
     const crossRevisionCacheBefore = getSlideXQualityCacheStats();
     await client.callTool({ arguments: { scope: "deck" }, name: "open_slidex_review" });
