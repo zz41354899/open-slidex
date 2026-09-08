@@ -73,9 +73,16 @@ export function createWorkbenchRouter(project: SlideXProject): WorkbenchRouter {
       for (const client of eventClients) if (!client.destroyed) client.write(`event: ${event}\ndata: {}\n\n`);
     }, 50));
   };
-  const documentWatcher = watch(project.root, { persistent: false }, (_event, fileName) => {
-    if (fileName === "presentation.tsx" || fileName === "presentation.mdx") notify("document.changed");
-  });
+  // Do not watch the project directory and its assets child concurrently:
+  // libuv's Windows watcher rejects overlapping directory handles. The source
+  // file is the only document change this router needs to publish.
+  const documentWatcher = watch(
+    path.isAbsolute(project.adapter.documentPath)
+      ? project.adapter.documentPath
+      : path.join(project.root, project.adapter.documentPath),
+    { persistent: false },
+    () => notify("document.changed")
+  );
   const assetWatcher = watch(
     project.assetsRoot,
     { persistent: false },
