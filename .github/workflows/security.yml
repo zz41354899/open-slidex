@@ -33,6 +33,7 @@ jobs:
           node-version: 24.19.0
           cache: npm
       - run: npm ci --ignore-scripts
+      - run: npm run build:runtime
       - run: npm run test:source
       - run: npm run test:release
       - run: npm audit --omit=dev --audit-level=moderate
