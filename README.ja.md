@@ -12,9 +12,21 @@ OpenSlideX は、編集可能なプレゼンテーションのための、オー
 
 プレビューをクリックすると、[OpenSlideX Workspace デモを再生できます](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)。
 
-## Node.js や Git を使わないインストール
+## インストール
 
-スタンドアロンインストーラーは、専用の Node.js 実行ファイルと Chromium renderer を含む OpenSlideX ランタイム一式をダウンロードします。npm、Git、システム全体の Node.js はインストールしません。Windows で release 検証用に GitHub CLI を導入する際は、昇格が求められる場合があります。
+Node.js 22.12 以降があるすべてのプラットフォームでは `npx open-slidex@latest` を使用できます。Node.js 不要のスタンドアロンインストールは macOS のみ対応です。
+
+### npx（すべてのプラットフォーム）
+
+```bash
+npx open-slidex@latest init my-deck
+cd my-deck
+npm run dev
+```
+
+### macOS スタンドアロン
+
+macOS インストーラーは、専用の Node.js 実行ファイルと Chromium renderer を含む OpenSlideX ランタイム一式をダウンロードします。npm、Git、システム全体の Node.js はインストールしません。
 
 macOS:
 
@@ -22,13 +34,6 @@ macOS:
 curl -fLO https://github.com/zz41354899/open-slidex/releases/latest/download/install.sh
 gh attestation verify install.sh --repo zz41354899/open-slidex
 sh install.sh
-```
-
-Windows PowerShell:
-
-```powershell
-irm https://github.com/zz41354899/open-slidex/releases/latest/download/install.ps1 -OutFile install.ps1
-.\install.ps1
 ```
 
 初回インストール後は新しいターミナルを開き、次を実行します。
@@ -40,7 +45,7 @@ slidex rollback    # 保持している直前の正常バージョンへ戻す
 slidex uninstall   # ランタイムとコマンドを削除し、プレゼンテーションは残す
 ```
 
-既定のライブラリは、macOS では `~/Documents/OpenSlideX Workspace`、Windows では現在のユーザーの Documents フォルダです。ダウンロードする release archive は SHA-256 checksum と GitHub artifact attestation で検証されます。Windows では必要に応じてインストーラーが Windows Package Manager（`winget`）で GitHub CLI（`gh`）を導入してから release を検証します。macOS では `gh` をあらかじめ利用可能にしてください。
+既定のライブラリは macOS では `~/Documents/OpenSlideX Workspace` です。ダウンロードする release archive は SHA-256 checksum と GitHub artifact attestation で検証され、attestation に紐付く SPDX SBOM とオフライン provenance bundle を含みます。macOS では `gh` をあらかじめ利用可能にしてください。
 
 ## 開発者向けクイックスタート
 
@@ -61,7 +66,7 @@ npm run dev
 npm run dev -- ~/Presentations --port 4174
 ```
 
-## npm で独立したデッキを作成する
+## グローバル npm CLI
 
 ```bash
 npx open-slidex@latest init my-deck
@@ -96,8 +101,8 @@ Workspace Settings は Codex、Claude Code、Claude Desktop 用のユーザー�
 | `npm run dev` | ローカル Workspace を開く。 |
 | `npm run mcp` | `open-slidex-workspace/` 用の MCP を起動する。 |
 | `npm run build:runtime` | 配布 runtime を再構築する。 |
-| `npm run build:standalone` | 現在のプラットフォーム向け standalone archive を作成する。 |
-| `npm run test:standalone` | installer、install、update、launch、uninstall を検証する。 |
+| `npm run build:standalone` | macOS 向けの完全な standalone archive を作成する。 |
+| `npm run test:standalone` | macOS installer、install、update、launch、uninstall を検証する。 |
 | `npm run test:source` | SDK、Workbench、MCP、CLI、Workspace の tests を実行する。 |
 
 ## プロジェクト境界とライセンス

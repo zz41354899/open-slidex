@@ -12,9 +12,21 @@ OpenSlideX 是开源、local-first 的可编辑演示文稿工作区。每份演
 
 点击预览图即可[观看 OpenSlideX Workspace 演示](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)。
 
-## 无需 Node.js 或 Git 的安装方式
+## 安装方式
 
-独立安装程序会下载完整 OpenSlideX runtime，包括私有 Node.js 可执行文件和 Chromium renderer；不会安装 npm、Git 或系统级 Node.js。Windows 如需安装 GitHub CLI 来验证 release，可能会请求系统授权。
+任何安装 Node.js 22.12 或更高版本的平台都可使用 `npx open-slidex@latest`。无需 Node.js 的 standalone 安装仅支持 macOS。
+
+### npx（所有平台）
+
+```bash
+npx open-slidex@latest init my-deck
+cd my-deck
+npm run dev
+```
+
+### macOS standalone
+
+macOS 独立安装程序会下载完整 OpenSlideX runtime，包括私有 Node.js 可执行文件和 Chromium renderer；不会安装 npm、Git 或系统级 Node.js。
 
 macOS：
 
@@ -22,13 +34,6 @@ macOS：
 curl -fLO https://github.com/zz41354899/open-slidex/releases/latest/download/install.sh
 gh attestation verify install.sh --repo zz41354899/open-slidex
 sh install.sh
-```
-
-Windows PowerShell：
-
-```powershell
-irm https://github.com/zz41354899/open-slidex/releases/latest/download/install.ps1 -OutFile install.ps1
-.\install.ps1
 ```
 
 首次安装后，请打开新终端并执行：
@@ -40,7 +45,7 @@ slidex rollback    # 切回保留的上一个正常版本
 slidex uninstall   # 移除 runtime 和命令，保留你的演示文稿
 ```
 
-macOS 的默认演示文稿库为 `~/Documents/OpenSlideX Workspace`；Windows 则位于当前用户的 Documents 文件夹。每个下载的 release archive 都会先通过 SHA-256 checksum 和 GitHub artifact attestation 验证。Windows 缺少 GitHub CLI（`gh`）时，安装程序会通过 Windows Package Manager（`winget`）安装它，再验证 release；macOS 需要预先提供 `gh`。
+macOS 的默认演示文稿库为 `~/Documents/OpenSlideX Workspace`。每个下载的 release archive 都会先通过 SHA-256 checksum 和 GitHub artifact attestation 验证，并附有 attestation 绑定的 SPDX SBOM 和离线 provenance bundle；macOS 需要预先提供 `gh`。
 
 ## 开发者快速开始
 
@@ -61,7 +66,7 @@ npm run dev
 npm run dev -- ~/Presentations --port 4174
 ```
 
-## 使用 npm 创建独立 deck
+## 使用全局 npm CLI
 
 ```bash
 npx open-slidex@latest init my-deck
@@ -96,8 +101,8 @@ Workspace Settings 可以为 Codex、Claude Code 或 Claude Desktop 生成用户
 | `npm run dev` | 打开本地 Workspace。 |
 | `npm run mcp` | 为 `open-slidex-workspace/` 启动 MCP。 |
 | `npm run build:runtime` | 重建发布 runtime。 |
-| `npm run build:standalone` | 构建当前平台的 standalone archive。 |
-| `npm run test:standalone` | 验证 installer、安装、更新、启动和卸载。 |
+| `npm run build:standalone` | 构建 macOS 的完整 standalone archive。 |
+| `npm run test:standalone` | 验证 macOS installer、安装、更新、启动和卸载。 |
 | `npm run test:source` | 运行 SDK、Workbench、MCP、CLI 和 Workspace 的 tests。 |
 
 ## 项目边界和许可证

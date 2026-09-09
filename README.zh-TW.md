@@ -12,9 +12,21 @@ OpenSlideX 是開源、local-first 的可編輯簡報工作區。每一份簡報
 
 點擊預覽圖即可[觀看 OpenSlideX Workspace 示範](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)。
 
-## 不需要 Node.js 或 Git 的安裝方式
+## 安裝方式
 
-獨立安裝程式會下載完整的 OpenSlideX 執行環境，包括私有的 Node.js 執行檔與 Chromium renderer；不會安裝 npm、Git 或系統層級的 Node.js。Windows 若需安裝 GitHub CLI 進行 release 驗證，可能會要求系統授權。
+有 Node.js 22.12 或更新版本的任何平台，都可使用 `npx open-slidex@latest`。不需 Node.js 的 standalone 安裝只支援 macOS。
+
+### npx（所有平台）
+
+```bash
+npx open-slidex@latest init my-deck
+cd my-deck
+npm run dev
+```
+
+### macOS standalone
+
+macOS 獨立安裝程式會下載完整的 OpenSlideX 執行環境，包括私有的 Node.js 執行檔與 Chromium renderer；不會安裝 npm、Git 或系統層級的 Node.js。
 
 macOS：
 
@@ -22,13 +34,6 @@ macOS：
 curl -fLO https://github.com/zz41354899/open-slidex/releases/latest/download/install.sh
 gh attestation verify install.sh --repo zz41354899/open-slidex
 sh install.sh
-```
-
-Windows PowerShell：
-
-```powershell
-irm https://github.com/zz41354899/open-slidex/releases/latest/download/install.ps1 -OutFile install.ps1
-.\install.ps1
 ```
 
 首次安裝後請開啟新的終端機，再執行：
@@ -40,7 +45,7 @@ slidex rollback    # 切回保留的上一個正常版本
 slidex uninstall   # 移除執行環境與指令，保留你的簡報
 ```
 
-預設簡報庫在 macOS 為 `~/Documents/OpenSlideX Workspace`，Windows 則在目前使用者的 Documents 資料夾。每個下載的 release archive 必須同時通過 SHA-256 checksum 與 GitHub artifact attestation 才能切換目前版本，並會附上經 attestation 綁定的 SPDX SBOM。Windows 在需要時會以 Windows Package Manager（`winget`）安裝 GitHub CLI（`gh`），再驗證 release；macOS 則需要預先提供 `gh`。本機測試 mirror 仍走明確隔離的測試路徑。
+macOS 預設簡報庫為 `~/Documents/OpenSlideX Workspace`。每個下載的 release archive 必須同時通過 SHA-256 checksum 與 GitHub artifact attestation 才能切換目前版本，並會附上經 attestation 綁定的 SPDX SBOM 與離線 provenance bundle；macOS 需預先提供 `gh`。本機測試 mirror 仍走明確隔離的測試路徑。
 
 ## 開發者快速開始
 
@@ -61,7 +66,7 @@ npm run dev
 npm run dev -- ~/Presentations --port 4174
 ```
 
-## 使用 npm 建立獨立 deck
+## 使用全域 npm CLI
 
 ```bash
 npx open-slidex@latest init my-deck
@@ -98,8 +103,8 @@ Workspace Settings 可以為 Codex、Claude Code 或 Claude Desktop 產生使用
 | `npm run dev` | 開啟本機 Workspace。 |
 | `npm run mcp` | 為 `open-slidex-workspace/` 啟動 MCP。 |
 | `npm run build:runtime` | 重建發行 runtime。 |
-| `npm run build:standalone` | 建立目前平台的完整 standalone archive。 |
-| `npm run test:standalone` | 驗證 installer、安裝、更新、啟動與解除安裝。 |
+| `npm run build:standalone` | 建立 macOS 的完整 standalone archive。 |
+| `npm run test:standalone` | 驗證 macOS installer、安裝、更新、啟動與解除安裝。 |
 | `npm run test:source` | 執行 SDK、Workbench、MCP、CLI 與 Workspace 的 tests。 |
 
 ## 專案邊界與授權
