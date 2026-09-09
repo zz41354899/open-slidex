@@ -48,6 +48,54 @@ function Assert-NotReparsePoint([string]$Path, [string]$Message) {
   }
 }
 
+function Find-GitHubCli([switch]$RefreshPath) {
+  $Gh = Get-Command gh -ErrorAction SilentlyContinue
+  if ($Gh) { return $Gh.Source }
+
+  if (-not $RefreshPath) { return $null }
+
+  $UserPath = (Get-ItemProperty -Path "HKCU:\Environment" -Name Path -ErrorAction SilentlyContinue).Path
+  $MachinePath = (Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name Path -ErrorAction SilentlyContinue).Path
+  $PathEntries = @($env:Path, $UserPath, $MachinePath) |
+    Where-Object { $_ } |
+    ForEach-Object { $_ -split ';' } |
+    Where-Object { $_ } |
+    ForEach-Object { [Environment]::ExpandEnvironmentVariables($_) }
+  $env:Path = ($PathEntries | Select-Object -Unique) -join ';'
+
+  $Gh = Get-Command gh -ErrorAction SilentlyContinue
+  if ($Gh) { return $Gh.Source }
+
+  $Candidates = @(
+    (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Links\gh.exe"),
+    (Join-Path $env:ProgramFiles "GitHub CLI\gh.exe")
+  )
+  if (${env:ProgramFiles(x86)}) {
+    $Candidates += Join-Path ${env:ProgramFiles(x86)} "GitHub CLI\gh.exe"
+  }
+  return $Candidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+}
+
+function Install-GitHubCli {
+  $GhPath = Find-GitHubCli
+  if ($GhPath) { return $GhPath }
+
+  $Winget = Get-Command winget -ErrorAction SilentlyContinue
+  if (-not $Winget) {
+    throw "GitHub CLI is required to verify the release attestation, and Windows Package Manager (winget) is unavailable. Install GitHub CLI from https://cli.github.com/, then run the installer again."
+  }
+
+  Write-Host "OpenSlideX is installing GitHub CLI with winget to verify the release attestation..."
+  & $Winget.Source install --id GitHub.cli --exact --source winget --accept-source-agreements --accept-package-agreements
+  if ($LASTEXITCODE -ne 0) { throw "GitHub CLI installation with winget failed. Approve any Windows elevation prompt, or install GitHub CLI from https://cli.github.com/, then run the installer again." }
+
+  $GhPath = Find-GitHubCli -RefreshPath
+  if (-not $GhPath) {
+    throw "GitHub CLI was installed but is not available to this PowerShell session. Open a new PowerShell window, then run the installer again."
+  }
+  return $GhPath
+}
+
 function Assert-SafeZip([string]$ArchivePath, [string]$DestinationRoot) {
   Add-Type -AssemblyName System.IO.Compression.FileSystem
   $DestinationFull = [IO.Path]::GetFullPath($DestinationRoot).TrimEnd('\', '/')
@@ -109,9 +157,8 @@ try {
   $ActualSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $ArchivePath).Hash.ToLowerInvariant()
   if ($ExpectedSha -cne $ActualSha) { throw "OpenSlideX download checksum verification failed. Nothing was installed." }
   if ($ReleaseBaseUrl -ceq $DefaultReleaseBaseUrl) {
-    $Gh = Get-Command gh -ErrorAction SilentlyContinue
-    if (-not $Gh) { throw "GitHub CLI is required to verify the release attestation. Install gh, then run the installer again." }
-    & $Gh.Source attestation verify $ArchivePath --repo $Repository | Out-Null
+    $GhPath = Install-GitHubCli
+    & $GhPath attestation verify $ArchivePath --repo $Repository | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "OpenSlideX release provenance verification failed. Nothing was installed." }
   }
 
