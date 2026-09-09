@@ -48,11 +48,9 @@ function Assert-NotReparsePoint([string]$Path, [string]$Message) {
   }
 }
 
-function Find-GitHubCli([switch]$RefreshPath) {
+function Find-GitHubCli {
   $Gh = Get-Command gh -ErrorAction SilentlyContinue
   if ($Gh) { return $Gh.Source }
-
-  if (-not $RefreshPath) { return $null }
 
   $UserPath = (Get-ItemProperty -Path "HKCU:\Environment" -Name Path -ErrorAction SilentlyContinue).Path
   $MachinePath = (Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name Path -ErrorAction SilentlyContinue).Path
@@ -89,7 +87,7 @@ function Install-GitHubCli {
   & $Winget.Source install --id GitHub.cli --exact --source winget --accept-source-agreements --accept-package-agreements
   if ($LASTEXITCODE -ne 0) { throw "GitHub CLI installation with winget failed. Approve any Windows elevation prompt, or install GitHub CLI from https://cli.github.com/, then run the installer again." }
 
-  $GhPath = Find-GitHubCli -RefreshPath
+  $GhPath = Find-GitHubCli
   if (-not $GhPath) {
     throw "GitHub CLI was installed but is not available to this PowerShell session. Open a new PowerShell window, then run the installer again."
   }
