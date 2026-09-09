@@ -93,9 +93,10 @@ test("standalone dependency records must match the reviewed lock path, version, 
 });
 
 test("bootstrap scripts expose immutable update, rollback, identity, and checksum contracts", async () => {
-  const [shellInstaller, powershellInstaller, readme, manifest, releaseWorkflow, securityWorkflow] = await Promise.all([
+  const [shellInstaller, powershellInstaller, windowsInstallerTest, readme, manifest, releaseWorkflow, securityWorkflow] = await Promise.all([
     readFile(path.join(repositoryRoot, "install.sh"), "utf8"),
     readFile(path.join(repositoryRoot, "install.ps1"), "utf8"),
+    readFile(path.join(repositoryRoot, "scripts/test-standalone-windows.ps1"), "utf8"),
     readFile(path.join(repositoryRoot, "README.md"), "utf8"),
     readFile(path.join(repositoryRoot, "package.json"), "utf8").then(JSON.parse),
     readFile(path.join(repositoryRoot, ".github/workflows/standalone-release.yml"), "utf8"),
@@ -115,6 +116,12 @@ test("bootstrap scripts expose immutable update, rollback, identity, and checksu
   assert.match(powershellInstaller, /\$Command -eq "uninstall"/);
   assert.match(powershellInstaller, /Assert-SafeZip/);
   assert.match(powershellInstaller, /attestation verify/);
+  assert.match(powershellInstaller, /function Install-GitHubCli/);
+  assert.match(powershellInstaller, /winget to verify the release attestation/);
+  assert.match(powershellInstaller, /install --id GitHub\.cli --exact --source winget/);
+  assert.match(powershellInstaller, /--accept-source-agreements --accept-package-agreements/);
+  assert.match(windowsInstallerTest, /install-with-local-attestation/);
+  assert.match(windowsInstallerTest, /Missing GitHub CLI did not invoke winget/);
   assert.doesNotMatch(powershellInstaller, /raw\.githubusercontent\.com/);
   assert.match(readme, /slidex update/);
   assert.match(readme, /slidex uninstall/);

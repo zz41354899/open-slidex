@@ -20,7 +20,8 @@ Click the preview to [watch the OpenSlideX Workspace demo](https://www.slidexdec
 
 The standalone installer downloads the complete OpenSlideX runtime, including
 its private Node.js executable and Chromium renderer. It does not install npm,
-Git, or system-wide Node.js and does not require administrator access.
+Git, or system-wide Node.js. Windows may request elevation to install GitHub CLI
+for release verification.
 
 macOS:
 
@@ -34,7 +35,6 @@ Windows PowerShell:
 
 ```powershell
 irm https://github.com/zz41354899/open-slidex/releases/latest/download/install.ps1 -OutFile install.ps1
-gh attestation verify install.ps1 --repo zz41354899/open-slidex
 .\install.ps1
 ```
 
@@ -51,9 +51,10 @@ The default presentation library is `~/Documents/OpenSlideX Workspace` on
 macOS and the current user's Documents folder on Windows. Every downloaded
 release archive must pass both SHA-256 integrity and GitHub artifact-attestation
 verification before it can replace the active version. Release archives include
-an attested SPDX SBOM. The installer therefore requires GitHub CLI (`gh`) for
-normal GitHub releases; local test mirrors remain explicitly isolated from this
-production verification path.
+an attested SPDX SBOM. On Windows, the installer uses Windows Package Manager
+(`winget`) to install GitHub CLI (`gh`) when needed, then verifies the release;
+macOS requires `gh` to be available. Local test mirrors remain explicitly
+isolated from this production verification path.
 
 ## Developer quick start
 

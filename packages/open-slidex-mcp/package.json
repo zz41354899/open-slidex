@@ -1,7 +1,7 @@
 {
   "name": "@open-slidex/mcp",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Local-only MCP server for an OpenSlideX presentation workspace.",
   "type": "module",
   "bin": {
@@ -14,7 +14,7 @@
   "dependencies": {
     "@modelcontextprotocol/server": "2.0.0",
     "@napi-rs/canvas": "0.1.100",
-    "@open-slidex/sdk": "0.6.0",
+    "@open-slidex/sdk": "0.6.1",
     "esbuild": "^0.28.0",
     "mdast-util-from-markdown": "2.0.3",
     "pdf-to-img": "5.0.0",

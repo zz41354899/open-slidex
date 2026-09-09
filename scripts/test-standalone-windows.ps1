@@ -105,6 +105,33 @@ try {
   if (Test-Path -LiteralPath $env:OPEN_SLIDEX_INSTALL_ROOT) { throw "Install root still exists after uninstall." }
   if (-not (Test-Path -LiteralPath $env:OPEN_SLIDEX_WORKSPACE)) { throw "Workspace was removed during uninstall." }
 
+  $FakeBin = Join-Path $Root "fake-bin"
+  $FakeGh = Join-Path $FakeBin "gh.cmd"
+  $FakeGhSource = Join-Path $Root "fake-gh-source.cmd"
+  $FakeWinget = Join-Path $FakeBin "winget.cmd"
+  $WingetMarker = Join-Path $Root "winget-invoked"
+  $BootstrapInstaller = Join-Path $Root "install-with-local-attestation.ps1"
+  New-Item -ItemType Directory -Path $FakeBin -Force | Out-Null
+  Set-Content -LiteralPath $FakeGhSource -Value "@echo off`r`nexit /b 0" -Encoding ASCII
+  Set-Content -LiteralPath $FakeWinget -Value "@echo off`r`ncopy /Y `"$FakeGhSource`" `"$FakeGh`" >NUL`r`ncopy NUL `"$WingetMarker`" >NUL`r`nexit /b 0" -Encoding ASCII
+  $InstallerSource = Get-Content -LiteralPath (Join-Path $RepositoryRoot "install.ps1") -Raw
+  $InstallerSource = $InstallerSource.Replace('$DefaultReleaseBaseUrl = "https://github.com/$Repository/releases/latest/download"', '$DefaultReleaseBaseUrl = $env:OPEN_SLIDEX_RELEASE_BASE_URL')
+  Set-Content -LiteralPath $BootstrapInstaller -Value $InstallerSource -Encoding UTF8
+  $OriginalPath = $env:Path
+  try {
+    $env:Path = $FakeBin
+    $env:OPEN_SLIDEX_INSTALL_ROOT = Join-Path $Root "bootstrap-installed"
+    $env:OPEN_SLIDEX_WORKSPACE = Join-Path $Root "bootstrap-workspace"
+    & $BootstrapInstaller
+    if (-not (Test-Path -LiteralPath $WingetMarker)) { throw "Missing GitHub CLI did not invoke winget." }
+    $BootstrapLauncher = Join-Path $env:OPEN_SLIDEX_INSTALL_ROOT "slidex.cmd"
+    if (-not (Test-Path -LiteralPath $BootstrapLauncher)) { throw "Missing GitHub CLI did not complete installation." }
+    $env:Path = $OriginalPath
+    & $BootstrapLauncher uninstall | Out-Null
+  } finally {
+    $env:Path = $OriginalPath
+  }
+
   Add-Type -AssemblyName System.IO.Compression.FileSystem
   $Sentinel = Join-Path $Root "outside-sentinel"
   Set-Content -LiteralPath $Sentinel -Value "safe" -Encoding ASCII
