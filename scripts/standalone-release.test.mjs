@@ -160,6 +160,7 @@ test("bootstrap scripts expose immutable update, rollback, identity, and checksu
   assert.match(releaseWorkflow, /Add offline provenance bundles/);
   assert.match(releaseWorkflow, /gh attestation download/);
   assert.match(releaseWorkflow, /\.intoto\.jsonl/);
+  assert.doesNotMatch(releaseWorkflow, /--predicate-type https:\/\/slsa\.dev\/provenance\/v1/);
   assert.doesNotMatch(releaseWorkflow, /npm publish/);
   assert.doesNotMatch(releaseWorkflow, /--clobber/);
   assert.match(securityWorkflow, /pull_request:/);

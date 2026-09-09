@@ -169,7 +169,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           for asset in open-slidex-darwin-arm64.tar.gz open-slidex-darwin-x64.tar.gz open-slidex-windows-x64.zip; do
-            gh attestation download "$asset" --repo "$GH_REPO" --predicate-type https://slsa.dev/provenance/v1 --limit 1
+            gh attestation download "$asset" --repo "$GH_REPO"
             digest=$(sha256sum "$asset" | awk '{ print $1 }')
             mv "sha256:${digest}.jsonl" "${asset}.intoto.jsonl"
           done
