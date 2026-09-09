@@ -85,7 +85,7 @@ function Install-GitHubCli {
     throw "GitHub CLI is required to verify the release attestation, and Windows Package Manager (winget) is unavailable. Install GitHub CLI from https://cli.github.com/, then run the installer again."
   }
 
-  Write-Host "OpenSlideX is installing GitHub CLI with winget to verify the release attestation..."
+  Write-Host "OpenSlideX is installing GitHub CLI with winget to verify the offline release attestation..."
   & $Winget.Source install --id GitHub.cli --exact --source winget --accept-source-agreements --accept-package-agreements
   if ($LASTEXITCODE -ne 0) { throw "GitHub CLI installation with winget failed. Approve any Windows elevation prompt, or install GitHub CLI from https://cli.github.com/, then run the installer again." }
 
@@ -147,8 +147,12 @@ New-Item -ItemType Directory -Path $TempRoot -Force | Out-Null
 try {
   $ArchivePath = Join-Path $TempRoot $Asset
   $ChecksumPath = Join-Path $TempRoot "SHA256SUMS.txt"
+  $BundlePath = Join-Path $TempRoot ("{0}.intoto.jsonl" -f $Asset)
   Copy-Download ("{0}/{1}" -f $ReleaseBaseUrl.TrimEnd('/'), $Asset) $ArchivePath
   Copy-Download ("{0}/SHA256SUMS.txt" -f $ReleaseBaseUrl.TrimEnd('/')) $ChecksumPath
+  if ($ReleaseBaseUrl -ceq $DefaultReleaseBaseUrl) {
+    Copy-Download ("{0}/{1}.intoto.jsonl" -f $ReleaseBaseUrl.TrimEnd('/'), $Asset) $BundlePath
+  }
 
   $ChecksumLine = Get-Content -LiteralPath $ChecksumPath | Where-Object { $_ -match ("\s\*?" + [regex]::Escape($Asset) + "$") } | Select-Object -First 1
   if (-not $ChecksumLine) { throw "The OpenSlideX release checksum does not list $Asset." }
@@ -156,12 +160,6 @@ try {
   if ($ExpectedSha -notmatch '^[0-9a-f]{64}$') { throw "The OpenSlideX release checksum for $Asset is invalid." }
   $ActualSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $ArchivePath).Hash.ToLowerInvariant()
   if ($ExpectedSha -cne $ActualSha) { throw "OpenSlideX download checksum verification failed. Nothing was installed." }
-  if ($ReleaseBaseUrl -ceq $DefaultReleaseBaseUrl) {
-    $GhPath = Install-GitHubCli
-    & $GhPath attestation verify $ArchivePath --repo $Repository | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "OpenSlideX release provenance verification failed. Nothing was installed." }
-  }
-
   $ExtractRoot = Join-Path $TempRoot "extract"
   New-Item -ItemType Directory -Path $ExtractRoot -Force | Out-Null
   Assert-SafeZip $ArchivePath $ExtractRoot
@@ -197,6 +195,28 @@ try {
       $Manifest.architecture -cne 'x64' -or $Manifest.asset -cne $Asset -or
       $Manifest.installer -cne 'install.ps1') {
     throw "The OpenSlideX release identity does not match this Windows installer. Nothing was installed."
+  }
+
+  if ($ReleaseBaseUrl -ceq $DefaultReleaseBaseUrl) {
+    $GhPath = Install-GitHubCli
+    $SavedGhConfigDir = [Environment]::GetEnvironmentVariable("GH_CONFIG_DIR", "Process")
+    $SavedGhToken = [Environment]::GetEnvironmentVariable("GH_TOKEN", "Process")
+    $SavedGhEnterpriseToken = [Environment]::GetEnvironmentVariable("GH_ENTERPRISE_TOKEN", "Process")
+    try {
+      # The downloaded bundle is verified without reading the caller's GitHub credentials.
+      $env:GH_CONFIG_DIR = Join-Path $TempRoot "gh-config"
+      Remove-Item Env:GH_TOKEN -ErrorAction SilentlyContinue
+      Remove-Item Env:GH_ENTERPRISE_TOKEN -ErrorAction SilentlyContinue
+      & $GhPath attestation verify $ArchivePath --repo $Repository --bundle $BundlePath `
+        --signer-workflow ("{0}/.github/workflows/standalone-release.yml" -f $Repository) `
+        --source-ref ("refs/tags/v{0}" -f $Version) --deny-self-hosted-runners | Out-Null
+      $AttestationExitCode = $LASTEXITCODE
+    } finally {
+      [Environment]::SetEnvironmentVariable("GH_CONFIG_DIR", $SavedGhConfigDir, "Process")
+      [Environment]::SetEnvironmentVariable("GH_TOKEN", $SavedGhToken, "Process")
+      [Environment]::SetEnvironmentVariable("GH_ENTERPRISE_TOKEN", $SavedGhEnterpriseToken, "Process")
+    }
+    if ($AttestationExitCode -ne 0) { throw "OpenSlideX release provenance verification failed. Nothing was installed." }
   }
 
   $Node = Join-Path $ReleaseFull "node\node.exe"

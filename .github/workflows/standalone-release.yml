@@ -134,53 +134,6 @@ jobs:
             dist/standalone/${{ matrix.archive }}.spdx.json
           if-no-files-found: error
 
-  publish-npm:
-    name: Publish npm package
-    if: needs.resolve.outputs.tag != ''
-    needs: [resolve, build, publish]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-          ref: ${{ needs.resolve.outputs.ref }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 24.19.0
-          cache: npm
-          registry-url: https://registry.npmjs.org
-      - run: npm ci
-      - name: Validate release tag
-        env:
-          EXPECTED_SHA: ${{ needs.resolve.outputs.ref }}
-          GH_REPO: ${{ github.repository }}
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
-        run: |
-          git fetch --force --no-tags origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
-          TAG_COMMIT=$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")
-          test "$TAG_COMMIT" = "$EXPECTED_SHA"
-          test "$(gh release view "$RELEASE_TAG" --json isImmutable --jq .isImmutable)" = "true"
-          node -e 'const version = require("./packages/open-slidex/package.json").version; if (process.env.RELEASE_TAG !== `v${version}`) throw new Error(`Release tag ${process.env.RELEASE_TAG} must equal v${version}`)'
-      - name: Check npm registry
-        id: registry
-        run: |
-          PACKAGE_VERSION=$(node -p 'require("./packages/open-slidex/package.json").version')
-          if npm view "open-slidex@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
-            echo "published=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "published=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Publish open-slidex
-        if: steps.registry.outputs.published != 'true'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish ./packages/open-slidex --access public --provenance
-
   publish:
     name: Publish GitHub release
     if: needs.resolve.outputs.tag != ''
@@ -209,6 +162,17 @@ jobs:
           subject-path: |
             release-assets/install.sh
             release-assets/install.ps1
+      - name: Add offline provenance bundles
+        working-directory: release-assets
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for asset in open-slidex-darwin-arm64.tar.gz open-slidex-darwin-x64.tar.gz open-slidex-windows-x64.zip; do
+            gh attestation download "$asset" --repo "$GH_REPO" --predicate-type https://slsa.dev/provenance/v1 --limit 1
+            digest=$(sha256sum "$asset" | awk '{ print $1 }')
+            mv "sha256:${digest}.jsonl" "${asset}.intoto.jsonl"
+          done
       - name: Create SHA-256 manifest
         working-directory: release-assets
         run: sha256sum open-slidex-* install.sh install.ps1 > SHA256SUMS.txt
