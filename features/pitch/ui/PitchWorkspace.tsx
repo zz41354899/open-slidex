@@ -12,7 +12,6 @@ import type { PitchWorkspaceProps } from "@/features/pitch/ui/workspace/PitchWor
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import { useVisibleRemoteMcpOperations } from "@/features/pitch/ui/hooks/useVisibleRemoteMcpOperations";
 import { PreviewMediaPolicyProvider } from "@/features/pitch/ui/preview/PreviewMediaPolicy";
-import { MotionSequenceStrip } from "@/features/pitch/ui/MotionSequenceStrip";
 
 const emptyAssistantActivities = [] as const;
 const emptyRemoteMcpOperations = [] as const;
@@ -76,9 +75,6 @@ export const PitchWorkspace = memo(function PitchWorkspace({ assistant, commands
     view.setIsMobileSidebarOpen(true);
     view.setIsMobileInspectorOpen(false);
   }, [view.setIsMobileInspectorOpen, view.setIsMobileSidebarOpen]);
-  const selectMotionBlock = useCallback((index: number) => {
-    selection.selectSingleBlock(index);
-  }, [selection.selectSingleBlock]);
   const projectDisplayName = useMemo(
     () => `${document.projectName === "Untitled presentation" ? tx("Untitled presentation") : document.projectName}${document.isProjectDirty ? ` - ${tx("Edited")}` : ""}`,
     [document.isProjectDirty, document.projectName, tx]
@@ -186,12 +182,6 @@ export const PitchWorkspace = memo(function PitchWorkspace({ assistant, commands
             singleSlidePreview={view.singleSlideCanvas === true}
             slideRows={document.slideRows}
             zoomLevel={zoomLevel}
-          />
-          <MotionSequenceStrip
-            onPreview={view.onReplayAnimations}
-            onReorder={commands.reorderMotionActions}
-            onSelectBlock={selectMotionBlock}
-            scene={document.activeSlide}
           />
           {view.commentsEnabled ? <DesktopSlideNoteFab
             comments={document.activeSlideComments}

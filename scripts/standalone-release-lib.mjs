@@ -3,20 +3,15 @@ import { createReadStream } from "node:fs";
 
 export const standaloneNodeVersion = "24.19.0";
 
-export function childProcessNeedsShell(platform, command) {
-  return platform === "win32" && /\.(?:cmd|bat)$/i.test(command);
-}
-
 export function standaloneTarget(platform = process.platform, architecture = process.arch) {
   if (platform === "darwin" && architecture === "arm64") return "darwin-arm64";
   if (platform === "darwin" && architecture === "x64") return "darwin-x64";
-  if (platform === "win32" && architecture === "x64") return "windows-x64";
-  throw new Error(`Standalone OpenSlideX does not support ${platform}-${architecture}.`);
+  throw new Error(`Standalone OpenSlideX is available only on macOS (received ${platform}-${architecture}). Use npx open-slidex@latest on other platforms.`);
 }
 
 export function standaloneAssetName(target) {
-  const extension = target.startsWith("windows-") ? "zip" : "tar.gz";
-  return `open-slidex-${target}.${extension}`;
+  if (target !== "darwin-arm64" && target !== "darwin-x64") throw new Error(`Unknown macOS standalone target: ${target}`);
+  return `open-slidex-${target}.tar.gz`;
 }
 
 export function nodeDistribution(target, version = standaloneNodeVersion) {
@@ -35,14 +30,7 @@ export function nodeDistribution(target, version = standaloneNodeVersion) {
       root: `node-${normalizedVersion}-darwin-x64`
     };
   }
-  if (target === "windows-x64") {
-    return {
-      archive: `node-${normalizedVersion}-win-x64.zip`,
-      executable: "node.exe",
-      root: `node-${normalizedVersion}-win-x64`
-    };
-  }
-  throw new Error(`Unknown standalone target: ${target}`);
+  throw new Error(`Unknown macOS standalone target: ${target}`);
 }
 
 export function parseSha256List(source) {

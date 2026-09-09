@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import {
-  childProcessNeedsShell,
   lockedStandaloneDependencies,
   nodeDistribution,
   parseSha256List,
@@ -128,7 +127,7 @@ try {
     architecture: process.arch,
     asset,
     browser: "playwright-chromium-headless-shell",
-    installer: target.startsWith("windows-") ? "install.ps1" : "install.sh",
+    installer: "install.sh",
     nodeVersion,
     platform: process.platform,
     schemaVersion: 1,
@@ -137,7 +136,6 @@ try {
   };
   await Promise.all([
     cp(path.join(repositoryRoot, "install.sh"), path.join(releaseRoot, "install.sh")),
-    cp(path.join(repositoryRoot, "install.ps1"), path.join(releaseRoot, "install.ps1")),
     writeFile(path.join(releaseRoot, "VERSION"), `${manifest.version}\n`, "utf8"),
     writeFile(path.join(releaseRoot, "release.json"), `${JSON.stringify(release, null, 2)}\n`, "utf8")
   ]);
@@ -146,10 +144,7 @@ try {
   const outputPath = path.join(outputRoot, asset);
   process.stdout.write(`Compressing ${path.basename(outputPath)}...\n`);
   await rm(outputPath, { force: true });
-  const tarArgs = target.startsWith("windows-")
-    ? ["-a", "-cf", outputPath, "-C", path.dirname(releaseRoot), path.basename(releaseRoot)]
-    : ["-czf", outputPath, "-C", path.dirname(releaseRoot), path.basename(releaseRoot)];
-  await run("tar", tarArgs, { cwd: repositoryRoot });
+  await run("tar", ["-czf", outputPath, "-C", path.dirname(releaseRoot), path.basename(releaseRoot)], { cwd: repositoryRoot });
   const digest = await sha256File(outputPath);
   const sbomPath = `${outputPath}.spdx.json`;
   await writeFile(
@@ -286,22 +281,18 @@ async function installNodeRuntime(releaseRoot, releaseTarget, version) {
   await run("tar", ["-xf", archivePath, "-C", extractRoot]);
   const sourceRoot = path.join(extractRoot, distribution.root);
   const runtimeRoot = path.join(releaseRoot, "node");
-  const executableTarget = releaseTarget.startsWith("windows-")
-    ? path.join(runtimeRoot, "node.exe")
-    : path.join(runtimeRoot, "bin/node");
+  const executableTarget = path.join(runtimeRoot, "bin/node");
   await mkdir(path.dirname(executableTarget), { recursive: true });
   await Promise.all([
     cp(path.join(sourceRoot, distribution.executable), executableTarget),
     cp(path.join(sourceRoot, "LICENSE"), path.join(runtimeRoot, "LICENSE"))
   ]);
-  if (!releaseTarget.startsWith("windows-")) await chmod(executableTarget, 0o755);
+  await chmod(executableTarget, 0o755);
 }
 
 async function installChromium(releaseRoot) {
   if (process.env.OPEN_SLIDEX_STANDALONE_SKIP_BROWSER === "1") return;
-  const nodeExecutable = target.startsWith("windows-")
-    ? path.join(releaseRoot, "node/node.exe")
-    : path.join(releaseRoot, "node/bin/node");
+  const nodeExecutable = path.join(releaseRoot, "node/bin/node");
   const playwrightCli = path.join(releaseRoot, "app/node_modules/playwright-core/cli.js");
   await run(nodeExecutable, [playwrightCli, "install", "chromium", "--only-shell", "--no-progress"], {
     cwd: releaseRoot,
@@ -326,13 +317,11 @@ async function run(command, args, options = {}) {
   const result = await execFileAsync(command, args, {
     env: options.env ?? process.env,
     maxBuffer: 40 * 1024 * 1024,
-    shell: childProcessNeedsShell(process.platform, command),
+    shell: false,
     timeout: 10 * 60 * 1000,
     ...options
   });
   return result;
 }
 
-function npmCommand() {
-  return process.platform === "win32" ? "npm.cmd" : "npm";
-}
+function npmCommand() { return "npm"; }

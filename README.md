@@ -16,25 +16,55 @@ editable in your own tools and Git workflow.
 
 Click the preview to [watch the OpenSlideX Workspace demo](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4).
 
-## Install without Node.js or Git
+## Install
 
-The standalone installer downloads the complete OpenSlideX runtime, including
-its private Node.js executable and Chromium renderer. It does not install npm,
-Git, or system-wide Node.js. Windows may request elevation to install GitHub CLI
-for offline release verification; it never asks for GitHub sign-in or a token.
+Create a project with `npx`, `pnpm`, Yarn, or Bun. The npx, pnpm, and Yarn
+commands require Node.js 22.12 or newer; Bun uses its own current runtime. The
+no-Node standalone installer is available only on macOS.
+
+### npx (all platforms)
+
+```bash
+npx open-slidex@latest init my-deck
+cd my-deck
+npm run dev
+```
+
+### pnpm
+
+```bash
+pnpm dlx open-slidex@latest init my-deck
+cd my-deck
+pnpm dev
+```
+
+### Yarn (2+)
+
+```bash
+yarn dlx open-slidex@latest init my-deck
+cd my-deck
+yarn dev
+```
+
+### Bun
+
+```bash
+bunx open-slidex@latest init my-deck
+cd my-deck
+bun run dev
+```
+
+### macOS standalone
+
+The macOS installer downloads the complete OpenSlideX runtime, including its
+private Node.js executable and Chromium renderer. It does not install npm, Git,
+or system-wide Node.js.
 
 macOS:
 
 ```bash
 curl -fLO https://github.com/zz41354899/open-slidex/releases/latest/download/install.sh
 sh install.sh
-```
-
-Windows PowerShell:
-
-```powershell
-irm https://github.com/zz41354899/open-slidex/releases/latest/download/install.ps1 -OutFile install.ps1
-.\install.ps1
 ```
 
 Open a new terminal after the first install, then run:
@@ -46,14 +76,11 @@ slidex rollback    # switch back to the retained previous version
 slidex uninstall   # remove the runtime and command, but keep presentations
 ```
 
-The default presentation library is `~/Documents/OpenSlideX Workspace` on
-macOS and the current user's Documents folder on Windows. Every downloaded
-release archive must pass both SHA-256 integrity and GitHub artifact-attestation
-verification before it can replace the active version. Release archives include
-an attested SPDX SBOM and an offline provenance bundle. On Windows, the installer
-uses Windows Package Manager (`winget`) to install GitHub CLI (`gh`) when needed,
-then verifies the release without GitHub authentication; macOS requires `gh` to
-be available. Local test mirrors remain explicitly isolated from this production
+The macOS presentation library defaults to `~/Documents/OpenSlideX Workspace`.
+Every downloaded release archive must pass SHA-256 and GitHub artifact-attestation
+verification before it replaces the active version. Release archives include an
+attested SPDX SBOM and an offline provenance bundle; macOS requires `gh` to be
+available. Local test mirrors remain explicitly isolated from this production
 verification path.
 
 ## Developer quick start
@@ -80,7 +107,7 @@ and Obsidian-specific templates are intentionally excluded.
 npm run dev -- ~/Presentations --port 4174
 ```
 
-## Create a standalone deck with npm
+## Package-runner CLI
 
 The npm package creates a separate presentation project:
 
@@ -96,6 +123,9 @@ Or install the CLI globally:
 npm install --global open-slidex@latest
 open-slidex init my-deck
 ```
+
+Use `pnpm dlx`, `yarn dlx`, or `bunx` in place of `npx`; in the generated
+project, use `pnpm dev`, `yarn dev`, or `bun run dev` respectively.
 
 `npm run dev` in an installed project always opens `/workspace`, rooted at the
 project's own ignored `open-slidex-workspace/` directory. A fresh install has
@@ -162,8 +192,8 @@ paths; the agent reads one reference before composing the complete deck.
 | `npm run dev` | Open the local Workspace. |
 | `npm run mcp` | Start MCP for `open-slidex-workspace/`. |
 | `npm run build:runtime` | Rebuild the distributable runtime after SDK, Workbench, MCP, or CLI changes. |
-| `npm run build:standalone` | Build the current platform's complete Node/Chromium standalone archive. |
-| `npm run test:standalone` | Verify installer targets plus isolated install, update, launch, and uninstall behavior. |
+| `npm run build:standalone` | Build a complete macOS Node/Chromium standalone archive. |
+| `npm run test:standalone` | Verify the macOS installer plus isolated install, update, launch, and uninstall behavior. |
 | `npm run decks:build` | Rebuild the six core thirty-page MDX references (180 editable teaching slides). |
 | `npm run decks:qa` | Render all six references and reject structural or visual release blockers. |
 | `npm run decks:gallery -- <output>` | Render six covers plus a complete montage for every thirty-page reference. |
@@ -180,8 +210,8 @@ packages/slidex-sdk/            # Filesystem-safe SDK and CLI
 packages/slidex-workbench/      # Local Workspace and editor
 packages/open-slidex-mcp/       # Workspace-scoped local MCP server
 packages/open-slidex/           # npm initializer and bundled runtime
-install.sh / install.ps1        # no-Node terminal bootstrap installers
-scripts/build-standalone-release.mjs # platform archive builder
+install.sh                      # macOS no-Node terminal bootstrap installer
+scripts/build-standalone-release.mjs # macOS archive builder
 ```
 
 Every runtime under `packages/open-slidex/runtime/` is rebuilt from source in

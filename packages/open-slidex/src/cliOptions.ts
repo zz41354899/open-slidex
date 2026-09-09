@@ -1,17 +1,26 @@
 export const minimumNodeVersion = "22.12.0";
 
+export type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
+
+export type PackageManagerCommand = {
+  args: readonly string[];
+  command: PackageManager;
+};
+
 export type CreateSlideXCliOptions =
   | { action: "help" }
   | { action: "version" }
   | {
       action: "create";
       installDependencies: boolean;
+      packageManager: PackageManager;
       target: string;
       template?: { id: string; locale: "en" | "zh-TW" };
     };
 
 export function parseCreateSlideXArguments(
-  args: readonly string[]
+  args: readonly string[],
+  userAgent = process.env.npm_config_user_agent
 ): CreateSlideXCliOptions {
   if (args.includes("--help") || args.includes("-h")) {
     return { action: "help" };
@@ -24,12 +33,30 @@ export function parseCreateSlideXArguments(
   let target: string | undefined;
   let templateId: string | undefined;
   let templateLocale: "en" | "zh-TW" = "en";
+  let packageManager = packageManagerFromUserAgent(userAgent);
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
 
     if (argument === "--no-install") {
       installDependencies = false;
+      continue;
+    }
+    if (argument === "--package-manager") {
+      const value = args[index + 1];
+      if (!isPackageManager(value)) {
+        throw new Error("--package-manager requires npm, pnpm, yarn, or bun.");
+      }
+      packageManager = value;
+      index += 1;
+      continue;
+    }
+    if (argument.startsWith("--package-manager=")) {
+      const value = argument.slice("--package-manager=".length);
+      if (!isPackageManager(value)) {
+        throw new Error("--package-manager requires npm, pnpm, yarn, or bun.");
+      }
+      packageManager = value;
       continue;
     }
     if (argument === "--template") {
@@ -70,6 +97,7 @@ export function parseCreateSlideXArguments(
   return {
     action: "create",
     installDependencies,
+    packageManager,
     target: target ?? "my-slidex-deck",
     ...(templateId ? { template: { id: templateId, locale: templateLocale } } : {})
   };
@@ -89,14 +117,22 @@ export function assertSupportedNodeVersion(
   }
 }
 
-export function installCommand() {
-  return { args: ["install"], command: "npm" };
+export function packageManagerFromUserAgent(userAgent?: string): PackageManager {
+  if (userAgent?.startsWith("pnpm/")) return "pnpm";
+  if (userAgent?.startsWith("yarn/")) return "yarn";
+  if (userAgent?.startsWith("bun/")) return "bun";
+  return "npm";
+}
+
+export function installCommand(packageManager: PackageManager): PackageManagerCommand {
+  return { args: ["install"], command: packageManager };
 }
 
 export function runScriptCommand(
+  packageManager: PackageManager,
   script: "dev" | "export:html" | "export:pptx" | "render" | "validate"
 ) {
-  return `npm run ${script}`;
+  return packageManager === "npm" ? `npm run ${script}` : packageManager === "bun" ? `bun run ${script}` : `${packageManager} ${script}`;
 }
 
 export function createSlideXHelp() {
@@ -108,15 +144,23 @@ Usage:
 Options:
   --template <official-template-id> Create from an official template blueprint
   --locale <en|zh-TW>               Template language (default: en)
+  --package-manager <manager>       npm, pnpm, yarn, or bun (auto-detected)
   --no-install                      Create files without installing dependencies
   -h, --help                        Show this help
   -v, --version                     Show the installed CLI version
 
 Examples:
   npx open-slidex@latest init my-deck
+  pnpm dlx open-slidex@latest init my-deck
+  yarn dlx open-slidex@latest init my-deck
+  bunx open-slidex@latest init my-deck
   open-slidex init my-deck --no-install
   open-slidex init my-deck --template summer-time-report --locale zh-TW
 `;
+}
+
+function isPackageManager(value: string | undefined): value is PackageManager {
+  return value === "npm" || value === "pnpm" || value === "yarn" || value === "bun";
 }
 
 function parseVersion(value: string) {

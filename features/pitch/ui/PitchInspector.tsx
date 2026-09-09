@@ -83,6 +83,7 @@ export const PitchInspector = memo(function PitchInspector({
   distributeSelectedBlocks,
   extendSharedMorphGroup,
   imageSourceRequiresAbsoluteUrl,
+  inspectorHeaderExtension,
   inspectorExtension,
   localAssetsOnly = false,
   importImageUrlForBlock,
@@ -141,6 +142,7 @@ export const PitchInspector = memo(function PitchInspector({
   distributeSelectedBlocks: (distribution: SelectionDistribution) => void;
   extendSharedMorphGroup: (endIndex: number) => void;
   imageSourceRequiresAbsoluteUrl: boolean;
+  inspectorHeaderExtension?: React.ReactNode;
   inspectorExtension?: React.ReactNode;
   localAssetsOnly?: boolean;
   importImageUrlForBlock: (blockIndex: number, source: string) => boolean;
@@ -209,6 +211,7 @@ export const PitchInspector = memo(function PitchInspector({
 
       <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-5 py-5">
         <div className="flex flex-col">
+          {inspectorHeaderExtension}
           {isMultiSelection ? (
             <MultiSelectionInspector
               canArrange={canArrangeSelection}

@@ -87,9 +87,6 @@ jobs:
           - os: macos-15-intel
             target: darwin-x64
             archive: open-slidex-darwin-x64.tar.gz
-          - os: windows-latest
-            target: windows-x64
-            archive: open-slidex-windows-x64.zip
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -111,11 +108,7 @@ jobs:
           node-version: 24.19.0
           cache: npm
       - run: npm ci
-      - if: runner.os != 'Windows'
-        run: npm run test:standalone
-      - if: runner.os == 'Windows'
-        shell: powershell
-        run: ./scripts/test-standalone-windows.ps1
+      - run: npm run test:standalone
       - run: npm run build:standalone
       - name: Attest build provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
@@ -154,28 +147,26 @@ jobs:
         with:
           path: release-assets
           merge-multiple: true
-      - name: Add immutable bootstrap installers
-        run: cp install.sh install.ps1 release-assets/
-      - name: Attest bootstrap installers
+      - name: Add immutable macOS bootstrap installer
+        run: cp install.sh release-assets/
+      - name: Attest macOS bootstrap installer
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
-          subject-path: |
-            release-assets/install.sh
-            release-assets/install.ps1
+          subject-path: release-assets/install.sh
       - name: Add offline provenance bundles
         working-directory: release-assets
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          for asset in open-slidex-darwin-arm64.tar.gz open-slidex-darwin-x64.tar.gz open-slidex-windows-x64.zip; do
+          for asset in open-slidex-darwin-arm64.tar.gz open-slidex-darwin-x64.tar.gz; do
             gh attestation download "$asset" --repo "$GH_REPO"
             digest=$(sha256sum "$asset" | awk '{ print $1 }')
             mv "sha256:${digest}.jsonl" "${asset}.intoto.jsonl"
           done
       - name: Create SHA-256 manifest
         working-directory: release-assets
-        run: sha256sum open-slidex-* install.sh install.ps1 > SHA256SUMS.txt
+        run: sha256sum open-slidex-* install.sh > SHA256SUMS.txt
       - name: Publish release assets
         env:
           EXPECTED_SHA: ${{ needs.resolve.outputs.ref }}

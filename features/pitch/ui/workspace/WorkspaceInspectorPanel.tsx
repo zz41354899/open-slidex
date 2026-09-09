@@ -133,6 +133,7 @@ function PitchInspectorContent({ commands, document, onOpenMdxEditor, selection,
       distributeSelectedBlocks={commands.distributeSelectedBlocks}
       extendSharedMorphGroup={commands.extendSharedMorphGroup}
       imageSourceRequiresAbsoluteUrl={commands.imageSourceRequiresAbsoluteUrl}
+      inspectorHeaderExtension={view.inspectorHeaderExtension}
       inspectorExtension={view.inspectorExtension}
       localAssetsOnly={view.localAssetsOnly === true}
       importImageUrlForBlock={commands.importImageUrlForBlock}
