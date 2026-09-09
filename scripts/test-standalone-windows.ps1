@@ -110,10 +110,12 @@ try {
   $FakeGhSource = Join-Path $Root "fake-gh-source.cmd"
   $FakeWinget = Join-Path $FakeBin "winget.cmd"
   $WingetMarker = Join-Path $Root "winget-invoked"
+  $GhArguments = Join-Path $Root "gh-arguments"
   $BootstrapInstaller = Join-Path $Root "install-with-local-attestation.ps1"
   New-Item -ItemType Directory -Path $FakeBin -Force | Out-Null
-  Set-Content -LiteralPath $FakeGhSource -Value "@echo off`r`nexit /b 0" -Encoding ASCII
+  Set-Content -LiteralPath $FakeGhSource -Value "@echo off`r`necho %* > `"$GhArguments`"`r`nexit /b 0" -Encoding ASCII
   Set-Content -LiteralPath $FakeWinget -Value "@echo off`r`ncopy /Y `"$FakeGhSource`" `"$FakeGh`" >NUL`r`ncopy NUL `"$WingetMarker`" >NUL`r`nexit /b 0" -Encoding ASCII
+  Set-Content -LiteralPath (Join-Path $ReleaseRoot "$Asset.intoto.jsonl") -Value "offline-attestation" -Encoding ASCII
   $InstallerSource = Get-Content -LiteralPath (Join-Path $RepositoryRoot "install.ps1") -Raw
   $InstallerSource = $InstallerSource.Replace('$DefaultReleaseBaseUrl = "https://github.com/$Repository/releases/latest/download"', '$DefaultReleaseBaseUrl = $env:OPEN_SLIDEX_RELEASE_BASE_URL')
   Set-Content -LiteralPath $BootstrapInstaller -Value $InstallerSource -Encoding UTF8
@@ -124,6 +126,8 @@ try {
     $env:OPEN_SLIDEX_WORKSPACE = Join-Path $Root "bootstrap-workspace"
     & $BootstrapInstaller
     if (-not (Test-Path -LiteralPath $WingetMarker)) { throw "Missing GitHub CLI did not invoke winget." }
+    $GhArgumentsText = Get-Content -Raw -LiteralPath $GhArguments
+    if ($GhArgumentsText -notmatch "--bundle" -or $GhArgumentsText -notmatch "--source-ref") { throw "GitHub CLI did not use the offline attestation bundle." }
     $BootstrapLauncher = Join-Path $env:OPEN_SLIDEX_INSTALL_ROOT "slidex.cmd"
     if (-not (Test-Path -LiteralPath $BootstrapLauncher)) { throw "Missing GitHub CLI did not complete installation." }
     $env:Path = $OriginalPath
