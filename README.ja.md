@@ -14,7 +14,7 @@ OpenSlideX は、編集可能なプレゼンテーションのための、オー
 
 ## インストール
 
-Node.js 22.12 以降があるすべてのプラットフォームでは `npx open-slidex@latest` を使用できます。Node.js 不要のスタンドアロンインストールは macOS のみ対応です。
+`npx`、`pnpm`、Yarn、または Bun でプロジェクトを作成できます。npx、pnpm、Yarn のコマンドには Node.js 22.12 以降が必要です。Bun は自身の最新ランタイムを使用します。Node.js 不要のスタンドアロンインストールは macOS のみ対応です。
 
 ### npx（すべてのプラットフォーム）
 
@@ -22,6 +22,30 @@ Node.js 22.12 以降があるすべてのプラットフォームでは `npx ope
 npx open-slidex@latest init my-deck
 cd my-deck
 npm run dev
+```
+
+### pnpm
+
+```bash
+pnpm dlx open-slidex@latest init my-deck
+cd my-deck
+pnpm dev
+```
+
+### Yarn（2+）
+
+```bash
+yarn dlx open-slidex@latest init my-deck
+cd my-deck
+yarn dev
+```
+
+### Bun
+
+```bash
+bunx open-slidex@latest init my-deck
+cd my-deck
+bun run dev
 ```
 
 ### macOS スタンドアロン
@@ -66,7 +90,7 @@ npm run dev
 npm run dev -- ~/Presentations --port 4174
 ```
 
-## グローバル npm CLI
+## パッケージランナー CLI
 
 ```bash
 npx open-slidex@latest init my-deck
@@ -80,6 +104,8 @@ npm run dev
 npm install --global open-slidex@latest
 open-slidex init my-deck
 ```
+
+`npx` の代わりに `pnpm dlx`、`yarn dlx`、または `bunx` を使えます。作成したプロジェクトでは、それぞれ `pnpm dev`、`yarn dev`、`bun run dev` を実行します。
 
 インストール済みプロジェクトの `npm run dev` は常に `/workspace` を開き、プロジェクト内の `open-slidex-workspace/` をルートにします。各デッキは自身のソース、アセット、エクスポートを所有し、Workbench ソースと依存キャッシュは `.open-slidex/` に保存されます。
 

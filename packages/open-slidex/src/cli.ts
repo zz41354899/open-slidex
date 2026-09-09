@@ -19,6 +19,7 @@ import {
   assertSupportedNodeVersion,
   createSlideXHelp,
   installCommand,
+  type PackageManager,
   parseCreateSlideXArguments,
   runScriptCommand
 } from "./cliOptions";
@@ -52,7 +53,7 @@ async function main() {
 
   await assertTargetIsAvailable(targetDir);
   if (options.installDependencies) {
-    await assertNpmAvailable();
+    await assertPackageManagerAvailable(options.packageManager);
   }
 
   await mkdir(targetDir, { recursive: true });
@@ -68,13 +69,14 @@ async function main() {
   }
 
   if (options.installDependencies) {
-    const install = installCommand();
+    const install = installCommand(options.packageManager);
     await run(install.command, install.args, targetDir, "inherit");
   }
 
   process.stdout.write(
     completionMessage({
       installDependencies: options.installDependencies,
+      packageManager: options.packageManager,
       targetDir,
       templateId: options.template?.id
     })
@@ -83,14 +85,16 @@ async function main() {
 
 function completionMessage({
   installDependencies,
+  packageManager,
   targetDir,
   templateId
 }: {
   installDependencies: boolean;
+  packageManager: PackageManager;
   targetDir: string;
   templateId?: string;
 }) {
-  const install = installCommand();
+  const install = installCommand(packageManager);
   return [
     "",
     `Created OpenSlideX React-first Local Workbench in ${targetDir}`,
@@ -100,7 +104,7 @@ function completionMessage({
     ...(installDependencies
       ? []
       : [`  ${install.command} ${install.args.join(" ")}`]),
-    `  ${runScriptCommand("dev")}`,
+    `  ${runScriptCommand(packageManager, "dev")}`,
     "",
     ...(templateId
       ? [`The ${templateId} deck is ready in open-slidex-workspace/.`, ""]
@@ -194,11 +198,11 @@ async function assertTargetIsAvailable(target: string) {
   }
 }
 
-async function assertNpmAvailable() {
+async function assertPackageManagerAvailable(packageManager: PackageManager) {
   try {
-    await run("npm", ["--version"], process.cwd(), "ignore");
+    await run(packageManager, ["--version"], process.cwd(), "ignore");
   } catch {
-    throw new Error("npm is not available. Install npm or pass --no-install.");
+    throw new Error(`${packageManager} is not available. Install it or pass --no-install.`);
   }
 }
 

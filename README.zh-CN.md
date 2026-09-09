@@ -14,7 +14,7 @@ OpenSlideX 是开源、local-first 的可编辑演示文稿工作区。每份演
 
 ## 安装方式
 
-任何安装 Node.js 22.12 或更高版本的平台都可使用 `npx open-slidex@latest`。无需 Node.js 的 standalone 安装仅支持 macOS。
+可使用 `npx`、`pnpm`、Yarn 或 Bun 创建项目。npx、pnpm 和 Yarn 命令需要 Node.js 22.12 或更高版本；Bun 使用自身的最新运行时。无需 Node.js 的 standalone 安装仅支持 macOS。
 
 ### npx（所有平台）
 
@@ -22,6 +22,30 @@ OpenSlideX 是开源、local-first 的可编辑演示文稿工作区。每份演
 npx open-slidex@latest init my-deck
 cd my-deck
 npm run dev
+```
+
+### pnpm
+
+```bash
+pnpm dlx open-slidex@latest init my-deck
+cd my-deck
+pnpm dev
+```
+
+### Yarn（2+）
+
+```bash
+yarn dlx open-slidex@latest init my-deck
+cd my-deck
+yarn dev
+```
+
+### Bun
+
+```bash
+bunx open-slidex@latest init my-deck
+cd my-deck
+bun run dev
 ```
 
 ### macOS standalone
@@ -66,7 +90,7 @@ npm run dev
 npm run dev -- ~/Presentations --port 4174
 ```
 
-## 使用全局 npm CLI
+## 使用包运行器 CLI
 
 ```bash
 npx open-slidex@latest init my-deck
@@ -80,6 +104,8 @@ npm run dev
 npm install --global open-slidex@latest
 open-slidex init my-deck
 ```
+
+可将 `npx` 改为 `pnpm dlx`、`yarn dlx` 或 `bunx`；进入创建好的项目后，分别使用 `pnpm dev`、`yarn dev` 或 `bun run dev`。
 
 已安装项目中的 `npm run dev` 会始终打开 `/workspace`，根目录是 `open-slidex-workspace/`。每个 deck 都拥有自己的源文件、资源和导出文件；Workbench 源文件和依赖缓存保留在 `.open-slidex/`。
 

@@ -18,8 +18,9 @@ Click the preview to [watch the OpenSlideX Workspace demo](https://www.slidexdec
 
 ## Install
 
-Use `npx open-slidex@latest` on any platform with Node.js 22.12 or newer.
-The no-Node standalone installer is available only on macOS.
+Create a project with `npx`, `pnpm`, Yarn, or Bun. The npx, pnpm, and Yarn
+commands require Node.js 22.12 or newer; Bun uses its own current runtime. The
+no-Node standalone installer is available only on macOS.
 
 ### npx (all platforms)
 
@@ -27,6 +28,30 @@ The no-Node standalone installer is available only on macOS.
 npx open-slidex@latest init my-deck
 cd my-deck
 npm run dev
+```
+
+### pnpm
+
+```bash
+pnpm dlx open-slidex@latest init my-deck
+cd my-deck
+pnpm dev
+```
+
+### Yarn (2+)
+
+```bash
+yarn dlx open-slidex@latest init my-deck
+cd my-deck
+yarn dev
+```
+
+### Bun
+
+```bash
+bunx open-slidex@latest init my-deck
+cd my-deck
+bun run dev
 ```
 
 ### macOS standalone
@@ -82,7 +107,7 @@ and Obsidian-specific templates are intentionally excluded.
 npm run dev -- ~/Presentations --port 4174
 ```
 
-## Global npm CLI
+## Package-runner CLI
 
 The npm package creates a separate presentation project:
 
@@ -98,6 +123,9 @@ Or install the CLI globally:
 npm install --global open-slidex@latest
 open-slidex init my-deck
 ```
+
+Use `pnpm dlx`, `yarn dlx`, or `bunx` in place of `npx`; in the generated
+project, use `pnpm dev`, `yarn dev`, or `bun run dev` respectively.
 
 `npm run dev` in an installed project always opens `/workspace`, rooted at the
 project's own ignored `open-slidex-workspace/` directory. A fresh install has
