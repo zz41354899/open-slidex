@@ -169,10 +169,15 @@ test("PDF text extraction enforces cumulative output, item, time, and cancellati
     () => extractPdfTextPages(bytes, { maximumItems: 1 }),
     /PDF text extraction exceeded the cumulative text item budget/
   );
-  await assert.rejects(
-    () => extractPdfTextPages(bytes, { maximumDurationMs: 1 }),
-    /PDF text extraction exceeded the 1 ms time budget/
-  );
+  // Repeating the deadline path catches cleanup that leaves a pdf.js stream
+  // alive after its caller returns. Node reports those late worker failures as
+  // an unhandled rejection only after the test body has finished.
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    await assert.rejects(
+      () => extractPdfTextPages(bytes, { maximumDurationMs: 1 }),
+      /PDF text extraction exceeded the 1 ms time budget/
+    );
+  }
   const controller = new AbortController();
   controller.abort(new Error("text extraction cancelled"));
   await assert.rejects(
