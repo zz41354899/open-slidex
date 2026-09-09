@@ -15,6 +15,7 @@ import { documentRoutes } from "./documentRoutes";
 import { exportRoutes } from "./exportRoutes";
 import { sendJson, type WorkbenchRouteContext } from "./httpRoute";
 import { OpenSlideXLocalMediaError, SlideXProject } from "./project";
+import { PresenterRemoteServer } from "./presenterRemote";
 import { sseRoutes } from "./sseRoutes";
 
 type StartServerInput = {
@@ -62,6 +63,7 @@ export async function startWorkbenchServer(input: StartServerInput) {
 
 export function createWorkbenchRouter(project: SlideXProject): WorkbenchRouter {
   const eventClients = new Set<ServerResponse>();
+  const presenterRemote = new PresenterRemoteServer();
   let lastActivity = Date.now();
   let activeRequests = 0;
   const notifications = new Map<string, ReturnType<typeof setTimeout>>();
@@ -93,6 +95,7 @@ export function createWorkbenchRouter(project: SlideXProject): WorkbenchRouter {
         await watcherClosed;
         for (const client of eventClients) client.end();
         eventClients.clear();
+        await presenterRemote.close();
       })();
       return closing;
     },
@@ -104,6 +107,7 @@ export function createWorkbenchRouter(project: SlideXProject): WorkbenchRouter {
         eventClients,
         incoming,
         outgoing,
+        presenterRemote,
         project,
         request,
         url

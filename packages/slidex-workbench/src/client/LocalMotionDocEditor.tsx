@@ -3,6 +3,7 @@ import { Sparkles } from "lucide-react";
 import { MotionDocEditor } from "@open-slidex/editor-ui";
 
 import { defaultMdx } from "@/core/motion-doc/presets/defaultMdx";
+import { PresentationPlaybackModePicker } from "@/features/pitch/ui/PresentationPlaybackModePicker";
 import { motionDocChartAnimationDuration, motionDocChartModel, motionDocToReactPresentationSource } from "@open-slidex/sdk";
 import { getSelectionMdx } from "@/core/motion-doc/application/motionDocSerialize";
 import { motionDocBlockKey } from "@/core/motion-doc/application/motionDocBlockIdentity";
@@ -16,20 +17,28 @@ import { usePitchShortcuts } from "@/features/pitch/ui/hooks/usePitchShortcuts";
 import { usePitchUndo } from "@/features/pitch/ui/hooks/usePitchUndo";
 import { usePitchWorkspaceViewState } from "@/features/pitch/ui/hooks/usePitchWorkspaceViewState";
 import { PresentationPreviewModal } from "@/features/pitch/ui/PresentationPreviewModal";
-import { PresentationPlaybackModePicker, type PresentationPlaybackMode } from "@/features/pitch/ui/PresentationPlaybackModePicker";
+import { PresentationConsoleModal } from "@/features/pitch/ui/PresentationConsoleModal";
+import { PresentationProjectionWindow } from "@/features/pitch/ui/PresentationProjectionWindow";
+import { PresenterNotesFab } from "@/features/pitch/ui/PresenterNotesFab";
+import { MotionSequencePanel } from "@/features/pitch/ui/MotionSequenceStrip";
+import { presenterNotesKey } from "@/features/pitch/application/presenterNotes";
 import { PreviewMediaPolicyProvider } from "@/features/pitch/ui/preview/PreviewMediaPolicy";
 import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
 import type { SlideXEditorAssetAdapter } from "@/features/pitch/domain/localEditor";
 
 import {
   deleteAsset,
+  closePresenterRemoteSession,
+  createPresenterRemoteSession,
   exportDocument,
   localWorkbenchAssetUrl,
   materializeLocalExportMedia,
   prepareExportDestination,
   renderMontage,
+  subscribePresenterRemoteSession,
   updateContext,
   updateHtmlAsset,
+  updatePresenterRemoteSession,
   uploadAsset
 } from "./api";
 import slidexWordmark from "./assets/slidex-wordmark.png";
@@ -80,8 +89,13 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
   const [openTool, setOpenTool] = useState<LocalToolMenuId | null>(null);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const [localChartAnimationsActive, setLocalChartAnimationsActive] = useState(false);
+  const [isPresenterConsoleOpen, setIsPresenterConsoleOpen] = useState(false);
   const [isPlaybackModePickerOpen, setIsPlaybackModePickerOpen] = useState(false);
-  const [presentationPlaybackMode, setPresentationPlaybackMode] = useState<PresentationPlaybackMode>("projection");
+  // Session-only notes never mutate the source or trigger document autosave.
+  const [presenterNotes, setPresenterNotes] = useState<Record<string, string>>({});
+  const changePresenterNotes = useCallback((id: string, value: string) => {
+    setPresenterNotes(current => ({ ...current, [id]: value }));
+  }, []);
   const undoStackRef = useRef<SourceHistoryEntry[]>([]);
   const redoStackRef = useRef<SourceHistoryEntry[]>([]);
   const chartReplayTimerRef = useRef<number | null>(null);
@@ -163,6 +177,9 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     undoStackRef
   });
   const projectName = sliderDocument.title || documentSnapshot?.title || tx("Untitled presentation");
+  const isProjectionWindow = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("slidexProjection") === "1";
+  const [presenterWindowId] = useState(() => new URLSearchParams(window.location.search).get("presenterWindow") || crypto.randomUUID());
+  const projectionChannel = `openslidex-presenter:${window.location.pathname}:${presenterWindowId}`;
   const workspaceHomeUrl = __OPEN_SLIDEX_WORKSPACE_URL__ || (
     /^\/workspace\/[A-Za-z0-9._-]+\/?$/.test(window.location.pathname)
       ? `${window.location.origin}/workspace`
@@ -408,7 +425,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
 
   usePitchShortcuts({
     activeSlideIndex,
-    blocked: Boolean(htmlWorkspace),
+    blocked: Boolean(htmlWorkspace) || isPresenterConsoleOpen || isPlaybackModePickerOpen,
     closeCodeEditor: () => setIsCodeEditorOpen(false),
     closeExportMenu: () => setIsExportMenuOpen(false),
     closeMobileInspector: () => setIsMobileInspectorOpen(false),
@@ -445,7 +462,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
   });
 
   useLocalWorkbenchShortcuts({
-    blocked: Boolean(htmlWorkspace) || isCodeEditorOpen || isPresentationPreviewOpen || shortcutHelpOpen,
+    blocked: Boolean(htmlWorkspace) || isCodeEditorOpen || isPresentationPreviewOpen || isPresenterConsoleOpen || isPlaybackModePickerOpen || shortcutHelpOpen,
     onAddChart: () => pitchCommands.addBlockToActiveSlide("Chart"),
     onAddText: () => pitchCommands.addBlockToActiveSlide("Text"),
     onRedo: redoLastChange,
@@ -474,7 +491,16 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
   const openExportWithFormat = useCallback((format: "html" | "mdx" | "pptx") => {
     void runExport(format);
   }, [runExport]);
-  const openPresentationPreview = useCallback(() => setIsPlaybackModePickerOpen(true), []);
+  const openProjectionWindow = useCallback(() => {
+    const projectionUrl = new URL(window.location.href);
+    projectionUrl.searchParams.set("slidexProjection", "1");
+    projectionUrl.searchParams.set("presenterWindow", presenterWindowId);
+    const projectionWindow = window.open(projectionUrl.toString(), `openslidex-projection-${presenterWindowId}`, "popup=yes,width=1600,height=900");
+    if (!projectionWindow) setNotice(tx("Allow pop-ups to open the projection window."));
+  }, [presenterWindowId, setNotice, tx]);
+  const openPresentationPreview = useCallback(() => {
+    setIsPlaybackModePickerOpen(true);
+  }, []);
   const selectShapeTool = useCallback((tool: CanvasShapeTool | null) => {
     setActiveCanvasTool("select");
     setCanvasShapeTool(tool);
@@ -526,6 +552,14 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
       sourcePath={htmlWorkspace.source}
     />
   ) : undefined, [activeHtmlPage, activeSlideIndex, closeMobileInspector, htmlWorkspace, saveHtmlSource]);
+  const motionSequenceInspector = useMemo(() => htmlWorkspace ? undefined : (
+    <MotionSequencePanel
+      onPreview={triggerChartReplay}
+      onReorder={pitchCommandActions.reorderMotionActions}
+      onSelectBlock={selectSingleBlock}
+      scene={activeSlide}
+    />
+  ), [activeSlide, htmlWorkspace, pitchCommandActions.reorderMotionActions, selectSingleBlock, triggerChartReplay]);
   const inspectorExtension = htmlWorkspace ? undefined : chartInspector;
 
   const editorCommands = useMemo<ComponentProps<typeof MotionDocEditor>["commands"]>(() => ({
@@ -710,7 +744,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           activeCanvasTool,
           authoringDisabled: Boolean(htmlWorkspace),
           assetUrl: localWorkbenchAssetUrl,
-          canvasPreviewSuspended: isPresentationPreviewOpen,
+          canvasPreviewSuspended: isPresentationPreviewOpen || isPresenterConsoleOpen,
           canvasViewMode,
           canvasShapeTool,
           commentsEnabled: false,
@@ -722,6 +756,7 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
           headerTools,
           headerVariant: "local",
           homeHref: "#",
+          inspectorHeaderExtension: motionSequenceInspector,
           inspectorExtension,
           inspectorOverride,
           localAssetsOnly: true,
@@ -769,7 +804,9 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     isExportMenuOpen,
     isMobileInspectorOpen,
     isMobileSidebarOpen,
+    motionSequenceInspector,
     isPresentationPreviewOpen,
+    isPresenterConsoleOpen,
     localChartAnimationsActive,
     notice,
     replayNonce,
@@ -794,32 +831,58 @@ export function LocalMotionDocEditor({ documentState }: { documentState: LocalDo
     view: editorView
   }), [editorCommands, editorDocument, editorSelection, editorView]);
 
+  if (isProjectionWindow) {
+    return <PreviewMediaPolicyProvider assetUrl={localWorkbenchAssetUrl} animateCharts localAssetsOnly><PresentationProjectionWindow channelName={projectionChannel} initialSlideIndex={activeSlideIndex} scenes={sliderDocument.scenes} onSubscribeRemoteSession={subscribePresenterRemoteSession} /></PreviewMediaPolicyProvider>;
+  }
+
   return (
     <div className="local-workbench-shell">
       <MotionDocEditor {...editorProps} />
+      <PresenterNotesFab
+        notes={presenterNotes[presenterNotesKey(activeSlide, activeSlideIndex)] ?? String(activeSlide?.props.presenterNotes ?? "")}
+        onChange={(notes) => changePresenterNotes(presenterNotesKey(activeSlide, activeSlideIndex), notes)}
+        slideNumber={activeSlideIndex + 1}
+      />
 
       {documentState.message ? (
         <LocalNotice documentState={documentState} onRestoreSaved={restoreSavedCanvas} />
       ) : null}
       <PreviewMediaPolicyProvider assetUrl={localWorkbenchAssetUrl} animateCharts localAssetsOnly>
+        <PresentationPlaybackModePicker
+          isOpen={isPlaybackModePickerOpen}
+          scene={activeSlide}
+          index={activeSlideIndex}
+          onClose={() => setIsPlaybackModePickerOpen(false)}
+          onSelect={(mode) => {
+            setIsPlaybackModePickerOpen(false);
+            if (mode === "presenter") { openProjectionWindow(); setIsPresenterConsoleOpen(true); }
+            else setIsPresentationPreviewOpen(true);
+          }}
+        />
         <PresentationPreviewModal
           activeSlideIndex={activeSlideIndex}
           documentTitle={projectName}
           isOpen={isPresentationPreviewOpen}
           onClose={() => setIsPresentationPreviewOpen(false)}
           scenes={sliderDocument.scenes}
-          startInFullscreen={presentationPlaybackMode === "fullscreen"}
+          startInFullscreen
+        />
+        <PresentationConsoleModal
+          activeSlideIndex={activeSlideIndex}
+          documentTitle={projectName}
+          isOpen={isPresenterConsoleOpen}
+          onClose={() => setIsPresenterConsoleOpen(false)}
+          onCloseRemoteSession={closePresenterRemoteSession}
+          onCreateRemoteSession={createPresenterRemoteSession}
+          onOpenProjection={openProjectionWindow}
+          onSubscribeRemoteSession={subscribePresenterRemoteSession}
+          onUpdateRemoteSession={updatePresenterRemoteSession}
+          projectionChannel={projectionChannel}
+          notes={presenterNotes}
+          onNotesChange={changePresenterNotes}
+          scenes={sliderDocument.scenes}
         />
       </PreviewMediaPolicyProvider>
-      <PresentationPlaybackModePicker
-        isOpen={isPlaybackModePickerOpen}
-        onClose={() => setIsPlaybackModePickerOpen(false)}
-        onSelect={(mode) => {
-          setPresentationPlaybackMode(mode);
-          setIsPlaybackModePickerOpen(false);
-          setIsPresentationPreviewOpen(true);
-        }}
-      />
       {commandOpen ? <LocalCommandMenu onClose={() => setCommandOpen(false)} onExport={() => void runExport("html")} onRender={() => void renderMontage()} /> : null}
     </div>
   );
