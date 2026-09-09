@@ -57,7 +57,7 @@
     "micromark-extension-gfm": "^3.0.0",
     "pdf-to-img": "5.0.0",
     "pdfjs-dist": "5.4.624",
-    "playwright-core": "1.61.1",
+    "playwright-core": "1.63.0",
     "postcss": "^8.5.26",
     "radix-ui": "^1.6.7",
     "react": "19.2.7",

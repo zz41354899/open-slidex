@@ -19,7 +19,7 @@
     "mdast-util-from-markdown": "2.0.3",
     "pdf-to-img": "5.0.0",
     "pdfjs-dist": "5.4.624",
-    "playwright-core": "1.61.1",
+    "playwright-core": "1.63.0",
     "sharp": "^0.35.3",
     "zod": "^4.4.3"
   },
