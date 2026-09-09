@@ -59,9 +59,15 @@ export async function extractPdfTextPages(
     let outputBytes = 0;
     for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
       assertWithinDuration(deadline);
-      const page = await withPdfDeadline(document.getPage(pageNumber), deadline);
+      // The page request may still be in flight when the deadline wins. Track
+      // it so document destruction cannot turn that request into a late
+      // "Transport destroyed" rejection after this extraction has returned.
+      const page = await withPdfDeadline(trackPdfOperation(document.getPage(pageNumber), pendingOperations), deadline);
       const strings: string[] = [];
       const reader = page.streamTextContent({ disableNormalization: false }).getReader();
+      // `closed` rejects if pdf.js ends this stream with an error. Keep that
+      // rejection observed even if the deadline wins the read race.
+      const readerClosed = reader.closed.catch(() => undefined);
       let completed = false;
       let readPending = false;
       try {
@@ -92,25 +98,20 @@ export async function extractPdfTextPages(
         }
       } finally {
         // A budget can be exceeded after a complete chunk has arrived. In that
-        // common case there is no outstanding read, and releasing the lock is
-        // both sufficient and safer than cancelling: pdf.js can otherwise
-        // report its delayed cancellation error after the caller has returned.
-        //
-        // When the deadline interrupts an in-flight read, cancellation is
-        // still necessary. Observe that promise so a worker-side failure never
-        // becomes an unhandled rejection.
+        // common case there is no outstanding read, so releasing the lock is
+        // sufficient. For an in-flight read, wait for both cancellation and
+        // `closed`: the latter is where pdf.js reports stream transport errors.
         if (!completed) {
           if (!readPending) {
             reader.releaseLock();
           } else {
-            void reader
-              .cancel(new Error(`${deadline.label} stopped before completion.`))
-              .catch(() => undefined);
+            const cancellation = reader.cancel(new Error(`${deadline.label} stopped before completion.`));
+            await Promise.allSettled([cancellation, readerClosed]);
+            reader.releaseLock();
           }
         } else {
           reader.releaseLock();
         }
-        await settlePdfOperations(pendingOperations);
       }
       pages.push(strings
         .join(" ")
