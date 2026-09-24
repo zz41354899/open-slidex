@@ -47,7 +47,7 @@ import {
 } from "@open-slidex/sdk/node";
 
 import { analyzeHtmlPresentation, assertSandboxedHtml, secureHtmlForStandaloneExport } from "./htmlImportPolicy";
-import { createHtmlPresentationMdx, extractEmbeddedImageAssets, MAX_WORKSPACE_IMPORT_FILE_BYTES } from "./workspaceImport";
+import { createHtmlPresentationMdx, extractEmbeddedImageAssets, inlineHtmlImageAssets, MAX_WORKSPACE_IMPORT_FILE_BYTES } from "./workspaceImport";
 import { renderOfficialTemplateCover } from "./templateCover";
 import { fileFingerprint } from "./fileFingerprint";
 import { BoundedCache } from "@/common/util/boundedCache";
@@ -612,7 +612,8 @@ export class SlideXProject {
     const originalHtml = input.format === "html" && input.htmlMode !== "player" ? htmlSource : undefined;
     if (originalHtml) {
       const bytes = await this.readAsset(originalHtml.slice("assets/".length));
-      const securedBytes = Buffer.from(secureHtmlForStandaloneExport(bytes.toString("utf8")), "utf8");
+      const portableHtml = await inlineHtmlImageAssets(bytes.toString("utf8"), this.assetsRoot);
+      const securedBytes = Buffer.from(secureHtmlForStandaloneExport(portableHtml), "utf8");
       if (input.target === "download") return { bytes: securedBytes, output: `${fileName}.html` };
       const outputPath = path.join(this.distRoot, `${fileName}.html`);
       if (!input.overwrite && await exists(outputPath)) throw new Error(`dist/${fileName}.html already exists.`);

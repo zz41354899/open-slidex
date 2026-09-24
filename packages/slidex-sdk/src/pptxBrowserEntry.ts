@@ -48,13 +48,19 @@ window.__slidexExportPptx = async ({ source, title }) => {
     }
   );
 
-  await pptx.writeFile({
-    // Shader and filtered-image fallbacks are already PNG-compressed. ZIP
-    // recompression adds substantial CPU time for multi-slide decks while
-    // yielding almost no size reduction, so keep the download responsive.
-    compression: false,
-    fileName: `${slugifyFilename(title || "open-slidex-deck")}.pptx`
-  });
+  // PptxGenJS revokes its browser download URL after 100 ms. Large decks can
+  // still be streaming into Chromium at that point, leaving a truncated file
+  // that PowerPoint cannot open. Keep our URL alive until the Node caller has
+  // finished saving the Playwright download (which closes this page).
+  const generated = await pptx.write({ compression: false, outputType: "blob" });
+  if (!(generated instanceof Blob)) throw new Error("PowerPoint export did not produce a file.");
+  const url = URL.createObjectURL(generated);
+  const link = window.document.createElement("a");
+  link.href = url;
+  link.download = `${slugifyFilename(title || "open-slidex-deck")}.pptx`;
+  link.style.display = "none";
+  window.document.body.append(link);
+  link.click();
 
   return {
     rasterizedSlideIndices: [...rasterRequirements.slideIndices]

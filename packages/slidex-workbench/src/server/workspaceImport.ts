@@ -186,6 +186,16 @@ export async function packageHtmlAssets(source: string, options: PackageHtmlAsse
   };
 }
 
+/** Make an imported HTML presentation self-contained for a single-file export. */
+export async function inlineHtmlImageAssets(source: string, assetRoot: string) {
+  const packaged = await packageHtmlAssets(source, { assetRoot });
+  const replacements = new Map(packaged.assets.map((asset) => [
+    asset.fileName,
+    `data:${asset.mediaType};base64,${Buffer.from(asset.bytes).toString("base64")}`
+  ]));
+  return rewriteHtmlSidecarReferences(packaged.source, replacements);
+}
+
 async function packageHtmlImage(bytes: Uint8Array, extension: string, reference: string): Promise<WorkspaceImportAsset> {
   let outputBytes = bytes;
   let outputExtension = extension === ".jpeg" ? ".jpg" : extension;

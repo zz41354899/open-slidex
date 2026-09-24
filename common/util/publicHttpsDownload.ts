@@ -129,7 +129,13 @@ function requestOnce(
         "User-Agent": options.userAgent
       },
       hostname: url.hostname,
-      lookup: (_hostname, _lookupOptions, callback) => callback(null, target.address, target.family),
+      lookup: (_hostname, lookupOptions, callback) => {
+        // Recent Node versions request the `all` form while trying multiple
+        // address families. In that mode the callback must receive an array;
+        // passing a single address leaves it undefined in the socket layer.
+        if (lookupOptions.all) callback(null, [target]);
+        else callback(null, target.address, target.family);
+      },
       method: "GET",
       path: `${url.pathname}${url.search}`,
       port: 443,
