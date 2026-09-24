@@ -1,14 +1,11 @@
 import {
   Chart,
   Deck,
-  HtmlEmbed as HtmlEmbedBlock,
   Image as ImageBlock,
   Shape,
   Slide,
-  Svg as SvgBlock,
   Table,
   Text,
-  Video as VideoBlock,
   definePresentation,
 } from "@open-slidex/sdk/react";
 

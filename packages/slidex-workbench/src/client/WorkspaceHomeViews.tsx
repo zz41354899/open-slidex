@@ -34,7 +34,7 @@ export function HomeView(props: {
       onClick: props.onTemplates
     },
     {
-      body: zh ? "匯入可編輯 MDX，或隔離播放含線上素材的 HTML。" : "Import editable MDX or play HTML with online resources in isolation.",
+      body: zh ? "匯入可編輯的 TSX、MDX，或離線 HTML 簡報。" : "Import editable TSX or MDX, or an offline HTML presentation.",
       icon: Upload,
       label: zh ? "匯入 OpenSlideX 簡報" : "Import OpenSlideX presentation",
       onClick: props.onImport

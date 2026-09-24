@@ -60,6 +60,26 @@ test("skill sync rejects an incomplete bundled catalog", async (context) => {
   );
 });
 
+test("skill sync keeps the current skill when a bundled SKILL.md is missing", async (context) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-skill-preserve-"));
+  context.after(async () => rm(root, { force: true, recursive: true }));
+  const skillsRoot = path.join(root, "bundled-skills");
+  for (const skill of openSlideXProjectSkillNames) {
+    const skillRoot = path.join(skillsRoot, skill);
+    await mkdir(skillRoot, { recursive: true });
+    if (skill !== "slidex-deck-qa") await writeFile(path.join(skillRoot, "SKILL.md"), `# ${skill}\n`, "utf8");
+  }
+  const installedSkill = path.join(root, ".agents", "skills", "slidex-deck-design");
+  await mkdir(installedSkill, { recursive: true });
+  await writeFile(path.join(installedSkill, "SKILL.md"), "# Keep this version\n", "utf8");
+
+  await assert.rejects(
+    () => syncOpenSlideXProjectSkills(skillsRoot, [root]),
+    /bundled OpenSlideX skill is missing SKILL\.md: slidex-deck-qa/
+  );
+  assert.equal(await readFile(path.join(installedSkill, "SKILL.md"), "utf8"), "# Keep this version\n");
+});
+
 test("skill sync targets only the current project when run inside a deck", async (context) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "open-slidex-skill-project-"));
   context.after(async () => rm(root, { force: true, recursive: true }));

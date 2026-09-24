@@ -88,6 +88,38 @@ test("HTML asset packaging rejects PNG dimensions above the product pixel budget
   );
 });
 
+test("HTML folder import ignores unreferenced image sidecars", async () => {
+  const valid = await sharp({
+    create: { background: "#3157d5", channels: 4, height: 16, width: 16 }
+  }).png().toBuffer();
+  const packaged = await packageHtmlAssets(
+    '<!doctype html><html><body><img src="assets/cover.png"></body></html>',
+    {
+      htmlSidecars: [
+        { file: new File([valid], "cover.png", { type: "image/png" }), path: "assets/cover.png" },
+        { file: new File(["not an image"], "unused.png", { type: "image/png" }), path: "assets/unused.png" }
+      ]
+    }
+  );
+
+  assert.equal(packaged.assets.length, 1);
+  assert.match(packaged.source, /html-asset-[a-f0-9]{16}\.webp/);
+  assert.doesNotMatch(packaged.source, /cover\.png/);
+});
+
+test("HTML folder import matches local images with cache query strings and fragments", async () => {
+  const png = await sharp({
+    create: { background: "#3157d5", channels: 4, height: 16, width: 16 }
+  }).png().toBuffer();
+  const packaged = await packageHtmlAssets(
+    '<!doctype html><html><body><img src="./assets/cover.png?v=2"><img src="assets/cover.png#preview"></body></html>',
+    { htmlSidecars: [{ file: new File([png], "cover.png", { type: "image/png" }), path: "assets/cover.png" }] }
+  );
+
+  assert.equal(packaged.assets.length, 1);
+  assert.equal((packaged.source.match(/html-asset-[a-f0-9]{16}\.webp/g) ?? []).length, 2);
+});
+
 function crc32(bytes: Uint8Array) {
   let crc = 0xffffffff;
   for (const byte of bytes) {

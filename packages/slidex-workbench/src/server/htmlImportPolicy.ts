@@ -21,7 +21,7 @@ export type HtmlImportPolicyOptions = {
 /**
  * Imported HTML keeps its original bytes and runs as an opaque-origin browser
  * document. Embedded resources work offline. Absolute HTTP(S) resources, CDN
- * libraries, and relative resources resolved by a remote <base> stay online.
+ * libraries, and relative resources resolved by a remote <base> are rejected.
  * Local image sidecars are packaged before this policy runs. A single browser
  * file upload cannot expose sibling bytes, so relative images require folder
  * import; MCP may resolve them through htmlAssetRoot.
@@ -33,7 +33,7 @@ export function assertSandboxedHtml(source: string, options: HtmlImportPolicyOpt
   const network = inspectHtmlNetworkResources(source, options);
   if (network.requiresNetwork) {
     throw badRequest(
-      "Remote HTML resources are disabled for local security. Package required images and scripts with the presentation instead."
+      "Remote HTML resources are disabled for local security. Choose the complete presentation folder for local images and embed required scripts in the HTML."
     );
   }
 }
@@ -202,8 +202,7 @@ function networkResourceUrl(value: string, base?: URL, localAssets = new Set<str
     else {
       throw badRequest(
         `The HTML import references a relative or unsupported resource (${summarizeReference(reference)}). ` +
-        "Choose the complete HTML presentation folder to package local images, or pass htmlAssetRoot through MCP. " +
-        "Remote resources may use an absolute HTTP(S) URL or a remote <base href>."
+        "Choose the complete HTML presentation folder to package local images, or pass htmlAssetRoot through MCP."
       );
     }
   } catch (error) {
@@ -214,7 +213,7 @@ function networkResourceUrl(value: string, base?: URL, localAssets = new Set<str
   if (resolved.protocol !== "http:" && resolved.protocol !== "https:") {
     throw badRequest(
       `The HTML import uses an unsupported resource protocol (${resolved.protocol}). ` +
-      "Use HTTP(S), data:, or blob: resources."
+      "Use embedded data: resources, runtime blob: URLs, or packaged local images."
     );
   }
   return resolved;

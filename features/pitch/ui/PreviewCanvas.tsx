@@ -17,15 +17,12 @@ import {
 import { nextCanvasZoomScale } from "@/features/pitch/application/canvasZoom";
 import {
   MAIN_CANVAS_INACTIVE_SHADER_MAX_PIXEL_COUNT,
-  MAIN_CANVAS_PRELOAD_MARGIN,
   mainCanvasShaderMaxPixelCount
 } from "@/features/pitch/application/canvasPerformance";
 import { initialCanvasScrollPositions, type CanvasViewMode } from "@/features/pitch/application/canvasViewMode";
 import type { CanvasShapeTool } from "@/features/pitch/application/shapeDrawing";
 import type { BlockFramePatch } from "@/features/pitch/application/pitchGeometry";
 import {
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
   blockFrame,
   canvasPointFromRect,
   gridLineColor,
@@ -199,7 +196,6 @@ export const PreviewCanvas = memo(function PreviewCanvas({
   singleSlidePreview = false,
   slideRows
 }: PreviewCanvasProps) {
-  const selectedBlock = selectedBlockIndex === null ? undefined : activeSlide?.blocks[selectedBlockIndex];
   const { locale } = usePitchI18n();
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const canvasStripRef = useRef<HTMLDivElement | null>(null);
@@ -1037,7 +1033,6 @@ export const PreviewCanvas = memo(function PreviewCanvas({
               <CanvasSlideFrame
                 actualScale={actualScale}
                 activeSlideFrameRef={activeSlideFrameRef}
-                activeSlideIndex={activeSlideIndex}
                 canvasFrameStyle={canvasFrameStyle}
                 canvasRef={canvasRef}
                 frameOverrides={previewFrameOverrides}

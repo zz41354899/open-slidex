@@ -1,27 +1,17 @@
-import { lazy, Suspense, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import { lazy, Suspense, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   CheckCircle2,
   Cable,
-  ChevronRight,
   Clock3,
-  FileCheck2,
-  FilePlus2,
   Files,
   FolderOpen,
   Home,
   LayoutGrid,
-  LoaderCircle,
   Monitor,
-  MoreHorizontal,
-  Pencil,
   Plus,
-  Search,
   Settings,
-  ShieldCheck,
   Sparkles,
-  Trash2,
-  Upload,
-  X
+  Upload
 } from "lucide-react";
 
 import { useI18n } from "@/common/lib/I18nProvider";
@@ -33,14 +23,11 @@ import slidexWordmark from "./assets/slidex-wordmark.png";
 import { WorkspaceSettingsView } from "./WorkspaceSettingsView";
 import { WorkspaceDialogs } from "./WorkspaceDialogs";
 import {
-  EmptyDecks,
-  formatBytes,
   HomeView,
   messageOf,
   PresentationsView,
   RecentView,
   SearchField,
-  templateSlideCover,
   TemplatesView,
   viewTitle,
   WorkspaceSkeleton

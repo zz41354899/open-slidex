@@ -478,8 +478,8 @@ export function playSharedMorph(
       });
     }
     const animation = clone.animate([
-      morphFrame(source.frame, source.frame, source.opacity, source.rotation, source.style, source.type),
-      morphFrame(source.frame, target.frame, target.opacity, target.rotation, target.style, source.type)
+      morphFrame(source.frame, source.frame, source.opacity, source.rotation, source.style),
+      morphFrame(source.frame, target.frame, target.opacity, target.rotation, target.style)
     ], { duration, easing, fill: "forwards" });
     animations.push(animation);
   });
@@ -613,8 +613,7 @@ function morphFrame(
   frame: MorphSnapshotItem["frame"],
   opacity: number,
   rotation: string,
-  style: MorphSnapshotItem["style"],
-  type: string
+  style: MorphSnapshotItem["style"]
 ): Keyframe {
   return {
     backgroundColor: style.backgroundColor,

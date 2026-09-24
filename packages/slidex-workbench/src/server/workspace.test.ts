@@ -612,7 +612,8 @@ test("local workspace converts selected HTML PNG sidecars to WebP and packages S
   const html = `<!doctype html><html><body><section class="slide is-active" data-slidex-slide-index="0"><img src="assets/cover.png"><img src="./icons/mark.svg"></section></body></html>`;
   const presentation = await workspace.importMdx(new File([html], "sidecars.html", { type: "text/html" }), [
     { file: new File([png], "cover.png", { type: "image/png" }), path: "assets/cover.png" },
-    { file: new File([svg], "mark.svg", { type: "image/svg+xml" }), path: "icons/mark.svg" }
+    { file: new File([svg], "mark.svg", { type: "image/svg+xml" }), path: "icons/mark.svg" },
+    { file: new File(["not an image"], "unused.png", { type: "image/png" }), path: "assets/unused.png" }
   ]);
   const projectRoot = path.join(workspaceRoot, presentation.id);
   const assets = await readdir(path.join(projectRoot, "assets"));

@@ -84,14 +84,14 @@ export function materializeFreeformScene(scene: MotionDocScene): MotionDocScene 
       ...scene.props,
       ...MOTION_DOC_CANVAS_PROPS
     },
-    blocks: scene.blocks.map((block, index) => {
+    blocks: scene.blocks.map((block) => {
       if (!("props" in block)) {
         return block;
       }
 
       const layout = block.props.x !== undefined && block.props.y !== undefined && block.props.w !== undefined && block.props.h !== undefined
         ? defaultBlockFrame(block)
-        : layoutBlock(block, index, blocksWithProps, hasCenteredCopy);
+        : layoutBlock(block, blocksWithProps, hasCenteredCopy);
       const props = usesPointFontSizes
         ? block.props
         : migrateFontSizeToPoints(block.props, isFullHdSource);
@@ -123,7 +123,6 @@ export function defaultBlockFrame(block: MotionDocBlock): PositionProps {
 
 function layoutBlock(
   block: MotionDocBlock,
-  originalIndex: number,
   blocksWithProps: Extract<MotionDocBlock, { props: MotionDocProps }>[],
   hasCenteredCopy: boolean
 ): PositionProps {

@@ -143,9 +143,12 @@ async function packageMdxAssets(references: string[], sidecars: WorkspaceHtmlSid
 
 export async function packageHtmlAssets(source: string, options: PackageHtmlAssetsOptions = {}) {
   const sidecars = options.htmlSidecars ?? [];
+  const references = htmlLocalImageReferences(source);
+  const referencedPaths = new Set(references.map(normalizeHtmlReference));
   const assetsByReference = new Map<string, WorkspaceImportAsset>();
   for (const sidecar of sidecars) {
     const reference = normalizeSidecarReference(sidecar.path);
+    if (!referencedPaths.has(reference)) continue;
     if (assetsByReference.has(reference)) throw badRequest(`The HTML import includes the sidecar more than once: ${reference}`);
     if (!sidecar.file.size || sidecar.file.size > MAX_HTML_IMAGE_BYTES) {
       throw badRequest(`HTML sidecar ${reference} must be between 1 byte and 25 MB.`);
@@ -161,7 +164,7 @@ export async function packageHtmlAssets(source: string, options: PackageHtmlAsse
     ));
   }
 
-  for (const reference of htmlLocalImageReferences(source)) {
+  for (const reference of references) {
     const normalized = normalizeHtmlReference(reference);
     if (assetsByReference.has(normalized)) continue;
     const localPath = await resolveHtmlLocalImagePath(reference, options.assetRoot);
@@ -403,7 +406,8 @@ function applyHtmlEdits(source: string, edits: Array<{ from: number; to: number;
 }
 
 function normalizeHtmlReference(value: string) {
-  const normalized = decodeHtmlReference(value).trim().replace(/^\.\//, "").replace(/\\/g, "/");
+  const pathname = decodeHtmlReference(value).trim().split(/[?#]/, 1)[0] ?? "";
+  const normalized = pathname.replace(/^\.\//, "").replace(/\\/g, "/");
   try { return decodeURIComponent(normalized); } catch { return normalized; }
 }
 

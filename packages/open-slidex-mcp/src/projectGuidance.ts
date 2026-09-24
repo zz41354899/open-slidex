@@ -3,7 +3,6 @@ import { readFile, readdir, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
 import {
-  openSlideXGuidanceIntents,
   openSlideXGuidanceSkillsByIntent,
   openSlideXProjectSkillNames,
   type OpenSlideXGuidanceIntent,

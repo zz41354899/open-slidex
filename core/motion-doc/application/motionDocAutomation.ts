@@ -12,7 +12,6 @@ import {
 import { materializeFreeformSource } from "@/core/motion-doc/application/motionDocFreeform";
 import {
   deleteMotionDocSlideSource,
-  motionDocSlideSourceRanges,
   reorderMotionDocSlideSource,
   replaceMotionDocSlideSource
 } from "@/core/motion-doc/application/motionDocSourceEditor";
@@ -30,10 +29,7 @@ import {
   motionDocEnterAnimations,
   motionDocSlideTransitions
 } from "@/core/motion-doc/domain/motionVocabulary";
-import {
-  motionEasings,
-  parseMotionSequence
-} from "@/core/motion-doc/domain/motionSequence";
+import { parseMotionSequence } from "@/core/motion-doc/domain/motionSequence";
 import { parseInteraction } from "@/core/motion-doc/domain/interaction";
 import { sharedMorphEasings, sharedMorphPairCount } from "@/core/motion-doc/domain/sharedMorph";
 import {

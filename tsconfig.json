@@ -8,6 +8,8 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "paths": {
       "@/*": ["./*"],
       "@open-slidex/editor-ui": ["./packages/editor-ui/src/index.ts"],

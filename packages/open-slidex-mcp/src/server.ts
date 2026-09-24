@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { basename, dirname, extname, join, resolve } from "node:path";
+import { basename, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { access, mkdir, readFile, readdir, realpath, unlink, writeFile } from "node:fs/promises";
 
@@ -32,7 +32,6 @@ import {
   openExistingFileInsideRoot,
   resolveExistingInsideRoot,
   resolveInsideRoot,
-  SlideXFileDocumentAdapter,
   type SlideXQualityReport,
   SlideXRevisionConflictError
 } from "@open-slidex/sdk/node";

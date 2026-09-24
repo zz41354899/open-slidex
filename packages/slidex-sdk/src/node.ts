@@ -3,7 +3,6 @@ import {
   access,
   lstat,
   mkdir,
-  readFile,
   rename,
   unlink,
   writeFile

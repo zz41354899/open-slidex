@@ -84,7 +84,7 @@ export function validateOpenSlideXLocalMedia(source: string) {
  * and turns it into the existing local import placeholder.
  */
 export function stripNonLocalMotionDocMedia(source: string) {
-  return source.replace(localMediaAttributePattern, (attribute, prop: string, quotedValue: string) => {
+  return source.replace(localMediaAttributePattern, (attribute, _prop: string, quotedValue: string) => {
     const value = quotedValue.slice(1, -1);
     return isOpenSlideXCompatibleMediaSource(value) ? attribute : "";
   });

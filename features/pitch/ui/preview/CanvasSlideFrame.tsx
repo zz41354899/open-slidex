@@ -21,7 +21,6 @@ import { createMotionPlaybackController } from "@/features/pitch/application/mot
 type CanvasSlideFrameProps = {
   actualScale: number;
   activeSlideFrameRef: RefObject<HTMLDivElement | null>;
-  activeSlideIndex: number;
   canvasFrameStyle: CSSProperties;
   canvasRef: RefObject<HTMLDivElement | null>;
   children: ReactNode;
@@ -52,7 +51,6 @@ type CanvasSlideFrameProps = {
 export function CanvasSlideFrame({
   actualScale,
   activeSlideFrameRef,
-  activeSlideIndex,
   canvasFrameStyle,
   canvasRef,
   children,

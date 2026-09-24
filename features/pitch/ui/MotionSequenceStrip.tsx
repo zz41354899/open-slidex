@@ -18,7 +18,6 @@ export const MotionSequencePanel = memo(function MotionSequencePanel({ onPreview
   scene: MotionDocScene | undefined;
 }) {
   const { tx } = usePitchI18n();
-  const [collapsed, setCollapsed] = useState(false);
   const [draggedId, setDraggedId] = useState("");
   const [dragOverId, setDragOverId] = useState("");
   const [selectedId, setSelectedId] = useState("");

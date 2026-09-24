@@ -1,4 +1,5 @@
-import { cp, readdir, rm, stat } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { cp, lstat, mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 
 import { openSlideXProjectSkillNames } from "@/core/motion-doc/domain/openSlideXProjectSkills";
@@ -32,19 +33,59 @@ export async function syncOpenSlideXProjectSkills(skillsRoot: string, targetRoot
   if (missing.length > 0) {
     throw new Error(`The bundled OpenSlideX skills are incomplete: ${missing.join(", ")}.`);
   }
+  for (const skill of openSlideXProjectSkillNames) {
+    if (!await isFile(path.join(skillsRoot, skill, "SKILL.md"))) {
+      throw new Error(`The bundled OpenSlideX skill is missing SKILL.md: ${skill}.`);
+    }
+  }
 
   for (const targetRoot of targetRoots) {
     const target = path.join(targetRoot, ".agents", "skills");
     for (const skill of openSlideXProjectSkillNames) {
-      const targetSkill = path.join(target, skill);
-      await rm(targetSkill, { force: true, recursive: true });
-      await cp(path.join(skillsRoot, skill), targetSkill, { recursive: true });
+      await replaceSkillDirectory(path.join(skillsRoot, skill), path.join(target, skill));
     }
   }
   return {
     skillCount: openSlideXProjectSkillNames.length,
     targetCount: targetRoots.length
   };
+}
+
+async function replaceSkillDirectory(source: string, target: string) {
+  const parent = path.dirname(target);
+  const name = path.basename(target);
+  const token = randomUUID();
+  const staged = path.join(parent, `.${name}.${token}.new`);
+  const backup = path.join(parent, `.${name}.${token}.old`);
+  await mkdir(parent, { recursive: true });
+
+  let oldSkillMoved = false;
+  try {
+    await cp(source, staged, { recursive: true });
+    if (await lstat(target).then(() => true, (error: unknown) => {
+      if (isNodeError(error) && error.code === "ENOENT") return false;
+      throw error;
+    })) {
+      await rename(target, backup);
+      oldSkillMoved = true;
+    }
+    try {
+      await rename(staged, target);
+    } catch (error) {
+      if (oldSkillMoved) {
+        try {
+          await rename(backup, target);
+          oldSkillMoved = false;
+        } catch (restoreError) {
+          throw new AggregateError([error, restoreError], `Could not restore ${target}; the previous skill remains at ${backup}.`);
+        }
+      }
+      throw error;
+    }
+    if (oldSkillMoved) await rm(backup, { force: true, recursive: true });
+  } finally {
+    await rm(staged, { force: true, recursive: true });
+  }
 }
 
 async function isFile(filePath: string) {

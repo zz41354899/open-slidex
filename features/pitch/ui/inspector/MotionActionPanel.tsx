@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowRightFromLine, ArrowUp, ChevronDown, CornerDownLeft, CornerUpRight, Eye, Hash, Layers3, Maximize2, Minimize2, Minus, MoveRight, Play, Plus, RotateCw, Scaling, Settings2, SlidersHorizontal, Sparkles, Square, Trash2, TrendingDown, TrendingUp, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, CornerDownLeft, CornerUpRight, Layers3, Maximize2, Minus, MoveRight, Play, Plus, RotateCw, Settings2, SlidersHorizontal, Sparkles, Square, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { MotionDocBlockWithProps, MotionDocProps, MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
 import {
@@ -672,23 +672,6 @@ function legacyPreviewAction(block: MotionDocBlockWithProps, preset: EnterAnimat
     start: "afterPrevious",
     type: "enter"
   };
-}
-
-function effectIcon(value: string) {
-  if (value === "none") return <Minus size={12} />;
-  if (value === "move" || value === "slideLeft") return <MoveRight size={13} />;
-  if (value === "scale") return <Scaling size={13} />;
-  if (value === "rotate") return <RotateCw size={13} />;
-  if (value === "fade" || value === "fadeIn" || value === "fadeOut") return <Eye size={13} />;
-  if (value === "arcUp" || value === "fadeUp") return <TrendingUp size={13} />;
-  if (value === "arcDown" || value === "fadeDown") return <TrendingDown size={13} />;
-  if (value === "drift") return <Sparkles size={13} />;
-  if (value === "slideRight") return <ArrowRightFromLine size={13} />;
-  if (value === "zoomIn" || value === "pop") return <ZoomIn size={13} />;
-  if (value === "zoomOut") return <ZoomOut size={13} />;
-  if (value === "shrink") return <Minimize2 size={13} />;
-  if (value === "numberRange") return <Hash size={13} />;
-  return <Sparkles size={13} />;
 }
 
 function initialNumberRange(block: MotionDocBlockWithProps): MotionNumberRange {
