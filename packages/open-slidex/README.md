@@ -8,6 +8,9 @@ One npm package contains everything: the SDK, Workbench, local MCP runtime, and
 project initializer. It does not use Cloud login, Supabase, background sync,
 Base64 image storage, or a second canvas document.
 
+Supported operating systems are macOS and Linux. The standalone installer is
+available on macOS.
+
 ## Local Workspace
 
 Open the original SlideX-style Workspace shell for a directory of local decks:
@@ -195,9 +198,8 @@ open-slidex mcp --workspace "$HOME/Presentations" --print-setup-prompt claude-de
 
 Codex reads its global MCP configuration from `~/.codex/config.toml`. Claude
 Desktop uses `~/Library/Application Support/Claude/claude_desktop_config.json`
-on macOS and `%APPDATA%\\Claude\\claude_desktop_config.json` on Windows. The
-Workspace Settings screen generates `cmd /c npx` on native Windows. Its
-explicit install action reads the selected local config, preserves unrelated
+on macOS. The Workspace Settings screen's explicit install action reads the
+selected local config, preserves unrelated
 entries, and adds or updates only OpenSlideX's entry. Claude Code uses the
 displayed user-scope CLI command instead of direct file editing.
 

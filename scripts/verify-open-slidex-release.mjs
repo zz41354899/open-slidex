@@ -37,6 +37,7 @@ const npmEnvironment = {
 let client;
 try {
   const packageManifest = await readJson(path.join(packageRoot, "package.json"));
+  assert.ok(packageManifest.dependencies?.qrcode, "published runtime must declare qrcode");
   const packRoot = path.join(tempRoot, "pack");
   await mkdir(packRoot, { recursive: true });
   const { stdout: packOutput } = await execFileAsync(
@@ -65,6 +66,8 @@ try {
     "runtime/workbench/sdk/index.js",
     "runtime/workbench/sdk/node.js",
     "template/AGENTS.md",
+    "template/.yarnrc.yml",
+    "template/pnpm-workspace.yaml",
     "template/package.json",
     "template/README.md"
   ]) {
