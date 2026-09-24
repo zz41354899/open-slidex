@@ -41,6 +41,16 @@ test("Node distributions are pinned and checksum lists are parsed strictly", () 
   );
 });
 
+test("repository dependencies do not require a single-platform binary", async () => {
+  const manifest = JSON.parse(await readFile(path.join(repositoryRoot, "package.json"), "utf8"));
+  const lockfile = JSON.parse(await readFile(path.join(repositoryRoot, "package-lock.json"), "utf8"));
+  const platformOnly = Object.keys(manifest.dependencies ?? {}).filter((name) => {
+    const locked = lockfile.packages[`node_modules/${name}`];
+    return locked?.os || locked?.cpu;
+  });
+  assert.deepEqual(platformOnly, []);
+});
+
 test("standalone dependency records must match the reviewed lock path, version, and integrity", () => {
   const lockfile = {
     packages: {
