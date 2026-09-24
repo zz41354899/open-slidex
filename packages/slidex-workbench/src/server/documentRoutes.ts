@@ -3,7 +3,63 @@ import { summarizeMotionDoc } from "@open-slidex/sdk";
 import { jsonBody, sendJson, type WorkbenchRouteContext } from "./httpRoute";
 
 export async function documentRoutes(context: WorkbenchRouteContext) {
-  const { outgoing, project, request, url } = context;
+  const { outgoing, presenterRemote, project, request, url } = context;
+
+  if (url.pathname === "/api/v1/presenter/sessions" && request.method === "POST") {
+    const body = await jsonBody<{ currentSlideIndex?: unknown; slideCount?: unknown; locale?: unknown }>(request);
+    if (!Number.isInteger(body.currentSlideIndex) || !Number.isInteger(body.slideCount)) {
+      return sendJson(outgoing, { code: "invalid_request", message: "currentSlideIndex and slideCount are required." }, 400);
+    }
+    return sendJson(outgoing, await presenterRemote.create({
+      currentSlideIndex: Number(body.currentSlideIndex),
+      locale: body.locale === "en" ? "en" : "zh-TW",
+      slideCount: Number(body.slideCount)
+    }), 201);
+  }
+
+  const presenterSession = url.pathname.match(/^\/api\/v1\/presenter\/sessions\/([A-Za-z0-9_-]+)$/);
+  const presenterSessionEvents = url.pathname.match(/^\/api\/v1\/presenter\/sessions\/([A-Za-z0-9_-]+)\/events$/);
+  if (presenterSessionEvents?.[1] && request.method === "GET") {
+    presenterRemote.read(presenterSessionEvents[1]);
+    outgoing.writeHead(200, {
+      "cache-control": "no-store",
+      connection: "keep-alive",
+      "content-type": "text/event-stream",
+      "x-content-type-options": "nosniff"
+    });
+    outgoing.flushHeaders();
+    const unsubscribe = presenterRemote.subscribe(presenterSessionEvents[1], (state) => {
+      outgoing.write(`event: state\ndata: ${JSON.stringify(state)}\n\n`);
+    });
+    const heartbeat = setInterval(() => {
+      try { presenterRemote.read(presenterSessionEvents[1]); outgoing.write(": heartbeat\n\n"); }
+      catch { outgoing.end(); }
+    }, 15000);
+    outgoing.once("close", () => { clearInterval(heartbeat); unsubscribe(); });
+    return true;
+  }
+  if (presenterSession?.[1]) {
+    if (request.method === "GET") return sendJson(outgoing, presenterRemote.read(presenterSession[1]));
+    if (request.method === "PATCH") {
+      const body = await jsonBody<{ currentSlideIndex?: unknown; slideCount?: unknown; timer?: unknown; clientId?: string; sequence?: number }>(request);
+      if ((body.currentSlideIndex !== undefined && !Number.isInteger(body.currentSlideIndex)) || (body.slideCount !== undefined && !Number.isInteger(body.slideCount))) {
+        return sendJson(outgoing, { code: "invalid_request", message: "currentSlideIndex and slideCount are required." }, 400);
+      }
+      return sendJson(outgoing, presenterRemote.update(presenterSession[1], {
+        currentSlideIndex: body.currentSlideIndex === undefined ? undefined : Number(body.currentSlideIndex),
+        slideCount: body.slideCount === undefined ? undefined : Number(body.slideCount),
+        clientId: body.clientId,
+        sequence: body.sequence,
+        timer: body.timer
+      }));
+    }
+    if (request.method === "DELETE") {
+      presenterRemote.closeSession(presenterSession[1]);
+      outgoing.writeHead(204, { "cache-control": "no-store", "x-content-type-options": "nosniff" });
+      outgoing.end();
+      return true;
+    }
+  }
 
   if (url.pathname === "/api/v1/document") {
     if (request.method === "GET") return sendJson(outgoing, await project.open());

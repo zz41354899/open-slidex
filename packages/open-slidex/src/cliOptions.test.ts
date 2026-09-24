@@ -4,23 +4,29 @@ import test from "node:test";
 import {
   assertSupportedNodeVersion,
   createSlideXHelp,
+  installCommand,
+  packageManagerFromUserAgent,
   parseCreateSlideXArguments
 } from "./cliOptions";
 
 test("CLI exposes help and version actions without creating a project", () => {
   assert.deepEqual(parseCreateSlideXArguments(["--help"]), { action: "help" });
   assert.deepEqual(parseCreateSlideXArguments(["-v"]), { action: "version" });
-  assert.doesNotMatch(createSlideXHelp(), /package-manager|pnpm|bun/);
+  assert.match(createSlideXHelp(), /--package-manager <manager>/);
   assert.match(createSlideXHelp(), /npx open-slidex@latest init my-deck/);
+  assert.match(createSlideXHelp(), /pnpm dlx open-slidex@latest init my-deck/);
+  assert.match(createSlideXHelp(), /yarn dlx open-slidex@latest init my-deck/);
+  assert.match(createSlideXHelp(), /bunx open-slidex@latest init my-deck/);
   assert.match(createSlideXHelp(), /--template <official-template-id>/);
 });
 
 test("CLI parses an official template and locale", () => {
   assert.deepEqual(
-    parseCreateSlideXArguments(["team-deck", "--template", "summer-time-report", "--locale", "zh-TW", "--no-install"]),
+    parseCreateSlideXArguments(["team-deck", "--template", "summer-time-report", "--locale", "zh-TW", "--no-install"], "npm/11.19.0 node/v22.19.0"),
     {
       action: "create",
       installDependencies: false,
+      packageManager: "npm",
       target: "team-deck",
       template: { id: "summer-time-report", locale: "zh-TW" }
     }
@@ -31,19 +37,32 @@ test("CLI parses an official template and locale", () => {
 
 test("CLI keeps starter options minimal", () => {
   assert.deepEqual(
-    parseCreateSlideXArguments(["customer-deck", "--no-install"]),
+    parseCreateSlideXArguments(["customer-deck", "--no-install"], "npm/11.19.0 node/v22.19.0"),
     {
       action: "create",
       installDependencies: false,
+      packageManager: "npm",
       target: "customer-deck"
     }
   );
 });
 
+test("CLI selects a package manager from the runner or explicit option", () => {
+  assert.equal(packageManagerFromUserAgent("pnpm/11.18.0 npm/? node/v22.19.0"), "pnpm");
+  assert.equal(packageManagerFromUserAgent("yarn/4.9.1 npm/? node/v22.19.0"), "yarn");
+  assert.equal(packageManagerFromUserAgent("bun/1.3.0 npm/? node/v22.19.0"), "bun");
+  assert.equal(packageManagerFromUserAgent(undefined), "npm");
+  assert.deepEqual(installCommand("pnpm"), { command: "pnpm", args: ["install"] });
+  assert.deepEqual(
+    parseCreateSlideXArguments(["deck", "--package-manager", "bun"], "npm/11.19.0 node/v22.19.0"),
+    { action: "create", installDependencies: true, packageManager: "bun", target: "deck" }
+  );
+});
+
 test("CLI rejects unknown, conflicting, and malformed options", () => {
   assert.throws(
-    () => parseCreateSlideXArguments(["deck", "--yarn"]),
-    /Unknown option/
+    () => parseCreateSlideXArguments(["deck", "--package-manager", "deno"]),
+    /package-manager requires npm, pnpm, yarn, or bun/
   );
   assert.throws(
     () => parseCreateSlideXArguments(["--pnpm"]),

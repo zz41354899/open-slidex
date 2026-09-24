@@ -12,22 +12,51 @@ OpenSlideX 是開源、local-first 的可編輯簡報工作區。每一份簡報
 
 點擊預覽圖即可[觀看 OpenSlideX Workspace 示範](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)。
 
-## 不需要 Node.js 或 Git 的安裝方式
+## 安裝方式
 
-獨立安裝程式會下載完整的 OpenSlideX 執行環境，包括私有的 Node.js 執行檔與 Chromium renderer；不會安裝 npm、Git、系統層級的 Node.js 或 GitHub CLI。
+可使用 `npx`、`pnpm`、Yarn 或 Bun 建立專案。npx、pnpm 與 Yarn 指令需要 Node.js 22.12 或更新版本；Bun 使用自身最新執行環境。OpenSlideX 支援 macOS 與 Linux；不需 Node.js 的 standalone 安裝只支援 macOS。
+
+### npx
+
+```bash
+npx open-slidex@latest init my-deck
+cd my-deck
+npm run dev
+```
+
+### pnpm
+
+```bash
+pnpm dlx open-slidex@latest init my-deck
+cd my-deck
+pnpm dev
+```
+
+### Yarn（2+）
+
+```bash
+yarn dlx open-slidex@latest init my-deck
+cd my-deck
+yarn dev
+```
+
+### Bun
+
+```bash
+bunx open-slidex@latest init my-deck
+cd my-deck
+bun run dev
+```
+
+### macOS standalone
+
+macOS 獨立安裝程式會下載完整的 OpenSlideX 執行環境，包括私有的 Node.js 執行檔與 Chromium renderer；不會安裝 npm、Git 或系統層級的 Node.js。
 
 macOS：
 
 ```bash
 curl -fLO https://github.com/zz41354899/open-slidex/releases/latest/download/install.sh
 sh install.sh
-```
-
-Windows PowerShell：
-
-```powershell
-irm https://github.com/zz41354899/open-slidex/releases/latest/download/install.ps1 -OutFile install.ps1
-.\install.ps1
 ```
 
 首次安裝後請開啟新的終端機，再執行：
@@ -39,7 +68,7 @@ slidex rollback    # 切回保留的上一個正常版本
 slidex uninstall   # 移除執行環境與指令，保留你的簡報
 ```
 
-預設簡報庫在 macOS 為 `~/Documents/OpenSlideX Workspace`，Windows 則在目前使用者的 Documents 資料夾。下載的 release archive 會先比對 SHA-256 checksum，再切換目前版本。發佈檔包含 SPDX SBOM；安裝時不需要 GitHub 認證。
+macOS 預設簡報庫為 `~/Documents/OpenSlideX Workspace`。安裝程式會先核對 release archive 的 SHA-256 checksum，再切換目前版本。Release archive 附有 SPDX SBOM，不需要預先安裝 GitHub CLI。
 
 ## 開發者快速開始
 
@@ -60,7 +89,7 @@ npm run dev
 npm run dev -- ~/Presentations --port 4174
 ```
 
-## 使用 npm 建立獨立 deck
+## 使用套件執行器 CLI
 
 ```bash
 npx open-slidex@latest init my-deck
@@ -74,6 +103,8 @@ npm run dev
 npm install --global open-slidex@latest
 open-slidex init my-deck
 ```
+
+可將 `npx` 改為 `pnpm dlx`、`yarn dlx` 或 `bunx`；進入建立好的專案後，分別使用 `pnpm dev`、`yarn dev` 或 `bun run dev`。
 
 已安裝專案中的 `npm run dev` 一律開啟 `/workspace`，根目錄是被忽略的 `open-slidex-workspace/`。每個 deck 都擁有自己的來源、資產與匯出檔；Workbench 原始碼與依賴快取保留在 `.open-slidex/`。
 
@@ -97,8 +128,8 @@ Workspace Settings 可以為 Codex、Claude Code 或 Claude Desktop 產生使用
 | `npm run dev` | 開啟本機 Workspace。 |
 | `npm run mcp` | 為 `open-slidex-workspace/` 啟動 MCP。 |
 | `npm run build:runtime` | 重建發行 runtime。 |
-| `npm run build:standalone` | 建立目前平台的完整 standalone archive。 |
-| `npm run test:standalone` | 驗證 installer、安裝、更新、啟動與解除安裝。 |
+| `npm run build:standalone` | 建立 macOS 的完整 standalone archive。 |
+| `npm run test:standalone` | 驗證 macOS installer、安裝、更新、啟動與解除安裝。 |
 | `npm run test:source` | 執行 SDK、Workbench、MCP、CLI 與 Workspace 的 tests。 |
 
 ## 專案邊界與授權

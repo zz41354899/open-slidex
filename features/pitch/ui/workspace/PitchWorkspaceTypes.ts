@@ -169,6 +169,8 @@ export type PitchWorkspaceView = {
   isExportMenuOpen: boolean;
   isMobileInspectorOpen: boolean;
   isMobileSidebarOpen: boolean;
+  /** Renders a contextual control before the regular Inspector settings. */
+  inspectorHeaderExtension?: ReactNode;
   inspectorExtension?: ReactNode;
   /** Replaces the complete inspector surface for a dedicated document mode. */
   inspectorOverride?: ReactNode;

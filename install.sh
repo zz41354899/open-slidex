@@ -131,7 +131,7 @@ validate_extracted_links() {
 }
 
 if [ "$(uname -s)" != "Darwin" ]; then
-  fail 'OpenSlideX install.sh currently supports macOS. Use install.ps1 on Windows.'
+  fail 'OpenSlideX standalone installation is available only on macOS. Use npx open-slidex@latest on other platforms.'
 fi
 
 case "$(uname -m)" in

@@ -16,6 +16,9 @@ Open the original SlideX-style Workspace shell for a directory of local decks:
 npx open-slidex@latest workspace ~/Presentations
 ```
 
+Replace `npx` with `pnpm dlx`, `yarn dlx`, or `bunx` to use that package
+runner instead.
+
 The Workspace can create a blank deck or start a new deck from a bundled public
 template. Each card maps to its own child folder with one `presentation.tsx` as
 the editable source of truth. MDX remains available for compatible import and portable export.
@@ -31,6 +34,30 @@ Node.js **22.12.0 or later** is required.
 npx open-slidex@latest init my-deck
 cd my-deck
 npm run dev
+```
+
+The equivalent pnpm flow is:
+
+```bash
+pnpm dlx open-slidex@latest init my-deck
+cd my-deck
+pnpm dev
+```
+
+The equivalent Yarn flow is:
+
+```bash
+yarn dlx open-slidex@latest init my-deck
+cd my-deck
+yarn dev
+```
+
+The equivalent Bun flow is:
+
+```bash
+bunx open-slidex@latest init my-deck
+cd my-deck
+bun run dev
 ```
 
 Start a new project with an immutable official template blueprint and locale:
@@ -58,6 +85,9 @@ cd my-deck
 npm install
 ```
 
+Use `pnpm install`, `yarn install`, or `bun install` when the project was
+created with that package runner.
+
 ## What the project contains
 
 ```text
@@ -78,6 +108,9 @@ Run these from the generated deck folder:
 ```bash
 npm run dev          # open this project's open-slidex-workspace/ library
 ```
+
+Use `pnpm dev`, `yarn dev`, or `bun run dev` for projects managed with those
+package runners.
 
 MDX exports are portable: local project images are embedded into the exported
 file and restored to `assets/*.webp` when that MDX is imported into a Workspace.

@@ -1,42 +1,40 @@
-import { Maximize2, MonitorPlay, X } from "lucide-react";
-import { usePitchI18n } from "@/features/pitch/ui/pitchI18n";
+import { useEffect, useRef } from "react";
+import { MonitorPlay, PanelRight, X } from "lucide-react";
+import type { MotionDocScene } from "@/core/motion-doc/domain/motionDocTypes";
+import { usePitchI18n } from "./pitchI18n";
+import { SlideThumbnailPreview } from "./preview/SlideThumbnailPreview";
+import { usePresenterFocus } from "./usePresenterFocus";
 
-export type PresentationPlaybackMode = "fullscreen" | "projection";
-
-type PresentationPlaybackModePickerProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (mode: PresentationPlaybackMode) => void;
-};
-
-export function PresentationPlaybackModePicker({ isOpen, onClose, onSelect }: PresentationPlaybackModePickerProps) {
+export type PresentationPlaybackMode = "presenter" | "projection";
+export function PresentationPlaybackModePicker({ isOpen, onClose, onSelect, scene, index }: {
+  isOpen: boolean; onClose: () => void; onSelect: (mode: PresentationPlaybackMode) => void; scene: MotionDocScene; index: number;
+}) {
   const { tx } = usePitchI18n();
+  const first = useRef<HTMLButtonElement>(null);
+  const root = useRef<HTMLElement>(null);
+  usePresenterFocus(root, isOpen);
+  useEffect(() => {
+    if (!isOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    first.current?.focus();
+    const keydown = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", keydown);
+    return () => { window.removeEventListener("keydown", keydown); previous?.focus(); };
+  }, [isOpen, onClose]);
   if (!isOpen) return null;
-
-  return (
-    <div aria-labelledby="playback-mode-title" aria-modal="true" className="fixed inset-0 z-[110] flex items-center justify-center bg-black/55 p-5 backdrop-blur-sm" role="dialog">
-      <div className="animate-in fade-in zoom-in-95 w-full max-w-[34rem] rounded-[28px] border border-white/[0.12] bg-[#1c1c1e]/95 p-3 shadow-[0_28px_90px_rgba(0,0,0,0.58)] backdrop-blur-2xl duration-200">
-        <header className="flex items-start justify-between px-3 pb-3 pt-2">
-          <div>
-            <h2 className="mt-1 text-[18px] font-semibold tracking-[-0.03em] text-white" id="playback-mode-title">{tx("Choose playback mode")}</h2>
+  return <div className="fixed inset-0 z-[110] bg-black/20" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <section ref={root} tabIndex={-1} role="dialog" aria-modal="true" aria-label={tx("Choose playback mode")} className="absolute right-5 top-20 w-[min(430px,calc(100vw-40px))] overflow-hidden rounded-xl border border-white/10 bg-[#2b2b2b] text-neutral-100 shadow-2xl outline-none">
+      <header className="flex items-center justify-between px-4 py-2"><h2 className="text-xs text-neutral-400">{tx("Choose playback mode")}</h2><button aria-label={tx("Close")} className="rounded p-2 text-neutral-400 hover:bg-white/10" onClick={onClose} type="button"><X size={14} /></button></header>
+      <div className="grid grid-cols-2 divide-x divide-white/10">
+        {(["projection", "presenter"] as const).map((mode, n) => <button ref={n === 0 ? first : undefined} key={mode} className="group flex flex-col items-stretch px-4 pb-5 pt-2 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-violet-300" onClick={() => onSelect(mode)} type="button">
+          <span className="block text-xs font-semibold">{tx(mode === "projection" ? "Presentation" : "Presentation with notes")}</span>
+          <div className="relative my-5 h-24">
+            <div className="absolute left-1 right-4 top-1 aspect-video overflow-hidden rounded border border-white/10 bg-black shadow-lg"><SlideThumbnailPreview activeSlideIndex={index} replayNonce={0} scene={scene} /></div>
+            {mode === "presenter" ? <div className="absolute bottom-0 right-0 flex h-14 w-24 items-center gap-2 rounded border border-white/15 bg-[#171717] p-2 shadow-xl"><MonitorPlay className="text-violet-300" size={36} /><PanelRight className="text-neutral-500" size={24} /></div> : null}
           </div>
-          <button aria-label={tx("Close")} className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-400 transition hover:bg-white/[0.1] hover:text-white" onClick={onClose} type="button">
-            <X size={17} />
-          </button>
-        </header>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <button className="rounded-[21px] border border-[#9ad7ff]/20 bg-[#9ad7ff]/[0.07] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#9ad7ff]/45 hover:bg-[#9ad7ff]/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9ad7ff]" onClick={() => onSelect("projection")} type="button">
-            <span className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-[#9ad7ff] text-[#071017] shadow-sm"><MonitorPlay size={19} /></span>
-            <span className="mt-5 block text-[15px] font-semibold text-white">{tx("Projection control mode")}</span>
-            <span className="mt-1 block text-[12px] leading-5 text-neutral-400">{tx("Keep slides and controls visible while you present.")}</span>
-          </button>
-          <button className="rounded-[21px] border border-white/[0.09] bg-white/[0.045] p-4 text-left transition hover:-translate-y-0.5 hover:border-white/[0.2] hover:bg-white/[0.09] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9ad7ff]" onClick={() => onSelect("fullscreen")} type="button">
-            <span className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-white text-black shadow-sm"><Maximize2 size={19} /></span>
-            <span className="mt-5 block text-[15px] font-semibold text-white">{tx("Full screen mode")}</span>
-            <span className="mt-1 block text-[12px] leading-5 text-neutral-400">{tx("Start immediately in full screen.")}</span>
-          </button>
-        </div>
+          <span className="block text-xs leading-5 text-neutral-400">{tx(mode === "projection" ? "One view, without speaker notes." : "An audience view and a private view for your notes.")}</span>
+        </button>)}
       </div>
-    </div>
-  );
+    </section>
+  </div>;
 }

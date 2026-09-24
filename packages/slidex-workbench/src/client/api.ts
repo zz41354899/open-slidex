@@ -71,6 +71,36 @@ export type WorkspaceMcpInstallResult = {
   restartRequired: true;
 };
 
+export type PresenterRemoteTimer = {
+  breakMinutes: number;
+  elapsedSeconds: number;
+  focusMinutes: number;
+  isRunning: boolean;
+  phase: "break" | "focus" | "ready";
+  remainingSeconds: number;
+};
+
+export type PresenterRemoteState = {
+  command?:
+    | { direction: "next" | "previous"; id: number; type: "slide" }
+    | { breakMinutes: number; focusMinutes: number; id: number; type: "timer.configure" }
+    | { id: number; type: "timer.reset" | "timer.toggle" };
+  connected: boolean;
+  currentSlideIndex: number;
+  expiresAt: string;
+  slideCount: number;
+  slideRevision: number;
+  timer: PresenterRemoteTimer;
+};
+
+export type PresenterRemoteSession = {
+  expiresAt: string;
+  id: string;
+  protocolVersion: 2;
+  qrSvg: string;
+  remoteUrl: string;
+};
+
 /** Keeps a deck opened from Workspace on the Workspace origin and API router. */
 export function localWorkbenchApiPath(path: string) {
   if (!path.startsWith("/") || typeof window === "undefined") return path;
@@ -183,6 +213,65 @@ export function updateContext(input: Selection & { revision: string }) {
     headers: { "content-type": "application/json" },
     method: "POST"
   });
+}
+
+export function createPresenterRemoteSession(input: {
+  currentSlideIndex: number;
+  locale?: "en" | "zh-TW";
+  slideCount: number;
+}) {
+  return requestJson<PresenterRemoteSession>("/api/v1/presenter/sessions", {
+    body: JSON.stringify(input),
+    headers: { "content-type": "application/json" },
+    method: "POST"
+  });
+}
+
+export function updatePresenterRemoteSession(id: string, input: {
+  clientId?: string;
+  currentSlideIndex?: number;
+  sequence?: number;
+  slideCount?: number;
+  timer?: PresenterRemoteTimer;
+}) {
+  return requestJson<PresenterRemoteState>(`/api/v1/presenter/sessions/${encodeURIComponent(id)}`, {
+    body: JSON.stringify(input),
+    headers: { "content-type": "application/json" },
+    method: "PATCH"
+  });
+}
+
+export async function closePresenterRemoteSession(id: string) {
+  const response = await fetch(localWorkbenchApiPath(`/api/v1/presenter/sessions/${encodeURIComponent(id)}`), {
+    method: "DELETE"
+  });
+  if (!response.ok) throw await apiError(response);
+}
+
+/**
+ * The local Workbench server owns the session state. Use its named SSE event
+ * rather than a polling loop so console and projection windows stay aligned.
+ */
+export function subscribePresenterRemoteSession(
+  id: string,
+  onState: (state: PresenterRemoteState) => void,
+  onError: () => void
+) {
+  const events = new EventSource(localWorkbenchApiPath(`/api/v1/presenter/sessions/${encodeURIComponent(id)}/events`));
+  const receiveState = (event: MessageEvent<string>) => {
+    try {
+      onState(JSON.parse(event.data) as PresenterRemoteState);
+    } catch {
+      onError();
+    }
+  };
+  events.addEventListener("state", receiveState);
+  events.addEventListener("error", onError);
+  return () => {
+    events.removeEventListener("state", receiveState);
+    events.removeEventListener("error", onError);
+    events.close();
+  };
 }
 
 export function readOfficialTemplates(locale: "en" | "zh-TW") {

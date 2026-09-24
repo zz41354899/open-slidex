@@ -9,7 +9,6 @@ import { promisify } from "node:util";
 import { gzipSync } from "node:zlib";
 
 import {
-  childProcessNeedsShell,
   lockedStandaloneDependencies,
   nodeDistribution,
   parseSha256List,
@@ -21,20 +20,12 @@ import {
 const execFileAsync = promisify(execFile);
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("standalone release targets use stable cross-platform asset names", () => {
+test("standalone release targets publish only stable macOS archives", () => {
   assert.equal(standaloneTarget("darwin", "arm64"), "darwin-arm64");
   assert.equal(standaloneTarget("darwin", "x64"), "darwin-x64");
-  assert.equal(standaloneTarget("win32", "x64"), "windows-x64");
   assert.equal(standaloneAssetName("darwin-arm64"), "open-slidex-darwin-arm64.tar.gz");
-  assert.equal(standaloneAssetName("windows-x64"), "open-slidex-windows-x64.zip");
-  assert.throws(() => standaloneTarget("linux", "x64"), /does not support/);
-});
-
-test("Windows batch commands use a shell while native executables stay direct", () => {
-  assert.equal(childProcessNeedsShell("win32", "npm.cmd"), true);
-  assert.equal(childProcessNeedsShell("win32", "setup.BAT"), true);
-  assert.equal(childProcessNeedsShell("win32", "node.exe"), false);
-  assert.equal(childProcessNeedsShell("darwin", "npm.cmd"), false);
+  assert.throws(() => standaloneTarget("win32", "x64"), /only on macOS/);
+  assert.throws(() => standaloneTarget("linux", "x64"), /npx open-slidex@latest/);
 });
 
 test("Node distributions are pinned and checksum lists are parsed strictly", () => {
@@ -43,7 +34,7 @@ test("Node distributions are pinned and checksum lists are parsed strictly", () 
     executable: "bin/node",
     root: "node-v24.19.0-darwin-arm64"
   });
-  assert.equal(nodeDistribution("windows-x64", "24.19.0").archive, "node-v24.19.0-win-x64.zip");
+  assert.throws(() => nodeDistribution("linux-x64", "24.19.0"), /Unknown macOS standalone target/);
   assert.deepEqual(
     [...parseSha256List(`${"a".repeat(64)}  file.tar.gz\ninvalid\n${"B".repeat(64)} *file.zip`)],
     [["file.tar.gz", "a".repeat(64)], ["file.zip", "b".repeat(64)]]
@@ -92,10 +83,9 @@ test("standalone dependency records must match the reviewed lock path, version, 
   );
 });
 
-test("bootstrap scripts expose update, rollback, identity, and checksum contracts", async () => {
-  const [shellInstaller, powershellInstaller, readme, manifest, releaseWorkflow] = await Promise.all([
+test("macOS bootstrap exposes update, rollback, identity, and checksum contracts", async () => {
+  const [shellInstaller, readme, manifest, releaseWorkflow] = await Promise.all([
     readFile(path.join(repositoryRoot, "install.sh"), "utf8"),
-    readFile(path.join(repositoryRoot, "install.ps1"), "utf8"),
     readFile(path.join(repositoryRoot, "README.md"), "utf8"),
     readFile(path.join(repositoryRoot, "package.json"), "utf8").then(JSON.parse),
     readFile(path.join(repositoryRoot, ".github/workflows/standalone-release.yml"), "utf8")
@@ -105,43 +95,32 @@ test("bootstrap scripts expose update, rollback, identity, and checksum contract
   assert.match(shellInstaller, /uninstall\)/);
   assert.match(shellInstaller, /rollback\)/);
   assert.match(shellInstaller, /MANIFEST_TARGET/);
-  assert.doesNotMatch(shellInstaller, /gh attestation verify/);
-  assert.doesNotMatch(shellInstaller, /\.intoto\.jsonl/);
+  assert.doesNotMatch(shellInstaller, /gh attestation|\.intoto\.jsonl|GH_CONFIG_DIR/);
   assert.doesNotMatch(shellInstaller, /raw\.githubusercontent\.com/);
   assert.match(shellInstaller, /Your Workspace presentations were kept/);
-  assert.match(powershellInstaller, /Get-FileHash -Algorithm SHA256/);
-  assert.match(powershellInstaller, /\$Command -eq "update"/);
-  assert.match(powershellInstaller, /\$Command -eq "rollback"/);
-  assert.match(powershellInstaller, /\$Command -eq "uninstall"/);
-  assert.match(powershellInstaller, /Assert-SafeZip/);
-  assert.doesNotMatch(powershellInstaller, /attestation verify/);
-  assert.doesNotMatch(powershellInstaller, /\.intoto\.jsonl/);
-  assert.doesNotMatch(powershellInstaller, /Install-GitHubCli/);
-  assert.doesNotMatch(powershellInstaller, /raw\.githubusercontent\.com/);
   assert.match(readme, /slidex update/);
   assert.match(readme, /slidex uninstall/);
+  assert.match(readme, /npx open-slidex@latest/);
+  assert.doesNotMatch(readme, /install\.ps1|Windows PowerShell/);
   assert.doesNotMatch(readme, /\| sh|\| iex/);
   assert.equal(manifest.scripts["build:standalone"], "node scripts/build-standalone-release.mjs");
   const builder = await readFile(path.join(repositoryRoot, "scripts/build-standalone-release.mjs"), "utf8");
   assert.match(builder, /Git tag must exactly match/);
   assert.match(builder, /createSpdxSbom/);
-  assert.doesNotMatch(builder, /Auditing the exact lockfile-derived production dependency tree/);
+  assert.doesNotMatch(builder, /"audit", "--omit=dev"/);
   assert.match(builder, /npmCommand\(\),\s*\["ci", "--omit=dev", "--workspace", "packages\/open-slidex"/);
   assert.match(builder, /DEPENDENCY-LOCK\.json/);
   assert.match(builder, /lockedStandaloneDependencies/);
-  assert.doesNotMatch(releaseWorkflow, /Release security gates/);
-  assert.doesNotMatch(releaseWorkflow, /actions\/attest@/);
+  assert.doesNotMatch(releaseWorkflow, /Release security gates|security\.yml|actions\/attest|attestations: write/);
   assert.match(releaseWorkflow, /RESOLVED_SHA/);
   assert.match(releaseWorkflow, /verify_remote_tag/);
   assert.match(releaseWorkflow, /--target "\$\{EXPECTED_SHA\}"/);
   assert.match(releaseWorkflow, /--draft --verify-tag/);
   assert.match(releaseWorkflow, /gh release edit "\$\{RELEASE_TAG\}" --draft=false/);
-  assert.doesNotMatch(releaseWorkflow, /--json isImmutable --jq \.isImmutable/);
+  assert.doesNotMatch(releaseWorkflow, /isImmutable|\.intoto\.jsonl|gh attestation/);
   assert.doesNotMatch(releaseWorkflow, /needs: \[resolve, build, publish\]/);
   assert.match(releaseWorkflow, /Publish GitHub release[\s\S]*needs: \[resolve, build\]/);
-  assert.doesNotMatch(releaseWorkflow, /Add offline provenance bundles/);
-  assert.doesNotMatch(releaseWorkflow, /gh attestation download/);
-  assert.doesNotMatch(releaseWorkflow, /\.intoto\.jsonl/);
+  assert.doesNotMatch(releaseWorkflow, /windows-latest|windows-x64|install\.ps1/);
   assert.doesNotMatch(releaseWorkflow, /--predicate-type https:\/\/slsa\.dev\/provenance\/v1/);
   assert.doesNotMatch(releaseWorkflow, /npm publish/);
   assert.doesNotMatch(releaseWorkflow, /--clobber/);
@@ -183,8 +162,7 @@ test("macOS bootstrap installs, updates, launches, and uninstalls an isolated ar
       writeFile(fakeCli, 'process.stdout.write(process.argv.slice(2).join("|") || "empty");\n', "utf8"),
       writeFile(path.join(payloadRoot, "VERSION"), "9.9.9\n", "utf8"),
       writeFile(path.join(payloadRoot, "release.json"), `${JSON.stringify(releaseManifest("9.9.9"), null, 2)}\n`, "utf8"),
-      writeFile(path.join(payloadRoot, "install.sh"), await readFile(path.join(repositoryRoot, "install.sh"), "utf8"), "utf8"),
-      writeFile(path.join(payloadRoot, "install.ps1"), await readFile(path.join(repositoryRoot, "install.ps1"), "utf8"), "utf8")
+      writeFile(path.join(payloadRoot, "install.sh"), await readFile(path.join(repositoryRoot, "install.sh"), "utf8"), "utf8")
     ]);
     await Promise.all([
       chmod(path.join(payloadRoot, "node/bin/node"), 0o755),
@@ -209,7 +187,7 @@ test("macOS bootstrap installs, updates, launches, and uninstalls an isolated ar
 
     await Promise.all([
       writeFile(path.join(payloadRoot, "VERSION"), "9.9.10\n", "utf8"),
-      writeFile(path.join(payloadRoot, "release.json"), `${JSON.stringify(releaseManifest("9.9.10", { target: "windows-x64" }), null, 2)}\n`, "utf8")
+      writeFile(path.join(payloadRoot, "release.json"), `${JSON.stringify(releaseManifest("9.9.10", { target: "linux-x64" }), null, 2)}\n`, "utf8")
     ]);
     await execFileAsync("tar", ["-czf", archivePath, "-C", path.join(root, "payload"), "open-slidex"]);
     await writeFile(

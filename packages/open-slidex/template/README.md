@@ -12,6 +12,9 @@ Start the Workspace with npm:
 npm run dev
 ```
 
+Projects initialized with pnpm, Yarn, or Bun can instead use `pnpm dev`,
+`yarn dev`, or `bun run dev`.
+
 The command opens the local Workspace rooted at
 `open-slidex-workspace/` inside this project. A fresh install starts with an
 empty library; creating or importing a presentation adds an isolated child

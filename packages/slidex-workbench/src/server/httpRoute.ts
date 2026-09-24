@@ -1,11 +1,13 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 import type { SlideXProject } from "./project";
+import type { PresenterRemoteServer } from "./presenterRemote";
 
 export type WorkbenchRouteContext = {
   eventClients: Set<ServerResponse>;
   incoming: IncomingMessage;
   outgoing: ServerResponse;
+  presenterRemote: PresenterRemoteServer;
   project: SlideXProject;
   request: Request;
   url: URL;

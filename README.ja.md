@@ -12,22 +12,51 @@ OpenSlideX は、編集可能なプレゼンテーションのための、オー
 
 プレビューをクリックすると、[OpenSlideX Workspace デモを再生できます](https://www.slidexdeck.com/marketing/open-slidex/slidex.mp4)。
 
-## Node.js や Git を使わないインストール
+## インストール
 
-スタンドアロンインストーラーは、専用の Node.js 実行ファイルと Chromium renderer を含む OpenSlideX ランタイム一式をダウンロードします。npm、Git、システム全体の Node.js、GitHub CLI はインストールしません。
+`npx`、`pnpm`、Yarn、または Bun でプロジェクトを作成できます。npx、pnpm、Yarn のコマンドには Node.js 22.12 以降が必要です。Bun は自身の最新ランタイムを使用します。OpenSlideX は macOS と Linux に対応し、Node.js 不要のスタンドアロンインストールは macOS のみ対応です。
+
+### npx
+
+```bash
+npx open-slidex@latest init my-deck
+cd my-deck
+npm run dev
+```
+
+### pnpm
+
+```bash
+pnpm dlx open-slidex@latest init my-deck
+cd my-deck
+pnpm dev
+```
+
+### Yarn（2+）
+
+```bash
+yarn dlx open-slidex@latest init my-deck
+cd my-deck
+yarn dev
+```
+
+### Bun
+
+```bash
+bunx open-slidex@latest init my-deck
+cd my-deck
+bun run dev
+```
+
+### macOS スタンドアロン
+
+macOS インストーラーは、専用の Node.js 実行ファイルと Chromium renderer を含む OpenSlideX ランタイム一式をダウンロードします。npm、Git、システム全体の Node.js はインストールしません。
 
 macOS:
 
 ```bash
 curl -fLO https://github.com/zz41354899/open-slidex/releases/latest/download/install.sh
 sh install.sh
-```
-
-Windows PowerShell:
-
-```powershell
-irm https://github.com/zz41354899/open-slidex/releases/latest/download/install.ps1 -OutFile install.ps1
-.\install.ps1
 ```
 
 初回インストール後は新しいターミナルを開き、次を実行します。
@@ -39,7 +68,7 @@ slidex rollback    # 保持している直前の正常バージョンへ戻す
 slidex uninstall   # ランタイムとコマンドを削除し、プレゼンテーションは残す
 ```
 
-既定のライブラリは、macOS では `~/Documents/OpenSlideX Workspace`、Windows では現在のユーザーの Documents フォルダです。ダウンロードする release archive は SHA-256 checksum と照合されます。release には SPDX SBOM が含まれ、インストール時に GitHub 認証は不要です。
+既定のライブラリは macOS では `~/Documents/OpenSlideX Workspace` です。インストーラーは release archive の SHA-256 checksum を確認してから現在のバージョンを切り替えます。Release archive には SPDX SBOM が含まれ、GitHub CLI は不要です。
 
 ## 開発者向けクイックスタート
 
@@ -60,7 +89,7 @@ npm run dev
 npm run dev -- ~/Presentations --port 4174
 ```
 
-## npm で独立したデッキを作成する
+## パッケージランナー CLI
 
 ```bash
 npx open-slidex@latest init my-deck
@@ -74,6 +103,8 @@ npm run dev
 npm install --global open-slidex@latest
 open-slidex init my-deck
 ```
+
+`npx` の代わりに `pnpm dlx`、`yarn dlx`、または `bunx` を使えます。作成したプロジェクトでは、それぞれ `pnpm dev`、`yarn dev`、`bun run dev` を実行します。
 
 インストール済みプロジェクトの `npm run dev` は常に `/workspace` を開き、プロジェクト内の `open-slidex-workspace/` をルートにします。各デッキは自身のソース、アセット、エクスポートを所有し、Workbench ソースと依存キャッシュは `.open-slidex/` に保存されます。
 
@@ -95,8 +126,8 @@ Workspace Settings は Codex、Claude Code、Claude Desktop 用のユーザー�
 | `npm run dev` | ローカル Workspace を開く。 |
 | `npm run mcp` | `open-slidex-workspace/` 用の MCP を起動する。 |
 | `npm run build:runtime` | 配布 runtime を再構築する。 |
-| `npm run build:standalone` | 現在のプラットフォーム向け standalone archive を作成する。 |
-| `npm run test:standalone` | installer、install、update、launch、uninstall を検証する。 |
+| `npm run build:standalone` | macOS 向けの完全な standalone archive を作成する。 |
+| `npm run test:standalone` | macOS installer、install、update、launch、uninstall を検証する。 |
 | `npm run test:source` | SDK、Workbench、MCP、CLI、Workspace の tests を実行する。 |
 
 ## プロジェクト境界とライセンス

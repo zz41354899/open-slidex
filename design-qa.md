@@ -109,6 +109,76 @@ final result: blocked
 
 ---
 
+# Presenter controls redesign QA
+
+- Source visual truth: `/var/folders/fp/bv98vn2s2v9dchl651zpsvn00000gn/T/TemporaryItems/NSIRD_screencaptureui_3cqh85/截圖 2026-09-09 下午1.48.48.png`
+- Source pixels: 1800 × 890.
+- Implementation target: `http://127.0.0.1:4172/workspace/presentation-20260906172033`.
+- Rendered implementation: in-app browser at 1280 × 720 CSS px, device scale 1; inspected in the editor state, the notes-panel state, the presenter-console state, and the dedicated projection-window state.
+- State and normalization: the supplied source is the normal desktop editor, while the presenter console, mobile remote, and projection window are intentionally new states not represented in the source. The editor comparison uses the same dark Workbench chrome, slide rail, canvas, and Inspector; the new note control is assessed as an intentional addition rather than a source mismatch.
+
+## Full-view and focused comparison evidence
+
+- Full editor view: the rendered 1280 × 720 Workbench retains the reference’s dense, near-black three-column composition, central canvas, restrained radii, low-contrast dividers, and compact control typography. The notes FAB appears at lower right without covering the canvas or persistent header controls.
+- Focused note-panel view: the panel uses the same graphite surface, thin neutral border, violet primary action, and compact 10–12 px hierarchy as the reference Inspector. Its textarea, cancel action, and explicit save action remain legible.
+- Focused presenter/projection views: presenter console renders its private notes, current slide, next-slide region, slide controls, and violet Pomodoro dial; the projection route renders only the slide plus a small fullscreen affordance. The no-notes and disabled skip-break states were visible and readable.
+
+## Required fidelity surfaces
+
+- Fonts and typography: the Workbench’s existing Roboto/system CJK stack, compact chrome labels, and heavier action labels are preserved. The note drawer title and the console timer are distinct without competing with slide content.
+- Spacing and layout rhythm: editor columns remain intact; the drawer is constrained to 360 px and the FAB is outside the canvas-safe editing region. The projection view centres the 16:9 slide without editor chrome.
+- Colors and tokens: graphite backgrounds, translucent white dividers, violet action/timer emphasis, and green saved/connected state reuse the source direction. Contrast remains adequate for the private-note and timer metadata.
+- Image quality and asset fidelity: existing MotionDoc slides and their source imagery render directly in the canvas and projection window. No replacement illustration, CSS artwork, or fabricated image asset was introduced.
+- Copy and content: Traditional Chinese labels are specific to the workflow: `講者備註`, `儲存備註`, `手機遙控`, `投影頁`, and Pomodoro controls. Private-note copy correctly states that it is not projected.
+
+## Functional verification
+
+- Browser: opened the editor, expanded/cancelled the notes drawer, opened the presenter console, and confirmed saved notes appear read-only in that console.
+- Browser: opened the projection route and confirmed it contains only the slide, slide count, and a fullscreen control; advancing from the console synchronized the displayed slide.
+- Automated: `npx tsc --noEmit --pretty false`, `npm run build:runtime`, and focused presenter remote / presenter notes tests passed.
+- The in-app browser does not expose pop-up windows, so the actual `window.open` transition was verified by opening its exact projection URL directly. The application handles blocked pop-ups with a notice.
+
+## Findings
+
+No actionable P0, P1, or P2 visual issues remain for the supplied editor reference and the intentionally added presentation-control states.
+
+## Follow-up polish
+
+- P3: validate the touch remote on a physical phone after scanning a live LAN QR code; the server protocol and the generated mobile page script are covered by focused tests, but this browser surface does not emulate a phone on the local network.
+
+final result: passed
+
+---
+
+# Presenter-mode redesign and realtime remote QA
+
+- Source visual truth: `/var/folders/fp/bv98vn2s2v9dchl651zpsvn00000gn/T/TemporaryItems/NSIRD_screencaptureui_3cqh85/截圖 2026-09-09 下午1.48.48.png`.
+- Implementation target: `http://127.0.0.1:4172/workspace/presentation-20260906172033`.
+- Rendered viewport: 1280 × 720 CSS px in the in-app browser; desktop Workbench dark theme, first slide, presenter mode open.
+- State: clicking `播放` now enters presenter mode directly and attempts the paired projection window in the same user gesture. The local browser surface does not permit pop-ups, so the already-verified direct projection route remains the browser evidence for that window.
+
+## Comparison and required fidelity surfaces
+
+- Typography: compact Workbench labels, mono time readouts, and the slide title hierarchy remain legible without the former oversized circular timer competing with the slide.
+- Layout: the main live slide occupies the dominant left region; the right rail is a single continuous control surface for time, Pomodoro progress, next slide, and speaker notes. The next preview was constrained to retain visible notes at a 720 px height.
+- Colors: graphite surfaces, hairline dividers, violet primary actions, and green live status match the source Workbench’s restrained dark palette.
+- Image quality: current and next slides render from the native MotionDoc imagery; no new placeholder, CSS illustration, or replacement raster asset is used.
+- Copy: the direct entry and console labels use presenter-specific wording, including `PRESENTER MODE`, `投影頁`, `手機遙控`, and private notes.
+
+## Functional verification
+
+- Browser: clicking `播放` opens presenter mode immediately instead of a playback-choice dialog.
+- Browser: the reworked console shows current slide, linear Pomodoro progress, navigation, next-slide preview, and speaker notes together at desktop height.
+- Browser: creating a phone remote displays its QR pairing card without an immediate remote-disconnected error.
+- Realtime: corrected the server-side event-stream close binding to the native incoming request, then verified commands are delivered through the presenter subscription without polling.
+- Automated: TypeScript check, production runtime build, remote authorization/rendering test, immediate subscription test, speaker-notes test, and `git diff --check` pass.
+
+## Findings
+
+No actionable P0, P1, or P2 issues remain in the verified desktop state. Physical-LAN touch latency still needs a real phone scan to measure radio/network conditions, but the former 450 ms host polling delay has been removed from the application path.
+
+final result: passed
+
 # Cinematic Morph inspector fidelity QA
 
 - Source visual truth: `/Users/zz41354899/.codex/generated_images/01a0438d-843b-7511-8ece-b476166443f5/exec-7b76ec6d-7866-468e-b6e0-29af1031c9a1.png`
@@ -154,6 +224,48 @@ No actionable P0, P1, or P2 fidelity issues remain.
 No P3 follow-up is required for this selected state.
 
 final result: passed
+
+---
+
+# Presenter console design QA
+
+## Findings
+
+- [Blocked] Desktop visual comparison could not be normalized in the available in-app browser.
+  Location: presenter console, `features/pitch/ui/PresentationConsoleModal.tsx`.
+  Evidence: the selected source visual is a 1487 × 1058 desktop mock at `/Users/zz41354899/.codex/generated_images/01a08444-04a0-72e3-8f2c-5b5293854042/exec-5fae624f-9ffb-4ed8-a2dd-8a6bc59d0483.png`; the browser-rendered console was captured through the in-app browser at a 415 × 800 viewport.
+  Impact: a side-by-side fidelity judgment for the source’s desktop proportions, above-the-fold next-slide preview, and notes panel would be misleading.
+  Fix: capture the console at approximately 1487 × 1058 in its default 10-minute focus state, then compare both images in one normalized input.
+
+## Evidence and comparison setup
+
+- Source visual truth path: `/Users/zz41354899/.codex/generated_images/01a08444-04a0-72e3-8f2c-5b5293854042/exec-5fae624f-9ffb-4ed8-a2dd-8a6bc59d0483.png`.
+- Source dimensions: 1487 × 1058 pixels.
+- Implementation target: `http://127.0.0.1:4172/workspace/presentation-20260906170109` with presenter console open.
+- Implementation capture: in-app-browser JPEG, 415 × 800 pixels; this browser surface does not expose a filesystem screenshot path.
+- State tested: presenter console; start/pause timer; change focus duration from 10 to 12 minutes; reset timer; advance slide; production-runtime reload.
+- Density normalization and full-view comparison: blocked by the non-equivalent narrow viewport. Focused-region comparison is similarly deferred.
+
+## Required fidelity surfaces
+
+- Fonts and typography: existing Workbench type system and Traditional Chinese console labels compile; desktop hierarchy and wrapping await the matching frame.
+- Spacing and layout rhythm: desktop grid, footer position, and above-the-fold density await the source-equivalent frame.
+- Colors and visual tokens: graphite surfaces, white typography, violet timer accent, and green live-status indicator follow the selected direction; desktop comparison remains pending.
+- Image quality and asset fidelity: the live current/next slide imagery is rendered from MotionDoc rather than replacement artwork; crop comparison remains pending.
+- Copy and content: presenter, timer, break, slide navigation, and settings labels are translated; desktop visual wrapping remains pending.
+
+## Functional verification
+
+- Type check, `npm run build:runtime`, `git diff --check`, and `npm run test:source` pass (338 passed, 15 Chromium-dependent skips).
+- Browser verification before the runtime reload confirmed timer start/pause, 10-to-12-minute configuration, reset, and next-slide navigation.
+
+## Implementation checklist
+
+1. Capture the desktop presenter console close to the source frame.
+2. Compare it alongside the source in one normalized visual input.
+3. Fix and re-check any P0/P1/P2 differences before changing this status.
+
+final result: blocked
 
 ---
 
@@ -205,3 +317,116 @@ No actionable P0, P1, or P2 fidelity or interaction issues remain.
 No P3 follow-up is required for the selected wide-desktop state.
 
 final result: passed
+
+## Presenter, phone remote and live notes — 2026-09-09 latest verification
+
+### Scope and visual truth
+
+This section supersedes earlier presenter-console QA, not the unrelated toolbar work above.
+The user's screenshots are inspiration for simplified interaction and hierarchy, not an instruction to copy the Figma brand or replace the current presentation.
+
+Sources:
+- Mode picker: /var/folders/fp/bv98vn2s2v9dchl651zpsvn00000gn/T/TemporaryItems/NSIRD_screencaptureui_bnjB2x/截圖 2026-09-09 下午2.40.30.png (402 × 279 pixels).
+- Presenter: /var/folders/fp/bv98vn2s2v9dchl651zpsvn00000gn/T/TemporaryItems/NSIRD_screencaptureui_MZMQ1P/截圖 2026-09-09 下午2.42.06.png (1916 × 1028, including browser chrome).
+- Notes: /var/folders/fp/bv98vn2s2v9dchl651zpsvn00000gn/T/TemporaryItems/NSIRD_screencaptureui_zrl76v/截圖 2026-09-09 下午2.43.21.png (1355 × 166 region).
+
+Rendered evidence in /tmp/slidex-presenter-qa-20260909/:
+- presenter-wide.png and presenter-en.png: 1916 × 1000 CSS/pixels, DPR 1.
+- presenter.png: compact desktop 1280 × 720.
+- modes-final.png: final Chrome implementation, 1830 × 877, with the 430-pixel-wide picker visible.
+- notes-wide.png: 1916 × 1000; notes-crop.png: actual 1262 × 177 dock region.
+- phone-final.png and phone-en.png: 390 × 844 CSS/pixels, DPR 1.
+- modes-crop.png records the earlier alignment issue; do not use it as final-state evidence.
+- modes-detail.png and notes-detail.png are invalid browser crop attempts and were excluded from comparison.
+
+Reference and rendered images were opened together in the same image input for full presenter composition, and again for the picker and note-region comparisons. Source browser chrome is excluded conceptually; no stretching or invented slide imagery is used. Presenter content is the existing Strategy Proposal deck, not the reference's unrelated Skytek deck. Populated versus empty note state is an intentional content difference.
+
+### Findings and comparison history
+
+1. [P2, resolved] The notes dock initially extended 26 pixels into the inspector at 1280px. Its desktop right inset now matches the existing 390px inspector. Post-fix notes-wide.png and notes-crop.png show a bounded canvas-area dock.
+2. [P2, resolved] Different description wrapping vertically centered the two picker titles at different heights. Buttons now use a top-aligned flex column. modes-final.png shows aligned labels and previews after rebuilding.
+3. No remaining actionable P0/P1/P2 visual finding in the verified states.
+
+### Required fidelity surfaces
+
+- Typography: retains the product sans-serif family, compact 12px labels and 20px editable notes; notes font controls support 14–36px. Chinese and English labels were rendered. Timer digits use tabular numerals.
+- Layout: thin 56px header; independently scrolling thumbnail rail; fitted 16:9 center stage; right notes. No large timer dashboard, cropped next-slide card or QR panel consuming the stage. Mobile uses two large touch buttons with timer settings in a dialog.
+- Tokens: charcoal surfaces, subtle dividers and restrained lavender selection/primary controls follow the existing product. Notes input is quieter than the former bordered save form.
+- Assets: existing native deck thumbnails and slide assets remain intact. The reference's company logo and presentation content are intentionally not copied.
+- Copy: Presentation / Presentation with notes, timer controls, pairing, notes placeholders and accessibility labels have English/Traditional Chinese text. Session-only notes behavior is stated visibly.
+- Responsive behavior: verified desktop 1280 × 720 and 1916 × 1000, mobile remote 390 × 844. No persistent control is clipped in those states.
+
+### Functional evidence
+
+- Single presentation opens fullscreen with no notes.
+- In Chrome, selecting Presentation with notes opens the private console and an actual separate audience popup. Advancing the private console updates that popup.
+- A late-opening audience tab receives the current slide via a ready handshake.
+- Phone pairing reaches Connected; next/previous update the presenter and audience. Focus/break configured to 25/5 on the phone appears on desktop; start/pause and elapsed time were exercised.
+- Phone language switch changes controls and statuses between English and Traditional Chinese.
+- Typing notes, moving to another slide, then returning preserves the session draft. Existing presentation.tsx still contains the user's original presenterNotes="123456"; test text was not written to the file.
+- Closing presenter mode ends the remote; the phone displays an ended-session message with disabled controls.
+- QR is modal, has copy/open-link fallbacks and a new-pairing-code control.
+- Keyboard input in notes does not advance slides; presenter/mode-picker shortcuts block editor mutations; focus trapping includes links.
+- Expensive stage rendering is memoized. BroadcastChannel and host SSE subscriptions no longer depend on slide index or timer ticks. Host updates are serialized/coalesced. Countdown uses a wall-clock anchor.
+- Generated-phone-script regression executes fragmented SSE data in both locales, rather than checking JavaScript syntax alone.
+- Workbench client/server suite: 257 tests, 251 passed, 6 skipped, 0 failed. Skipped cases require OPEN_SLIDEX_CHROMIUM_EXECUTABLE.
+- TypeScript check, runtime build and git diff --check passed.
+- Captured Chrome console warnings/errors for the verified flow: none.
+
+### Remaining test boundaries
+
+- No physical phone, Wi-Fi congestion, iOS Safari or mobile background-lock test was performed; no zero-latency or measured end-to-end latency claim.
+- The in-app browser became unresponsive during final reload/cleanup. Final popup and pairing verification used Chrome instead. Its locale test had switched the in-app profile to English; automatic restoration could not be confirmed after that browser stopped responding. Chrome's original Traditional Chinese setting was preserved.
+- Notes are intentionally ephemeral: reload/closing the editor discards new session drafts. Existing source-authored notes remain a read-only fallback.
+- This change is to the local Workbench; it does not claim equivalent mobile pairing inside an exported offline HTML file.
+
+### Follow-up polish
+
+No blocking visual follow-up. A physical-phone acceptance pass remains recommended.
+
+final result: passed
+
+## Phone remote latency correction — 2026-09-09
+
+Scope: transport/control-path correction only; preserve existing slide content, notes, and visual design.
+
+- Phone slide taps no longer await previous HTTP responses or timer commands. They send absolute targets immediately, with per-controller sequence numbers. The server ignores duplicated/late targets, and the phone rejects older slide revisions. The phone shows a pending target immediately and reconciles with acknowledged state.
+- The service owns the current slide. Both presenter and audience subscribe to it; remote projection no longer requires presenter React/event-loop forwarding. Timer-only PATCH requests cannot overwrite the current page. Desktop slide requests are sent in the interaction handler, independently of timer writes, following the React performance guidance.
+- Requests have an 8-second abort timeout. This bounds failures; it is not a normal input delay. Timer actions remain ordered, separately from slides.
+- Pairing advertises protocol version 2. New clients retain the old presenter relay and complete timer payload for an already-running older service. The latency improvements require a newly started service and fresh pairing.
+- Presenter windows use independent channel/window identifiers, preventing multiple copies of the same deck from controlling one shared audience window.
+
+Verification:
+
+- Full Workbench suite during implementation: 259 tests, 253 passed, 6 Chromium-configuration skips, no failures. Final focused remote suite after protocol compatibility changes: 7/7 passed. Final TypeScript check, runtime production build, and whitespace check passed.
+- Script-level regression holds all previous command responses unresolved: timer + next + next + previous produce four immediate requests with slide targets `[1, 2, 1]`. Reversed acknowledgments cannot rewind the page. Abort behavior and LAN-compatible client IDs are covered.
+- Service-level tests deliver sequence 3 before 1 and 2, retry 3, and interleave timer/desktop writes. Late commands do not roll the slide back; subscribers receive the new page without a host relay.
+- Final loopback HTTP probe: 40 commands, p50 0.96 ms, p95 1.81 ms (an earlier run measured p95 2.60 ms). This measures service acknowledgment only, not physical Wi-Fi or browser paint, and is not a before/after end-to-end benchmark.
+- Final production-runtime Chrome flow on port 4173: pair remote, start timer, next × 8, previous × 1; phone, presenter selection, and actual popup audience all show slide 8. Desktop selection of slide 4 updates both phone and audience. No captured presenter/audience console errors. English remote was also exercised in the in-app browser.
+- Port 4172 was not restarted or reloaded by the agent, per explicit user request. A separate updated runtime remains available at http://127.0.0.1:4173/workspace. Existing ephemeral user notes were not edited.
+
+Boundary: no physical-phone, congested Wi-Fi, or iOS Safari timing measurement; do not claim zero latency. Re-pair on the updated runtime to test these changes.
+
+## Presenter motion and interaction parity — 2026-09-09
+
+Scope: make both presenter and audience stages execute the native presentation playback behavior without coupling animation work to timer or notes renders.
+
+- `PresenterSlideStage` remains memoized, but now owns a small rendered-slide state so it can capture the outgoing DOM before committing a new slide. It runs `createMotionPlaybackController` for Motion sequences and the same shared-Morph capture/playback pipeline used by the standard presentation preview.
+- Native click interactions (`nextSlide`, `previousSlide`, `goToSlide`, safe URL/hash actions) work in both presenter and audience views. Clicking an otherwise non-interactive slide consumes its next on-click Motion cue. Slides containing explicit interactive regions retain the standard temporary hotspot hint behavior.
+- Remote page changes enter through the same `index` contract, so phone, presenter controls, keyboard navigation, thumbnails, and interactive layers all trigger the same stage transition and Motion initialization. Timer and notes changes do not rerender the memoized stage.
+
+Verification:
+
+- New DOM regression: Motion sequence is mounted and starts Web Animations; a native `goToSlide` region emits the correct target; changing the controlled index creates a Morph overlay and finishes on the requested slide. Passed 1/1.
+- Full Workbench client suite: 162/162 passed. TypeScript and whitespace checks passed. Production runtime build passed.
+- Production browser flow on isolated port 4173 with the existing `presentation-20260906170109` Morph/interaction deck: presenter stage mounted 6 Motion nodes on slide 1; clicking the native planet hotspot moved presenter to slide 2 with 8 Motion nodes and no captured console error. In the earlier three-surface pass, a phone change moved phone/presenter/audience to slide 2, and clicking the audience's native return hotspot synchronized all three back to slide 1.
+- Port 4172 was not restarted. Updated runtime is active on port 4173; a new QR pairing is required there.
+
+Boundary: browser behavior was verified, but no new physical-phone frame-timing measurement was performed. Reduced-motion preference intentionally disables Motion/Morph.
+
+## Empty presenter-note editing affordance — 2026-09-09
+
+- Empty notes always render as an enabled, writable textarea. The transparent placeholder-only treatment was replaced with a rounded bordered surface, visible hover/focus states, text caret, padding, and the actionable placeholder “Add notes for this slide…” / “輸入這張投影片的備註…”.
+- The editor remains session-only and does not mutate the canonical presentation source. Its controlled value continues to use the stable per-slide note key.
+- Browser verification on the final production runtime at port 4173 used an initially empty slide: the field was visible, enabled, not read-only, accepted `Second slide live note`, retained it after slide 2 → 3 → 2 navigation, and emitted no captured console errors.
+- Focused notes/playback regression tests: 3/3 passed. TypeScript, production runtime build, and whitespace checks passed. Port 4172 remains untouched per the earlier instruction.
