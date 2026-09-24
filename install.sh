@@ -146,12 +146,8 @@ trap 'rm -rf "$TEMP_ROOT"' EXIT HUP INT TERM
 
 ARCHIVE_PATH="$TEMP_ROOT/$ASSET"
 CHECKSUM_PATH="$TEMP_ROOT/SHA256SUMS.txt"
-BUNDLE_PATH="$TEMP_ROOT/$ASSET.intoto.jsonl"
 download_file "$RELEASE_BASE_URL/$ASSET" "$ARCHIVE_PATH"
 download_file "$RELEASE_BASE_URL/SHA256SUMS.txt" "$CHECKSUM_PATH"
-if [ "$RELEASE_BASE_URL" = "$DEFAULT_RELEASE_BASE_URL" ]; then
-  download_file "$RELEASE_BASE_URL/$ASSET.intoto.jsonl" "$BUNDLE_PATH"
-fi
 
 EXPECTED_SHA="$(awk -v asset="$ASSET" '$2 == asset || $2 == "*" asset { print $1; exit }' "$CHECKSUM_PATH")"
 case "$EXPECTED_SHA" in ""|*[!0-9a-fA-F]*) fail "The OpenSlideX release checksum for $ASSET is invalid." ;; esac
@@ -191,16 +187,6 @@ MANIFEST_INSTALLER="$(json_string installer "$MANIFEST_PATH")"
   [ "$MANIFEST_PLATFORM" = "darwin" ] && [ "$MANIFEST_ARCH" = "$EXPECTED_ARCH" ] && \
   [ "$MANIFEST_ASSET" = "$ASSET" ] && [ "$MANIFEST_INSTALLER" = "install.sh" ] || \
   fail 'The OpenSlideX release identity does not match this macOS installer. Nothing was installed.'
-
-if [ "$RELEASE_BASE_URL" = "$DEFAULT_RELEASE_BASE_URL" ]; then
-  command -v gh >/dev/null 2>&1 || \
-    fail 'GitHub CLI is required to verify the release attestation. Install gh, then run the installer again.'
-  GH_CONFIG_DIR="$TEMP_ROOT/gh-config" GH_TOKEN='' GH_ENTERPRISE_TOKEN='' \
-    gh attestation verify "$ARCHIVE_PATH" --repo "$REPOSITORY" --bundle "$BUNDLE_PATH" \
-    --signer-workflow "$REPOSITORY/.github/workflows/standalone-release.yml" \
-    --source-ref "refs/tags/v$VERSION" --deny-self-hosted-runners >/dev/null 2>&1 || \
-    fail 'OpenSlideX release provenance verification failed. Nothing was installed.'
-fi
 
 NODE="$RELEASE_SOURCE/node/bin/node"
 CLI="$RELEASE_SOURCE/app/node_modules/open-slidex/dist/cli.mjs"

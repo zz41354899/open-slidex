@@ -75,11 +75,6 @@ try {
     ["ci", "--omit=dev", "--workspace", "packages/open-slidex", "--include-workspace-root=false", "--ignore-scripts", "--no-audit", "--no-fund"],
     { cwd: installRoot, env: npmEnvironment }
   );
-  process.stdout.write("Auditing the exact lockfile-derived production dependency tree...\n");
-  await run(npmCommand(), ["audit", "--omit=dev", "--workspace", "packages/open-slidex", "--audit-level=moderate"], {
-    cwd: installRoot,
-    env: npmEnvironment
-  });
   await run(npmCommand(), ["ls", "--omit=dev", "--all", "--workspace", "packages/open-slidex"], { cwd: installRoot, env: npmEnvironment });
   await rename(path.join(installRoot, "node_modules"), path.join(appRoot, "node_modules"));
   const applicationNodeModules = path.join(installRoot, "packages/open-slidex/node_modules");

@@ -14,13 +14,12 @@ OpenSlideX 是开源、local-first 的可编辑演示文稿工作区。每份演
 
 ## 无需 Node.js 或 Git 的安装方式
 
-独立安装程序会下载完整 OpenSlideX runtime，包括私有 Node.js 可执行文件和 Chromium renderer；不会安装 npm、Git 或系统级 Node.js。Windows 如需安装 GitHub CLI 来验证 release，可能会请求系统授权。
+独立安装程序会下载完整 OpenSlideX runtime，包括私有 Node.js 可执行文件和 Chromium renderer；不会安装 npm、Git、系统级 Node.js 或 GitHub CLI。
 
 macOS：
 
 ```bash
 curl -fLO https://github.com/zz41354899/open-slidex/releases/latest/download/install.sh
-gh attestation verify install.sh --repo zz41354899/open-slidex
 sh install.sh
 ```
 
@@ -40,7 +39,7 @@ slidex rollback    # 切回保留的上一个正常版本
 slidex uninstall   # 移除 runtime 和命令，保留你的演示文稿
 ```
 
-macOS 的默认演示文稿库为 `~/Documents/OpenSlideX Workspace`；Windows 则位于当前用户的 Documents 文件夹。每个下载的 release archive 都会先通过 SHA-256 checksum 和 GitHub artifact attestation 验证。Windows 缺少 GitHub CLI（`gh`）时，安装程序会通过 Windows Package Manager（`winget`）安装它，再验证 release；macOS 需要预先提供 `gh`。
+macOS 的默认演示文稿库为 `~/Documents/OpenSlideX Workspace`；Windows 则位于当前用户的 Documents 文件夹。下载的 release archive 会先核对 SHA-256 checksum。发布文件包含 SPDX SBOM，安装时无需 GitHub 认证。
 
 ## 开发者快速开始
 

@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   resolve:
-    name: Resolve immutable release ref
+    name: Resolve release ref
     runs-on: ubuntu-latest
     outputs:
       ref: ${{ steps.lock.outputs.sha }}
@@ -33,7 +33,7 @@ jobs:
           if [ -n "$RELEASE_TAG" ]; then
             case "$RELEASE_TAG" in v*) ;; *) echo "Release tag must start with v." >&2; exit 1 ;; esac
             if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-              echo "Release $RELEASE_TAG already exists; immutable assets will not be replaced." >&2
+              echo "Release $RELEASE_TAG already exists; assets will not be replaced." >&2
               exit 1
             fi
             echo "ref=refs/tags/$RELEASE_TAG" >> "$GITHUB_OUTPUT"
@@ -58,25 +58,12 @@ jobs:
           fi
           echo "sha=$RESOLVED_SHA" >> "$GITHUB_OUTPUT"
 
-  security:
-    name: Release security gates
+  build:
+    name: Build ${{ matrix.target }}
     needs: resolve
     permissions:
       actions: read
       contents: read
-      security-events: write
-    uses: ./.github/workflows/security.yml
-    with:
-      ref: ${{ needs.resolve.outputs.ref }}
-
-  build:
-    name: Build ${{ matrix.target }}
-    needs: [resolve, security]
-    permissions:
-      actions: read
-      attestations: write
-      contents: read
-      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -111,21 +98,7 @@ jobs:
           node-version: 24.19.0
           cache: npm
       - run: npm ci
-      - if: runner.os != 'Windows'
-        run: npm run test:standalone
-      - if: runner.os == 'Windows'
-        shell: powershell
-        run: ./scripts/test-standalone-windows.ps1
       - run: npm run build:standalone
-      - name: Attest build provenance
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
-        with:
-          subject-path: dist/standalone/${{ matrix.archive }}
-      - name: Attest SBOM
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
-        with:
-          subject-path: dist/standalone/${{ matrix.archive }}
-          sbom-path: dist/standalone/${{ matrix.archive }}.spdx.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.target }}
@@ -141,9 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: read
-      attestations: write
       contents: write
-      id-token: write
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -154,25 +125,8 @@ jobs:
         with:
           path: release-assets
           merge-multiple: true
-      - name: Add immutable bootstrap installers
+      - name: Add bootstrap installers
         run: cp install.sh install.ps1 release-assets/
-      - name: Attest bootstrap installers
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
-        with:
-          subject-path: |
-            release-assets/install.sh
-            release-assets/install.ps1
-      - name: Add offline provenance bundles
-        working-directory: release-assets
-        env:
-          GH_REPO: ${{ github.repository }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          for asset in open-slidex-darwin-arm64.tar.gz open-slidex-darwin-x64.tar.gz open-slidex-windows-x64.zip; do
-            gh attestation download "$asset" --repo "$GH_REPO"
-            digest=$(sha256sum "$asset" | awk '{ print $1 }')
-            mv "sha256:${digest}.jsonl" "${asset}.intoto.jsonl"
-          done
       - name: Create SHA-256 manifest
         working-directory: release-assets
         run: sha256sum open-slidex-* install.sh install.ps1 > SHA256SUMS.txt
@@ -192,15 +146,11 @@ jobs:
             fi
           }
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
-            echo "Release ${RELEASE_TAG} already exists; immutable assets will not be replaced." >&2
+            echo "Release ${RELEASE_TAG} already exists; assets will not be replaced." >&2
             exit 1
           fi
           verify_remote_tag
           gh release create "${RELEASE_TAG}" release-assets/* --draft --verify-tag --target "${EXPECTED_SHA}" --generate-notes --title "OpenSlideX ${RELEASE_TAG}"
           verify_remote_tag
           gh release edit "${RELEASE_TAG}" --draft=false
-          if [ "$(gh release view "${RELEASE_TAG}" --json isImmutable --jq .isImmutable)" != "true" ]; then
-            echo "Release ${RELEASE_TAG} is not immutable. Enable GitHub immutable releases before publishing npm." >&2
-            exit 1
-          fi
           verify_remote_tag

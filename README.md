@@ -20,8 +20,7 @@ Click the preview to [watch the OpenSlideX Workspace demo](https://www.slidexdec
 
 The standalone installer downloads the complete OpenSlideX runtime, including
 its private Node.js executable and Chromium renderer. It does not install npm,
-Git, or system-wide Node.js. Windows may request elevation to install GitHub CLI
-for offline release verification; it never asks for GitHub sign-in or a token.
+Git, system-wide Node.js, or GitHub CLI.
 
 macOS:
 
@@ -48,13 +47,9 @@ slidex uninstall   # remove the runtime and command, but keep presentations
 
 The default presentation library is `~/Documents/OpenSlideX Workspace` on
 macOS and the current user's Documents folder on Windows. Every downloaded
-release archive must pass both SHA-256 integrity and GitHub artifact-attestation
-verification before it can replace the active version. Release archives include
-an attested SPDX SBOM and an offline provenance bundle. On Windows, the installer
-uses Windows Package Manager (`winget`) to install GitHub CLI (`gh`) when needed,
-then verifies the release without GitHub authentication; macOS requires `gh` to
-be available. Local test mirrors remain explicitly isolated from this production
-verification path.
+release archive is checked against its SHA-256 checksum before it can replace
+the active version. Release archives include an SPDX SBOM. The installer does
+not require GitHub authentication.
 
 ## Developer quick start
 

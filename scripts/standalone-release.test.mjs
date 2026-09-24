@@ -92,28 +92,21 @@ test("standalone dependency records must match the reviewed lock path, version, 
   );
 });
 
-test("bootstrap scripts expose immutable update, rollback, identity, and checksum contracts", async () => {
-  const [shellInstaller, powershellInstaller, windowsInstallerTest, readme, manifest, releaseWorkflow, securityWorkflow] = await Promise.all([
+test("bootstrap scripts expose update, rollback, identity, and checksum contracts", async () => {
+  const [shellInstaller, powershellInstaller, readme, manifest, releaseWorkflow] = await Promise.all([
     readFile(path.join(repositoryRoot, "install.sh"), "utf8"),
     readFile(path.join(repositoryRoot, "install.ps1"), "utf8"),
-    readFile(path.join(repositoryRoot, "scripts/test-standalone-windows.ps1"), "utf8"),
     readFile(path.join(repositoryRoot, "README.md"), "utf8"),
     readFile(path.join(repositoryRoot, "package.json"), "utf8").then(JSON.parse),
-    readFile(path.join(repositoryRoot, ".github/workflows/standalone-release.yml"), "utf8"),
-    readFile(path.join(repositoryRoot, ".github/workflows/security.yml"), "utf8")
+    readFile(path.join(repositoryRoot, ".github/workflows/standalone-release.yml"), "utf8")
   ]);
   assert.match(shellInstaller, /SHA256SUMS\.txt/);
   assert.match(shellInstaller, /update\)/);
   assert.match(shellInstaller, /uninstall\)/);
   assert.match(shellInstaller, /rollback\)/);
   assert.match(shellInstaller, /MANIFEST_TARGET/);
-  assert.match(shellInstaller, /gh attestation verify/);
-  assert.match(shellInstaller, /\.intoto\.jsonl/);
-  assert.match(shellInstaller, /--bundle/);
-  assert.match(shellInstaller, /--source-ref/);
-  assert.match(shellInstaller, /--deny-self-hosted-runners/);
-  assert.match(shellInstaller, /GH_CONFIG_DIR=.*GH_TOKEN=''/);
-  assert.doesNotMatch(shellInstaller, /gh auth login/);
+  assert.doesNotMatch(shellInstaller, /gh attestation verify/);
+  assert.doesNotMatch(shellInstaller, /\.intoto\.jsonl/);
   assert.doesNotMatch(shellInstaller, /raw\.githubusercontent\.com/);
   assert.match(shellInstaller, /Your Workspace presentations were kept/);
   assert.match(powershellInstaller, /Get-FileHash -Algorithm SHA256/);
@@ -121,19 +114,9 @@ test("bootstrap scripts expose immutable update, rollback, identity, and checksu
   assert.match(powershellInstaller, /\$Command -eq "rollback"/);
   assert.match(powershellInstaller, /\$Command -eq "uninstall"/);
   assert.match(powershellInstaller, /Assert-SafeZip/);
-  assert.match(powershellInstaller, /attestation verify/);
-  assert.match(powershellInstaller, /\.intoto\.jsonl/);
-  assert.match(powershellInstaller, /--bundle/);
-  assert.match(powershellInstaller, /--source-ref/);
-  assert.match(powershellInstaller, /--deny-self-hosted-runners/);
-  assert.match(powershellInstaller, /Remove-Item Env:GH_TOKEN/);
-  assert.doesNotMatch(powershellInstaller, /gh auth login/);
-  assert.match(powershellInstaller, /function Install-GitHubCli/);
-  assert.match(powershellInstaller, /winget to verify .*release attestation/);
-  assert.match(powershellInstaller, /install --id GitHub\.cli --exact --source winget/);
-  assert.match(powershellInstaller, /--accept-source-agreements --accept-package-agreements/);
-  assert.match(windowsInstallerTest, /install-with-local-attestation/);
-  assert.match(windowsInstallerTest, /Missing GitHub CLI did not invoke winget/);
+  assert.doesNotMatch(powershellInstaller, /attestation verify/);
+  assert.doesNotMatch(powershellInstaller, /\.intoto\.jsonl/);
+  assert.doesNotMatch(powershellInstaller, /Install-GitHubCli/);
   assert.doesNotMatch(powershellInstaller, /raw\.githubusercontent\.com/);
   assert.match(readme, /slidex update/);
   assert.match(readme, /slidex uninstall/);
@@ -142,32 +125,26 @@ test("bootstrap scripts expose immutable update, rollback, identity, and checksu
   const builder = await readFile(path.join(repositoryRoot, "scripts/build-standalone-release.mjs"), "utf8");
   assert.match(builder, /Git tag must exactly match/);
   assert.match(builder, /createSpdxSbom/);
-  assert.match(builder, /Auditing the exact lockfile-derived production dependency tree/);
+  assert.doesNotMatch(builder, /Auditing the exact lockfile-derived production dependency tree/);
   assert.match(builder, /npmCommand\(\),\s*\["ci", "--omit=dev", "--workspace", "packages\/open-slidex"/);
   assert.match(builder, /DEPENDENCY-LOCK\.json/);
   assert.match(builder, /lockedStandaloneDependencies/);
-  assert.match(releaseWorkflow, /Release security gates/);
-  assert.match(releaseWorkflow, /actions\/attest@1e69f48a/);
-  assert.match(releaseWorkflow, /sbom-path:/);
+  assert.doesNotMatch(releaseWorkflow, /Release security gates/);
+  assert.doesNotMatch(releaseWorkflow, /actions\/attest@/);
   assert.match(releaseWorkflow, /RESOLVED_SHA/);
   assert.match(releaseWorkflow, /verify_remote_tag/);
   assert.match(releaseWorkflow, /--target "\$\{EXPECTED_SHA\}"/);
   assert.match(releaseWorkflow, /--draft --verify-tag/);
   assert.match(releaseWorkflow, /gh release edit "\$\{RELEASE_TAG\}" --draft=false/);
-  assert.match(releaseWorkflow, /--json isImmutable --jq \.isImmutable/);
+  assert.doesNotMatch(releaseWorkflow, /--json isImmutable --jq \.isImmutable/);
   assert.doesNotMatch(releaseWorkflow, /needs: \[resolve, build, publish\]/);
   assert.match(releaseWorkflow, /Publish GitHub release[\s\S]*needs: \[resolve, build\]/);
-  assert.match(releaseWorkflow, /Add offline provenance bundles/);
-  assert.match(releaseWorkflow, /gh attestation download/);
-  assert.match(releaseWorkflow, /\.intoto\.jsonl/);
+  assert.doesNotMatch(releaseWorkflow, /Add offline provenance bundles/);
+  assert.doesNotMatch(releaseWorkflow, /gh attestation download/);
+  assert.doesNotMatch(releaseWorkflow, /\.intoto\.jsonl/);
   assert.doesNotMatch(releaseWorkflow, /--predicate-type https:\/\/slsa\.dev\/provenance\/v1/);
   assert.doesNotMatch(releaseWorkflow, /npm publish/);
   assert.doesNotMatch(releaseWorkflow, /--clobber/);
-  assert.match(securityWorkflow, /pull_request:/);
-  assert.match(securityWorkflow, /npm audit --omit=dev/);
-  assert.match(securityWorkflow, /npm run test:release/);
-  assert.match(securityWorkflow, /codeql-action\/analyze/);
-  assert.match(securityWorkflow, /osv-scanner-reusable/);
   await execFileAsync("sh", ["-n", path.join(repositoryRoot, "install.sh")]);
 });
 

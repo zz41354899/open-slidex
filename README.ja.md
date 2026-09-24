@@ -14,13 +14,12 @@ OpenSlideX は、編集可能なプレゼンテーションのための、オー
 
 ## Node.js や Git を使わないインストール
 
-スタンドアロンインストーラーは、専用の Node.js 実行ファイルと Chromium renderer を含む OpenSlideX ランタイム一式をダウンロードします。npm、Git、システム全体の Node.js はインストールしません。Windows で release 検証用に GitHub CLI を導入する際は、昇格が求められる場合があります。
+スタンドアロンインストーラーは、専用の Node.js 実行ファイルと Chromium renderer を含む OpenSlideX ランタイム一式をダウンロードします。npm、Git、システム全体の Node.js、GitHub CLI はインストールしません。
 
 macOS:
 
 ```bash
 curl -fLO https://github.com/zz41354899/open-slidex/releases/latest/download/install.sh
-gh attestation verify install.sh --repo zz41354899/open-slidex
 sh install.sh
 ```
 
@@ -40,7 +39,7 @@ slidex rollback    # 保持している直前の正常バージョンへ戻す
 slidex uninstall   # ランタイムとコマンドを削除し、プレゼンテーションは残す
 ```
 
-既定のライブラリは、macOS では `~/Documents/OpenSlideX Workspace`、Windows では現在のユーザーの Documents フォルダです。ダウンロードする release archive は SHA-256 checksum と GitHub artifact attestation で検証されます。Windows では必要に応じてインストーラーが Windows Package Manager（`winget`）で GitHub CLI（`gh`）を導入してから release を検証します。macOS では `gh` をあらかじめ利用可能にしてください。
+既定のライブラリは、macOS では `~/Documents/OpenSlideX Workspace`、Windows では現在のユーザーの Documents フォルダです。ダウンロードする release archive は SHA-256 checksum と照合されます。release には SPDX SBOM が含まれ、インストール時に GitHub 認証は不要です。
 
 ## 開発者向けクイックスタート
 
