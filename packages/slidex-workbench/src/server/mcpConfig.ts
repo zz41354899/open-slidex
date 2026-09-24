@@ -114,6 +114,6 @@ export function parseWorkspaceMcpClient(value: string | null): OpenSlideXMcpClie
 }
 
 export function parseWorkspaceMcpPlatform(value: string | null): OpenSlideXMcpPlatform {
-  if (value === "macos" || value === "windows") return value;
-  throw Object.assign(new Error("Choose macOS or Windows."), { status: 400 });
+  if (value === "macos") return value;
+  throw Object.assign(new Error("Only macOS is supported."), { status: 400 });
 }

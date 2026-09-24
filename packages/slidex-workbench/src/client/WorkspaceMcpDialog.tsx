@@ -24,7 +24,7 @@ const officialInstallUrls: Partial<Record<WorkspaceMcpClient, string>> = {
 export function WorkspaceMcpDialog({ locale, onClose, onNotice }: Props) {
   const zh = locale === "zh-TW";
   const [client, setClient] = useState<WorkspaceMcpClient>("codex");
-  const [platform, setPlatform] = useState<WorkspaceMcpPlatform>("macos");
+  const platform: WorkspaceMcpPlatform = "macos";
   const [hostPlatform, setHostPlatform] = useState<WorkspaceMcpPlatform>(() =>
     typeof navigator !== "undefined" && /Windows/i.test(navigator.userAgent) ? "windows" : "macos"
   );
@@ -49,13 +49,6 @@ export function WorkspaceMcpDialog({ locale, onClose, onNotice }: Props) {
       .catch((reason) => { if (active) setError(messageOf(reason, zh ? "無法準備 MCP 設定。" : "Could not prepare the MCP setup.")); });
     return () => { active = false; };
   }, [client, hostPlatform, platform, scopeRoot, zh]);
-
-  function selectPlatform(value: WorkspaceMcpPlatform) {
-    setPlatform(value);
-    setCopied(undefined);
-    setScopeRoot(undefined);
-    setScopeRootDraft("");
-  }
 
   async function copy(value: string, notice: string, kind: "configuration" | "prompt" = "configuration") {
     try {
@@ -126,19 +119,14 @@ export function WorkspaceMcpDialog({ locale, onClose, onNotice }: Props) {
         <span className="osx-mcp-dialog-icon"><Cable size={20} /></span>
         <small>{zh ? "MCP 快速設定" : "MCP quick setup"}</small>
         <h2 id="osx-mcp-title">{zh ? "連接你的 AI 工作區" : "Connect your AI workspace"}</h2>
-        <p>{zh ? "選擇 Agent 與平台分頁。若設定另一台裝置，請輸入該裝置的 Workspace 絕對路徑。" : "Choose an agent and platform. For another device, enter that device's absolute Workspace path."}</p>
+        <p>{zh ? "選擇 Agent。若設定另一台 macOS 裝置，請輸入該裝置的 Workspace 絕對路徑。" : "Choose an agent. For another macOS device, enter that device's absolute Workspace path."}</p>
 
         <div aria-label={zh ? "MCP 用戶端" : "MCP client"} className="osx-mcp-client-picker" role="group">
           {clients.map((value) => <button className={client === value ? "is-active" : ""} key={value} onClick={() => { setClient(value); setCopied(undefined); }} type="button">{clientLabel(value)}</button>)}
         </div>
-        <div className="osx-mcp-platform-section">
-          <span>{zh ? "設定平台" : "Setup platform"}</span>
-          <div aria-label={zh ? "設定平台" : "Setup platform"} className="osx-mcp-platform-picker" role="group"><button className={platform === "macos" ? "is-active" : ""} onClick={() => selectPlatform("macos")} type="button">macOS</button><button className={platform === "windows" ? "is-active" : ""} onClick={() => selectPlatform("windows")} type="button">Windows</button></div>
-        </div>
-
         {platform !== hostPlatform ? <form className="osx-mcp-scope-root" onSubmit={(event) => { event.preventDefault(); setScopeRoot(scopeRootDraft.trim() || undefined); }}>
           <label htmlFor="osx-mcp-scope-root">{zh ? `${platformName(platform)} 裝置上的 Workspace 絕對路徑` : `Absolute Workspace path on the ${platformName(platform)} device`}</label>
-          <div><input autoComplete="off" id="osx-mcp-scope-root" onChange={(event) => setScopeRootDraft(event.target.value)} placeholder={platform === "windows" ? "C:\\Users\\you\\OpenSlideX Workspace" : "/Users/you/Documents/OpenSlideX Workspace"} spellCheck={false} value={scopeRootDraft} /><button disabled={!scopeRootDraft.trim()} type="submit">{scopeRoot ? (zh ? "更新設定" : "Update configuration") : (zh ? "產生設定" : "Generate configuration")}</button></div>
+          <div><input autoComplete="off" id="osx-mcp-scope-root" onChange={(event) => setScopeRootDraft(event.target.value)} placeholder="/Users/you/Documents/OpenSlideX Workspace" spellCheck={false} value={scopeRootDraft} /><button disabled={!scopeRootDraft.trim()} type="submit">{scopeRoot ? (zh ? "更新設定" : "Update configuration") : (zh ? "產生設定" : "Generate configuration")}</button></div>
           <small>{zh ? "OpenSlideX 不會猜測或轉換另一個作業系統的本機路徑。" : "OpenSlideX never guesses or converts another operating system's local path."}</small>
         </form> : null}
 
@@ -150,7 +138,7 @@ export function WorkspaceMcpDialog({ locale, onClose, onNotice }: Props) {
           </div>
           <div className="osx-mcp-privacy"><ShieldCheck size={15} /><span>{zh ? "不會啟動 CLI，也不會把你的設定內容傳到瀏覽器。" : "No CLI is started and your configuration contents never reach the browser."}</span></div>
           <details className="osx-mcp-details"><summary>{zh ? "檢視產生的設定" : "View generated configuration"}</summary><pre><code>{setup.config}</code></pre><button onClick={() => void copy(setup.config, zh ? "MCP 設定已複製。" : "MCP configuration copied.")} type="button">{copied === "configuration" ? <Check size={14} /> : <ClipboardCopy size={14} />}{zh ? "複製設定" : "Copy configuration"}</button></details>
-          <details className="osx-mcp-details osx-mcp-prompt"><summary>{zh ? "複製平台安裝提示詞" : "Copy platform setup prompt"}</summary><p>{zh ? "提示詞會依目前選取的 macOS／Windows 分頁，帶入正確路徑、步驟與命令。" : "The prompt uses the selected macOS or Windows tab's correct paths, steps, and command."}</p><pre><code>{setup.prompt}</code></pre><button onClick={() => void copy(setup.prompt, zh ? "平台專屬安裝提示詞已複製。" : "Platform-specific setup prompt copied.", "prompt")} type="button">{copied === "prompt" ? <Check size={14} /> : <ClipboardCopy size={14} />}{zh ? "複製安裝提示詞" : "Copy setup prompt"}</button></details>
+          <details className="osx-mcp-details osx-mcp-prompt"><summary>{zh ? "複製 macOS 安裝提示詞" : "Copy macOS setup prompt"}</summary><p>{zh ? "提示詞會帶入 macOS 的路徑、步驟與命令。" : "The prompt includes the macOS paths, steps, and commands."}</p><pre><code>{setup.prompt}</code></pre><button onClick={() => void copy(setup.prompt, zh ? "macOS 安裝提示詞已複製。" : "macOS setup prompt copied.", "prompt")} type="button">{copied === "prompt" ? <Check size={14} /> : <ClipboardCopy size={14} />}{zh ? "複製安裝提示詞" : "Copy setup prompt"}</button></details>
         </> : null}
 
         <footer><button disabled={pending} onClick={onClose} type="button">{zh ? "稍後再說" : "Not now"}</button>{officialInstallUrl ? <a className="is-primary" href={officialInstallUrl} rel="noreferrer" target="_blank"><ExternalLink size={14} />{primaryLabel}</a> : <button className="is-primary" disabled={!setup || pending} onClick={() => void install()} type="button">{pending ? <LoaderCircle className="spin" size={14} /> : <Cable size={14} />}{pending ? (zh ? "安裝中…" : "Installing…") : primaryLabel}</button>}</footer>

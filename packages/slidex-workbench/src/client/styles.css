@@ -230,11 +230,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .osx-mcp-details pre { max-height: 154px; overflow: auto; margin: 12px 0; border: 1px solid rgb(255 255 255 / .08); border-radius: 9px; padding: 12px; background: #0b0d0f; color: #d7d4ff; font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
 .osx-mcp-prompt pre { max-height: 210px; }
 .osx-mcp-details button { display: inline-flex; min-height: 36px; align-items: center; gap: 6px; border: 1px solid rgb(255 255 255 / .13); border-radius: 999px; padding: 0 13px; background: #24262b; color: #e5e3dd; cursor: pointer; font-size: 12px; font-weight: 680; }
-.osx-mcp-platform-section { display: grid; gap: 7px; }
-.osx-mcp-platform-section > span { color: #b5b7bd; font-size: 12px; font-weight: 650; }
-.osx-mcp-platform-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid rgb(255 255 255 / .09); border-radius: 10px; padding: 4px; background: #0c0e10; }
-.osx-mcp-platform-picker button { min-height: 39px; border: 0; border-radius: 7px; background: transparent; color: #9699a1; font-size: 13px; }
-.osx-mcp-platform-picker button.is-active { background: #27292e; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .06); color: #fff; }
 .osx-mcp-scope-root { display: grid; gap: 7px; border: 1px solid rgb(164 155 255 / .2); border-radius: 11px; padding: 12px; background: rgb(143 131 255 / .055); }
 .osx-mcp-scope-root label { color: #d3d0ff; font-size: 12px; font-weight: 680; }
 .osx-mcp-scope-root > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
